@@ -29,7 +29,10 @@
     <div class="supporter-item">MrGrom</div>
     <!-- Майбутні імена будуть додаватися сюди -->
   </div>
-        <p class="call-to-action-text" style="white-space: pre-line">{$t("supportersPage.callToAction")}</p>  <a
+  <p class="call-to-action-text" style="white-space: pre-line">
+    {@html $t("supportersPage.callToAction")}
+  </p>
+  <a
     href="https://send.monobank.ua/jar/8TPmFKQTCK"
     target="_blank"
     rel="noopener noreferrer"
