@@ -41,6 +41,7 @@ export default defineConfig({
 			sourcemap: true
 		}),
 		VitePWA({
+			filename: 'service-worker.js',
 			registerType: 'prompt',
 			manifest,
 			workbox: {
