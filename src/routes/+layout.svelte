@@ -73,6 +73,25 @@
 		// hotkeyService.register("global", "[", ...);
 		// hotkeyService.register("global", "t", ...);
 
+		// Remove old 'sw.js' service worker to fix 404 errors during migration to 'service-worker.js'
+		if ("serviceWorker" in navigator) {
+			navigator.serviceWorker.getRegistrations().then((registrations) => {
+				for (const registration of registrations) {
+					if (
+						registration.active &&
+						registration.active.scriptURL.endsWith("/sw.js")
+					) {
+						console.log(
+							"[Layout] Unregistering old sw.js service worker",
+						);
+						registration.unregister().then(() => {
+							window.location.reload();
+						});
+					}
+				}
+			});
+		}
+
 		return () => {
 			appInitializationService.cleanup();
 			unsubscribeVersion();
@@ -304,7 +323,7 @@
 	{#if import.meta.env.DEV}
 		<NetworkMonitorWidget />
 	{/if}
-	
+
 	<!-- PWA Update Prompt -->
 	<ReloadPrompt />
 </ErrorBoundary>
