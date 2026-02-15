@@ -10,19 +10,20 @@ const manifest: Partial<ManifestOptions> = {
 	name: 'MindStep',
 	short_name: 'MindStep',
 	description: 'Стратегічна гра на витривалість та просторову уяву',
-	start_url: '/MindStep/',
+	scope: base,
+	start_url: base,
 	display: 'standalone' as Display,
 	background_color: '#222',
 	theme_color: '#222',
 	lang: 'uk',
 	icons: [
 		{
-			src: '/favicon-32px.ico',
+			src: base === '/' ? '/favicon-32px.ico' : base + '/favicon-32px.ico',
 			sizes: '32x32',
 			type: 'image/x-icon'
 		},
 		{
-			src: '/favicon.svg',
+			src: base === '/' ? '/favicon.svg' : base + '/favicon.svg',
 			sizes: 'any',
 			type: 'image/svg+xml'
 		}
