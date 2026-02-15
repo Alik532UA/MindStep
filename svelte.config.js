@@ -1,9 +1,8 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-// Видаляємо залежність від змінної оточення
-// const base = process.env.VITE_BASE_PATH || '';
-const base = '/MindStep'; // <-- Жорстко прописуємо шлях
+const dev = process.argv.includes('dev');
+const base = dev ? '' : '/MindStep'; // Use /MindStep only for production build
 
 // /**
 //  * Кастомний препроцесор для автоматичного додавання data-testid
