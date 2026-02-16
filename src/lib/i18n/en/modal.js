@@ -16,6 +16,7 @@ export default {
   errorTitle: "Mistaken Claim!",
   playAgain: "Play Again",
   continueGame: "Continue",
+  playerScores: "Player scores",
   leaveLobby: "Leave Lobby",
   finishGameWithBonus: "Finish (+{bonus} points)",
   keyConflictTitle: "Key Choice",

@@ -16,6 +16,7 @@ export default {
   errorTitle: "Onjuiste Bewering!",
   playAgain: "Opnieuw spelen",
   continueGame: "Doorgaan",
+  playerScores: "Spelersscores",
   leaveLobby: "Lobby Verlaten",
   finishGameWithBonus: "Beëindigen (+{bonus} punten)",
   keyConflictTitle: "Toetskeuze",

@@ -16,6 +16,7 @@ export default {
   errorTitle: "Помилкова заява!",
   playAgain: "Грати ще раз",
   continueGame: "Продовжити",
+  playerScores: "Рахунки гравців",
   waitingForPlayers: "Очікування інших гравців...",
   leaveLobby: "Вийти з лобі",
   finishGameWithBonus: "Завершити (+{bonus} балів)",

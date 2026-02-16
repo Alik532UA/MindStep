@@ -16,6 +16,7 @@ export default {
   errorTitle: "Hatalı beyanat!",
   playAgain: "Kene oyna",
   continueGame: "Devam et",
+  playerScores: "Oyuncılarnıñ esapları",
   leaveLobby: "Lobbi Terva Etmek",
   finishGameWithBonus: "Bitir (+{bonus} bal)",
   keyConflictTitle: "Düğme seçimi",
