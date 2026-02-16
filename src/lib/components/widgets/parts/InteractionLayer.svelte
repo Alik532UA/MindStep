@@ -31,6 +31,7 @@
     display: grid;
     grid-template-columns: repeat(var(--board-size), 1fr);
     grid-template-rows: repeat(var(--board-size), 1fr);
+    gap: var(--global-border-width);
     width: 100%;
     height: 100%;
     position: absolute;
@@ -41,10 +42,9 @@
   }
 
   .cell-interaction {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     position: relative;
+    width: 100%;
+    height: 100%;
   }
 
   .move-dot {
@@ -53,8 +53,11 @@
     background-color: #2ecc71 !important; /* Green */
     border-radius: 50%;
     border: var(--global-border-width) solid rgba(0, 0, 0, 0.2);
+    position: absolute;
+    top: 50%;
+    left: 50%;
     opacity: 0.5;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
 

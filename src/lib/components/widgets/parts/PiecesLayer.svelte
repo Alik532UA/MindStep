@@ -19,6 +19,10 @@
 
 <style>
   .pieces-layer {
+    display: grid;
+    grid-template-columns: repeat(var(--board-size), 1fr);
+    grid-template-rows: repeat(var(--board-size), 1fr);
+    gap: var(--global-border-width);
     width: 100%;
     height: 100%;
     position: absolute;

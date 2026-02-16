@@ -11,8 +11,17 @@
 
 <div
   class="player-piece"
-  style="top: {row * (100 / boardSize)}%; left: {col *
-    (100 / boardSize)}%; z-index: 10;"
+  style="
+    --current-board-size: {boardSize};
+    --cell-width: calc((100% - (var(--current-board-size) - 1) * var(--global-border-width)) / var(--current-board-size));
+    --offset-row: calc(var(--row-idx) * (var(--cell-width) + var(--global-border-width)));
+    --offset-col: calc(var(--col-idx) * (var(--cell-width) + var(--global-border-width)));
+    top: var(--offset-row); 
+    left: var(--offset-col);
+    --row-idx: {row};
+    --col-idx: {col};
+    z-index: 10;
+  "
 >
   <div class="piece-container">
     <NotoEmoji name="crown" size="100%" />
@@ -22,8 +31,8 @@
 <style>
   .player-piece {
     position: absolute;
-    width: calc(100% / var(--board-size, 4));
-    height: calc(100% / var(--board-size, 4));
+    width: var(--cell-width);
+    height: var(--cell-width);
     display: flex;
     align-items: center;
     justify-content: center;
