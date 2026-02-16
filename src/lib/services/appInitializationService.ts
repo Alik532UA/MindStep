@@ -10,9 +10,11 @@ import { appVersion } from "$lib/stores/versionStore";
 import { base } from "$app/paths";
 
 const APP_VERSION_KEY = "app_version";
+const VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 class AppInitializationService {
     private unsubscribeGameSettings: (() => void) | null = null;
+    private versionCheckIntervalId: any = null;
 
     public initialize() {
         logService.init("[AppInitializationService] Starting initialization...");
@@ -39,6 +41,7 @@ class AppInitializationService {
 
         // 6. Check for updates
         this.checkForUpdates();
+        this.startPeriodicVersionCheck();
 
         // 7. Expose debug tools in DEV
         if (import.meta.env.DEV) {
@@ -56,6 +59,22 @@ class AppInitializationService {
     public cleanup() {
         if (this.unsubscribeGameSettings) {
             this.unsubscribeGameSettings();
+        }
+        this.stopPeriodicVersionCheck();
+    }
+
+    private startPeriodicVersionCheck() {
+        this.stopPeriodicVersionCheck();
+        this.versionCheckIntervalId = setInterval(() => {
+            logService.init("[AppInitializationService] Periodic version check...");
+            this.checkForUpdates();
+        }, VERSION_CHECK_INTERVAL);
+    }
+
+    private stopPeriodicVersionCheck() {
+        if (this.versionCheckIntervalId) {
+            clearInterval(this.versionCheckIntervalId);
+            this.versionCheckIntervalId = null;
         }
     }
 
