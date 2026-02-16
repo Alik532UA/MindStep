@@ -1,155 +1,107 @@
 # MindStep
 
-"MindStep" - це ігрова платформа, що пропонує різноманітні стратегічні настільні ігри. Поточна версія включає режим "Втримайся", де гравці намагаються утримати спільну фігуру на дошці якомога довше.
+"MindStep" - це ігрова платформа, що пропонує стратегічну настільну гру "Втримайся". Основна концепція полягає в тому, щоб якомога довше утримувати спільну ігрову фішку на дошці, уникаючи заблокованих клітинок.
 
 ## ✨ Основні можливості
 
-*   **Гра проти AI:** Продуманий AI, який не робить помилок.
-*   **Кастомізація UI:** Можливість перетягувати та налаштовувати розташування ігрових елементів.
-*   **"Режим Профі":** Гра наосліп з озвучуванням ходів для тренування пам'яті.
-*   **Система реплеїв:** Перегляд запису гри після її завершення.
-*   **Гнучкі налаштування:** Налаштування розміру дошки, гарячих клавіш, тем та мов.
+*   **Гра проти ШІ:** Кілька рівнів складності віртуального гравця.
+*   **Локальний режим:** Можливість грати вдвох на одному пристрої.
+*   **Онлайн-режим:** Гра через мережу з іншими гравців.
+*   **Кастомізація UI:** Гнучке налаштування розташування віджетів (Drag-and-Drop).
+*   **Система реплеїв:** Перегляд та аналіз завершених ігор.
+*   **Гнучкі налаштування:** Розмір дошки, гарячі клавіші, озвучування ходів (TTS) та підтримка кількох мов.
 
 ## 🚀 Швидкий старт
 
 ### Вимоги
 
-*   [Node.js](https://nodejs.org/) (рекомендована версія LTS)
-*   Пакетний менеджер `npm` (встановлюється разом з Node.js)
+*   [Node.js](https://nodejs.org/) (версія 18+)
+*   `npm` або `pnpm`
 
-### Установка
+### Установка та запуск
 
-1.  Клонуйте репозиторій:
-    ```bash
-    git clone https://github.com/your-username/MindStep.git
-    ```
-2.  Перейдіть до директорії проєкту:
-    ```bash
-    cd MindStep
-    ```
-3.  Встановіть всі залежності:
-    ```bash
-    npm install
-    ```
-
-### Запуск у режимі розробки
-
-Щоб запустити локальний сервер для розробки з автоматичним перезавантаженням:
-```bash
-npm run dev
-```
-Після цього відкрийте вказану адресу (зазвичай `http://localhost:5173`) у вашому браузері.
-
-## 🛠️ Скрипти
-
-*   `npm run dev`: Запуск сервера для розробки.
-*   `npm run build`: Збірка статичної версії сайту в папку `build`.
-*   `npm run preview`: Локальний запуск продакшн-версії з папки `build`.
-*   `npm run deploy`: Автоматична збірка та деплой на GitHub Pages.
-*   `npm run check`: Запуск Svelte Check для перевірки типів та коду.
+1.  Клонуйте репозиторій.
+2.  Встановіть залежності: `npm install`
+3.  Запустіть у режимі розробки: `npm run dev`
+4.  Відкрийте `http://localhost:5173`.
 
 ## 🏗️ Архітектура
 
-Проєкт побудований на SvelteKit. Основна ігрова логіка розділена на віджети, що дозволяє гнучко налаштовувати інтерфейс. Детальніше про архітектуру можна прочитати в `docs/architecture/README.md`. 
+Проєкт побудований на **SvelteKit** та використовує гібридну систему стану:
+- **Svelte 5 Runes ($state, $derived):** Основне джерело правди (SSoT) для ігрової логіки.
+- **Bridge Pattern:** Спеціальні стори (`.svelte.ts`), що надають сумісність зі Svelte 4 компонентами.
 
-## Архітектурні принципи
+### Ключові принципи
+- **Розділення логіки та візуалізації:** Ігровий рушій (`GameEngine.ts`) та `center-info` працюють миттєво, не чекаючи завершення анімацій на дошці.
+- **Event-Driven UI:** Взаємодія між модулями через `gameEventBus`.
+- **SSoT (Single Source of Truth):** Всі дані зберігаються в централізованих сторах.
 
-Детальний опис архітектурних принципів проєкту:
-[docs/development/ARCHITECTURE.md](docs/development/ARCHITECTURE.md)
-
-- Single Source of Truth (SSoT)
-- Unidirectional Data Flow
-- Separation of Concerns (SoC)
-- Composition over Inheritance
-- Purity and Side-Effect Minimization
-
-## Регулярний аудит архітектури
-
-- Після кожного великого рефакторингу або додавання складних фіч рекомендується проводити аудит архітектури за цими принципами.
-- Всі зміни, що впливають на структуру стану, потік даних чи композицію компонентів, мають супроводжуватись оновленням документації. 
-
-## Сервіси (Services)
+## 🛠️ Сервіси (Services)
 
 ### modalService
-Централізований сервіс для роботи з модальними вікнами.
+Керує відображенням модальних вікон. Підтримує кастомні компоненти та пресети (GameOver, BoardResize).
 
-```js
-import { modalService } from '$lib/services/modalService.js';
+```typescript
+import { modalService } from '$lib/services/modalService';
 
-// Відкрити модальне вікно
+// Відкрити стандартне модальне вікно через SimpleModalContent
 modalService.showModal({
-  titleKey: 'modal.title',
-  contentKey: 'modal.content', // Рекомендується використовувати ключі перекладу
-  buttons: [
-    { textKey: 'modal.ok', primary: true, onClick: modalService.closeModal }
-  ]
+  variant: 'menu',
+  props: {
+    titleKey: 'modal.confirmTitle',
+    contentKey: 'modal.confirmContent',
+    actions: [
+      { labelKey: 'modal.confirm', onClick: () => { /* ... */ } }
+    ]
+  }
 });
 
 // Закрити модальне вікно
 modalService.closeModal();
-
-// Підписка на стан
-modalService.subscribe(state => { /* ... */ });
 ```
 
 ### logService
-Централізований сервіс для логування дій, помилок, подій.
+Категоризоване логування з підтримкою сесійних звітів.
 
-```js
-import { logService } from '$lib/services/logService.js';
+```typescript
+import { logService } from '$lib/services/logService';
 
-// Додати запис у лог
-logService.addLog('Повідомлення', 'info');
+logService.logicMove('Player moved to', { row: 1, col: 2 });
+logService.score('New score updated');
+logService.error('Something went wrong');
 
-// Очистити всі логи
-logService.clearLogs();
-
-// Підписка на логи
-logService.subscribe(logs => { /* ... */ });
+// Отримати повний звіт для діагностики (останні 100 логів)
+const report = logService.getLogReport();
 ```
 
 ### speechService
-Централізований сервіс для озвучення ходів, повідомлень тощо.
+Централізований сервіс для озвучення тексту (TTS).
 
-```js
-import { speakText, loadAndGetVoices, filterVoicesByLang, langMap } from '$lib/services/speechService.js';
+```typescript
+import { speakText, speakMove } from '$lib/services/speechService';
 
-// Озвучити текст
+// Озвучити довільний текст
 speakText('Ваш хід', 'uk', null);
 
-// Завантажити голоси
-loadAndGetVoices().then(voices => { /* ... */ });
-
-// Фільтрувати голоси за мовою
-const ukVoices = filterVoicesByLang(voices, 'uk');
+// Озвучити ігровий хід
+speakMove({ direction: 'up', distance: 1 }, 'uk', null);
 ```
+
+## 📊 Стори (Stores)
+
+| Store | Тип | Опис |
+| :--- | :--- | :--- |
+| `boardStore` | Bridge / Rune | Стан дошки, позиція фішки, історія ходів. |
+| `playerStore` | Bridge / Rune | Список гравців та поточний хід. |
+| `gameSettingsStore` | Rune | Налаштування гри та пресети складності. |
+| `uiStateStore` | Rune | Стан інтерфейсу та завантаження. |
+| `modalStore` | Rune | Стан та вміст поточного модального вікна. |
+
+## 🧪 Тестування
+
+*   **E2E (Playwright):** `npx playwright test`
+*   **Unit (Vitest):** `npm run test:unit`
+*   **Type Check:** `npm run check`
 
 ---
-
-## Single Source of Truth (SSoT)
-Всі основні дані та стани в грі зберігаються у централізованих Svelte stores. Для кожного типу стану (гра, налаштування, UI, логування, повтори, модальні вікна, розташування) існує окремий store, який є єдиним джерелом правди (SSoT). Всі компоненти підписуються на відповідні stores та не дублюють стан локально.
-
-### Приклад підключення store
-```js
-import { gameStore } from '$lib/stores/gameStore.ts';
-
-// Підписка на стан гри
-const unsubscribe = gameStore.subscribe(state => {
-  // ...
-});
-```
-
-### Таблиця відповідності store → тип стану
-| Store                | Тип стану         | Опис                                      |
-|----------------------|-------------------|--------------------------------------------|
-| `gameStore`          | Гра               | Основний стан гри: режим                   |
-| `boardStore`          | Дошка             | Позиція фігури, заблоковані клітинки       |
-| `appSettingsStore`      | Налаштування      | Всі налаштування застосунку                |
-| `gameSettingsStore`   | Налаштування гри  | Налаштування поточної сесії                |
-| `replayStore`        | Повтор            | Стан перегляду запису гри                  |
-| `logService`         | Логування         | Логи дій, помилок, подій                   |
-| `modalStore`         | Модальні вікна    | Стан та вміст поточного модального вікна   |
-| `layoutStore`        | Розташування      | Розташування віджетів на сторінці          |
-| `rewardsStore`       | Нагороди          | Стан нагород та досягнень                  |
-
---- 
+*MindStep - крок за кроком до перемоги.*
