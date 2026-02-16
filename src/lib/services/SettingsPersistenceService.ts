@@ -1,25 +1,11 @@
 // src/lib/services/SettingsPersistenceService.ts
 import { logService } from './logService';
 import { defaultGameSettings, type GameSettingsState } from '../stores/gameSettingsStore.js';
+import { GameSettingsSchema } from '../schemas/gameSettingsSchema';
 
 const isBrowser = typeof window !== 'undefined';
 const GAME_SETTINGS_KEY = 'gameSettings';
 const SETTINGS_VERSION = 2;
-
-const defaultSettings: GameSettingsState & { version: number } = {
-  ...defaultGameSettings,
-  version: SETTINGS_VERSION,
-};
-
-function safeJsonParse<T>(jsonString: string | null, defaultValue: T): T {
-  if (!jsonString) return defaultValue;
-  try {
-    return JSON.parse(jsonString);
-  } catch (e) {
-    logService.error('Failed to parse JSON from localStorage', e);
-    return defaultValue;
-  }
-}
 
 export const settingsPersistenceService = {
   load(): GameSettingsState {
@@ -27,18 +13,25 @@ export const settingsPersistenceService = {
 
     try {
       const storedSettingsRaw = localStorage.getItem(GAME_SETTINGS_KEY);
-      const storedSettings = safeJsonParse<Partial<GameSettingsState & { version: number }>>(storedSettingsRaw, {});
-      
-      let mergedSettings = { ...defaultGameSettings, ...storedSettings };
+      if (!storedSettingsRaw) return defaultGameSettings;
 
-      if (!storedSettings.version || storedSettings.version < SETTINGS_VERSION) {
-        // If settings are outdated or version is missing, apply defaults for new/updated properties
-        mergedSettings.showGameInfoWidget = defaultGameSettings.showGameInfoWidget;
-        mergedSettings.version = SETTINGS_VERSION;
-      }
+      const storedSettings = JSON.parse(storedSettingsRaw);
       
-      // Remove version before returning the state to avoid polluting the store
-      const { version, ...gameSettings } = mergedSettings;
+      // Валідація через Zod
+      const validationResult = GameSettingsSchema.safeParse(storedSettings);
+      
+      if (!validationResult.success) {
+        logService.error('[SettingsPersistenceService] Invalid settings in localStorage. Falling back to defaults.', validationResult.error.format());
+        return defaultGameSettings;
+      }
+
+      const { version, ...gameSettings } = validationResult.data as any;
+
+      // Міграція версій (якщо потрібно)
+      if (!version || version < SETTINGS_VERSION) {
+        logService.init(`[SettingsPersistenceService] Migrating settings from version ${version || 0} to ${SETTINGS_VERSION}`);
+        // Тут можна додати специфічну логіку міграції, якщо структура змінилася кардинально
+      }
 
       return gameSettings as GameSettingsState;
     } catch (error) {
