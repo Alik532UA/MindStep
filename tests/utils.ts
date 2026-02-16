@@ -65,6 +65,14 @@ export async function enableTestMode(page: Page) {
 // Починає нову гру
 export async function startNewGame(page: Page, mode: GameMode = GameMode.Beginner) {
   await page.goto('/');
+  
+  // НАВІЩО: Позначаємо для додатка, що це автоматизований тест.
+  // Це дозволяє вимкнути блокуючі UI-елементи (як-от банери оновлення PWA).
+  await page.evaluate(() => {
+    (window as any).__playwright_test__ = true;
+    (window as any).updateNoticeDisabled = true;
+  });
+
   await enableTestMode(page);
   await page.getByTestId('center-play-btn').click();
 
@@ -74,7 +82,8 @@ export async function startNewGame(page: Page, mode: GameMode = GameMode.Beginne
     await page.getByTestId('faq-modal-ok-btn').click();
   }
 
-  await page.waitForURL('**/game/virtual-player');
+  await page.waitForURL(/\/game\/virtual-player/, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(100);
   await expect(page.locator('.direction-controls-panel')).toBeVisible();
 }
 

@@ -2,22 +2,29 @@
   import { t } from "$lib/i18n/typedI18n";
   import { createEventDispatcher } from "svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
+  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { testModeStore } from "$lib/stores/testModeStore";
 
   const dispatch = createEventDispatcher();
   function reload() {
     dispatch("reload");
   }
+
+  // НАВІЩО: Не показуємо сповіщення в тестовому режимі, щоб не блокувати E2E тести.
+  const isHidden = $derived($testModeStore.isEnabled);
 </script>
 
-<div class="update-notice">
-  <div class="text-container">
-    <p class="title">{$t("updateNotification.title")}</p>
-    <p class="description">{$t("updateNotification.description")}</p>
+{#if !isHidden}
+  <div class="update-notice">
+    <div class="text-container">
+      <p class="title">{$t("updateNotification.title")}</p>
+      <p class="description">{$t("updateNotification.description")}</p>
+    </div>
+    <StyledButton variant="primary" onclick={reload} style="width: 100%;">
+      {$t("updateNotification.updateButton")}
+    </StyledButton>
   </div>
-  <StyledButton variant="primary" onclick={reload} style="width: 100%;">
-    {$t("updateNotification.updateButton")}
-  </StyledButton>
-</div>
+{/if}
 
 <style>
   .update-notice {

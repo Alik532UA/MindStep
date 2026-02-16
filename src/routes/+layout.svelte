@@ -4,6 +4,7 @@
 	import { appInitializationService } from "$lib/services/appInitializationService";
 	import { appVersion } from "$lib/stores/versionStore";
 	import { onMount, onDestroy } from "svelte";
+	import { get } from "svelte/store";
 	import { base } from "$app/paths";
 	import UpdateNotification from "$lib/components/UpdateNotification.svelte";
 	import ReloadPrompt from "$lib/components/pwa/ReloadPrompt.svelte";
@@ -53,12 +54,12 @@
 		});
 
 		// Subscribe to version changes to show update notice
-		const unsubscribeVersion = appVersion.subscribe((serverVersion) => {
+		const unsubscribeVersion = appVersion.subscribe((versionInfo) => {
 			const localVersion = localStorage.getItem(APP_VERSION_KEY);
 			if (
-				serverVersion &&
+				versionInfo.current &&
 				localVersion &&
-				localVersion !== serverVersion
+				localVersion !== versionInfo.current
 			) {
 				showUpdateNotice = true;
 			}
@@ -224,7 +225,7 @@
 			dataTestId: "dev-menu-modal",
 			props: {
 				onClose: () => modalStore.closeModal(),
-				versionNumber: $appVersion,
+				versionNumber: get(appVersion).current,
 			},
 			closeOnOverlayClick: true,
 		});

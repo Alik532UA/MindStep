@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Модальне вікно вибору режиму гри', () => {
+test.describe('Модальне вікно вибору режиму гри', { tag: '@GMM' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/'); // Go to the page first to have the window object
+
+    // НАВІЩО: Вимикаємо блокуючі UI-елементи.
+    await page.evaluate(() => {
+      (window as any).__playwright_test__ = true;
+      (window as any).updateNoticeDisabled = true;
+    });
 
     // Wait for the reset function to be attached to the window object by Svelte
     await page.waitForFunction(() => (window as any).resetAllStores, null, { timeout: 10000 });
@@ -30,25 +36,28 @@ test.describe('Модальне вікно вибору режиму гри', ()
       await expect(page.getByTestId('faq-modal')).toBeVisible();
       await expect(page.getByTestId('faq-modal-title')).toHaveAttribute('data-i18n-key', 'faq.title');
       await page.getByTestId('faq-modal-ok-btn').click();
-      await page.waitForURL('**/game/virtual-player');
+      await page.waitForURL(/\/game\/virtual-player/);
+      await page.waitForTimeout(100);
       await expect(page.locator('.direction-controls-panel')).toBeVisible();
     });
   });
 
-  test('2. Не повинно показувати FAQ для режиму "досвідчений"', { tag: ['@done', '@GMM-2'] }, async ({ page }) => {
+  test('2. Не повинно показувати FAQ для режиму "досвідчений"', { tag: ['@done', '@GMM', '@GMM-2'] }, async ({ page }) => {
     await test.step('Вибір режиму "досвідчений" та перевірка відсутності FAQ', async () => {
       await page.getByTestId('experienced-mode-btn').click();
       await expect(page.getByTestId('game-mode-modal')).not.toBeVisible();
-      await page.waitForURL('**/game/virtual-player');
+      await page.waitForURL(/\/game\/virtual-player/, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(100);
       await expect(page.locator('.direction-controls-panel')).toBeVisible();
     });
   });
 
-  test('3. Не повинно показувати FAQ для режиму "профі"', { tag: ['@done', '@GMM-3'] }, async ({ page }) => {
+  test('3. Не повинно показувати FAQ для режиму "профі"', { tag: ['@done', '@GMM', '@GMM-3'] }, async ({ page }) => {
     await test.step('Вибір режиму "профі" та перевірка відсутності FAQ', async () => {
       await page.getByTestId('pro-mode-btn').click();
       await expect(page.getByTestId('game-mode-modal')).not.toBeVisible();
-      await page.waitForURL('**/game/virtual-player');
+      await page.waitForURL(/\/game\/virtual-player/, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(100);
       await expect(page.locator('.direction-controls-panel')).toBeVisible();
     });
   });
