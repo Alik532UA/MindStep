@@ -4,8 +4,12 @@
     import { modalStore } from "$lib/stores/modalStore";
     import HamburgerMenuModal from "$lib/components/modals/HamburgerMenuModal.svelte";
 
-    export let onPlay: () => void;
-    export let onFeedback: () => void;
+    interface Props {
+        onPlay: () => void;
+        onFeedback: () => void;
+    }
+
+    let { onPlay, onFeedback }: Props = $props();
 
     function openMenu() {
         logService.action('Click: "Open Hamburger Menu"');
@@ -25,11 +29,10 @@
 
 <button
     class="hamburger-btn"
-    on:click={openMenu}
+    onclick={openMenu}
     data-testid="hamburger-menu-btn"
     aria-label="Menu"
 >
-    <!-- FIX: Явно задаємо розмір іконки, щоб вона не була маленькою -->
     <SvgIcons name="hamburger-menu" width="32px" height="32px" />
 </button>
 
@@ -51,7 +54,7 @@
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         z-index: 100;
         transition: transform 0.2s;
-        padding: 0; /* Прибираємо паддінги, щоб центрування працювало коректно */
+        padding: 0;
     }
 
     .hamburger-btn:hover {
