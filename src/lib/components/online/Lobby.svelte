@@ -125,7 +125,7 @@
 </script>
 
 <div class="lobby-page" data-testid="lobby-container">
-    <FloatingBackButton on:click={handleLeave} />
+    <FloatingBackButton onclick={handleLeave} />
 
     {#if room && myPlayerId}
         <div class="lobby-content" in:fade={{ duration: 300 }}>

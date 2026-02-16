@@ -4,12 +4,16 @@
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { logService } from "$lib/services/logService.js";
 
-  export let onClick: (() => void) | undefined = undefined;
+  interface Props {
+    onclick?: () => void;
+  }
+
+  let { onclick }: Props = $props();
 
   function handleClick() {
-    if (onClick) {
-      logService.ui("FloatingBackButton: Custom onClick executed");
-      onClick();
+    if (onclick) {
+      logService.ui("FloatingBackButton: Custom onclick executed");
+      onclick();
     } else {
       logService.ui("FloatingBackButton: Default navigation executed");
       navigationService.goToMainMenu();
@@ -22,7 +26,7 @@
   class="floating-back-btn"
   aria-label={$t("ui.goBack") || "Повернутися назад"}
   use:customTooltip={$t("ui.goBack") || "Повернутися назад"}
-  on:click={handleClick}
+  {onclick}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -69,7 +73,6 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
-  /* FIX: Виправлено розмір іконки. 200% було забагато. */
   .floating-back-btn svg {
     width: 28px;
     height: 28px;

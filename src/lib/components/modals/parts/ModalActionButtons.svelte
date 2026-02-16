@@ -7,23 +7,31 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import DontShowAgainCheckbox from "../../DontShowAgainCheckbox.svelte";
     import type { ModalState } from "$lib/stores/modalStore";
-    import { focusManager } from "$lib/stores/focusManager.js";
-    import { tick } from "svelte";
+    import type { Snippet } from "svelte";
 
-    export let modalState: ModalState;
-    export let currentModalContext: string | null;
-    export let isComputerMoveInProgress: boolean = false;
-    export let buttonRefs: (HTMLButtonElement | null)[] = [];
-
-    let processingButtons: boolean[] = [];
-
-    $: if (modalState.buttons) {
-        processingButtons = Array(modalState.buttons.length).fill(false);
+    interface Props {
+        modalState: ModalState;
+        currentModalContext: string | null;
+        isComputerMoveInProgress?: boolean;
+        buttonRefs?: (HTMLButtonElement | null)[];
+        children?: Snippet;
     }
 
-    // Auto-focus logic handled here or in parent?
-    // In parent is easier for now, but we can emit event or just expose refs.
-    // The logic `focusManager.focusWithDelay(buttonRefs[hotButtonIndex], 50);` was in parent.
+    let {
+        modalState,
+        currentModalContext,
+        isComputerMoveInProgress = false,
+        buttonRefs = $bindable([]),
+        children,
+    }: Props = $props();
+
+    let processingButtons = $state<boolean[]>([]);
+
+    $effect(() => {
+        if (modalState.buttons) {
+            processingButtons = Array(modalState.buttons.length).fill(false);
+        }
+    });
 </script>
 
 <div class="modal-action-buttons">
@@ -74,5 +82,7 @@
         />
     {/if}
 
-    <slot />
+    {#if children}
+        {@render children()}
+    {/if}
 </div>

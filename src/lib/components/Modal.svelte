@@ -1,6 +1,6 @@
 <script lang="ts">
   import "$lib/css/components/modal.css";
-  import { modalState, modalStore } from "$lib/stores/modalStore";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import FAQModal from "./FAQModal.svelte";
   import GameOverContent from "./modals/GameOverContent.svelte";
@@ -12,15 +12,28 @@
   import { trapFocus } from "$lib/actions/trapFocus.js";
   import { uiStateStore } from "$lib/stores/uiStateStore";
   import { gameEventBus } from "$lib/services/gameEventBus";
-  import { get } from "svelte/store";
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
 
   import ExpertModeVolumeControl from "./modals/parts/ExpertModeVolumeControl.svelte";
   import ModalHeader from "./modals/parts/ModalHeader.svelte";
   import ModalActionButtons from "./modals/parts/ModalActionButtons.svelte";
+  import type { Snippet } from "svelte";
+  import type { ModalButton } from "$lib/stores/modalStore";
 
-  let buttonRefs: (HTMLButtonElement | null)[] = [];
-  let windowHeight = 0;
+  interface Props {
+    children?: Snippet;
+  }
+
+  let { children }: Props = $props();
+
+  // Перейменовуємо state -> mState, щоб уникнути конфлікту з $state rune
+  const mState = $derived(modalStateRune.state);
+
+  let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
+  let windowHeight = $state(0);
+  let modalContent = $state<HTMLDivElement | null>(null);
+  let expertVolume = $state(0.3);
+  let currentModalContext = $state<string | null>(null);
 
   onMount(() => {
     windowHeight = window.innerHeight;
@@ -29,29 +42,26 @@
     return () => window.removeEventListener("resize", updateHeight);
   });
 
-  let modalContent: HTMLDivElement | null = null;
-  let expertVolume = 0.3;
-  let currentModalContext: string | null = null;
+  const themeClass = $derived(
+    mState.variant === "menu" ? "style-glass" : "style-classic"
+  );
 
-  $: themeClass =
-    $modalState.variant === "menu" ? "style-glass" : "style-classic";
-
-  $: {
-    if ($modalState.isOpen) {
-      const newContext = `modal-${$modalState.dataTestId}`;
+  $effect(() => {
+    if (mState.isOpen) {
+      const newContext = `modal-${mState.dataTestId}`;
       if (currentModalContext !== newContext) {
         if (currentModalContext) hotkeyService.popContext(currentModalContext);
         currentModalContext = newContext;
         hotkeyService.pushContext(currentModalContext);
 
         tick().then(() => {
-          if ($modalState.closable) {
+          if (mState.closable) {
             hotkeyService.register(currentModalContext!, "Escape", () => {
               logService.ui("Escape key pressed, closing modal");
               gameEventBus.dispatch("CloseModal");
             });
           }
-          $modalState.buttons.forEach((btn, i) => {
+          mState.buttons.forEach((btn: ModalButton, i: number) => {
             if (btn.hotKey) {
               const key = btn.hotKey === "ESC" ? "Escape" : btn.hotKey;
               hotkeyService.register(currentModalContext!, key, () => {
@@ -67,7 +77,7 @@
         currentModalContext = null;
       }
     }
-  }
+  });
 
   onDestroy(() => {
     if (currentModalContext) {
@@ -76,12 +86,12 @@
     }
   });
 
-  $: {
+  $effect(() => {
     const isTestEnvironment =
       import.meta.env.CI === "true" || import.meta.env.MODE === "test";
     const shouldPlay =
-      $modalState.isOpen &&
-      $modalState.titleKey === "modal.expertModeTitle" &&
+      mState.isOpen &&
+      mState.titleKey === "modal.expertModeTitle" &&
       !isTestEnvironment;
 
     audioService.setVolume(expertVolume);
@@ -89,19 +99,21 @@
 
     if (shouldPlay) audioService.play();
     else audioService.pause();
-  }
+  });
 
-  $: if ($modalState.isOpen && $modalState.buttons) {
-    const hotButtonIndex = $modalState.buttons.findIndex((b) => b.isHot);
-    if (hotButtonIndex !== -1) {
-      tick().then(() => {
-        focusManager.focusWithDelay(buttonRefs[hotButtonIndex], 50);
-      });
+  $effect(() => {
+    if (mState.isOpen && mState.buttons) {
+      const hotButtonIndex = mState.buttons.findIndex((b: ModalButton) => b.isHot);
+      if (hotButtonIndex !== -1) {
+        tick().then(() => {
+          focusManager.focusWithDelay(buttonRefs[hotButtonIndex], 50);
+        });
+      }
     }
-  }
+  });
 
   function onOverlayClick(e: MouseEvent) {
-    if (!$modalState.closeOnOverlayClick) return;
+    if (!mState.closeOnOverlayClick) return;
     const target = e.target as HTMLElement;
     if (
       target &&
@@ -114,95 +126,94 @@
   }
 </script>
 
-{#if $modalState.isOpen}
+{#if mState.isOpen}
   <div
     use:trapFocus
     class="modal-overlay screen-overlay-backdrop {themeClass}"
     role="button"
     tabindex="-1"
-    on:click={onOverlayClick}
-    on:keydown={(e) =>
+    onclick={onOverlayClick}
+    onkeydown={(e) =>
       (e.key === "Enter" || e.key === " ") && onOverlayClick(e as any)}
     data-testid="modal-overlay"
   >
-    <!-- FIX: Показуємо кнопку "Назад" ТІЛЬКИ якщо дозволено закриття по кліку на фон.
-         Це прибирає кнопку з екранів Game Over та No Moves, змушуючи гравця обирати дію в меню. -->
-    {#if $modalState.variant === "menu" && $modalState.closeOnOverlayClick}
-      <FloatingBackButton onClick={() => gameEventBus.dispatch("CloseModal")} />
+    {#if mState.variant === "menu" && mState.closeOnOverlayClick}
+      <FloatingBackButton onclick={() => gameEventBus.dispatch("CloseModal")} />
     {/if}
 
     <div
-      class="modal-window {themeClass} variant-{$modalState.variant}"
-      class:[$modalState.customClass]={$modalState.customClass}
-      data-testid={$modalState.dataTestId}
+      class="modal-window {themeClass} variant-{mState.variant}"
+      class:custom={mState.customClass}
+      data-testid={mState.dataTestId}
     >
-      {#if $modalState.variant === "standard" && ($modalState.titleKey || $modalState.title) && !($modalState.dataTestId === "replay-modal" && windowHeight < 870)}
-        <ModalHeader modalState={$modalState}>
-          <div slot="volume-control">
-            {#if $modalState.titleKey === "modal.expertModeTitle"}
+      {#if mState.variant === "standard" && (mState.titleKey || mState.title) && !(mState.dataTestId === "replay-modal" && windowHeight < 870)}
+        <ModalHeader modalState={mState}>
+          {#snippet volumeControl()}
+            {#if mState.titleKey === "modal.expertModeTitle"}
               <ExpertModeVolumeControl bind:expertVolume />
             {/if}
-          </div>
+          {/snippet}
         </ModalHeader>
       {/if}
 
       <div
         class="modal-content"
-        class:is-faq={typeof $modalState.content === "object" &&
-          $modalState.content &&
-          "isFaq" in $modalState.content &&
-          $modalState.content.isFaq}
+        class:is-faq={typeof mState.content === "object" &&
+          mState.content &&
+          "isFaq" in (mState.content as any) &&
+          (mState.content as any).isFaq}
         bind:this={modalContent}
-        data-testid={`${$modalState.dataTestId}-content`}
+        data-testid={`${mState.dataTestId}-content`}
       >
-        <!-- FIX: Додано перевірку !$modalState.component, щоб уникнути дублювання тексту -->
-        {#if typeof $modalState.content === "object" && $modalState.content && "reason" in $modalState.content && !$modalState.component}
+        {#if typeof mState.content === "object" && mState.content && "reason" in (mState.content as any) && !mState.component}
           <p
             class="reason"
-            data-testid={`${$modalState.dataTestId}-content-reason`}
-            data-i18n-key={($modalState.content as any).reasonKey}
+            data-testid={`${mState.dataTestId}-content-reason`}
+            data-i18n-key={(mState.content as any).reasonKey}
           >
-            {$modalState.content.reason}
+            {(mState.content as any).reason}
           </p>
         {/if}
 
-        {#if $modalState.component}
-          <svelte:component
-            this={$modalState.component as any}
-            {...$modalState.props}
-            content={$modalState.content}
-            dataTestId={$modalState.dataTestId}
+        {#if mState.component}
+          {@const Component = mState.component as any}
+          <Component
+            {...mState.props}
+            content={mState.content}
+            dataTestId={mState.dataTestId}
             scope={currentModalContext}
           />
-        {:else if typeof $modalState.content === "object" && $modalState.content && "isFaq" in $modalState.content && $modalState.content.isFaq}
+        {:else if typeof mState.content === "object" && mState.content && "isFaq" in (mState.content as any) && (mState.content as any).isFaq}
           <FAQModal />
-        {:else if typeof $modalState.content === "object" && $modalState.content && "key" in $modalState.content && "actions" in $modalState.content}
+        {:else if typeof mState.content === "object" && mState.content && "key" in (mState.content as any) && "actions" in (mState.content as any)}
           <p class="reason">
             {$t("modal.keyConflictContent", {
-              key: $modalState.content.key as string,
+              key: (mState.content as any).key as string,
             })}
           </p>
-        {:else if $modalState.contentKey}
+        {:else if mState.contentKey}
           <p class="reason">
-            {$t($modalState.contentKey as import("$lib/types/i18n").TranslationKey, $modalState.content as any)}
+            {$t(mState.contentKey as import("$lib/types/i18n").TranslationKey, mState.content as any)}
           </p>
-        {:else if typeof $modalState.content === "string" && $modalState.content}
-          <p class="reason">{$modalState.content}</p>
+        {:else if typeof mState.content === "string" && mState.content}
+          <p class="reason">{mState.content}</p>
         {/if}
 
-        {#if $modalState.content && typeof $modalState.content === "object" && "scoreDetails" in $modalState.content && !$modalState.component}
-          <GameOverContent content={$modalState.content} />
+        {#if mState.content && typeof mState.content === "object" && "scoreDetails" in (mState.content as any) && !mState.component}
+          <GameOverContent content={mState.content} />
         {/if}
       </div>
 
-      {#if $modalState.buttons.length > 0}
+      {#if mState.buttons.length > 0}
         <ModalActionButtons
-          modalState={$modalState}
+          modalState={mState}
           {currentModalContext}
           isComputerMoveInProgress={$uiStateStore?.isComputerMoveInProgress}
           bind:buttonRefs
         >
-          <slot />
+          {#if children}
+            {@render children()}
+          {/if}
         </ModalActionButtons>
       {/if}
     </div>

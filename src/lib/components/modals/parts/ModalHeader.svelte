@@ -5,8 +5,14 @@
     import { gameEventBus } from "$lib/services/gameEventBus";
     import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
     import type { ModalState } from "$lib/stores/modalStore";
+    import type { Snippet } from "svelte";
 
-    export let modalState: ModalState;
+    interface Props {
+        modalState: ModalState;
+        volumeControl?: Snippet;
+    }
+
+    let { modalState, volumeControl }: Props = $props();
 
     function close() {
         gameEventBus.dispatch("CloseModal");
@@ -14,7 +20,9 @@
 </script>
 
 <div class="modal-header" data-testid={`${modalState.dataTestId}-header`}>
-    <slot name="volume-control" />
+    {#if volumeControl}
+        {@render volumeControl()}
+    {/if}
 
     <div class="modal-title-wrapper">
         <h2
@@ -37,7 +45,7 @@
         <button
             class="modal-close"
             use:hotkeyTooltip={{ key: "ESC" }}
-            on:click={close}
+            onclick={close}
             data-testid={`${modalState.dataTestId}-close-btn`}>×</button
         >
     {/if}
