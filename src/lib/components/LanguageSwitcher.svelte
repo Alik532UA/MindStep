@@ -3,13 +3,19 @@
   import { appSettingsStore } from "../stores/appSettingsStore.js";
   import { logService } from "$lib/services/logService.js";
 
-  let showDropdown = false;
-  const languages: { code: "uk" | "en" | "crh" | "nl", label: string, flag: string }[] = [
+  let showDropdown = $state(false);
+
+  const languages: {
+    code: "uk" | "en" | "crh" | "nl";
+    label: string;
+    flag: string;
+  }[] = [
     { code: "uk", label: "Українська", flag: "🇺🇦" },
     { code: "en", label: "English", flag: "🇬🇧" },
     { code: "crh", label: "Qırımtatarca", flag: "🇹🇷" },
     { code: "nl", label: "Nederlands", flag: "🇳🇱" },
   ];
+
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
     appSettingsStore.updateSettings({ language: lang });
@@ -17,9 +23,11 @@
     locale.set(lang);
     showDropdown = false;
   }
+
   function toggleDropdown() {
     showDropdown = !showDropdown;
   }
+
   function closeDropdown() {
     showDropdown = false;
   }
@@ -30,17 +38,17 @@
     data-testid="lang-dropdown-btn"
     class="lang-dropdown-btn"
     aria-label="Вибір мови"
-    on:click={toggleDropdown}
+    onclick={toggleDropdown}
   >
     🌐
   </button>
   {#if showDropdown}
-    <div class="lang-dropdown" role="menu" on:blur={closeDropdown}>
+    <div class="lang-dropdown" role="menu" onblur={closeDropdown}>
       {#each languages as lang}
         <button
           data-testid="lang-option-{lang.code}"
           class="lang-option"
-          on:click={() => selectLang(lang.code)}
+          onclick={() => selectLang(lang.code)}
           aria-label={lang.label}
         >
           <span class="lang-flag">{lang.flag}</span>
