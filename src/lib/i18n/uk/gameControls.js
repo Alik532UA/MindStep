@@ -15,6 +15,7 @@ export default {
   voiceCommand: "Керування голосом (beta)",
   voiceCommandTitle: "Голосова команда",
   voiceCommandNotSupported: "Голосове керування не підтримується у вашому браузері",
+  distance: "Відстань",
   'up-left': 'Вгору-вліво',
   'up': 'Вгору',
   'up-right': 'Вгору-вправо',

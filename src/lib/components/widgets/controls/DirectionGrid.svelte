@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
     import type { MoveDirectionType } from "$lib/models/Piece";
+    import { t } from "$lib/i18n/typedI18n";
 
     export let selectedDirection: MoveDirectionType | null = null;
     export let disabled: boolean = false;
@@ -57,6 +58,7 @@
                 on:click={() => handleDirection(dir)}
                 data-testid={`dir-btn-${dir}`}
                 {disabled}
+                aria-label={$t(`gameControls.${dir}` as any)}
             >
                 {getArrow(dir)}
             </button>

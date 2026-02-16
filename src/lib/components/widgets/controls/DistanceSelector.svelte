@@ -1,5 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import { t } from "$lib/i18n/typedI18n";
 
     export let distanceRows: number[][] = [];
     export let selectedDistance: number | null = null;
@@ -25,6 +26,7 @@
                         on:click={() => handleDistance(dist)}
                         data-testid={`dist-btn-${dist}`}
                         {disabled}
+                        aria-label="{$t('gameControls.distance')} {dist}"
                     >
                         {dist}
                     </button>

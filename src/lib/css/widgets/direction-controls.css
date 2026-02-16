@@ -28,6 +28,17 @@
   font-family: "M PLUS Rounded 1c", sans-serif !important;
 }
 
+.dir-btn:focus-visible,
+.dist-btn:focus-visible,
+.control-btn:focus-visible,
+.confirm-btn:focus-visible,
+.no-moves-btn:focus-visible,
+.voice-btn:focus-visible {
+  outline: 3px solid var(--control-selected, #ff9800) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 15px var(--control-selected, #ff9800);
+}
+
 .dir-btn:disabled,
 .dist-btn:disabled,
 .control-btn:disabled,

@@ -15,6 +15,7 @@ export default {
   voiceCommand: "Spraakbesturing (beta)",
   voiceCommandTitle: "Spraakopdracht",
   voiceCommandNotSupported: "Spraakopdracht wordt niet ondersteund in uw browser",
+  distance: "Afstand",
   'up-left': 'Omhoog-links',
   'up': 'Omhoog',
   'up-right': 'Omhoog-rechts',

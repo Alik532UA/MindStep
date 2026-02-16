@@ -15,6 +15,7 @@ export default {
   voiceCommand: "Sesnen idare (beta)",
   voiceCommandTitle: "Sesli komanda",
   voiceCommandNotSupported: "Sesli komanda brauzeriñizde desteklenmey",
+  distance: "Mesafe",
   'up-left': 'Yuqarı-solğa',
   'up': 'Yuqarı',
   'up-right': 'Yuqarı-sağğa',

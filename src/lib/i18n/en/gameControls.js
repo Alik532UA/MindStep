@@ -15,6 +15,7 @@ export default {
   voiceCommand: "Voice Control (beta)",
   voiceCommandTitle: "Voice Command",
   voiceCommandNotSupported: "Voice command is not supported in your browser",
+  distance: "Distance",
   'up-left': 'Up-Left',
   'up': 'Up',
   'up-right': 'Up-Right',
