@@ -9,6 +9,7 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore
 import { getAuth } from 'firebase/auth';
 import { getFirebaseApp } from '$lib/services/firebaseService';
 import { rewardsState } from './rewardsState.svelte';
+import { RewardsStateSchema } from '$lib/schemas/rewardsSchema';
 
 const STORAGE_KEY = 'sotb_rewards';
 
@@ -35,12 +36,17 @@ function createRewardsStore() {
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    rewardsState.state = {
-                        unlockedRewards: parsed.unlockedRewards || {},
-                        hasUnseenRewards: parsed.hasUnseenRewards || false
-                    };
-                    syncStore();
-                    logService.info('[RewardsStore] Loaded state from localStorage');
+                    const validation = RewardsStateSchema.safeParse(parsed);
+                    
+                    if (validation.success) {
+                        rewardsState.state = validation.data;
+                        syncStore();
+                        logService.info('[RewardsStore] Loaded validated state from localStorage');
+                    } else {
+                        logService.error('[RewardsStore] Invalid state in localStorage, resetting to defaults.', validation.error.format());
+                        rewardsState.reset();
+                        syncStore();
+                    }
                 }
             } catch (e) {
                 logService.error('[RewardsStore] Failed to load from localStorage', e);

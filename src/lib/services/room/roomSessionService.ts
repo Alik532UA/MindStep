@@ -1,3 +1,5 @@
+import { OnlineSessionSchema } from '$lib/schemas/onlineSessionSchema';
+
 const STORAGE_KEYS = {
     ROOM_ID: 'online_roomId',
     PLAYER_ID: 'online_playerId'
@@ -13,10 +15,15 @@ export class RoomSessionService {
 
     getSession(): { roomId: string | null, playerId: string | null } {
         if (typeof localStorage !== 'undefined') {
-            return {
+            const data = {
                 roomId: localStorage.getItem(STORAGE_KEYS.ROOM_ID),
                 playerId: localStorage.getItem(STORAGE_KEYS.PLAYER_ID)
             };
+            
+            const result = OnlineSessionSchema.safeParse(data);
+            if (result.success) {
+                return result.data as { roomId: string | null, playerId: string | null };
+            }
         }
         return { roomId: null, playerId: null };
     }

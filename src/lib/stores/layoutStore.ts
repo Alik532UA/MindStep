@@ -5,7 +5,8 @@
 import { writable } from 'svelte/store';
 import { logService } from '../services/logService';
 import { layoutStateRune, defaultLayout } from './layoutState.svelte';
-import type { Layout, LayoutColumn } from './layoutState.svelte';
+import type { Layout } from './layoutState.svelte';
+import { LayoutSchema } from '$lib/schemas/layoutSchema';
 
 // Re-export types та constants
 export { WIDGETS, defaultLayout } from './layoutState.svelte';
@@ -18,10 +19,18 @@ function loadLayout(): Layout {
     try {
         const savedLayout = localStorage.getItem('gameLayout');
         if (savedLayout) {
-            return JSON.parse(savedLayout);
+            const parsed = JSON.parse(savedLayout);
+            const validation = LayoutSchema.safeParse(parsed);
+            
+            if (validation.success) {
+                return validation.data;
+            } else {
+                logService.error('[LayoutStore] Invalid layout in localStorage, using defaults.', validation.error.format());
+                return defaultLayout;
+            }
         }
     } catch (e) {
-        logService.init('Failed to load layout from localStorage', e);
+        logService.error('Failed to load layout from localStorage', e);
     }
     return defaultLayout;
 }
