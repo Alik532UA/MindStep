@@ -34,7 +34,10 @@ class GameModeService {
    * @param options Додаткові параметри ініціалізації (наприклад, roomId для онлайн гри).
    */
   public initializeGameMode(modeName: string | null = null, applyPresetSettings: boolean = true, options: any = {}) {
-    let name = modeName || get(gameSettingsStore).gameMode;
+    const currentSettings = get(gameSettingsStore);
+    let name = modeName || currentSettings.gameMode;
+
+    logService.GAME_MODE(`[GameModeService] Initializing: modeName="${modeName}", storeName="${currentSettings.gameMode}"`);
 
     // Валідація назви пресету
     const validationResult = GameModePresetSchema.safeParse(name);
