@@ -58,9 +58,10 @@ class PlayerStateRune {
 
     updatePlayer(playerId: number, updatedData: Partial<Player>) {
         if (!this._state) return;
-        const index = this._state.players.findIndex(p => p.id === playerId);
-        if (index !== -1) {
-            this._state.players[index] = { ...this._state.players[index], ...updatedData };
+        const player = this._state.players.find(p => p.id === playerId);
+        if (player) {
+            // Прямо оновлюємо властивості об'єкта
+            Object.assign(player, updatedData);
         }
     }
 
