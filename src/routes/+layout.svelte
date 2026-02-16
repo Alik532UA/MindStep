@@ -108,6 +108,8 @@
 		checkOnlineSession($page.url.pathname);
 	}
 
+	let isAbandonedModalOpen = false;
+
 	async function checkOnlineSession(currentPath: string) {
 		const session = roomService.getSession();
 
@@ -123,10 +125,11 @@
 			const isSafeZone = isLobby || isGame;
 
 			logService.init(
-				`[Layout] checkOnlineSession: path=${currentPath}, roomId=${session.roomId}, isSafeZone=${isSafeZone} (Lobby=${isLobby}, Game=${isGame})`,
+				`[Layout] checkOnlineSession: path=${currentPath}, roomId=${session.roomId}, isSafeZone=${isSafeZone}`,
 			);
 
-			if (!isSafeZone) {
+			if (!isSafeZone && !isAbandonedModalOpen) {
+				isAbandonedModalOpen = true;
 				// Determine if we should show the modal
 				modalStore.showModal({
 					titleKey: "onlineMenu.abandonedGame.title",
@@ -143,7 +146,14 @@
 					variant: "menu",
 					closeOnOverlayClick: false,
 					buttons: [],
+					onClose: () => {
+						isAbandonedModalOpen = false;
+					}
 				});
+			} else if (isSafeZone && isAbandonedModalOpen) {
+				// Якщо користувач повернувся в гру іншим шляхом (напр. через URL)
+				modalStore.closeModal();
+				isAbandonedModalOpen = false;
 			}
 		}
 	}
