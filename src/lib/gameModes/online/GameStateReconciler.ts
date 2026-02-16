@@ -5,7 +5,6 @@ import { scoreStore } from '$lib/stores/scoreStore';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 import { uiStateStore } from '$lib/stores/uiStateStore';
 import { gameOverStore } from '$lib/stores/gameOverStore';
-import { animationService } from '$lib/services/animationService';
 import { availableMovesService } from '$lib/services/availableMovesService';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { modalService } from '$lib/services/modalService';
@@ -28,7 +27,7 @@ export class GameStateReconciler {
         if (currentBoard && remoteState.boardState) {
             if (remoteState.boardState.moveHistory.length < currentBoard.moveHistory.length) {
                 logService.GAME_MODE('[Reconciler] Detected game reset. Resetting animation service.');
-                animationService.reset();
+                gameEventBus.dispatch('GAME_RESET');
             }
 
             const oldQueueLength = currentBoard.moveQueue.length;

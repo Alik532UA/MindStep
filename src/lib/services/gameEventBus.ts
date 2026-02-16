@@ -135,6 +135,10 @@ export interface GameEventPayloads {
   GAME_MOVE_FAILURE: GameMoveFailurePayload;
   GAME_TURN_SWITCHED: { nextPlayerIndex: number; playerType: string };
   UI_REQUEST_HIDE_BOARD: { delay: number };
+  
+  // Lifecycle Events
+  GAME_INITIALIZED: { newSize?: number };
+  GAME_RESET: void;
 
   // Legacy/Other Events (Типізовано як словник замість any для безпеки)
   GameStateChanged: Record<string, unknown>;

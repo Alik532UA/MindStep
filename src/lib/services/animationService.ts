@@ -10,7 +10,7 @@ import { gameEventBus } from './gameEventBus';
 
 function createAnimationService() {
   let unsubscribe: (() => void) | null = null;
-  let animationTimeout: NodeJS.Timeout | null = null; // FIX: Зберігаємо ID таймера
+  let animationTimeout: NodeJS.Timeout | null = null;
 
   function addToAnimationQueue(move: import('$lib/stores/animationStore').AnimationMove) {
     logService.animation('[AnimationService] addToAnimationQueue:', move);
@@ -18,7 +18,6 @@ function createAnimationService() {
       const newQueue = [...state.animationQueue, move];
 
       if (!state.isPlayingAnimation) {
-        // Використовуємо setTimeout, щоб дати Svelte оновити стор перед запуском
         if (animationTimeout) clearTimeout(animationTimeout);
         animationTimeout = setTimeout(() => playNextAnimation(true), 0);
       }
@@ -89,10 +88,30 @@ function createAnimationService() {
     }, animationDuration + pauseAfterMove);
   }
 
+  function resetInternal() {
+    logService.animation('[AnimationService] reset() called via Event/Method. Clearing state and timeouts.');
+    if (animationTimeout) {
+      clearTimeout(animationTimeout);
+      animationTimeout = null;
+    }
+    animationStore.set(initialState);
+  }
+
   return {
     initialize: () => {
       if (unsubscribe) return;
-      unsubscribe = gameEventBus.subscribe('new_move_added', addToAnimationQueue);
+      logService.init('[AnimationService] Initializing global listeners.');
+      
+      const unsubMoves = gameEventBus.subscribe('new_move_added', addToAnimationQueue);
+      const unsubReset = gameEventBus.subscribe('GAME_RESET', resetInternal);
+      // GAME_INITIALIZED також може викликати reset, щоб гарантувати чистоту перед стартом
+      const unsubInit = gameEventBus.subscribe('GAME_INITIALIZED', resetInternal);
+
+      unsubscribe = () => {
+        unsubMoves();
+        unsubReset();
+        unsubInit();
+      };
     },
     destroy: () => {
       if (unsubscribe) {
@@ -104,16 +123,7 @@ function createAnimationService() {
         animationTimeout = null;
       }
     },
-    reset: () => {
-      logService.animation('[AnimationService] reset() called. Clearing state and timeouts.');
-      // FIX: Очищаємо активний таймер анімації
-      if (animationTimeout) {
-        clearTimeout(animationTimeout);
-        animationTimeout = null;
-      }
-      // Скидаємо стор до початкового стану
-      animationStore.set(initialState);
-    }
+    reset: resetInternal
   };
 }
 

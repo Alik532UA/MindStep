@@ -11,7 +11,6 @@ import { sideEffectService, type SideEffect } from '$lib/services/sideEffectServ
 import { Piece, type MoveDirectionType } from '../models/Piece';
 import type { GameMoveResult, SuccessfulMoveResult, ScoreChangesData, MoveQueueItem } from '$lib/types/gameMove';
 import { logService } from '$lib/services/logService';
-import { animationService } from '$lib/services/animationService';
 import { endGameService } from '$lib/services/endGameService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
@@ -146,7 +145,7 @@ export abstract class BaseGameMode implements IGameMode {
 
     availableMovesService.updateAvailableMoves();
     gameOverStore.resetGameOverState();
-    animationService.reset();
+    gameEventBus.dispatch('GAME_RESET');
   }
 
   protected startTurn(): void {
@@ -312,7 +311,7 @@ export abstract class BaseGameMode implements IGameMode {
   async restartGame(options: { newSize?: number } = {}): Promise<void> {
     this.initialize(options);
     this.initEngine();
-    animationService.reset();
+    // animationService reset is handled by initialize -> GAME_INITIALIZED event
     gameEventBus.dispatch('CloseModal', undefined);
   }
 

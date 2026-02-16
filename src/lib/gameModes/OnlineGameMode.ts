@@ -5,11 +5,11 @@ import { logService } from '$lib/services/logService';
 import { gameService } from '$lib/services/gameService';
 import { createOnlinePlayers } from '$lib/utils/playerFactory';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { animationService } from '$lib/services/animationService';
 import { boardStore } from '$lib/stores/boardStore';
 import { playerStore } from '$lib/stores/playerStore';
 import { scoreStore } from '$lib/stores/scoreStore';
 import { uiStateStore } from '$lib/stores/uiStateStore';
+import { gameEventBus } from '$lib/services/gameEventBus';
 import type { IGameStateSync, GameStateSyncEvent, SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { createFirebaseGameStateSync } from '$lib/sync/FirebaseGameStateSync';
 import type { ScoreChangesData } from '$lib/types/gameMove';
@@ -112,7 +112,7 @@ export class OnlineGameMode extends BaseGameMode {
     boardStore.set(null);
     playerStore.set(null);
     scoreStore.set(null);
-    animationService.reset();
+    gameEventBus.dispatch('GAME_RESET');
   }
 
   private initializeSession(optionRoomId?: string): boolean {
@@ -273,7 +273,7 @@ export class OnlineGameMode extends BaseGameMode {
       }
 
       this.applyLocalSettings();
-      animationService.initialize();
+      gameEventBus.dispatch('GAME_INITIALIZED', { newSize });
 
       if (get(boardStore)) {
         this.startTurn();

@@ -5,7 +5,6 @@ import { createTrainingPlayers } from '$lib/utils/playerFactory';
 import { gameOverStore } from '$lib/stores/gameOverStore';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from '$lib/services/logService';
-import { animationService } from '$lib/services/animationService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { timeService } from '$lib/services/timeService';
 import { gameService } from '$lib/services/gameService';
@@ -20,7 +19,9 @@ export class TrainingGameMode extends BaseGameMode {
       players: this.getPlayersConfiguration(),
     });
     this.initEngine();
-    animationService.initialize();
+    // Повідомляємо систему про ініціалізацію гри.
+    // Це автоматично скине стан анімації через animationService, який слухає цю подію.
+    gameEventBus.dispatch('GAME_INITIALIZED', { newSize: options.newSize });
     this.startTurn();
   }
 

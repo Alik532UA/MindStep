@@ -5,7 +5,6 @@ import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 import { gameOverStore } from '$lib/stores/gameOverStore';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from '$lib/services/logService';
-import { animationService } from '$lib/services/animationService';
 import { timeService } from '$lib/services/timeService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
@@ -48,7 +47,7 @@ export class LocalGameMode extends BaseGameMode {
         onlineOpponentMove: true
       },
     });
-    animationService.initialize();
+    gameEventBus.dispatch('GAME_INITIALIZED', { newSize: options.newSize });
     this.checkComputerTurn();
     // this.startTurn(); // Timer will start after the first move to allow infinite setup time
   }

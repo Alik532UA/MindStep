@@ -8,6 +8,7 @@ import { rewardsService } from "$lib/services/rewardsService";
 import { logService } from "$lib/services/logService";
 import { appVersion } from "$lib/stores/versionStore";
 import { base } from "$app/paths";
+import { animationService } from "$lib/services/animationService";
 
 const APP_VERSION_KEY = "app_version";
 const VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
@@ -38,6 +39,7 @@ class AppInitializationService {
         // 5. Initialize other services
         initializeTestModeSync();
         rewardsService.init();
+        animationService.initialize();
 
         // 6. Check for updates
         this.checkForUpdates();
