@@ -1,9 +1,24 @@
 // src/lib/stores/boardState.svelte.ts
 // SSoT для стану ігрової дошки. Використовує Svelte 5 Runes.
-// Обгортку для Svelte 4 (writable) надає boardStore.ts (bridge pattern).
 
-import type { BoardState } from './boardStore';
 import { logService } from '$lib/services/logService';
+import type { MoveHistoryEntry } from '$lib/models/moveHistory';
+import type { MoveDirectionType } from '$lib/models/Piece';
+
+export interface BoardState {
+  boardSize: number;
+  board: number[][];
+  playerRow: number | null;
+  playerCol: number | null;
+  cellVisitCounts: Record<string, number>;
+  moveHistory: MoveHistoryEntry[];
+  moveQueue: Array<{ 
+    player: number; 
+    direction: MoveDirectionType; 
+    distance: number; 
+    to: { row: number; col: number } 
+  }>;
+}
 
 class BoardStateRune {
     private _state = $state<BoardState | null>(null);

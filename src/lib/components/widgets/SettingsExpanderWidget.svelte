@@ -1,14 +1,11 @@
 <script lang="ts">
   import { gameModeStore } from "$lib/stores/gameModeStore";
   import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
-  import { userActionService } from "$lib/services/userActionService";
   import { t } from "$lib/i18n/typedI18n";
   import { uiStateStore } from "$lib/stores/uiStateStore";
-  import SvgIcons from "../SvgIcons.svelte";
   import { onMount, tick } from "svelte";
-  import { layoutStore } from "$lib/stores/layoutStore";
   import { logService } from "$lib/services/logService";
-  import { boardStore } from "$lib/stores/boardStore";
+  import { boardState } from "$lib/stores/boardState.svelte";
   import { layoutUpdateStore } from "$lib/stores/layoutUpdateStore";
   import { dev } from "$app/environment";
 
@@ -20,13 +17,20 @@
   import SettingsLayout from "./settings/SettingsLayout.svelte";
   import "$lib/css/components/settings-expander.css";
 
-  let summaryRef: HTMLElement;
-  let isOpen = dev;
+  // 1. Оголошуємо всі Runes спочатку
+  const bState = $derived(boardState.state);
+  
+  let isOpen = $state(dev);
+  let contentHeight = $state(0);
+  let isHorizontalLayout = $state(true);
 
-  let contentRef: HTMLDivElement;
-  let contentHeight = 0;
+  // 2. Потім refs та іншу логіку
+  let summaryRef = $state<HTMLElement>();
+  let contentRef = $state<HTMLDivElement>();
 
-  $: uiStateStore.update((s) => ({ ...s, isSettingsExpanderOpen: isOpen }));
+  $effect(() => {
+    uiStateStore.update((s) => ({ ...s, isSettingsExpanderOpen: isOpen }));
+  });
 
   async function toggleExpander() {
     logService.action(
@@ -35,7 +39,6 @@
     isOpen = !isOpen;
     setTimeout(() => layoutUpdateStore.update((n) => n + 1), 500);
   }
-  let isHorizontalLayout = true;
 
   function updateLayoutMode() {
     isHorizontalLayout = window.innerWidth > 1270;
@@ -54,8 +57,9 @@
     };
   });
 
-  $: {
-    const blockModeDependency = $gameSettingsStore.blockModeEnabled;
+  $effect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    $gameSettingsStore.blockModeEnabled;
 
     if (isOpen && contentRef) {
       tick().then(() => {
@@ -64,19 +68,19 @@
     } else {
       contentHeight = 0;
     }
-  }
+  });
 
-  $: isCompetitiveMode =
+  const isCompetitiveMode = $derived(
     $gameModeStore.activeMode === "timed" ||
     ($gameModeStore.activeMode === "local" &&
       $gameSettingsStore.lockSettings) ||
     ($gameModeStore.activeMode === "online" &&
       $gameSettingsStore.settingsLocked) ||
-    $uiStateStore.settingsMode === "competitive";
+    $uiStateStore.settingsMode === "competitive"
+  );
 </script>
 
-{#if $boardStore}
-  <!-- FIX: Додано data-testid для головного контейнера -->
+{#if bState}
   <div
     class="settings-expander {isOpen ? 'open' : ''}"
     data-testid="settings-expander-widget"
@@ -86,8 +90,8 @@
       class="settings-expander__summary"
       role="button"
       aria-label={$t("gameControls.settings")}
-      on:click={toggleExpander}
-      on:keydown={(e) =>
+      onclick={toggleExpander}
+      onkeydown={(e) =>
         (e.key === "Enter" || e.key === " ") && toggleExpander()}
       bind:this={summaryRef}
       tabindex={0}

@@ -1,16 +1,15 @@
 <script lang="ts">
-    import { boardStore } from "$lib/stores/boardStore";
+    import { boardState } from "$lib/stores/boardState.svelte";
     import { userActionService } from "$lib/services/userActionService";
     import { logService } from "$lib/services/logService";
     import { t } from "$lib/i18n/typedI18n";
-    import { get } from "svelte/store";
     import Stepper from "$lib/components/ui/Stepper.svelte";
 
     function changeBoardSize(increment: number) {
         logService.action(
             `Click: "Змінити розмір дошки: ${increment > 0 ? "+" : ""}${increment}" (SettingsBoardSize)`,
         );
-        const currentSize = get(boardStore)?.boardSize;
+        const currentSize = boardState.state?.boardSize;
         if (typeof currentSize !== "number") return;
         const newSize = currentSize + increment;
         if (newSize >= 2 && newSize <= 9) {
@@ -18,15 +17,13 @@
         }
     }
 
-    $: displayValue = $boardStore
-        ? `${$boardStore.boardSize}x${$boardStore.boardSize}`
-        : "?";
+    const state = $derived(boardState.state);
+    const displayValue = $derived(state ? `${state.boardSize}x${state.boardSize}` : "?");
 </script>
 
 <div class="settings-expander__setting-item">
     <span class="settings-expander__label">{$t("settings.boardSize")}</span>
 
-    <!-- Використовуємо новий компонент Stepper -->
     <Stepper
         value={displayValue}
         dataTestId="settings-expander-size-adjuster"
