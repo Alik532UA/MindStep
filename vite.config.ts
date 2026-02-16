@@ -30,38 +30,45 @@ const manifest: Partial<ManifestOptions> = {
 	]
 };
 
-export default defineConfig({
-	base,
-	plugins: [
-		sveltekit(),
-		visualizer({
-			filename: 'bundle-stats.html',
-			template: 'treemap',
-			open: false,
-			sourcemap: true
-		}),
-		VitePWA({
-			filename: 'service-worker.js',
-			registerType: 'prompt',
-			manifest,
-			workbox: {
-				clientsClaim: true,
-				skipWaiting: false,
-				cleanupOutdatedCaches: true,
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
-				navigateFallbackDenylist: [/^\/version\.json$/]
-			},
-			devOptions: {
-				enabled: true,
-				suppressWarnings: true,
-				type: 'module',
-			}
-		})
-	],
-	build: {
-		sourcemap: true,
-	},
-	test: {
-		include: ['tests/**/*.test.ts']
-	}
+export default defineConfig(({ mode }) => {
+	const isDev = mode === 'development';
+
+	return {
+		base,
+		plugins: [
+			sveltekit(),
+			visualizer({
+				filename: 'bundle-stats.html',
+				template: 'treemap',
+				open: false,
+				sourcemap: true
+			}),
+			VitePWA({
+				filename: 'service-worker.js',
+				registerType: 'prompt',
+				manifest,
+				workbox: {
+					clientsClaim: true,
+					skipWaiting: false,
+					cleanupOutdatedCaches: true,
+					globPatterns: isDev
+						? ['**/*.{js,css,ico,png,svg,webp,woff2,json}']
+						: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
+					globIgnores: isDev ? ['**/index.html'] : undefined,
+					navigateFallbackDenylist: [/^\/version\.json$/]
+				},
+				devOptions: {
+					enabled: true,
+					suppressWarnings: true,
+					type: 'module',
+				}
+			})
+		],
+		build: {
+			sourcemap: true,
+		},
+		test: {
+			include: ['tests/**/*.test.ts']
+		}
+	};
 });
