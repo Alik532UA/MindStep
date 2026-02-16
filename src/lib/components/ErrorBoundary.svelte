@@ -15,9 +15,11 @@
 
     interface Props {
         children: Snippet;
+        /** Чи показувати компактну версію помилки (для віджетів) */
+        compact?: boolean;
     }
 
-    let { children }: Props = $props();
+    let { children, compact = false }: Props = $props();
 
     /** Чи знаходимося ми в режимі розробки */
     const isDev = import.meta.env.DEV;
@@ -83,29 +85,37 @@ ${stack ? `\nStack:\n${stack}` : ""}
     }
 
     /**
-     * Обробник помилки — логування в консоль.
+     * Обробник помилки — логування.
      */
     function handleError(error: unknown) {
-        if (isDev) {
-            const message =
-                error instanceof Error ? error.message : String(error);
-            const stack = error instanceof Error ? error.stack : undefined;
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
 
-            console.group("🔴 [MindStep Error Boundary]");
-            console.error("Message:", message);
-            if (stack) {
-                console.error("Stack:", stack);
-            }
-            console.groupEnd();
+        console.group("🔴 [MindStep Error Boundary]");
+        console.error("Message:", message);
+        if (stack) {
+            console.error("Stack:", stack);
         }
+        console.groupEnd();
     }
 </script>
 
-{#if isDev}
-    <svelte:boundary onerror={handleError}>
-        {@render children()}
+<svelte:boundary onerror={handleError}>
+    {@render children()}
 
-        {#snippet failed(error, reset)}
+    {#snippet failed(error, reset)}
+        {#if compact}
+            <div class="error-compact" data-testid="error-boundary-compact">
+                <span class="compact-emoji">⚠️</span>
+                <div class="compact-content">
+                    <span class="compact-title">Віджет недоступний</span>
+                    {#if isDev}
+                        <span class="compact-message">{error instanceof Error ? error.message : String(error)}</span>
+                    {/if}
+                </div>
+                <button class="compact-reset" onclick={() => reset()} title="Спробувати ще раз">🔄</button>
+            </div>
+        {:else}
             <!-- Error Page -->
             <div class="error-page" data-testid="error-boundary-page">
                 <div class="error-container">
@@ -121,35 +131,41 @@ ${stack ? `\nStack:\n${stack}` : ""}
                     </div>
 
                     <!-- Dev Section -->
-                    <div class="dev-section" data-testid="dev-error-section">
-                        <div class="dev-badge">🛠️ DEV MODE</div>
+                    {#if isDev}
+                        <div class="dev-section" data-testid="dev-error-section">
+                            <div class="dev-badge">🛠️ DEV MODE</div>
 
-                        <!-- Повідомлення помилки -->
-                        <div class="error-details">
-                            <h3>Повідомлення:</h3>
-                            <pre class="error-message">{error instanceof Error
-                                    ? error.message
-                                    : String(error)}</pre>
-                        </div>
-
-                        <!-- Стек викликів -->
-                        {#if error instanceof Error && error.stack}
+                            <!-- Повідомлення помилки -->
                             <div class="error-details">
-                                <h3>Стек викликів:</h3>
-                                <pre class="error-stack">{error.stack}</pre>
+                                <h3>Повідомлення:</h3>
+                                <pre class="error-message">{error instanceof Error
+                                        ? error.message
+                                        : String(error)}</pre>
                             </div>
-                        {/if}
 
-                        <!-- Кнопка копіювання -->
-                        <button
-                            class="copy-btn"
-                            class:success={copySuccess}
-                            onclick={() => copyError(error)}
-                            data-testid="copy-error-btn"
-                        >
-                            {copyButtonText}
-                        </button>
-                    </div>
+                            <!-- Стек викликів -->
+                            {#if error instanceof Error && error.stack}
+                                <div class="error-details">
+                                    <h3>Стек викликів:</h3>
+                                    <pre class="error-stack">{error.stack}</pre>
+                                </div>
+                            {/if}
+
+                            <!-- Кнопка копіювання -->
+                            <button
+                                class="copy-btn"
+                                class:success={copySuccess}
+                                onclick={() => copyError(error)}
+                                data-testid="copy-error-btn"
+                            >
+                                {copyButtonText}
+                            </button>
+                        </div>
+                    {:else}
+                        <p class="user-message">
+                            Сталася неочікувана помилка в інтерфейсі. Спробуйте натиснути кнопку нижче, щоб відновити роботу.
+                        </p>
+                    {/if}
 
                     <!-- Кнопки навігації -->
                     <div class="action-buttons">
@@ -168,12 +184,9 @@ ${stack ? `\nStack:\n${stack}` : ""}
                     </div>
                 </div>
             </div>
-        {/snippet}
-    </svelte:boundary>
-{:else}
-    <!-- У production просто рендеримо контент без boundary -->
-    {@render children()}
-{/if}
+        {/if}
+    {/snippet}
+</svelte:boundary>
 
 <style>
     .error-page {
@@ -210,6 +223,56 @@ ${stack ? `\nStack:\n${stack}` : ""}
         animation: shake 0.5s ease-in-out;
     }
 
+    /* === Compact Error (Widgets) === */
+    .error-compact {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        border-radius: 12px;
+        color: #fff;
+        margin: 4px 0;
+    }
+
+    .compact-emoji {
+        font-size: 1.5rem;
+    }
+
+    .compact-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .compact-title {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .compact-message {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        font-family: monospace;
+        word-break: break-all;
+    }
+
+    .compact-reset {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        padding: 4px 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .compact-reset:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
     @keyframes shake {
         0%,
         100% {
@@ -241,6 +304,13 @@ ${stack ? `\nStack:\n${stack}` : ""}
         background: linear-gradient(135deg, #e74c3c, #c0392b);
         border-radius: 8px;
         color: white;
+    }
+
+    .user-message {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: var(--text-secondary, #a0a0a0);
+        margin: 1.5rem 0;
     }
 
     /* === Dev Section === */

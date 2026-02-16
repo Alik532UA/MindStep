@@ -50,29 +50,31 @@ const defaultConfig: LogConfig = {
     [LOG_GROUPS.LOGIC_GENERAL]: false,
     [LOG_GROUPS.LOGIC_BOARD]: false,
     [LOG_GROUPS.LOGIC_WIN]: false,
-    [LOG_GROUPS.LOGIC_VIRTUAL_PLAYER]: false,
-    [LOG_GROUPS.LOGIC_AVAILABILITY]: true, // Enabled for debugging
+    [LOG_GROUPS.LOGIC_VIRTUAL_PLAYER]: true, // Enabled for debugging
+    [LOG_GROUPS.LOGIC_AVAILABILITY]: false, 
     [LOG_GROUPS.LOGIC_TIME]: false,
-    [LOG_GROUPS.SCORE]: false,
+    [LOG_GROUPS.SCORE]: true, // Enabled for debugging
     [LOG_GROUPS.UI]: false,
     [LOG_GROUPS.TOOLTIP]: false,
     [LOG_GROUPS.ANIMATION]: false,
-    [LOG_GROUPS.INIT]: true, // Enabled for debugging
+    [LOG_GROUPS.INIT]: true,
     [LOG_GROUPS.ACTION]: false,
     [LOG_GROUPS.GAME_MODE]: true,
     [LOG_GROUPS.SPEECH]: false,
     [LOG_GROUPS.VOICE_CONTROL]: false,
-    [LOG_GROUPS.STATE]: true, // Enabled for debugging
+    [LOG_GROUPS.STATE]: false, 
     [LOG_GROUPS.PIECE]: false,
-    [LOG_GROUPS.LOGIC_MOVE]: false,
+    [LOG_GROUPS.LOGIC_MOVE]: true, // Enabled for debugging
     [LOG_GROUPS.TEST_MODE]: false,
-    [LOG_GROUPS.MODAL]: false, // Disabled to reduce noise
+    [LOG_GROUPS.MODAL]: false,
     [LOG_GROUPS.ERROR]: true,
     [LOG_GROUPS.HOTKEY]: false,
-    [LOG_GROUPS.PRESENCE]: false, // Disabled to reduce noise
+    [LOG_GROUPS.PRESENCE]: false,
 };
 
 const STORAGE_KEY = 'logConfig';
+const SESSION_LOGS_KEY = 'mindstep_session_logs';
+const MAX_SESSION_LOGS = 100;
 
 function loadConfig(): LogConfig {
     if (!isBrowser) return defaultConfig;
@@ -90,6 +92,29 @@ function loadConfig(): LogConfig {
 function saveConfig(config: LogConfig): void {
     if (isBrowser) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    }
+}
+
+/**
+ * Зберігає лог у sessionStorage для подальшої діагностики.
+ */
+function saveLogToSession(logEntry: string): void {
+    if (!isBrowser) return;
+    try {
+        const rawLogs = sessionStorage.getItem(SESSION_LOGS_KEY);
+        const logs: string[] = rawLogs ? JSON.parse(rawLogs) : [];
+        
+        logs.push(`${new Date().toISOString()} ${logEntry}`);
+        
+        // Тримаємо тільки останні MAX_SESSION_LOGS
+        if (logs.length > MAX_SESSION_LOGS) {
+            logs.shift();
+        }
+        
+        sessionStorage.setItem(SESSION_LOGS_KEY, JSON.stringify(logs));
+    } catch (e) {
+        // Очищуємо, якщо переповнено або помилка
+        sessionStorage.removeItem(SESSION_LOGS_KEY);
     }
 }
 
@@ -147,7 +172,20 @@ function formatDataForDisplay(data: unknown[]): string {
  * Основна функція логування з підтримкою групування та рівнів.
  */
 function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unknown[]): void {
-    if ((isDev || isForceEnabled) && logConfig[group]) {
+    const isLogEnabled = (isDev || isForceEnabled) && logConfig[group];
+    
+    // Ми завжди зберігаємо в сесію, навіть якщо консоль вимкнена, 
+    // для можливості діагностики помилок "постфактум"
+    if (isBrowser) {
+        const logText = `[${group.toUpperCase()}] [${level.toUpperCase()}] ${message} ${data.length > 0 ? formatDataForDisplay(data) : ''}`;
+        saveLogToSession(logText);
+        
+        if (isLogEnabled) {
+            debugLogStore.add(logText);
+        }
+    }
+
+    if (isLogEnabled) {
         const style = styles[group] || '';
         const label = `[${group.toUpperCase()}]`;
         
@@ -158,12 +196,6 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
             console.groupEnd();
         } else {
             console[level](`%c${label} %c${message}`, style, 'color: inherit; font-weight: normal;');
-        }
-
-        // Надсилаємо в debugLogStore тільки якщо ми в браузері (бо стор використовує Svelte)
-        if (isBrowser) {
-            const displayMessage = `[${group.toUpperCase()}] [${level.toUpperCase()}] ${message} ${formatDataForDisplay(data)}`;
-            debugLogStore.add(displayMessage);
         }
     }
 }
@@ -193,6 +225,8 @@ type LoggerMethods = {
     info: (message: string, ...data: unknown[]) => void;
     error: (message: string, ...data: unknown[]) => void;
     forceEnableLogging: () => void;
+    getLogReport: () => string;
+    clearSessionLogs: () => void;
     setLogLevels: (newConfig: Partial<LogConfig>) => void;
 };
 
@@ -209,6 +243,20 @@ const loggerProxy = new Proxy({} as LoggerMethods, {
                     console.log('%c[LOG_SERVICE]%c Production logging enabled.', 'font-weight: bold; color: #4CAF50;', 'color: inherit;');
                     if (isBrowser) debugLogStore.add('[INFO] Logging has been force-enabled for this session.');
                 }
+            };
+        }
+
+        if (prop === 'getLogReport') {
+            return () => {
+                if (!isBrowser) return 'Not a browser environment';
+                const logs = sessionStorage.getItem(SESSION_LOGS_KEY);
+                return logs ? JSON.parse(logs).join('\n') : 'No logs found in session.';
+            };
+        }
+
+        if (prop === 'clearSessionLogs') {
+            return () => {
+                if (isBrowser) sessionStorage.removeItem(SESSION_LOGS_KEY);
             };
         }
 

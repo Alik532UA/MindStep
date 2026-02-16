@@ -6,7 +6,7 @@
   import { gameModeService } from "$lib/services/gameModeService";
   import { userActionService } from "$lib/services/userActionService";
   import { logService } from "$lib/services/logService.js";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, type Snippet } from "svelte";
   import PlayerColorProvider from "$lib/components/PlayerColorProvider.svelte";
   import hotkeyService from "$lib/services/hotkeyService";
   import { gameStore } from "$lib/stores/gameStore";
@@ -22,6 +22,9 @@
   import { testModeStore } from "$lib/stores/testModeStore";
   import "$lib/services/commandService.ts";
   import { animationService } from "$lib/services/animationService";
+  import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
+
+  let { children }: { children: Snippet } = $props();
 
   onDestroy(() => {
     logService.init("[game/+layout] onDestroy called.");
@@ -103,7 +106,9 @@
 
 <!-- FIX: Додано data-testid для головного контейнера ігрової сторінки -->
 <div class="game-layout-container" data-testid="game-page-layout">
-  <slot />
+  <ErrorBoundary>
+    {@render children()}
+  </ErrorBoundary>
 </div>
 
 <PlayerColorProvider />

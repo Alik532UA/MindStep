@@ -6,6 +6,7 @@
   import { columnStyleMode } from "$lib/stores/columnStyleStore";
   import { t } from "$lib/i18n/typedI18n";
   import { layoutUpdateStore } from "$lib/stores/layoutUpdateStore";
+  import ErrorBoundary from "./ErrorBoundary.svelte";
 
   export let columns: {
     id: string;
@@ -152,11 +153,13 @@
           transition:scale={{ duration: 300, start: 0.9 }}
         >
           <div class="dnd-item-content">
-            {#if typeof itemContent(item) === "function"}
-              <svelte:component this={itemContent(item)} {...item.props} />
-            {:else}
-              {itemContent(item)}
-            {/if}
+            <ErrorBoundary compact={true}>
+              {#if typeof itemContent(item) === "function"}
+                <svelte:component this={itemContent(item)} {...item.props} />
+              {:else}
+                {itemContent(item)}
+              {/if}
+            </ErrorBoundary>
           </div>
         </li>
       {/each}
