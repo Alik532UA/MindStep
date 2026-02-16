@@ -34,7 +34,7 @@
 </script>
 
 <div 
-  class="modal-overlay {variant}" 
+  class="base-modal-backdrop {variant}" 
   transition:fade={{ duration: 200 }}
   onclick={handleOverlayClick}
   onkeydown={handleKeydown}
@@ -43,7 +43,7 @@
   data-testid="{dataTestId}-overlay"
 >
   <div 
-    class="modal-container {variant}"
+    class="base-modal-container {variant}"
     use:trapFocus
     transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: quintOut }}
     data-testid={dataTestId}
@@ -53,7 +53,7 @@
 </div>
 
 <style>
-  .modal-overlay {
+  .base-modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -67,39 +67,22 @@
     box-sizing: border-box;
   }
 
-  .modal-overlay.glass {
+  .base-modal-backdrop.glass {
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
 
-  .modal-overlay.classic {
+  .base-modal-backdrop.classic {
     background: rgba(0, 0, 0, 0.6);
   }
 
-  .modal-container {
+  .base-modal-container {
     max-width: 90vw;
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     position: relative;
     box-sizing: border-box;
-  }
-
-  .modal-container.glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    color: white;
-  }
-
-  .modal-container.classic {
-    background: var(--bg-primary, #fff);
-    border: 1px solid var(--border-color, #ccc);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    color: var(--text-primary, #000);
   }
 </style>

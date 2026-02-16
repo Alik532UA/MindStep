@@ -5,29 +5,44 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import DontShowAgainCheckbox from "../DontShowAgainCheckbox.svelte";
 
-    export let titleKey: TranslationKey | "" = "";
-    export let title: string = "";
-    export let titleValues: Record<string, any> = {};
-
-    export let contentKey: TranslationKey | "" = "";
-    export let content: string = "";
-    export let contentValues: Record<string, any> = {};
-
-    export let actions: Array<{
+    interface Action {
         labelKey?: TranslationKey;
         label?: string;
         onClick: () => void;
         variant?: "primary" | "default" | "danger" | "info" | "warning";
         dataTestId?: string;
         isHot?: boolean;
-    }> = [];
+    }
 
-    export let dataTestId: string = "simple-modal";
-    export let scope: string = "";
-    export let showDontShowAgain: boolean = false;
-    export let dontShowAgainType: "gameMode" | "expertMode" = "gameMode";
+    interface Props {
+        titleKey?: TranslationKey | "";
+        title?: string;
+        titleValues?: Record<string, any>;
+        contentKey?: TranslationKey | "";
+        content?: string;
+        contentValues?: Record<string, any>;
+        actions?: Action[];
+        dataTestId?: string;
+        scope?: string;
+        showDontShowAgain?: boolean;
+        dontShowAgainType?: "gameMode" | "expertMode";
+    }
 
-    let buttonRefs: (HTMLButtonElement | null)[] = [];
+    let {
+        titleKey = "",
+        title = "",
+        titleValues = {},
+        contentKey = "",
+        content = "",
+        contentValues = {},
+        actions = [],
+        dataTestId = "simple-modal",
+        scope = "",
+        showDontShowAgain = false,
+        dontShowAgainType = "gameMode"
+    }: Props = $props();
+
+    let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
 
     onMount(() => {
         const hotIndex = actions.findIndex((a) => a.isHot);
@@ -46,7 +61,7 @@
             data-testid={`${dataTestId}-title`}
             data-i18n-key={titleKey}
         >
-            {titleKey ? $t(titleKey, titleValues) : title}
+            {titleKey ? $t(titleKey as TranslationKey, titleValues) : title}
         </h2>
     {/if}
 
@@ -56,7 +71,7 @@
             data-testid={`${dataTestId}-message`}
             data-i18n-key={contentKey}
         >
-            {contentKey ? $t(contentKey, contentValues) : content}
+            {contentKey ? $t(contentKey as TranslationKey, contentValues) : content}
         </p>
     {/if}
 
@@ -114,7 +129,6 @@
         font-size: 1.1em;
         margin: 0;
         white-space: pre-line;
-        white-space: pre-line;
         line-height: 1.4;
     }
 
@@ -124,5 +138,11 @@
         gap: 12px;
         width: 100%;
         margin-top: 10px;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        justify-content: center;
+        margin: 10px 0;
     }
 </style>

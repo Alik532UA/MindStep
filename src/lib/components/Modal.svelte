@@ -13,6 +13,7 @@
   import { uiStateStore } from "$lib/stores/uiStateStore";
   import { gameEventBus } from "$lib/services/gameEventBus";
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
+  import BaseModal from "$lib/components/ui/BaseModal.svelte";
 
   import ExpertModeVolumeControl from "./modals/parts/ExpertModeVolumeControl.svelte";
   import ModalHeader from "./modals/parts/ModalHeader.svelte";
@@ -127,15 +128,11 @@
 </script>
 
 {#if mState.isOpen}
-  <div
-    use:trapFocus
-    class="modal-overlay screen-overlay-backdrop {themeClass}"
-    role="button"
-    tabindex="-1"
-    onclick={onOverlayClick}
-    onkeydown={(e) =>
-      (e.key === "Enter" || e.key === " ") && onOverlayClick(e as any)}
-    data-testid="modal-overlay"
+  <BaseModal
+    variant={mState.variant === "menu" ? "glass" : "classic"}
+    onclose={() => mState.closable && gameEventBus.dispatch("CloseModal")}
+    closeOnOverlayClick={mState.closeOnOverlayClick}
+    dataTestId={mState.dataTestId}
   >
     {#if mState.variant === "menu" && mState.closeOnOverlayClick}
       <FloatingBackButton onclick={() => gameEventBus.dispatch("CloseModal")} />
@@ -144,7 +141,6 @@
     <div
       class="modal-window {themeClass} variant-{mState.variant}"
       class:custom={mState.customClass}
-      data-testid={mState.dataTestId}
     >
       {#if mState.variant === "standard" && (mState.titleKey || mState.title) && !(mState.dataTestId === "replay-modal" && windowHeight < 870)}
         <ModalHeader modalState={mState}>
@@ -157,7 +153,7 @@
       {/if}
 
       <div
-        class="modal-content"
+        class="modal-body"
         class:is-faq={typeof mState.content === "object" &&
           mState.content &&
           "isFaq" in (mState.content as any) &&
@@ -217,7 +213,7 @@
         </ModalActionButtons>
       {/if}
     </div>
-  </div>
+  </BaseModal>
 {/if}
 
 <style>

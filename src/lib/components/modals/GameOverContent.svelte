@@ -9,50 +9,58 @@
     PlayerScoreResult,
   } from "$lib/stores/gameOverStore";
 
-  // Props даних
-  export let content: any;
+  interface Props {
+    content: any;
+    titleKey?: TranslationKey;
+    titleValues?: any;
+    mode?: "game-over" | "no-moves";
+    onPlayAgain?: () => void;
+    onWatchReplay?: () => void;
+    onMainMenu?: () => void;
+    onLeaveLobby?: () => void;
+    onContinue?: () => void;
+    onFinish?: () => void;
+    dataTestId?: string;
+    continueText?: string;
+    finishText?: string;
+  }
 
-  // Props налаштувань
-  export let titleKey: TranslationKey = "modal.gameOverTitle";
-  export let titleValues: any = {};
-  export let mode: "game-over" | "no-moves" = "game-over";
+  let {
+    content,
+    titleKey = "modal.gameOverTitle",
+    titleValues = {},
+    mode = "game-over",
+    onPlayAgain,
+    onWatchReplay,
+    onMainMenu,
+    onLeaveLobby,
+    onContinue,
+    onFinish,
+    dataTestId = "game-over-modal",
+    continueText,
+    finishText
+  }: Props = $props();
 
-  // Props колбеків (дій)
-  export let onPlayAgain: (() => void) | undefined = undefined;
-  export let onWatchReplay: (() => void) | undefined = undefined;
-  export let onMainMenu: (() => void) | undefined = undefined;
-  export let onLeaveLobby: (() => void) | undefined = undefined;
-  export let onContinue: (() => void) | undefined = undefined;
-  export let onFinish: (() => void) | undefined = undefined;
+  let isCompactScoreMode = $state(true);
 
-  // Prop для ідентифікації в тестах
-  export let dataTestId: string = "game-over-modal";
-
-  // Тексти для динамічних кнопок (наприклад, з кількістю голосів)
-
-  export let continueText: string | undefined = undefined;
-  export let finishText: string | undefined = undefined;
-
-  let isCompactScoreMode = true;
-
-  $: scoreDetails = content?.scoreDetails as FinalScoreDetails;
-  $: totalBonus = scoreDetails
+  const scoreDetails = $derived(content?.scoreDetails as FinalScoreDetails);
+  const totalBonus = $derived(scoreDetails
     ? (scoreDetails.sizeBonus ?? 0) +
       (scoreDetails.blockModeBonus ?? 0) +
       (scoreDetails.jumpBonus ?? 0) +
       (scoreDetails.noMovesBonus ?? 0) +
       (scoreDetails.distanceBonus ?? 0) +
       (scoreDetails.finishBonus ?? 0)
-    : 0;
+    : 0);
 
-  $: playerScores = content?.playerScores as Array<
+  const playerScores = $derived(content?.playerScores as Array<
     PlayerScoreResult & {
       playerName: string;
       playerColor: string;
       isWinner: boolean;
       isLoser: boolean;
     }
-  >;
+  >);
 </script>
 
 <div class="game-over-content" data-testid="game-over-content">
@@ -80,7 +88,7 @@
   <div class="results-card">
     {#if playerScores && playerScores.length > 0}
       <div class="player-scores-container">
-        <h3>Рахунки гравців:</h3>
+        <h3>{$t("modal.playerScores")}:</h3>
         {#each playerScores as playerScore}
           <div
             class="player-score-row"
