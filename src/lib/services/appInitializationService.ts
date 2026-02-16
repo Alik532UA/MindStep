@@ -11,6 +11,8 @@ import { get } from "svelte/store";
 import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
 
+import { urlSyncService } from "$lib/services/urlSyncService";
+
 const APP_VERSION_KEY = "app_version";
 const VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -24,9 +26,13 @@ class AppInitializationService {
         // 1. Initialize app settings (theme, language)
         appSettingsStore.init();
 
-        // 2. Initialize game settings from localStorage
+        // 2. Initialize game settings
+        // Priority: URL > LocalStorage > Defaults
         const loadedGameSettings = settingsPersistenceService.load();
-        gameSettingsStore.set(loadedGameSettings);
+        const urlParams = urlSyncService.getParamsFromUrl();
+        
+        const finalSettings = { ...loadedGameSettings, ...urlParams };
+        gameSettingsStore.set(finalSettings);
 
         // 3. Subscribe to game settings changes to persist them
         const debouncedSave = debounce(settingsPersistenceService.save, 300);
@@ -82,6 +88,17 @@ class AppInitializationService {
     }
 
     private async checkForUpdates() {
+        // НАВІЩО: Вимикаємо перевірку оновлень у тестовому режимі, Playwright та CI.
+        // Ми перевіряємо як внутрішній стан, так і глобальні змінні середовища тестування.
+        if (typeof window !== 'undefined') {
+            const isPlaywright = (window as any).updateNoticeDisabled || (window as any).__playwright_test__;
+            const isTestMode = (window as any).testMode;
+            if (isPlaywright || isTestMode || import.meta.env.MODE === 'test') {
+                logService.init("[AppInitializationService] Skipping update check (test environment detected)");
+                return;
+            }
+        }
+
         try {
             const response = await fetch(`${base}/version.json?v=${new Date().getTime()}`);
             if (!response.ok) return;

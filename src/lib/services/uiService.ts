@@ -7,33 +7,36 @@ import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 export function navigateToGame() {
   const { intendedGameType } = get(uiStateStore);
-  const { gameMode } = get(gameSettingsStore);
+  const { gameMode, boardSize, blockModeEnabled } = get(gameSettingsStore);
 
-  let targetPath = '';
-  let modeToInitialize = '';
+  let targetPath = "";
 
   switch (intendedGameType) {
-    case 'training':
-      targetPath = '/game/training';
-      modeToInitialize = gameMode || 'training';
+    case "training":
+      targetPath = "/game/training";
       break;
-    case 'local':
-      targetPath = '/local-setup';
-      modeToInitialize = gameMode || 'local';
+    case "local":
+      targetPath = "/local-setup";
       break;
-    case 'timed':
-      targetPath = '/game/timed';
-      modeToInitialize = gameMode || 'timed';
+    case "timed":
+      targetPath = "/game/timed";
       break;
-    case 'virtual-player':
-      targetPath = '/game/virtual-player';
-      modeToInitialize = gameMode || 'virtual-player';
+    case "virtual-player":
+      targetPath = "/game/virtual-player";
       break;
     default:
-      targetPath = '/game/training';
-      modeToInitialize = 'training';
+      targetPath = "/game/training";
       break;
   }
 
-  goto(`${base}${targetPath}`);
+  // Формуємо параметри одразу
+  const params = new URLSearchParams();
+  if (gameMode) params.set("mode", gameMode);
+  if (boardSize) params.set("size", boardSize.toString());
+  if (blockModeEnabled !== undefined) params.set("block", blockModeEnabled ? "1" : "0");
+
+  const search = params.toString();
+  const finalUrl = `${base}${targetPath}${search ? "?" + search : ""}`;
+
+  goto(finalUrl);
 }

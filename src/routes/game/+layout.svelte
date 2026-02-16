@@ -23,8 +23,16 @@
   import "$lib/services/commandService.ts";
   import { animationService } from "$lib/services/animationService";
   import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
+  import { urlSyncService } from "$lib/services/urlSyncService";
 
   let { children }: { children: Snippet } = $props();
+
+  // НАВІЩО: Синхронізуємо URL з налаштуваннями стору ТІЛЬКИ коли ми знаходимося 
+  // в контексті гри. Це дозволяє Deep Linking працювати без циклів редиректів.
+  $effect(() => {
+    const settings = $gameSettingsStore;
+    urlSyncService.updateUrlFromSettings(settings);
+  });
 
   onDestroy(() => {
     logService.init("[game/+layout] onDestroy called.");

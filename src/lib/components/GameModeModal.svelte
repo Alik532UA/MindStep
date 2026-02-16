@@ -53,11 +53,14 @@
     logService.modal(`[GameModeModal] selectMode called with: ${mode}`);
     userActionService.setGameModePreset(mode);
 
+    // НАВІЩО: Завжди встановлюємо тип гри перед навігацією, щоб uiService
+    // вибрав правильний шлях (наприклад, /game/virtual-player).
+    uiStateStore.update((s) => ({
+      ...s,
+      intendedGameType: "virtual-player",
+    }));
+
     if (extended) {
-      uiStateStore.update((s) => ({
-        ...s,
-        intendedGameType: "virtual-player",
-      }));
       if (mode === "beginner") {
         showFaqModal();
       } else {
