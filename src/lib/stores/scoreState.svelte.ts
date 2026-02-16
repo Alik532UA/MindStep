@@ -1,8 +1,13 @@
 // src/lib/stores/scoreState.svelte.ts
 // SSoT для стану рахунку. Використовує Svelte 5 Runes.
-// Обгортку для Svelte 4 (writable) надає scoreStore.ts (bridge pattern).
 
-import type { ScoreState } from './scoreStore';
+export interface ScoreState {
+  penaltyPoints: number;
+  movesInBlockMode: number;
+  jumpedBlockedCells: number;
+  noMovesBonus: number;
+  distanceBonus: number;
+}
 
 export const initialScoreState: ScoreState = {
     penaltyPoints: 0,
@@ -29,7 +34,7 @@ class ScoreStateRune {
 
     addPenalty(points: number) {
         if (!this._state) return;
-        this._state = { ...this._state, penaltyPoints: this._state.penaltyPoints + points };
+        this._state.penaltyPoints += points;
     }
 
     reset() {

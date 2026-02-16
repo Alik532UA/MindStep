@@ -1,8 +1,13 @@
 // src/lib/stores/playerState.svelte.ts
 // SSoT для стану гравців. Використовує Svelte 5 Runes.
-// Обгортку для Svelte 4 (writable) надає playerStore.ts (bridge pattern).
 
-import type { PlayerState } from './playerStore';
+import type { Player, BonusHistoryItem } from '$lib/models/player';
+import { generateId, getRandomUnusedColor, getRandomUnusedName } from '$lib/utils/playerUtils';
+
+export interface PlayerState {
+  players: Player[];
+  currentPlayerIndex: number;
+}
 
 class PlayerStateRune {
     private _state = $state<PlayerState | null>(null);
@@ -21,7 +26,42 @@ class PlayerStateRune {
 
     setCurrentPlayer(index: number) {
         if (!this._state) return;
-        this._state = { ...this._state, currentPlayerIndex: index };
+        this._state.currentPlayerIndex = index;
+    }
+
+    addPlayer() {
+        if (!this._state || this._state.players.length >= 8) return;
+        
+        const usedColors = this._state.players.map((p) => p.color);
+        const usedNames = this._state.players.map((p) => p.name);
+        
+        const newPlayer: Player = {
+            id: generateId(),
+            name: getRandomUnusedName(usedNames),
+            color: getRandomUnusedColor(usedColors),
+            score: 0,
+            isComputer: false,
+            type: "human" as const,
+            penaltyPoints: 0,
+            bonusPoints: 0,
+            bonusHistory: [] as BonusHistoryItem[],
+            roundScore: 0,
+        };
+        
+        this._state.players.push(newPlayer);
+    }
+
+    removePlayer(playerId: number) {
+        if (!this._state || this._state.players.length <= 2) return;
+        this._state.players = this._state.players.filter((p) => p.id !== playerId);
+    }
+
+    updatePlayer(playerId: number, updatedData: Partial<Player>) {
+        if (!this._state) return;
+        const index = this._state.players.findIndex(p => p.id === playerId);
+        if (index !== -1) {
+            this._state.players[index] = { ...this._state.players[index], ...updatedData };
+        }
     }
 
     reset() {
