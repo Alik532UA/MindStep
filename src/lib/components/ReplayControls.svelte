@@ -18,7 +18,7 @@
       shape="circle"
       variant="menu"
       dataTestId="replay-prev-step-btn"
-      on:click={() => dispatch("goToStep", currentStep - 1)}
+      onclick={() => dispatch("goToStep", currentStep - 1)}
       disabled={currentStep === 0}
       title="Previous Step">«</StyledButton
     >
@@ -26,7 +26,7 @@
       shape="circle"
       variant={autoPlayDirection === "backward" ? "primary" : "menu"}
       dataTestId="replay-play-backward-btn"
-      on:click={() => dispatch("toggleAutoPlay", "backward")}
+      onclick={() => dispatch("toggleAutoPlay", "backward")}
       title="Pop Play Backward"
     >
       {#if autoPlayDirection === "backward"}❚❚{:else}◀{/if}
@@ -35,7 +35,7 @@
       shape="circle"
       variant={autoPlayDirection === "forward" ? "primary" : "menu"}
       dataTestId="replay-play-forward-btn"
-      on:click={() => dispatch("toggleAutoPlay", "forward")}
+      onclick={() => dispatch("toggleAutoPlay", "forward")}
       title="Pop Play Forward"
     >
       {#if autoPlayDirection === "forward"}❚❚{:else}▶{/if}
@@ -44,7 +44,7 @@
       shape="circle"
       variant="menu"
       dataTestId="replay-next-step-btn"
-      on:click={() => dispatch("goToStep", currentStep + 1)}
+      onclick={() => dispatch("goToStep", currentStep + 1)}
       disabled={currentStep >= totalSteps - 1}
       title="Next Step">»</StyledButton
     >

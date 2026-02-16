@@ -48,7 +48,7 @@
         <!-- Test Pages -->
         <StyledButton
             variant="menu"
-            on:click={handleDevMenuBtn}
+            onclick={handleDevMenuBtn}
             dataTestId="dev-menu-dnd-btn"
         >
             {$t("mainMenu.dragAndDropTest")}
@@ -56,7 +56,7 @@
 
         <StyledButton
             variant="menu"
-            on:click={() =>
+            onclick={() =>
                 handlePhantomPage("Button Styles Test", "/test/buttons")}
             dataTestId="dev-menu-buttons-test-btn"
         >
@@ -65,7 +65,7 @@
 
         <StyledButton
             variant="menu"
-            on:click={() => {
+            onclick={() => {
                 navigateTo("/test-main-menu-v2");
                 onClose();
             }}
@@ -75,7 +75,7 @@
         <!-- Phantom / WIP Pages -->
         <StyledButton
             variant="menu"
-            on:click={() => handlePhantomPage("Join Room (WIP)", "/join")}
+            onclick={() => handlePhantomPage("Join Room (WIP)", "/join")}
             dataTestId="dev-menu-join-btn"
         >
             Join Room (WIP)
@@ -83,7 +83,7 @@
 
         <StyledButton
             variant="menu"
-            on:click={() =>
+            onclick={() =>
                 handlePhantomPage("Local Game Comp (WIP)", "/local")}
             dataTestId="dev-menu-local-comp-btn"
         >
@@ -92,7 +92,7 @@
 
         <StyledButton
             variant="menu"
-            on:click={() =>
+            onclick={() =>
                 handlePhantomPage("Waiting Screen (WIP)", "/waiting")}
             dataTestId="dev-menu-waiting-btn"
         >
@@ -104,7 +104,7 @@
         <!-- Standard Game Modes -->
         <StyledButton
             variant="menu"
-            on:click={() => {
+            onclick={() => {
                 onPlayVsComputer();
                 onClose();
             }}
@@ -112,12 +112,12 @@
         >
         <StyledButton
             variant="menu"
-            on:click={handleTimedGame}
+            onclick={handleTimedGame}
             dataTestId="timed-game-btn">{$t("mainMenu.timedGame")}</StyledButton
         >
         <StyledButton
             variant="menu"
-            on:click={() => {
+            onclick={() => {
                 onLocalGame();
                 onClose();
             }}
@@ -125,7 +125,7 @@
         >
         <StyledButton
             variant="menu"
-            on:click={handleOnlineGame}
+            onclick={handleOnlineGame}
             dataTestId="online-game-btn"
             >{$t("mainMenu.playOnline")}</StyledButton
         >

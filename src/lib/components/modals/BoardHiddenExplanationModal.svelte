@@ -21,7 +21,7 @@
         <StyledButton
             variant="primary"
             size="large"
-            on:click={() => modalStore.closeModal()}
+            onclick={() => modalStore.closeModal()}
             dataTestId={`${dataTestId}-ok-btn`}
         >
             {$t("modal.ok")}

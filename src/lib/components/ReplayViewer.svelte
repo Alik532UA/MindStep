@@ -152,7 +152,7 @@
     <div class="actions-column">
       <StyledButton
         variant="default"
-        on:click={onClose}
+        onclick={onClose}
         dataTestId="replay-close-btn"
       >
         {$t("modal.close")}

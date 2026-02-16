@@ -14,7 +14,7 @@
     <p class="title">{$t("updateNotification.title")}</p>
     <p class="description">{$t("updateNotification.description")}</p>
   </div>
-  <StyledButton variant="primary" on:click={reload} style="width: 100%;">
+  <StyledButton variant="primary" onclick={reload} style="width: 100%;">
     {$t("updateNotification.updateButton")}
   </StyledButton>
 </div>

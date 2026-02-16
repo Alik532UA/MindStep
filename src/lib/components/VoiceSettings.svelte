@@ -113,7 +113,7 @@
 <div class="settings-section">
   <StyledButton
     variant="menu"
-    on:click={() => speakTestPhrase()}
+    onclick={() => speakTestPhrase()}
     dataTestId="voice-settings-test-voice-btn"
     style="width: 100%;"
   >

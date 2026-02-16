@@ -113,15 +113,15 @@
       <div class="settings-actions">
         <StyledButton
           variant="menu"
-          on:click={resetSettings}
+          onclick={resetSettings}
           tooltip={$t("settings.resetHint")}
         >
           <span>{$t("settings.reset")}</span>
         </StyledButton>
-        <StyledButton variant="menu" on:click={handleKeepAppearance}>
+        <StyledButton variant="menu" onclick={handleKeepAppearance}>
           <span>{$t("mainMenu.clearCacheModal.keepAppearance")}</span>
         </StyledButton>
-        <StyledButton variant="danger" on:click={handleClearAll}>
+        <StyledButton variant="danger" onclick={handleClearAll}>
           <span>{$t("mainMenu.clearCacheModal.fullClear")}</span>
         </StyledButton>
       </div>

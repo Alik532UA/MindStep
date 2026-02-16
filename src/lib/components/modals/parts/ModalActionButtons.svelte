@@ -44,7 +44,7 @@
             disabled={btn.disabled ||
                 isComputerMoveInProgress ||
                 processingButtons[i]}
-            on:click={async () => {
+            onclick={async () => {
                 if (processingButtons[i] || isComputerMoveInProgress) return;
                 processingButtons[i] = true;
                 logService.action(

@@ -68,17 +68,17 @@
 {#if !isDeleteMode && !isChangePasswordMode}
     <!-- MAIN PROFILE ACTIONS -->
     <div class="actions">
-        <StyledButton variant="default" on:click={toggleChangePassword}>
+        <StyledButton variant="default" onclick={toggleChangePassword}>
             {$t("ui.auth.changePasswordBtn")}
         </StyledButton>
 
-        <StyledButton variant="default" on:click={handleLogout}>
+        <StyledButton variant="default" onclick={handleLogout}>
             {$t("ui.auth.logoutBtn")}
         </StyledButton>
 
         <StyledButton
             variant="danger"
-            on:click={toggleDeleteAccount}
+            onclick={toggleDeleteAccount}
             style="margin-top: 10px;"
         >
             {$t("ui.auth.deleteAccountBtn")}
@@ -100,7 +100,7 @@
         <div class="actions">
             <StyledButton
                 variant="primary"
-                on:click={handleChangePassword}
+                onclick={handleChangePassword}
                 disabled={isLoading || !newPassword}
             >
                 {isLoading
@@ -129,7 +129,7 @@
         <div class="actions">
             <StyledButton
                 variant="danger"
-                on:click={handleDeleteAccount}
+                onclick={handleDeleteAccount}
                 disabled={isLoading || !deletePassword}
             >
                 {isLoading

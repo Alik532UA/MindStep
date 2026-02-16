@@ -58,7 +58,7 @@
         <StyledButton
             variant="primary"
             size="large"
-            on:click={goToGame}
+            onclick={goToGame}
             dataTestId="return-to-game-btn"
             class="action-btn"
         >
@@ -68,7 +68,7 @@
         <StyledButton
             variant="danger"
             size="large"
-            on:click={leaveGame}
+            onclick={leaveGame}
             dataTestId="leave-game-btn"
             class="action-btn"
         >

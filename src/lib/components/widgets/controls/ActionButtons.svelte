@@ -24,12 +24,14 @@
         variant="primary"
         size="large"
         disabled={confirmDisabled || disabled}
-        on:click={() => dispatch("confirm")}
+        onclick={() => dispatch("confirm")}
         tooltip={$t("gameControls.confirm")}
         dataTestId="confirm-move-btn"
         style="width: 90%;"
     >
-        <span slot="icon"><SvgIcons name="confirm" /></span>
+        {#snippet icon()}
+            <span><SvgIcons name="confirm" /></span>
+        {/snippet}
         {$t("gameControls.confirm")}
     </StyledButton>
 
@@ -38,12 +40,14 @@
             variant="warning"
             size="large"
             {disabled}
-            on:click={() => dispatch("noMoves")}
+            onclick={() => dispatch("noMoves")}
             tooltip={$t("gameControls.noMovesTitle")}
             dataTestId="no-moves-btn"
             style="width: 90%;"
         >
-            <span slot="icon"><SvgIcons name="no-moves" /></span>
+            {#snippet icon()}
+                <span><SvgIcons name="no-moves" /></span>
+            {/snippet}
             {$t("gameControls.noMovesTitle")}
         </StyledButton>
     {/if}
@@ -53,7 +57,7 @@
             variant="info"
             size="large"
             disabled={!isVoiceSupported || disabled}
-            on:click={() => dispatch("voiceCommand")}
+            onclick={() => dispatch("voiceCommand")}
             tooltip={voiceButtonTooltip}
             dataTestId="voice-command-btn"
             class={$voiceControlStore.lastTranscript !== "" ? "active" : ""}
@@ -61,7 +65,9 @@
                 ? voiceButtonStyle
                 : ''}"
         >
-            <span slot="icon"><SvgIcons name="microphone" /></span>
+            {#snippet icon()}
+                <span><SvgIcons name="microphone" /></span>
+            {/snippet}
             {$t("gameControls.voiceCommand")}
         </StyledButton>
     {/if}

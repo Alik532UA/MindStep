@@ -24,7 +24,7 @@
     <StyledButton
         variant={isMyPlayerReady ? "default" : "primary"}
         size="large"
-        on:click={onToggleReady}
+        onclick={onToggleReady}
         dataTestId="toggle-ready-btn"
         class="action-btn ready-btn"
         disabled={roomStatus !== "waiting"}
@@ -44,7 +44,7 @@
             variant="primary"
             size="large"
             disabled={!allReady}
-            on:click={onStartGame}
+            onclick={onStartGame}
             dataTestId="start-game-btn"
             class="action-btn start-btn"
         >

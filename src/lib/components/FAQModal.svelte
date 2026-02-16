@@ -70,7 +70,7 @@
     <StyledButton
       variant="primary"
       size="large"
-      on:click={onOk}
+      onclick={onOk}
       dataTestId="faq-modal-ok-btn"
     >
       {$t("modal.ok")}
@@ -79,7 +79,7 @@
     {#if onRules}
       <StyledButton
         variant="info"
-        on:click={onRules}
+        onclick={onRules}
         dataTestId="faq-modal-rules-btn"
       >
         {$t("rulesPage.title")}

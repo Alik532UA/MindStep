@@ -69,7 +69,7 @@
         <StyledButton
           variant="primary"
           size="large"
-          on:click={openCreateRoomModal}
+          onclick={openCreateRoomModal}
           dataTestId="create-room-btn"
         >
           <span class="btn-content">

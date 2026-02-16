@@ -71,7 +71,7 @@
         <StyledButton
             size="small"
             variant="primary"
-            on:click={sendMessage}
+            onclick={sendMessage}
             class="send-btn"
         >
             <SvgIcons name="arrow-up" width="16" height="16" />

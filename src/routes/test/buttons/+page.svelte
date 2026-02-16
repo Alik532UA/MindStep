@@ -37,7 +37,7 @@
             <div class="cell">
                 <StyledButton
                     variant="default"
-                    on:click={() => logClick("New Default")}
+                    onclick={() => logClick("New Default")}
                 >
                     Default
                 </StyledButton>
@@ -57,7 +57,7 @@
             <div class="cell">
                 <StyledButton
                     variant="primary"
-                    on:click={() => logClick("New Primary")}
+                    onclick={() => logClick("New Primary")}
                 >
                     Primary
                 </StyledButton>
@@ -77,7 +77,7 @@
             <div class="cell">
                 <StyledButton
                     variant="info"
-                    on:click={() => logClick("New Info")}
+                    onclick={() => logClick("New Info")}
                 >
                     Info
                 </StyledButton>
@@ -97,7 +97,7 @@
             <div class="cell">
                 <StyledButton
                     variant="danger"
-                    on:click={() => logClick("New Danger")}
+                    onclick={() => logClick("New Danger")}
                 >
                     Danger
                 </StyledButton>
@@ -140,7 +140,7 @@
                 <StyledButton
                     variant="menu"
                     size="large"
-                    on:click={() => logClick("New Menu")}
+                    onclick={() => logClick("New Menu")}
                 >
                     Menu Button
                 </StyledButton>
@@ -167,11 +167,13 @@
                 <StyledButton
                     variant="menu"
                     size="large"
-                    on:click={() => logClick("New Menu Icon")}
+                    onclick={() => logClick("New Menu Icon")}
                 >
-                    <span slot="icon" style="margin-right: 0px;"
-                        ><SvgIcons name="trophy_bronze" /></span
-                    >
+                    {#snippet icon()}
+                        <span style="margin-right: 0px;"
+                            ><SvgIcons name="trophy_bronze" /></span
+                        >
+                    {/snippet}
                     Rewards
                 </StyledButton>
             </div>
@@ -188,9 +190,9 @@
                 <StyledButton
                     variant="menu"
                     shape="circle"
-                    on:click={() => logClick("Circle Menu")}
+                    onclick={() => logClick("Circle Menu")}
                 >
-                    <span slot="icon"><SvgIcons name="trophy_bronze" /></span>
+                    {#snippet icon()}<span><SvgIcons name="trophy_bronze" /></span>{/snippet}
                 </StyledButton>
             </div>
         </div>
@@ -202,9 +204,9 @@
                 <StyledButton
                     variant="primary"
                     shape="circle"
-                    on:click={() => logClick("Circle Primary")}
+                    onclick={() => logClick("Circle Primary")}
                 >
-                    <span slot="icon">▶</span>
+                    {#snippet icon()}<span>▶</span>{/snippet}
                 </StyledButton>
             </div>
         </div>
@@ -220,7 +222,7 @@
         <StyledButton
             size="small"
             variant="default"
-            on:click={() => (keys = [])}>Clear Log</StyledButton
+            onclick={() => (keys = [])}>Clear Log</StyledButton
         >
     </div>
 </div>

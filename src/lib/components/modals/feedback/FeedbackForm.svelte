@@ -102,7 +102,7 @@
         <StyledButton
             variant="default"
             size="large"
-            on:click={goBack}
+            onclick={goBack}
             disabled={isSubmitting}
         >
             ← {$t("ui.goBack")}
@@ -110,7 +110,7 @@
         <StyledButton
             variant="primary"
             size="large"
-            on:click={handleSubmit}
+            onclick={handleSubmit}
             disabled={isSubmitting}
         >
             {isSubmitting ? $t("common.loading") : $t("ui.feedback.submit")}

@@ -76,7 +76,7 @@
                 <StyledButton
                     variant={action.variant || "default"}
                     size="large"
-                    on:click={action.onClick}
+                    onclick={action.onClick}
                     dataTestId={action.dataTestId ||
                         `${dataTestId}-action-${i}`}
                     bind:buttonElement={buttonRefs[i]}

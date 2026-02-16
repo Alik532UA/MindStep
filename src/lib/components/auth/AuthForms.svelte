@@ -55,7 +55,7 @@
 <div class="actions">
     <StyledButton
         variant="primary"
-        on:click={handleSubmit}
+        onclick={handleSubmit}
         disabled={isLoading}
     >
         {#if isLoading}

@@ -70,7 +70,7 @@
     <StyledButton
       variant="primary"
       size="large"
-      on:click={() => modalStore.closeModal()}
+      onclick={() => modalStore.closeModal()}
       dataTestId="voice-settings-save-footer-btn"
     >
       {$t("common.save")}

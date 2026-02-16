@@ -48,7 +48,7 @@
             <StyledButton
                 size="default"
                 variant="primary"
-                on:click={onJoin}
+                onclick={onJoin}
                 disabled={!!joiningRoomId}
                 dataTestId={`join-room-btn-${room.id}`}
                 class="full-width-btn"

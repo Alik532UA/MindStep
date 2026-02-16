@@ -39,7 +39,7 @@
       <p class="description">{$t("updateNotification.description")}</p>
     </div>
     <div class="pwa-buttons">
-      <StyledButton variant="primary" on:click={update} style="width: 100%; margin-bottom: 8px;">
+      <StyledButton variant="primary" onclick={update} style="width: 100%; margin-bottom: 8px;">
         {$t("updateNotification.updateButton")}
       </StyledButton>
       <button on:click={close} class="dismiss-btn">

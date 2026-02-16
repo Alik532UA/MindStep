@@ -1,80 +1,55 @@
 <script lang="ts">
   import "$lib/css/components/styled-button.css";
-  import { createEventDispatcher } from "svelte";
-
   import { customTooltip } from "$lib/actions/customTooltip.js";
+  import type { Snippet } from "svelte";
 
-  // HTMLButtonElement attributes we want to expose
-  export let type: "button" | "submit" | "reset" = "button";
-  export let disabled: boolean = false;
-  export let title: string | undefined = undefined;
-  export let id: string | undefined = undefined;
-
-  /**
-   * Optional tooltip text.
-   */
-  export let tooltip: string | undefined = undefined;
-
-  /**
-   * The visual style variant of the button.
-   * - `default`: White background, generic modal button.
-   * - `menu`: Uses --control-bg, for Main Menu.
-   * - `primary`: Green (Confirm).
-   * - `info`: Blue (Info).
-   * - `warning`: Orange (No Moves).
-   * - `danger`: Red (Error/Delete).
-   */
-  export let variant:
-    | "default"
-    | "menu"
-    | "primary"
-    | "info"
-    | "warning"
-    | "danger" = "default";
-
-  /**
-   * The size of the button.
-   * - `default`: Standard modal button size.
-   * - `large`: Main Menu button size.
-   * - `small`: Compact size.
-   */
-  export let size: "default" | "large" | "small" = "default";
-
-  /**
-   * The shape of the button.
-   * - `default`: Standard rounded rectangle.
-   * - `circle`: Perfect circle (for icons).
-   */
-  export let shape: "default" | "circle" = "default";
-
-  /**
-   * Optional custom CSS class to append.
-   */
-  let customClass = "";
-  export { customClass as class };
-
-  /**
-   * Optional inline styles.
-   */
-  export let style: string | undefined = undefined;
-
-  /**
-   * Data test id for testing
-   */
-  export let dataTestId: string | undefined = undefined;
-
-  /**
-   * Binding to the underlying HTMLButtonElement
-   */
-  export let buttonElement: HTMLButtonElement | null = null;
-
-  const dispatch = createEventDispatcher();
-
-  function handleClick(event: MouseEvent) {
-    if (!disabled) {
-      dispatch("click", event);
-    }
+  interface Props {
+    type?: "button" | "submit" | "reset";
+    disabled?: boolean;
+    title?: string;
+    id?: string;
+    tooltip?: string;
+    variant?: "default" | "menu" | "primary" | "info" | "warning" | "danger";
+    size?: "default" | "large" | "small";
+    shape?: "default" | "circle";
+    class?: string;
+    style?: string;
+    dataTestId?: string;
+    buttonElement?: HTMLButtonElement | null;
+    // Svelte 5 event props
+    onclick?: (event: MouseEvent) => void;
+    onmouseover?: (event: MouseEvent) => void;
+    onmouseenter?: (event: MouseEvent) => void;
+    onmouseleave?: (event: MouseEvent) => void;
+    onfocus?: (event: FocusEvent) => void;
+    onblur?: (event: FocusEvent) => void;
+    // Snippets for slots
+    children?: Snippet;
+    icon?: Snippet;
   }
+
+  let {
+    type = "button",
+    disabled = false,
+    title = undefined,
+    id = undefined,
+    tooltip = undefined,
+    variant = "default",
+    size = "default",
+    shape = "default",
+    class: customClass = "",
+    style = undefined,
+    dataTestId = undefined,
+    buttonElement = $bindable(null),
+    onclick,
+    onmouseover,
+    onmouseenter,
+    onmouseleave,
+    onfocus,
+    onblur,
+    children,
+    icon
+  }: Props = $props();
 </script>
 
 <button
@@ -86,14 +61,18 @@
   {id}
   data-testid={dataTestId}
   bind:this={buttonElement}
-  on:click={handleClick}
-  on:mouseover
-  on:mouseenter
-  on:mouseleave
-  on:focus
-  on:blur
+  {onclick}
+  {onmouseover}
+  {onmouseenter}
+  {onmouseleave}
+  {onfocus}
+  {onblur}
   use:customTooltip={tooltip}
 >
-  <slot name="icon" />
-  <slot />
+  {#if icon}
+    {@render icon()}
+  {/if}
+  {#if children}
+    {@render children()}
+  {/if}
 </button>

@@ -89,7 +89,7 @@
         <StyledButton
             variant="primary"
             size="large"
-            on:click={handleCreate}
+            onclick={handleCreate}
             disabled={isCreating}
             dataTestId="create-room-confirm-btn"
         >
@@ -98,7 +98,7 @@
 
         <StyledButton
             variant="default"
-            on:click={() => modalStore.closeModal()}
+            onclick={() => modalStore.closeModal()}
             dataTestId="create-room-cancel-btn"
         >
             {$t("onlineMenu.cancel")}

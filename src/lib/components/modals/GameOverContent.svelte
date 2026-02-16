@@ -175,7 +175,7 @@
         <StyledButton
           variant="primary"
           size="large"
-          on:click={onContinue}
+          onclick={onContinue}
           dataTestId="continue-game-no-moves-btn"
         >
           {continueText || $t("modal.continueGame")}
@@ -185,7 +185,7 @@
       {#if onFinish}
         <StyledButton
           variant="default"
-          on:click={onFinish}
+          onclick={onFinish}
           dataTestId="finish-game-with-bonus-btn"
         >
           {finishText || $t("modal.finishGameWithBonus")}
@@ -197,7 +197,7 @@
         <StyledButton
           variant="primary"
           size="large"
-          on:click={onPlayAgain}
+          onclick={onPlayAgain}
           dataTestId="play-again-btn"
         >
           {$t("modal.playAgain")}
@@ -209,7 +209,7 @@
     {#if onWatchReplay}
       <StyledButton
         variant="info"
-        on:click={onWatchReplay}
+        onclick={onWatchReplay}
         dataTestId="watch-replay-btn"
       >
         {$t("modal.watchReplay")}
@@ -220,7 +220,7 @@
     {#if onLeaveLobby}
       <StyledButton
         variant="danger"
-        on:click={onLeaveLobby}
+        onclick={onLeaveLobby}
         dataTestId="leave-lobby-btn"
       >
         {$t("modal.leaveLobby")}
@@ -231,7 +231,7 @@
     {#if mode === "game-over" && onMainMenu}
       <StyledButton
         variant="default"
-        on:click={onMainMenu}
+        onclick={onMainMenu}
         dataTestId="game-over-main-menu-btn"
       >
         {$t("modal.mainMenu")}

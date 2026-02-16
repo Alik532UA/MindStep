@@ -24,7 +24,7 @@
   <StyledButton
     variant="menu"
     size="small"
-    on:click={showExplanation}
+    onclick={showExplanation}
     dataTestId="why-board-hidden-btn"
     style="width: 100%;"
   >
@@ -34,7 +34,7 @@
   <StyledButton
     variant="menu"
     size="small"
-    on:click={dismissWidget}
+    onclick={dismissWidget}
     dataTestId="i-know-why-btn"
     style="width: 100%;"
   >
