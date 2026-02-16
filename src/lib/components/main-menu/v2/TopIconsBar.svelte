@@ -2,20 +2,22 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { t } from "$lib/i18n/typedI18n";
-    import SvgIcons from "$lib/components/SvgIcons.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import { logService } from "$lib/services/logService.js";
-    import { currentLanguageFlagComponent } from "$lib/stores/derivedState";
     import { modalStore } from "$lib/stores/modalStore";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
 
     import ThemeDropdown from "$lib/components/main-menu/ThemeDropdown.svelte";
     import LanguageDropdown from "$lib/components/main-menu/LanguageDropdown.svelte";
 
-    export let onFeedback: () => void;
+    interface Props {
+        onFeedback: () => void;
+    }
 
-    let showThemeDropdown = false;
-    let showLangDropdown = false;
+    let { onFeedback }: Props = $props();
+
+    let showThemeDropdown = $state(false);
+    let showLangDropdown = $state(false);
 
     function closeAll() {
         showThemeDropdown = false;
@@ -54,7 +56,7 @@
 <div class="top-icons-bar">
     <button
         class="icon-btn"
-        on:click={() => navigateTo("/rules")}
+        onclick={() => navigateTo("/rules")}
         title={$t("mainMenu.rules")}
         data-testid="top-rules-btn"
     >
@@ -63,7 +65,7 @@
 
     <button
         class="icon-btn"
-        on:click={() => navigateTo("/rewards")}
+        onclick={() => navigateTo("/rewards")}
         title={$t("rewards.pageTitle")}
         data-testid="top-rewards-btn"
     >
@@ -72,7 +74,7 @@
 
     <button
         class="icon-btn"
-        on:click={() => navigateTo("/settings")}
+        onclick={() => navigateTo("/settings")}
         title={$t("mainMenu.settings")}
         data-testid="top-settings-btn"
     >
@@ -82,7 +84,7 @@
     <div class="icon-wrapper">
         <button
             class="icon-btn"
-            on:click={toggleLang}
+            onclick={toggleLang}
             title={$t("mainMenu.language")}
             data-testid="top-language-btn"
         >
@@ -95,7 +97,7 @@
     <div class="icon-wrapper">
         <button
             class="icon-btn"
-            on:click={toggleTheme}
+            onclick={toggleTheme}
             title={$t("mainMenu.theme")}
             data-testid="top-theme-btn"
         >
@@ -107,7 +109,7 @@
 
     <button
         class="icon-btn desktop-only"
-        on:click={() => navigateTo("/settings?tab=hotkeys")}
+        onclick={() => navigateTo("/settings?tab=hotkeys")}
         title={$t("mainMenu.controls")}
         data-testid="top-controls-btn"
     >
@@ -116,7 +118,7 @@
 
     <button
         class="icon-btn"
-        on:click={() => navigateTo("/supporters")}
+        onclick={() => navigateTo("/supporters")}
         title={$t("mainMenu.donate")}
         data-testid="top-donate-btn"
     >
@@ -125,7 +127,7 @@
 
     <button
         class="icon-btn"
-        on:click={onFeedback}
+        onclick={onFeedback}
         title={$t("ui.feedback.title")}
         data-testid="top-feedback-btn"
     >
@@ -136,7 +138,7 @@
 
     <button
         class="icon-btn"
-        on:click={openAuthModal}
+        onclick={openAuthModal}
         title={$t("mainMenu.account")}
         data-testid="top-account-btn"
     >
@@ -149,7 +151,7 @@
 {#if showThemeDropdown || showLangDropdown}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="dropdown-backdrop" on:click={closeAll}></div>
+    <div class="dropdown-backdrop" onclick={closeAll}></div>
 
     {#if showThemeDropdown}
         <div class="centered-dropdown-container">
