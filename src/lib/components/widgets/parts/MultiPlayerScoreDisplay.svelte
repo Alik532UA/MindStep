@@ -3,11 +3,15 @@
     import { modalStore } from "$lib/stores/modalStore";
     import SimpleModalContent from "../../modals/SimpleModalContent.svelte";
     import { customTooltip } from "$lib/actions/customTooltip.js";
-    import type { ScoreState } from "$lib/stores/scoreStore";
+    import type { ScoreState } from "$lib/stores/scoreState.svelte";
     import type { Player } from "$lib/models/player";
 
-    export let players: Player[] = [];
-    export let scoreStore: ScoreState;
+    interface Props {
+        players?: Player[];
+        scoreStore: ScoreState;
+    }
+
+    let { players = [], scoreStore }: Props = $props();
 
     function getPlayerColor(playerName: string) {
         const player = players.find((p) => p.name === playerName);
@@ -35,7 +39,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onClick: () => modalStore.closeModal(),
+                        onclick: () => modalStore.closeModal(),
                         dataTestId: "penalty-info-ok-btn",
                     },
                 ],
@@ -76,7 +80,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onClick: () => modalStore.closeModal(),
+                        onclick: () => modalStore.closeModal(),
                         dataTestId: "player-score-details-ok-btn",
                     },
                 ],
@@ -85,14 +89,12 @@
     }
 </script>
 
-<!-- FIX: Додано data-testid для контейнера -->
 <div
     class="score-display-multiplayer"
     data-testid="multiplayer-score-container"
 >
     <div class="score-label-multiplayer">{$t("gameBoard.scoreLabel")}</div>
     {#each players as player}
-        <!-- FIX: Додано data-testid для рядка гравця -->
         <div class="score-row" data-testid={`score-row-${player.id}`}>
             <span
                 class="player-name-plate"
@@ -101,8 +103,8 @@
             <div class="score-compound">
                 <span
                     class="score-value-clickable fixed-score"
-                    on:click={() => showPlayerBonusInfo(player)}
-                    on:keydown={(e) =>
+                    onclick={() => showPlayerBonusInfo(player)}
+                    onkeydown={(e) =>
                         (e.key === "Enter" || e.key === " ") &&
                         showPlayerBonusInfo(player)}
                     role="button"
@@ -125,8 +127,8 @@
         <div class="score-row">
             <span
                 class="penalty-display"
-                on:click={showPenaltyInfo}
-                on:keydown={(e) =>
+                onclick={showPenaltyInfo}
+                onkeydown={(e) =>
                     (e.key === "Enter" || e.key === " ") && showPenaltyInfo()}
                 use:customTooltip={$t("gameBoard.penaltyHint")}
                 role="button"

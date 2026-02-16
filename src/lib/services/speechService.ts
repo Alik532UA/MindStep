@@ -2,7 +2,7 @@
 import { writable, get } from 'svelte/store';
 import { logService } from '$lib/services/logService';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { playerStore } from '$lib/stores/playerStore';
+import { playerStore } from '$lib/stores/playerStore.svelte';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import { VoiceLoader } from './speech/voiceLoader';
 

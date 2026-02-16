@@ -3,36 +3,36 @@
   import { replayStore } from "$lib/stores/replayStore";
   import { t } from "$lib/i18n/typedI18n";
   import { customTooltip } from "$lib/actions/customTooltip.js";
-  import { playerStore } from "$lib/stores/playerStore";
-  import { scoreStore } from "$lib/stores/scoreStore";
+  import { playerState } from "$lib/stores/playerState.svelte";
+  import { scoreStore } from '$lib/stores/scoreStore.svelte';
 
   import SinglePlayerScoreDisplay from "./parts/SinglePlayerScoreDisplay.svelte";
   import MultiPlayerScoreDisplay from "./parts/MultiPlayerScoreDisplay.svelte";
 
-  $: isMultiplayer = $playerStore
-    ? $playerStore.players.filter((p) => p.type === "human").length > 1
-    : false;
-  $: players = $playerStore ? $playerStore.players : [];
+  const pState = $derived(playerState.state);
+  const isMultiplayer = $derived(pState
+    ? pState.players.filter((p) => p.type === "human").length > 1
+    : false);
+  const players = $derived(pState ? pState.players : []);
 
   async function cashOutAndEndGame() {
-    // FIX: Використовуємо voteToFinish для коректної роботи в онлайн режимі
     await userActionService.voteToFinish("modal.gameOverReasonCashOut" as const);
   }
 </script>
 
-{#if !$replayStore.isReplayMode && $playerStore && $scoreStore}
+{#if !$replayStore.isReplayMode && pState && $scoreStore}
   <div class="score-panel game-content-block" data-testid="score-panel">
     {#if isMultiplayer}
       <MultiPlayerScoreDisplay {players} scoreStore={$scoreStore} />
     {:else}
       <SinglePlayerScoreDisplay
-        score={$playerStore.players[0]?.score || 0}
+        score={pState.players[0]?.score || 0}
         scoreStore={$scoreStore}
       />
     {/if}
     <button
       class="cash-out-btn"
-      on:click={cashOutAndEndGame}
+      onclick={cashOutAndEndGame}
       use:customTooltip={isMultiplayer
         ? $t("gameBoard.cashOutLocal")
         : $t("gameBoard.cashOutTooltip")}

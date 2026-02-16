@@ -1,4 +1,4 @@
-import type { PlayerState } from "$lib/stores/playerStore";
+import type { PlayerState } from '$lib/stores/playerStore.svelte';
 import type { UiState } from "$lib/stores/uiStateStore";
 import type { TranslationKey } from "$lib/types/i18n";
 

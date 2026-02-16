@@ -1,7 +1,7 @@
 import { boardState } from './boardState.svelte';
-import type { BoardState } from './boardStore';
+import type { BoardState } from './boardStore.svelte';
 import { playerState } from './playerState.svelte';
-import type { PlayerState } from './playerStore';
+import type { PlayerState } from './playerStore.svelte';
 import { uiState } from './uiState.svelte';
 import type { UiState } from '$lib/types/uiState';
 import { timerState } from './timerState.svelte';

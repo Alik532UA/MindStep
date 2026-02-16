@@ -1,7 +1,7 @@
 // src/lib/services/serverSyncService.ts
 import { get } from 'svelte/store';
 import { logService } from './logService';
-import { boardStore } from '$lib/stores/boardStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
 
 class ServerSyncService {
   async getAuthoritativeState(): Promise<any> {

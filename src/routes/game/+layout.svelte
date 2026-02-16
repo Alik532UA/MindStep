@@ -11,7 +11,7 @@
   import hotkeyService from "$lib/services/hotkeyService";
   import { gameStore } from "$lib/stores/gameStore";
   import { uiStateStore } from "$lib/stores/uiStateStore";
-  import { boardStore } from "$lib/stores/boardStore";
+  import { boardStore } from '$lib/stores/boardStore.svelte';
   import { enableAllGameCheckboxesIfNeeded } from "$lib/utils/uiUtils.js";
 
   import {

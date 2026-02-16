@@ -2,8 +2,8 @@
 import { get } from 'svelte/store';
 import { logService } from './logService';
 import type { MoveDirectionType } from '../models/Piece';
-import type { BoardState } from '$lib/stores/boardStore';
-import type { PlayerState } from '$lib/stores/playerStore';
+import type { BoardState } from '$lib/stores/boardStore.svelte';
+import type { PlayerState } from '$lib/stores/playerStore.svelte';
 import type { UiState } from '$lib/stores/uiStateStore';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 

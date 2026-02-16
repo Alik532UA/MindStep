@@ -51,25 +51,25 @@ const defaultConfig: LogConfig = {
     [LOG_GROUPS.LOGIC_BOARD]: false,
     [LOG_GROUPS.LOGIC_WIN]: false,
     [LOG_GROUPS.LOGIC_VIRTUAL_PLAYER]: false,
-    [LOG_GROUPS.LOGIC_AVAILABILITY]: false,
+    [LOG_GROUPS.LOGIC_AVAILABILITY]: true, // Enabled for debugging
     [LOG_GROUPS.LOGIC_TIME]: false,
     [LOG_GROUPS.SCORE]: false,
     [LOG_GROUPS.UI]: false,
     [LOG_GROUPS.TOOLTIP]: false,
     [LOG_GROUPS.ANIMATION]: false,
-    [LOG_GROUPS.INIT]: false,
+    [LOG_GROUPS.INIT]: true, // Enabled for debugging
     [LOG_GROUPS.ACTION]: false,
     [LOG_GROUPS.GAME_MODE]: true,
     [LOG_GROUPS.SPEECH]: false,
     [LOG_GROUPS.VOICE_CONTROL]: false,
-    [LOG_GROUPS.STATE]: false,
+    [LOG_GROUPS.STATE]: true, // Enabled for debugging
     [LOG_GROUPS.PIECE]: false,
     [LOG_GROUPS.LOGIC_MOVE]: false,
     [LOG_GROUPS.TEST_MODE]: false,
-    [LOG_GROUPS.MODAL]: true,
+    [LOG_GROUPS.MODAL]: false, // Disabled to reduce noise
     [LOG_GROUPS.ERROR]: true,
     [LOG_GROUPS.HOTKEY]: false,
-    [LOG_GROUPS.PRESENCE]: true,
+    [LOG_GROUPS.PRESENCE]: false, // Disabled to reduce noise
 };
 
 const STORAGE_KEY = 'logConfig';

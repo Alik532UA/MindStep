@@ -1,12 +1,12 @@
 // src/lib/services/availableMovesService.ts
 import { get } from 'svelte/store';
-import { boardStore, type BoardState } from '$lib/stores/boardStore';
+import { boardStore, type BoardState } from '$lib/stores/boardStore.svelte';
 import { gameSettingsStore, type GameSettingsState } from '$lib/stores/gameSettingsStore';
 import { Piece, MoveDirection } from '../models/Piece';
 import { isCellBlocked, isMirrorMove } from '$lib/utils/boardUtils';
 import { availableMovesStore } from '$lib/stores/availableMovesStore';
 import { logService } from '$lib/services/logService';
-import { playerStore, type PlayerState } from '$lib/stores/playerStore';
+import { playerStore, type PlayerState } from '$lib/stores/playerStore.svelte';
 
 /**
  * "Чиста" функція для розрахунку доступних ходів.
@@ -75,6 +75,8 @@ export const availableMovesService = {
     const boardState = get(boardStore);
     const playerState = get(playerStore);
     const settings = get(gameSettingsStore);
+
+    logService.logicAvailability(`[availableMovesService] updateAvailableMoves called. BoardState present: ${!!boardState}, PlayerState present: ${!!playerState}`);
 
     if (!boardState || !playerState) {
       availableMovesStore.set([]);

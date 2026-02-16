@@ -1,7 +1,7 @@
 // src/lib/sync/gameStateSync.interface.ts
-import type { BoardState } from '$lib/stores/boardStore';
-import type { PlayerState } from '$lib/stores/playerStore';
-import type { ScoreState } from '$lib/stores/scoreStore';
+import type { BoardState } from '$lib/stores/boardStore.svelte';
+import type { PlayerState } from '$lib/stores/playerStore.svelte';
+import type { ScoreState } from '$lib/stores/scoreStore.svelte';
 import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
 import type { GameOverPayload, PlayerScoreResult } from '$lib/stores/gameOverStore';
 

@@ -28,15 +28,16 @@
   let summaryRef = $state<HTMLElement>();
   let contentRef = $state<HTMLDivElement>();
 
-  $effect(() => {
-    uiStateStore.update((s) => ({ ...s, isSettingsExpanderOpen: isOpen }));
-  });
+  function syncExpanderStateToStore(open: boolean) {
+    uiStateStore.update((s) => ({ ...s, isSettingsExpanderOpen: open }));
+  }
 
   async function toggleExpander() {
     logService.action(
       'Click: "Розгорнути/Згорнути налаштування" (SettingsExpanderWidget)',
     );
     isOpen = !isOpen;
+    syncExpanderStateToStore(isOpen);
     setTimeout(() => layoutUpdateStore.update((n) => n + 1), 500);
   }
 
@@ -47,6 +48,9 @@
   onMount(() => {
     updateLayoutMode();
     window.addEventListener("resize", updateLayoutMode);
+
+    // Синхронізуємо початковий стан при монтуванні
+    syncExpanderStateToStore(isOpen);
 
     if (isOpen) {
       setTimeout(() => layoutUpdateStore.update((n) => n + 1), 500);
@@ -63,7 +67,9 @@
 
     if (isOpen && contentRef) {
       tick().then(() => {
-        contentHeight = contentRef.scrollHeight;
+        if (contentRef) { // Захисна перевірка всередині promise
+          contentHeight = contentRef.scrollHeight;
+        }
       });
     } else {
       contentHeight = 0;
@@ -129,3 +135,7 @@
     </div>
   </div>
 {/if}
+
+<style>
+  /* Стилі залишаються без змін */
+</style>

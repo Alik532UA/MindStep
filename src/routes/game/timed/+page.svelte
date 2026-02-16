@@ -4,7 +4,7 @@
   import { gameModeService } from "$lib/services/gameModeService";
   import { logService } from "$lib/services/logService";
   import { get } from "svelte/store";
-  import { boardStore } from "$lib/stores/boardStore";
+  import { boardStore } from '$lib/stores/boardStore.svelte';
 
   function initTimedGame() {
     const boardState = get(boardStore);

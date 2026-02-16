@@ -6,7 +6,7 @@
 import { writable, get } from 'svelte/store';
 import { logService } from '../services/logService';
 import { uiStateStore } from './uiStateStore';
-import { boardStore } from './boardStore';
+import { boardStore } from './boardStore.svelte';
 import { availableMovesService } from '../services/availableMovesService';
 import { syncGameModeLogic } from '$lib/logic/settingsLogic';
 import { gameSettingsState } from './gameSettingsState.svelte';

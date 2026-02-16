@@ -4,9 +4,9 @@
  * @description Централізоване визначення типів для роботи з ігровим станом.
  */
 
-import type { BoardState } from '$lib/stores/boardStore';
-import type { PlayerState } from '$lib/stores/playerStore';
-import type { ScoreState } from '$lib/stores/scoreStore';
+import type { BoardState } from '$lib/stores/boardStore.svelte';
+import type { PlayerState } from '$lib/stores/playerStore.svelte';
+import type { ScoreState } from '$lib/stores/scoreStore.svelte';
 import type { UiState } from '$lib/stores/uiStateStore';
 import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
 import type { MoveDirectionType } from './Piece';

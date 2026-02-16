@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { playerStore } from "$lib/stores/playerStore";
+  import { playerState } from "$lib/stores/playerState.svelte";
   import { customTooltip } from "$lib/actions/customTooltip.js";
 
-  $: players = $playerStore?.players;
-  $: currentPlayerIndex = $playerStore?.currentPlayerIndex;
+  // SSoT: Використовуємо стан з Runes
+  const state = $derived(playerState.state);
+  const players = $derived(state?.players);
+  const currentPlayerIndex = $derived(state?.currentPlayerIndex);
 </script>
 
 {#if players}
-  <!-- FIX: Додано data-testid для контейнера та індикаторів -->
   <div class="indicator-wrapper" data-testid="player-turn-indicator-container">
     {#each players as player, i}
       <div

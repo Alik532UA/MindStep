@@ -12,7 +12,7 @@
   import { i18nReady } from "$lib/i18n/init.js";
   import { fade, slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
-  import { playerStore } from "$lib/stores/playerStore";
+  import { playerStore } from '$lib/stores/playerStore.svelte';
   import { uiStateStore } from "$lib/stores/uiStateStore";
   import CompactComputerMove from "$lib/components/widgets/game-info/CompactComputerMove.svelte";
   import StructuredMessage from "$lib/components/widgets/game-info/StructuredMessage.svelte";

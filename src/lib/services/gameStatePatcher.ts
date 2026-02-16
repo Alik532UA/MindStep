@@ -1,6 +1,6 @@
 // src/lib/services/gameStatePatcher.ts
 import { logService } from './logService';
-import { boardStore } from '$lib/stores/boardStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
 
 class GameStatePatcher {
   applyPatch(serverState: any): void {

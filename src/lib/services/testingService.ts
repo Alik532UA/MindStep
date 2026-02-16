@@ -7,13 +7,13 @@
 import { animationStore, initialState as initialAnimationState } from '$lib/stores/animationStore';
 import { appSettingsStore } from '$lib/stores/appSettingsStore';
 import { availableMovesStore } from '$lib/stores/availableMovesStore';
-import { boardStore } from '$lib/stores/boardStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
 import { gameModeStore, initialState as initialGameModeState } from '$lib/stores/gameModeStore';
 import { gameOverStore } from '$lib/stores/gameOverStore';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 import { gameStore } from '$lib/stores/gameStore';
-import { playerStore } from '$lib/stores/playerStore';
-import { scoreStore } from '$lib/stores/scoreStore';
+import { playerStore } from '$lib/stores/playerStore.svelte';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
 import { testModeStore, initialState as initialTestModeState } from '$lib/stores/testModeStore';
 import { timerStore } from '$lib/stores/timerStore';
 import { uiStateStore, initialUIState } from '$lib/stores/uiStateStore';

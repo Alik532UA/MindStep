@@ -9,7 +9,7 @@
     import { onMount } from "svelte";
     import { animationService } from "$lib/services/animationService.js";
     import { get } from "svelte/store";
-    import { boardStore } from "$lib/stores/boardStore";
+    import { boardStore } from '$lib/stores/boardStore.svelte';
     import { replayStore } from "$lib/stores/replayStore";
     import { i18nReady } from "$lib/i18n/init.js";
     import { logService } from "$lib/services/logService";

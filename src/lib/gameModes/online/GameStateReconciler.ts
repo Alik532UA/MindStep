@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
-import { boardStore } from '$lib/stores/boardStore';
-import { playerStore } from '$lib/stores/playerStore';
-import { scoreStore } from '$lib/stores/scoreStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
+import { playerStore } from '$lib/stores/playerStore.svelte';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 import { uiStateStore } from '$lib/stores/uiStateStore';
 import { gameOverStore } from '$lib/stores/gameOverStore';

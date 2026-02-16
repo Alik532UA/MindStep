@@ -8,9 +8,9 @@ import type {
     GameStateSyncEvent,
     VoteType
 } from './gameStateSync.interface';
-import { boardStore } from '$lib/stores/boardStore';
-import { playerStore } from '$lib/stores/playerStore';
-import { scoreStore } from '$lib/stores/scoreStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
+import { playerStore } from '$lib/stores/playerStore.svelte';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
 import { logService } from '$lib/services/logService';
 
 /**

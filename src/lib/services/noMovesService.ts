@@ -6,9 +6,9 @@ import { calculateFinalScore } from './scoreService';
 import { endGameService } from './endGameService';
 import { availableMovesService } from './availableMovesService';
 import { gameStore } from '$lib/stores/gameStore';
-import { boardStore } from '$lib/stores/boardStore';
-import { playerStore } from '$lib/stores/playerStore';
-import { scoreStore } from '$lib/stores/scoreStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
+import { playerStore } from '$lib/stores/playerStore.svelte';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
 import { uiStateStore } from '$lib/stores/uiStateStore';
 import { gameModeService } from './gameModeService';
 

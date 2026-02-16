@@ -15,9 +15,9 @@ import { endGameService } from '$lib/services/endGameService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
 import { timeService } from '$lib/services/timeService';
-import { boardStore } from '$lib/stores/boardStore';
-import { playerStore } from '$lib/stores/playerStore';
-import { scoreStore } from '$lib/stores/scoreStore';
+import { boardStore } from '$lib/stores/boardStore.svelte';
+import { playerStore } from '$lib/stores/playerStore.svelte';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
 import { uiStateStore } from '$lib/stores/uiStateStore';
 import { appSettingsStore } from '$lib/stores/appSettingsStore';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
@@ -63,7 +63,7 @@ export abstract class BaseGameMode implements IGameMode {
     const playerState = get(playerStore);
     const humanPlayerIndex = playerState?.players.findIndex(p => p.type === 'human');
 
-    if (humanPlayerIndex !== undefined && humanPlayerIndex !== -1) {
+    if (playerState && humanPlayerIndex !== undefined && humanPlayerIndex !== -1) {
       playerStore.update(s => s ? { ...s, currentPlayerIndex: humanPlayerIndex } : null);
       logService.GAME_MODE('continueAfterNoMoves: Хід повернуто гравцю-людині.', { humanPlayerIndex });
     } else {
@@ -78,7 +78,7 @@ export abstract class BaseGameMode implements IGameMode {
   protected async advanceToNextPlayer(): Promise<void> {
     logService.GAME_MODE('advanceToNextPlayer: Передача ходу наступному гравцю.');
     const currentPlayerState = get(playerStore);
-    if (!currentPlayerState) return;
+    if (!currentPlayerState || !currentPlayerState.players) return;
     const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
 
     playerStore.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
@@ -113,12 +113,12 @@ export abstract class BaseGameMode implements IGameMode {
   protected resetBoardForContinuation(): void {
     const boardState = get(boardStore);
     const settings = get(gameSettingsStore);
-    if (!boardState) return;
+    if (!boardState || boardState.playerRow === null || boardState.playerCol === null) return;
 
     const continuationData = {
       cellVisitCounts: {} as Record<string, number>,
       moveHistory: [{
-        pos: { row: boardState.playerRow!, col: boardState.playerCol! },
+        pos: { row: boardState.playerRow, col: boardState.playerCol },
         blocked: [] as { row: number; col: number }[],
         visits: {},
         blockModeEnabled: settings.blockModeEnabled
@@ -171,7 +171,8 @@ export abstract class BaseGameMode implements IGameMode {
     }
 
     const playerState = get(playerStore);
-    if (!playerState) return;
+    const boardState = get(boardStore);
+    if (!playerState || !boardState || boardState.playerRow === null || boardState.playerCol === null) return;
 
     // Оновлюємо налаштування в двигуні перед ходом (на випадок змін)
     this.engine.updateSettings(get(gameSettingsStore));
@@ -272,9 +273,9 @@ export abstract class BaseGameMode implements IGameMode {
   protected async onPlayerMoveFailure(reason: string | undefined, direction: MoveDirectionType, distance: number): Promise<void> {
     const boardState = get(boardStore);
     const playerState = get(playerStore);
-    if (!boardState || !playerState) return;
+    if (!boardState || !playerState || boardState.playerRow === null || boardState.playerCol === null) return;
 
-    const piece = new Piece(boardState.playerRow!, boardState.playerCol!, boardState.boardSize);
+    const piece = new Piece(boardState.playerRow, boardState.playerCol, boardState.boardSize);
     const finalInvalidPosition = piece.calculateNewPosition(direction, distance);
 
     const finalMoveForAnimation = {

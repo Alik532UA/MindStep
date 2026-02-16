@@ -3,7 +3,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { get } from 'svelte/store';
 import { appVersion } from '$lib/stores/versionStore';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { playerStore } from '$lib/stores/playerStore';
+import { playerStore } from '$lib/stores/playerStore.svelte';
 import { logService } from './logService';
 import { notificationService } from './notificationService';
 

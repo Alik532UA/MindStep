@@ -3,9 +3,9 @@ import type { Player } from '$lib/models/player';
 import { isMirrorMove, getMovePath, isCellBlocked } from '$lib/utils/boardUtils';
 import { logService } from './logService';
 import type { FinalScoreDetails } from '$lib/models/score';
-import type { BoardState } from '$lib/stores/boardStore';
-import type { PlayerState } from '$lib/stores/playerStore';
-import type { ScoreState } from '$lib/stores/scoreStore';
+import type { BoardState } from '$lib/stores/boardStore.svelte';
+import type { PlayerState } from '$lib/stores/playerStore.svelte';
+import type { ScoreState } from '$lib/stores/scoreStore.svelte';
 import type { UiState } from '$lib/stores/uiStateStore';
 import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
 

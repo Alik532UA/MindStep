@@ -8,8 +8,8 @@ import { logService } from '$lib/services/logService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { timeService } from '$lib/services/timeService';
 import { gameService } from '$lib/services/gameService';
-import { scoreStore } from '$lib/stores/scoreStore';
-import { boardStore } from '$lib/stores/boardStore';
+import { scoreStore } from '$lib/stores/scoreStore.svelte';
+import { boardStore } from '$lib/stores/boardStore.svelte';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 
 export class TrainingGameMode extends BaseGameMode {

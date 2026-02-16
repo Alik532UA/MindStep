@@ -3,10 +3,14 @@
     import { modalStore } from "$lib/stores/modalStore";
     import SimpleModalContent from "../../modals/SimpleModalContent.svelte";
     import { customTooltip } from "$lib/actions/customTooltip.js";
-    import type { ScoreState } from "$lib/stores/scoreStore";
+    import type { ScoreState } from "$lib/stores/scoreState.svelte";
 
-    export let score: number = 0;
-    export let scoreStore: ScoreState;
+    interface Props {
+        score?: number;
+        scoreStore: ScoreState;
+    }
+
+    let { score = 0, scoreStore }: Props = $props();
 
     function showScoreInfo() {
         modalStore.showModal({
@@ -21,7 +25,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onClick: () => modalStore.closeModal(),
+                        onclick: () => modalStore.closeModal(),
                         dataTestId: "score-info-ok-btn",
                     },
                 ],
@@ -42,7 +46,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onClick: () => modalStore.closeModal(),
+                        onclick: () => modalStore.closeModal(),
                         dataTestId: "penalty-info-ok-btn",
                     },
                 ],
@@ -58,8 +62,8 @@
     <span
         class="score-value-clickable"
         class:positive-score={score > 0}
-        on:click={showScoreInfo}
-        on:keydown={(e) =>
+        onclick={showScoreInfo}
+        onkeydown={(e) =>
             (e.key === "Enter" || e.key === " ") && showScoreInfo()}
         role="button"
         tabindex="0"
@@ -69,8 +73,8 @@
     {#if scoreStore && scoreStore.penaltyPoints > 0}
         <span
             class="penalty-display"
-            on:click={showPenaltyInfo}
-            on:keydown={(e) =>
+            onclick={showPenaltyInfo}
+            onkeydown={(e) =>
                 (e.key === "Enter" || e.key === " ") && showPenaltyInfo()}
             use:customTooltip={$t("gameBoard.penaltyHint")}
             role="button"

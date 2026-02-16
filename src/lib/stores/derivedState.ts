@@ -1,7 +1,7 @@
 // src/lib/stores/derivedState.ts
 import { derived } from 'svelte/store';
-import { boardStore } from './boardStore';
-import { playerStore } from './playerStore';
+import { boardStore } from './boardStore.svelte';
+import { playerStore } from './playerStore.svelte';
 import { uiStateStore } from './uiStateStore';
 import { appSettingsStore } from './appSettingsStore';
 import { timerStore } from './timerStore';
