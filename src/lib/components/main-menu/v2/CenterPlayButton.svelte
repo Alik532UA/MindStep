@@ -1,9 +1,12 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
-    import SvgIcons from "$lib/components/SvgIcons.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-    export let onPlay: () => void;
+    interface Props {
+        onPlay: () => void;
+    }
+
+    let { onPlay }: Props = $props();
 
     // Налаштування анімації
     const waveCount = 11;
@@ -14,7 +17,7 @@
 <div class="center-container" data-testid="center-container">
     <button
         class="play-btn-circle"
-        on:click={onPlay}
+        onclick={onPlay}
         data-testid="center-play-btn"
         aria-label={$t("mainMenu.virtualPlayer")}
     >
@@ -42,7 +45,6 @@
         justify-content: center;
         flex: 1;
         position: relative;
-        /* Додаємо overflow: visible контейнеру, щоб великі хвилі (scale 5) не обрізалися, якщо контейнер малий */
         overflow: visible;
     }
 
@@ -51,9 +53,7 @@
         height: 160px;
         border-radius: 50%;
         border: none;
-        /* Фон як у гамбургера */
         background: var(--bg-secondary);
-
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         cursor: pointer;
         display: flex;
@@ -63,7 +63,6 @@
             transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
             box-shadow 0.3s;
         position: relative;
-        /* Важливо: overflow: visible, щоб хвилі виходили за межі кнопки */
         overflow: visible;
         z-index: 10;
     }
@@ -71,7 +70,6 @@
     .play-btn-circle:hover {
         transform: scale(1.05);
         box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
-        /* При наведенні трохи світліший фон */
         filter: brightness(1.2);
     }
 
@@ -85,10 +83,9 @@
         color: var(--text-primary);
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
         position: relative;
-        z-index: 11; /* Іконка завжди зверху */
+        z-index: 11;
     }
 
-    /* Стилі хвилі */
     .wave {
         position: absolute;
         top: 0;
@@ -96,27 +93,25 @@
         right: 0;
         bottom: 0;
         border-radius: 100%;
-        /* background: rgba(255, 255, 255, 0.1); /* Біла тінь */
-        z-index: -1; /* Під кнопкою */
+        z-index: -1;
         pointer-events: none;
         opacity: 0;
         animation-name: pulse-in;
         animation-timing-function: ease;
         animation-iteration-count: infinite;
         border: 1px solid rgba(255, 255, 255, 1);
-        /* outline: 1px solid rgba(0, 0, 0, 0.5); */
     }
 
     @keyframes pulse-in {
         0% {
-            transform: scale(9); /* Розмах 5 */
+            transform: scale(9);
             opacity: 0;
         }
         15% {
             opacity: 0;
         }
         40% {
-            opacity: 0.03; /* Прозорість 0.25 */
+            opacity: 0.03;
         }
         100% {
             transform: scale(0.5);
