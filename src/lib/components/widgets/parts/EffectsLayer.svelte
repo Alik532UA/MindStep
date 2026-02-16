@@ -8,8 +8,8 @@
 </script>
 
 <div class="effects-layer" style="--board-size: {boardSize}">
-  {#each Array(boardSize) as _, rowIdx}
-    {#each Array(boardSize) as _, colIdx}
+  {#each Array(boardSize) as _, rowIdx (rowIdx)}
+    {#each Array(boardSize) as _, colIdx (colIdx)}
       {@const blocked = isCellBlocked(rowIdx, colIdx, visualCellVisitCounts, gameSettings)}
       {@const damageClass = getDamageClass(rowIdx, colIdx, visualCellVisitCounts, gameSettings)}
       <div 
@@ -34,5 +34,11 @@
     left: 0;
     z-index: 2;
     pointer-events: none;
+  }
+
+  .board-cell {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
   }
 </style>

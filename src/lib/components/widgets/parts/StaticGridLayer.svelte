@@ -3,8 +3,8 @@
 </script>
 
 <div class="static-grid" style="--board-size: {boardSize}">
-  {#each Array(boardSize) as _, rowIdx}
-    {#each Array(boardSize) as _, colIdx}
+  {#each Array(boardSize) as _, rowIdx (rowIdx)}
+    {#each Array(boardSize) as _, colIdx (colIdx)}
       <div
         class="board-cell"
         class:light={(rowIdx + colIdx) % 2 === 0}
@@ -28,5 +28,11 @@
     left: 0;
     z-index: 1;
     pointer-events: none;
+  }
+
+  .board-cell {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
   }
 </style>

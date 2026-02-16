@@ -5,17 +5,37 @@
 
   const dispatch = createEventDispatcher();
 
-  function onCellRightClick(event: MouseEvent, row: number, col: number) {
-    dispatch("cellRightClick", { event, row, col });
+  function handleContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    const target = event.target as HTMLElement;
+    const row = target.getAttribute('data-row');
+    const col = target.getAttribute('data-col');
+
+    if (row !== null && col !== null) {
+      dispatch("cellRightClick", { 
+        event, 
+        row: parseInt(row, 10), 
+        col: parseInt(col, 10) 
+      });
+    }
   }
 </script>
 
-<div class="input-layer" style="--board-size: {boardSize}">
-  {#each Array(boardSize) as _, rowIdx}
-    {#each Array(boardSize) as _, colIdx}
+<!-- 
+  НАВІЩО: Використовуємо делегування подій (один обробник на весь контейнер).
+  Це значно зменшує кількість слухачів подій у пам'яті, особливо на великих дошках.
+-->
+<div 
+  class="input-layer" 
+  style="--board-size: {boardSize}"
+  oncontextmenu={handleContextMenu}
+>
+  {#each Array(boardSize) as _, rowIdx (rowIdx)}
+    {#each Array(boardSize) as _, colIdx (colIdx)}
       <div 
         class="input-cell" 
-        on:contextmenu|preventDefault={(e) => onCellRightClick(e, rowIdx, colIdx)}
+        data-row={rowIdx}
+        data-col={colIdx}
         role="gridcell"
         aria-label="Cell {rowIdx + 1}, {colIdx + 1}"
         tabindex="-1"
@@ -40,7 +60,8 @@
 
   .input-cell {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 1 / 1;
     cursor: pointer;
+    box-sizing: border-box;
   }
 </style>
