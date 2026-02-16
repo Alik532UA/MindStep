@@ -7,6 +7,7 @@ import { initializeTestModeSync } from "$lib/services/testModeService";
 import { rewardsService } from "$lib/services/rewardsService";
 import { logService } from "$lib/services/logService";
 import { appVersion } from "$lib/stores/versionStore";
+import { get } from "svelte/store";
 import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
 
@@ -87,17 +88,82 @@ class AppInitializationService {
 
             const serverVersionData = await response.json();
             const serverVersion = serverVersionData.version;
+            const minVersion = serverVersionData.minVersion;
+            
             const localVersion = localStorage.getItem(APP_VERSION_KEY);
-            appVersion.set(serverVersion);
+            
+            appVersion.setVersion(serverVersion);
+            if (minVersion) appVersion.setMinVersion(minVersion);
 
             if (localVersion && localVersion !== serverVersion) {
-                // Logic to show update notice is handled in layout via store subscription
-                // Here we just ensure the store is updated
+                logService.init(`[AppInitializationService] New version available: ${serverVersion}`);
+                appVersion.setUpdateAvailable(true);
+
+                // Check for critical update
+                if (minVersion && this.isVersionLower(localVersion, minVersion)) {
+                    logService.init("[AppInitializationService] Critical update required! Performing Hard Reload...");
+                    await this.performHardReload();
+                }
             } else if (!localVersion) {
                 localStorage.setItem(APP_VERSION_KEY, serverVersion);
             }
         } catch (error) {
             logService.error("Failed to check for app update:", error);
+        }
+    }
+
+    /**
+     * Порівнює дві версії (формат x.y.z)
+     */
+    private isVersionLower(current: string, required: string): boolean {
+        const cParts = current.split('.').map(Number);
+        const rParts = required.split('.').map(Number);
+        
+        for (let i = 0; i < Math.max(cParts.length, rParts.length); i++) {
+            const c = cParts[i] || 0;
+            const r = rParts[i] || 0;
+            if (c < r) return true;
+            if (c > r) return false;
+        }
+        return false;
+    }
+
+    /**
+     * Виконує повне очищення кешу та перезавантаження
+     */
+    public async performHardReload() {
+        logService.init("[AppInitializationService] Performing Hard Reload: clearing SW and Caches...");
+        
+        try {
+            // 1. Unregister all service workers
+            if ("serviceWorker" in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+
+            // 2. Clear all caches
+            if ("caches" in window) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                    await caches.delete(key);
+                }
+            }
+
+            // 3. Update local version to prevent loop
+            const currentVersion = get(appVersion).current;
+            if (currentVersion) {
+                localStorage.setItem(APP_VERSION_KEY, currentVersion);
+            }
+
+            // 4. Force reload with cache-buster
+            const url = new URL(window.location.href);
+            url.searchParams.set('upd', Date.now().toString());
+            window.location.replace(url.toString());
+        } catch (e) {
+            logService.error("Hard Reload failed:", e);
+            window.location.reload();
         }
     }
 }

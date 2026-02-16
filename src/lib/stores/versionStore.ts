@@ -3,16 +3,24 @@
 // SSoT — versionState.svelte.ts (Runes).
 
 import { writable } from 'svelte/store';
-import { versionState } from './versionState.svelte';
+import { versionState, type VersionInfo } from './versionState.svelte';
 
-const { subscribe, set: svelteSet } = writable<string | null>(versionState.state);
+const { subscribe, set: svelteSet } = writable<VersionInfo>(versionState.state);
 
 const syncStore = () => { svelteSet(versionState.state); };
 
 export const appVersion = {
     subscribe,
-    set: (value: string | null) => {
-        versionState.state = value;
+    setVersion: (version: string) => {
+        versionState.setVersion(version);
+        syncStore();
+    },
+    setMinVersion: (version: string) => {
+        versionState.setMinVersion(version);
+        syncStore();
+    },
+    setUpdateAvailable: (available: boolean) => {
+        versionState.setUpdateAvailable(available);
         syncStore();
     }
 };

@@ -51,14 +51,17 @@ export default defineConfig(({ mode }) => {
 					clientsClaim: true,
 					skipWaiting: false,
 					cleanupOutdatedCaches: true,
+					// У dev режимі ми не хочемо прекешувати нічого, бо це створює помилки для віртуальних файлів SvelteKit
 					globPatterns: isDev
-						? ['**/*.{js,css,ico,png,svg,webp,woff2,json}']
+						? [] 
 						: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
-					globIgnores: isDev ? ['**/index.html'] : undefined,
-					navigateFallbackDenylist: [/^\/version\.json$/]
+					globIgnores: ['**/index.html'],
+					navigateFallback: isDev ? null : (base === '/' ? 'index.html' : `${base}/index.html`),
+					navigateFallbackDenylist: [/^\/version\.json$/],
+					dontCacheBustURLsMatching: /-[a-f0-9]{8}\./,
 				},
 				devOptions: {
-					enabled: true,
+					enabled: false, // Вимикаємо SW у dev за замовчуванням
 					suppressWarnings: true,
 					type: 'module',
 				}
