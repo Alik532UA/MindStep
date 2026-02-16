@@ -40,7 +40,7 @@
     class: customClass = "",
     style = undefined,
     dataTestId = undefined,
-    buttonElement = $bindable(null),
+    buttonElement = $bindable(),
     onclick,
     onmouseover,
     onmouseenter,

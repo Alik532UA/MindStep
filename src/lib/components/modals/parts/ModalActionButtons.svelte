@@ -30,6 +30,7 @@
     $effect(() => {
         if (modalState.buttons) {
             processingButtons = Array(modalState.buttons.length).fill(false);
+            buttonRefs = Array(modalState.buttons.length).fill(null);
         }
     });
 </script>
