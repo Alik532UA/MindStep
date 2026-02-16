@@ -15,7 +15,8 @@ const initialState: ModalState = {
     closeOnOverlayClick: false,
     dataTestId: undefined,
     customClass: undefined,
-    variant: 'standard'
+    variant: 'standard',
+    onClose: undefined
 };
 
 class ModalStateRune {

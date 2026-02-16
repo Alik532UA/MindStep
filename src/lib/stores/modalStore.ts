@@ -46,6 +46,7 @@ export interface ModalState {
     customClass?: string;
     titleValues?: Record<string, unknown>;
     variant: ModalVariant;
+    onClose?: () => void;
 }
 
 const { subscribe, set: svelteSet } = writable<ModalState>(modalStateRune.state);
@@ -95,7 +96,15 @@ export function showModalAsReplacement(modalDetails: Partial<ModalState>): void 
 }
 
 export function closeModal(): void {
+    const currentState = modalStateRune.state;
     logService.modal(`[ModalStore] closeModal called. Stack size before action: ${modalStack.length}`, { stack: [...modalStack] });
+    
+    // Викликаємо onClose перед закриттям
+    if (currentState.isOpen && currentState.onClose) {
+        logService.modal('[ModalStore] Calling onClose callback.');
+        currentState.onClose();
+    }
+
     if (modalStack.length > 0) {
         const previousState = modalStack.pop();
         if (previousState) {
@@ -110,7 +119,15 @@ export function closeModal(): void {
 }
 
 export function closeAllModals(): void {
+    const currentState = modalStateRune.state;
     logService.modal(`[ModalStore] closeAllModals called. Clearing stack of size ${modalStack.length}.`);
+    
+    // Викликаємо onClose поточної модалки
+    if (currentState.isOpen && currentState.onClose) {
+        logService.modal('[ModalStore] Calling onClose callback before closing all.');
+        currentState.onClose();
+    }
+
     modalStack.length = 0;
     modalStateRune.reset();
     syncStore();

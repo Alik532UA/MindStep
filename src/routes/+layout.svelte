@@ -37,6 +37,7 @@
 	import "$lib/services/commandService";
 	import ToastContainer from "$lib/components/ui/ToastContainer.svelte";
 	import { errorHandlerService } from "$lib/services/errorHandlerService";
+	import { audioService } from "$lib/services/audioService";
 
 	let showUpdateNotice = false;
 	const APP_VERSION_KEY = "app_version";
@@ -48,6 +49,15 @@
 		// Centralized initialization
 		appInitializationService.initialize();
 		errorHandlerService.initGlobalHandlers();
+
+		// Unlock audio on first click
+		const unlockAudio = () => {
+			audioService.unlock();
+			window.removeEventListener("click", unlockAudio);
+			window.removeEventListener("touchstart", unlockAudio);
+		};
+		window.addEventListener("click", unlockAudio);
+		window.addEventListener("touchstart", unlockAudio);
 
 		unsubscribeTestMode = testModeStore.subscribe((state) => {
 			testModeEnabled = state.isEnabled;

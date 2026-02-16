@@ -29,6 +29,35 @@ const speechTranslations: Record<SupportedLanguage, SpeechTranslations> = {
 
 const voices = writable<SpeechSynthesisVoice[]>([]);
 
+// Черга повідомлень для озвучення
+interface QueuedUtterance {
+    text: string;
+    lang: string;
+    voiceURI: string | null;
+    onEnd?: () => void;
+    force?: boolean;
+}
+
+let speechQueue: QueuedUtterance[] = [];
+let isSpeaking = false;
+let speechTimeout: any = null;
+
+/**
+ * Очищує чергу озвучення.
+ */
+export function clearSpeechQueue(): void {
+    speechQueue = [];
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    isSpeaking = false;
+    if (speechTimeout) {
+        clearTimeout(speechTimeout);
+        speechTimeout = null;
+    }
+    logService.speech('[Speech] Queue cleared.');
+}
+
 // Експортуємо функції-обгортки для зворотної сумісності
 export function loadAndGetVoices(): Promise<SpeechSynthesisVoice[]> {
     return VoiceLoader.loadAndGetVoices(voices);
@@ -104,12 +133,10 @@ export function speakMove(
         return;
     }
 
-    const selectedVoice = voiceURI ? allVoices.find(v => v.voiceURI === voiceURI) : null;
-    const availableVoices = filterVoicesByLang(allVoices, lang);
-    const voiceToUse = selectedVoice || availableVoices[0] || null;
-
-    const voiceLang = voiceToUse ? voiceToUse.lang : 'en-US';
-    const actualLangCode = voiceLang.split(/[-_]/)[0].toLowerCase();
+    // Отримуємо мову для вибору перекладів
+    const voicesForLang = filterVoicesByLang(allVoices, lang);
+    const firstVoice = voicesForLang[0];
+    const actualLangCode = firstVoice ? firstVoice.lang.split(/[-_]/)[0].toLowerCase() : lang.split(/[-_]/)[0].toLowerCase();
 
     const translations = (actualLangCode in speechTranslations)
         ? speechTranslations[actualLangCode as SupportedLanguage]
@@ -131,53 +158,119 @@ export function speakMove(
     }
 
     logService.speech(`[Speech] Generating text for "${actualLangCode}": "${textToSpeak}"`);
-    speakText(textToSpeak, voiceLang, voiceURI, onEndCallback);
+    speakText(textToSpeak, lang, voiceURI, onEndCallback, force);
 }
 
 /**
- * Озвучує текст.
+ * Озвучує текст через чергу.
  */
 export function speakText(
     textToSpeak: string,
     lang: string,
     voiceURI: string | null,
-    onEndCallback?: () => void
+    onEndCallback?: () => void,
+    force: boolean = false
 ): void {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !textToSpeak) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !textToSpeak) {
+        if (onEndCallback) onEndCallback();
+        return;
+    }
+
+    // Якщо це форсоване повідомлення (наприклад, перемога), очищуємо чергу
+    if (force) {
+        clearSpeechQueue();
+    }
+
+    speechQueue.push({
+        text: textToSpeak,
+        lang: lang,
+        voiceURI: voiceURI,
+        onEnd: onEndCallback,
+        force: force
+    });
+
+    // Якщо черга занадто велика (затримка), видаляємо старі повідомлення ходів
+    if (speechQueue.length > 3) {
+        logService.speech('[Speech] Queue too long, trimming...');
+        speechQueue = speechQueue.filter(item => item.force || item === speechQueue[speechQueue.length - 1]);
+    }
+
+    processQueue();
+}
+
+/**
+ * Обробляє чергу озвучення.
+ */
+function processQueue(): void {
+    if (isSpeaking || speechQueue.length === 0) return;
+
+    isSpeaking = true;
+    const item = speechQueue.shift();
+    if (!item) {
+        isSpeaking = false;
+        return;
+    }
 
     const allVoices = speechSynthesis.getVoices();
     if (allVoices.length === 0) {
-        logService.speech('[Speech] No voices available, aborting speakText.');
-        loadAndGetVoices();
+        logService.speech('[Speech] No voices available, waiting for voices...');
+        loadAndGetVoices().then(() => {
+            isSpeaking = false;
+            speechQueue.unshift(item);
+            processQueue();
+        });
         return;
     }
 
     const settings = get(gameSettingsStore);
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    const utterance = new SpeechSynthesisUtterance(item.text);
     utterance.rate = settings.speechRate || 1.0;
     utterance.pitch = 1.0;
 
-    if (onEndCallback) {
-        utterance.onend = onEndCallback;
-    }
-
-    const voiceToUseURI = voiceURI || settings.selectedVoiceURI;
+    const voiceToUseURI = item.voiceURI || settings.selectedVoiceURI;
     let selectedVoice: SpeechSynthesisVoice | null = null;
 
     if (voiceToUseURI) {
         selectedVoice = allVoices.find(v => v.voiceURI === voiceToUseURI) || null;
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-            utterance.lang = selectedVoice.lang;
-        } else {
-            utterance.lang = lang;
-        }
-    } else {
-        utterance.lang = lang;
     }
 
-    logService.speech(`[Speech] Queuing utterance "${textToSpeak}"`);
-    window.speechSynthesis.cancel();
+    if (!selectedVoice) {
+        const availableVoices = filterVoicesByLang(allVoices, item.lang);
+        // Пріоритет локальним голосам для стабільності
+        selectedVoice = availableVoices.find(v => v.localService) || availableVoices[0] || null;
+    }
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+    } else {
+        utterance.lang = item.lang;
+    }
+
+    const finishSpeak = () => {
+        if (speechTimeout) {
+            clearTimeout(speechTimeout);
+            speechTimeout = null;
+        }
+        isSpeaking = false;
+        if (item.onEnd) item.onEnd();
+        processQueue();
+    };
+
+    utterance.onend = finishSpeak;
+    utterance.onerror = (e) => {
+        logService.speech('[Speech] Utterance error:', e);
+        finishSpeak();
+    };
+
+    // Fallback: якщо onend не спрацював протягом 5 секунд (баг Chrome/Safari)
+    speechTimeout = setTimeout(() => {
+        logService.speech('[Speech] Utterance timeout reached.');
+        window.speechSynthesis.cancel();
+        finishSpeak();
+    }, 5000);
+
+    logService.speech(`[Speech] Speaking: "${item.text}"`);
     window.speechSynthesis.speak(utterance);
 }
 
@@ -216,12 +309,5 @@ export function speakTestPhrase(): void {
 
     if (!phrase) return;
 
-    const utterance = new SpeechSynthesisUtterance(phrase);
-    utterance.rate = settings.speechRate || 1.0;
-    utterance.pitch = 1.0;
-    utterance.voice = voiceToUse;
-    utterance.lang = voiceToUse.lang;
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    speakText(phrase, voiceLang, voiceToUse.voiceURI, undefined, true);
 }

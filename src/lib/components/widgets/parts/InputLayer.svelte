@@ -29,6 +29,7 @@
   class="input-layer" 
   style="--board-size: {boardSize}"
   oncontextmenu={handleContextMenu}
+  role="presentation"
 >
       {#each Array(boardSize) as _, rowIdx (rowIdx)}
       {#each Array(boardSize) as _, colIdx (colIdx)}
