@@ -4,6 +4,8 @@
   import { logService } from "$lib/services/logService.js";
   import { voiceControlService } from "$lib/services/voiceControlService.js";
   import type { MoveDirectionType } from "$lib/models/Piece";
+  import type { CenterInfoState } from "$lib/utils/centerInfoUtil";
+  import hotkeyService from "$lib/services/hotkeyService";
 
   // FIX: Import external styles
   import "$lib/css/widgets/direction-controls.css";
@@ -19,7 +21,7 @@
     distanceRows?: number[][];
     isPlayerTurn?: boolean;
     blockModeEnabled?: boolean;
-    centerInfoProps?: any;
+    centerInfoProps: CenterInfoState;
     isConfirmDisabled?: boolean;
     ondirection?: (dir: MoveDirectionType) => void;
     ondistance?: (dist: number) => void;
@@ -35,7 +37,7 @@
     distanceRows = [],
     isPlayerTurn = false,
     blockModeEnabled = false,
-    centerInfoProps = {},
+    centerInfoProps,
     isConfirmDisabled = false,
     ondirection,
     ondistance,
@@ -90,6 +92,11 @@
                         flatDistances.some(d => !registeredDistances.has(d));
       
       if (hasChanges) {
+        // Очищаємо попередні відстані перед реєстрацією нових
+        registeredDistances.forEach(dist => {
+          hotkeyService.unregister(`game.distance-${dist}`);
+        });
+
         flatDistances.forEach((dist) => {
           registerGameAction(`distance-${dist}` as any, () =>
             handleDistance(dist),
@@ -98,6 +105,13 @@
         registeredDistances = new Set(flatDistances);
       }
     }
+
+    return () => {
+      // Cleanup при демонтажі компонента або зміні ефекту
+      registeredDistances.forEach(dist => {
+        hotkeyService.unregister(`game.distance-${dist}`);
+      });
+    };
   });
 
   function handleDirection(dir: MoveDirectionType) {
@@ -133,12 +147,32 @@
 </script>
 
 <div class="direction-controls-panel">
+  {#snippet centerSnippet()}
+    <!-- FIX: disabled={false} гарантує, що кнопка ніколи не виглядає заблокованою (сірою/прозорою),
+           навіть якщо зараз хід суперника. Логіка кліку контролюється в handleCentral. -->
+    <button
+      id="center-info"
+      class="control-btn center-info {centerInfoProps.class}"
+      type="button"
+      aria-label={centerInfoProps.aria}
+      aria-live="polite"
+      onclick={handleCentral}
+      tabindex="0"
+      disabled={false}
+      style={centerInfoProps.backgroundColor
+        ? `background-color: ${centerInfoProps.backgroundColor} !important`
+        : ""}
+      data-testid="center-info-btn"
+    >
+      {centerInfoProps.content}
+    </button>
+  {/snippet}
+
   <DirectionGrid
     {selectedDirection}
     disabled={controlsDisabled}
-    {centerInfoProps}
+    center={centerSnippet}
     ondirection={handleDirection}
-    oncentral={handleCentral}
   />
 
   <DistanceSelector

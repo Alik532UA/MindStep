@@ -13,7 +13,7 @@
   import { modalStore } from "$lib/stores/modalStore";
   import DirectionControls from "./DirectionControls.svelte";
   import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
-  import { getCenterInfoState } from "$lib/utils/centerInfoUtil";
+  import { getCenterInfoState, type CenterInfoState } from "$lib/utils/centerInfoUtil";
   import { logService } from "$lib/services/logService.js";
   import { uiStateStore } from "$lib/stores/uiStateStore";
   import { voiceControlStore } from "$lib/stores/voiceControlStore";
@@ -35,7 +35,7 @@
     });
   });
 
-  let centerInfoProps = $derived(getCenterInfoState({
+  let centerInfoProps = $derived<CenterInfoState>(getCenterInfoState({
     selectedDirection: selectedDirection,
     selectedDistance,
     lastComputerMove: $lastComputerMove,

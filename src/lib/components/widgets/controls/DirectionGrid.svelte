@@ -2,21 +2,20 @@
     import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
     import type { MoveDirectionType } from "$lib/models/Piece";
     import { t } from "$lib/i18n/typedI18n";
+    import type { Snippet } from "svelte";
 
     interface Props {
         selectedDirection?: MoveDirectionType | null;
         disabled?: boolean;
-        centerInfoProps?: any;
+        center?: Snippet;
         ondirection?: (dir: MoveDirectionType) => void;
-        oncentral?: () => void;
     }
 
     let {
         selectedDirection = null,
         disabled = false,
-        centerInfoProps = {},
-        ondirection,
-        oncentral
+        center,
+        ondirection
     }: Props = $props();
 
     const directions: (MoveDirectionType | null)[] = [
@@ -50,12 +49,6 @@
         if (disabled) return;
         ondirection?.(dir);
     }
-
-    function handleCentral() {
-        // Центральна кнопка керується власною логікою clickable
-        if (!centerInfoProps.clickable) return;
-        oncentral?.();
-    }
 </script>
 
 <div class="directions-3x3">
@@ -71,24 +64,8 @@
             >
                 {getArrow(dir)}
             </button>
-        {:else}
-            <!-- FIX: disabled={false} гарантує, що кнопка ніколи не виглядає заблокованою (сірою/прозорою),
-           навіть якщо зараз хід суперника. Логіка кліку контролюється в handleCentral. -->
-            <button
-                id="center-info"
-                class="control-btn center-info {centerInfoProps.class}"
-                type="button"
-                aria-label={centerInfoProps.aria}
-                onclick={handleCentral}
-                tabindex="0"
-                disabled={false}
-                style={centerInfoProps.backgroundColor
-                    ? `background-color: ${centerInfoProps.backgroundColor} !important`
-                    : ""}
-                data-testid="center-info-btn"
-            >
-                {centerInfoProps.content}
-            </button>
+        {:else if center}
+            {@render center()}
         {/if}
     {/each}
 </div>
