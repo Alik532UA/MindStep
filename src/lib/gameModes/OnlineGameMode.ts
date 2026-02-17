@@ -47,6 +47,7 @@ export class OnlineGameMode extends BaseGameMode {
   private amIHost: boolean = false;
   private myPlayerIndex: number = -1;
   private isApplyingRemoteState: boolean = false;
+  private isEndingGame: boolean = false;
   private roomData: Room | null = null;
 
   constructor() {
@@ -54,7 +55,8 @@ export class OnlineGameMode extends BaseGameMode {
     this.turnDuration = 30;
   }
 
-  async initialize(options: { newSize?: number; roomId?: string } = {}): Promise<void> {
+  async initialize(options: { newSize?: number; roomId?: string; isNewGame?: boolean } = {}): Promise<void> {
+    this.isEndingGame = false;
     this.resetLocalStores();
 
     // Start tracking network stats for this session
@@ -73,37 +75,19 @@ export class OnlineGameMode extends BaseGameMode {
       return;
     }
 
-    // SCENARIO: Player reloaded page into a game where everyone else left
-    if (this.roomData.status !== 'waiting') {
-      const otherPlayers = Object.values(this.roomData.players).filter(p => p.id !== this.myPlayerId);
-      if (otherPlayers.length === 0) {
-        logService.GAME_MODE('[OnlineGameMode] Cannot resume: Room is empty (only me left) and game started/finished.');
-        // Якщо ми залишились одні, то грати ні з ким.
-        // Можна показати Game Over, але оскільки ми тільки зайшли, краще просто вийти.
-        // Але щоб користувач зрозумів, що сталось, краще показати Game Over.
-
-        // Однак, ми ще не ініціалізували контролери, тому endGame може працювати некоректно якщо залежить від них.
-        // Але endGameService залежить від сторів, які ми ще не заповнили (resetLocalStores був вище).
-
-        // Тому краще просто перенаправити в лобі з повідомленням (через notificationService, якщо можливо, або просто мовчки).
-        // Або, оскільки ми хочемо "не повертати до гри", то навігація - найкращий варіант.
-
-        // Але щоб видалити "зомбі" гравця з кімнати (щоб вона нарешті видалилась), треба викликати leaveRoom.
-        if (this.roomId && this.myPlayerId) {
-          await roomPlayerService.leaveRoom(this.roomId, this.myPlayerId);
-        }
-        navigationService.goTo('/online');
-        return;
-      }
-    }
+    // ... (scenario check) ...
 
     this.determineRole();
     this.applyRoomSettings();
     this.initializeControllers();
-    this.setupSubscriptions();
     this.startPresence();
 
-    // Хост-логіка моніторингу тепер виконується в OnlinePresenceManager.startMonitoring()
+    // СИСТЕМНЕ ВИПРАВЛЕННЯ: Якщо це нова гра і ми хост - ПОВНІСТЮ очищаємо стан у Firebase.
+    // Це гарантує, що старі ходи з попередніх ігор не будуть завантажені через pullState.
+    if (options.isNewGame && this.amIHost && this.stateSync) {
+      logService.GAME_MODE('[OnlineGameMode] New game requested by Host. Resetting remote state.');
+      await this.stateSync.resetState();
+    }
 
     await this.syncInitialState(options.newSize);
   }
@@ -184,6 +168,8 @@ export class OnlineGameMode extends BaseGameMode {
       this.matchController,
       {
         onSyncState: (overrides: Partial<SyncableGameState>) => this.synchronizer?.syncCurrentState(overrides),
+        onSyncSettings: () => this.synchronizer?.syncSettings(),
+        onPatchState: (updates: Partial<SyncableGameState>) => this.synchronizer?.patchState(updates),
         isApplyingRemoteState: () => this.isApplyingRemoteState
       },
       this.turnDuration
@@ -202,6 +188,11 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   private handleGameEnd(reason: string, initiatorId?: string) {
+    if (this.isEndingGame) {
+      logService.GAME_MODE(`[OnlineGameMode] handleGameEnd skipped: already ending. Reason: ${reason}`);
+      return;
+    }
+
     let specificPlayerIndex: number | undefined;
 
     if (initiatorId && this.roomData) {
@@ -216,6 +207,12 @@ export class OnlineGameMode extends BaseGameMode {
     }
 
     logService.GAME_MODE(`[OnlineGameMode] Ending game. Reason: ${reason}, Initiator: ${initiatorId}, Mapped Index: ${specificPlayerIndex}`);
+    this.isEndingGame = true;
+    
+    // ВАЖЛИВО: Очищаємо анімаційну чергу ПЕРЕД показом результатів, 
+    // щоб запобігти візуальним артефактам після завершення.
+    gameEventBus.dispatch('GAME_RESET');
+    
     endGameService.endGame(reason, null, specificPlayerIndex);
   }
 
@@ -251,11 +248,14 @@ export class OnlineGameMode extends BaseGameMode {
     try {
       await this.stateSync!.initialize(this.roomId!);
       this.unsubscribeSync = this.stateSync!.subscribe((event) => this.handleSyncEvent(event));
-      this.eventManager!.setupSubscriptions();
-
+      
       const remoteState = await this.stateSync!.pullState();
 
-      if (remoteState) {
+      // СИСТЕМНЕ ВИПРАВЛЕННЯ: Вважаємо гру "існуючою" тільки якщо в ній є стан дошки.
+      // Якщо там тільки налаштування (після патчу) — хост має ініціалізувати нову гру.
+      const isRemoteStateComplete = remoteState && remoteState.boardState && remoteState.playerState;
+
+      if (isRemoteStateComplete) {
         logService.GAME_MODE('[OnlineGameMode] Loaded existing state from server');
         this.applyRemoteState(remoteState);
       } else {
@@ -272,11 +272,18 @@ export class OnlineGameMode extends BaseGameMode {
         }
       }
 
+      // Підписуємось на події ТІЛЬКИ ПІСЛЯ того, як початковий стан встановлено.
+      // Це запобігає відправці патчів налаштувань у порожню кімнату до створення гри.
+      this.eventManager!.setupSubscriptions();
+
       this.applyLocalSettings();
       gameEventBus.dispatch('GAME_INITIALIZED', { newSize });
 
       if (get(boardStore)) {
-        this.startTurn();
+        // Даємо UI час відрендеритися перед початком ходу
+        setTimeout(() => {
+          this.startTurn();
+        }, 100);
       }
 
     } catch (error) {
@@ -316,11 +323,16 @@ export class OnlineGameMode extends BaseGameMode {
     const playerState = get(playerStore);
     if (!playerState || this.myPlayerIndex === -1) return;
 
+    const currentPlayer = playerState.players[playerState.currentPlayerIndex];
+    logService.GAME_MODE(`[OnlineGameMode.handlePlayerMove] Called: playerIndex=${playerState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, myIndex=${this.myPlayerIndex}, direction=${direction}, distance=${distance}`);
+
     if (playerState.currentPlayerIndex !== this.myPlayerIndex) {
+      logService.GAME_MODE(`[OnlineGameMode] Move rejected: Not my turn. Local index: ${this.myPlayerIndex}, Current turn index: ${playerState.currentPlayerIndex}, Player Type: ${currentPlayer?.type}`);
       notificationService.show({ type: 'warning', messageRaw: 'Зачекайте свого ходу!' });
       return;
     }
 
+    logService.GAME_MODE(`[OnlineGameMode] Executing local move: ${direction} ${distance}`);
     await super.handlePlayerMove(direction, distance, onEndCallback);
 
     // Implicit Heartbeat: Хід підтверджує присутність. Не чекаємо завершення.
@@ -347,9 +359,17 @@ export class OnlineGameMode extends BaseGameMode {
   getPlayersConfiguration(): Player[] {
     if (this.roomData) {
       const onlinePlayers = Object.values(this.roomData.players);
-      return createOnlinePlayers(onlinePlayers, this.roomData.hostId);
+      const configs = createOnlinePlayers(onlinePlayers, this.roomData.hostId);
+      logService.GAME_MODE('[OnlineGameMode] Player configuration created from room data:', configs.map(p => ({ name: p.name, type: p.type, isComputer: p.isComputer })));
+      return configs;
     }
-    return createOnlinePlayers();
+    const defaultConfigs = createOnlinePlayers();
+    logService.GAME_MODE('[OnlineGameMode] Player configuration created from defaults (room data missing):', defaultConfigs.map(p => ({ name: p.name, type: p.type, isComputer: p.isComputer })));
+    return defaultConfigs;
+  }
+
+  protected async triggerComputerMove(): Promise<void> {
+    logService.GAME_MODE('[OnlineGameMode] triggerComputerMove blocked. AI is not allowed in Online mode.');
   }
 
   getModeName(): 'training' | 'local' | 'timed' | 'online' | 'virtual-player' {
@@ -377,6 +397,8 @@ export class OnlineGameMode extends BaseGameMode {
     const currentPlayerState = get(playerStore);
     if (!currentPlayerState) return;
     const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
+
+    logService.GAME_MODE(`[OnlineGameMode] Advancing turn: ${currentPlayerState.currentPlayerIndex} -> ${nextPlayerIndex}`);
 
     if (nextPlayerIndex === 0) {
       logService.GAME_MODE(`[OnlineGameMode] Round completed. Flushing round scores to fixed scores.`);
@@ -429,6 +451,23 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   private applyRemoteState(remoteState: SyncableGameState): void {
+    // ВАЖЛИВО: Перевіряємо чи стан повний. 
+    if (!remoteState.boardState || !remoteState.playerState || !remoteState.scoreState) {
+      logService.GAME_MODE('[OnlineGameMode] Received incomplete remote state. Skipping application.');
+      return;
+    }
+
+    // СИСТЕМНЕ ВИПРАВЛЕННЯ: Форсуємо тип "human" для всіх гравців в онлайн-режимі.
+    // Це гарантує, що локальний AI ніколи не перехопить хід опонента, 
+    // навіть якщо в даних на сервері стався збій типів.
+    if (remoteState.playerState.players) {
+      remoteState.playerState.players = remoteState.playerState.players.map(p => ({
+        ...p,
+        type: 'human',
+        isComputer: false
+      }));
+    }
+
     this.isApplyingRemoteState = true;
 
     const previousPlayerIndex = get(playerStore)?.currentPlayerIndex;

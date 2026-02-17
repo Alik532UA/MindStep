@@ -96,6 +96,32 @@ export class FirebaseGameStateSync implements IGameStateSync {
         }
     }
 
+    async resetState(): Promise<void> {
+        if (!this._roomRef || !this._isConnected) return;
+        try {
+            await updateDoc(this._roomRef, {
+                gameState: null,
+                updatedAt: serverTimestamp()
+            });
+            this._stateVersion = 0;
+            logService.init('[FirebaseGameStateSync] Remote state RESET to null');
+        } catch (error) {
+            logService.error('[FirebaseGameStateSync] Reset state error:', error);
+        }
+    }
+
+    /**
+     * Перетворює об'єкт у плаский формат для updateDoc (dot notation).
+     */
+    private _flattenForUpdate(obj: any, prefix: string = 'gameState.'): Record<string, any> {
+        const result: Record<string, any> = {};
+        Object.entries(obj).forEach(([key, value]) => {
+            if (key === 'version' || key === 'updatedAt') return;
+            result[`${prefix}${key}`] = value;
+        });
+        return result;
+    }
+
     async pushState(state: SyncableGameState): Promise<void> {
         if (!this._roomRef || !this._isConnected) {
             logService.error('[FirebaseGameStateSync] Cannot push state: not connected');
@@ -103,80 +129,93 @@ export class FirebaseGameStateSync implements IGameStateSync {
         }
 
         try {
-            this._stateVersion++;
-
-            const finalState = {
-                ...GameStateSerializer.serialize(state),
-                version: this._stateVersion,
-                updatedAt: Date.now()
+            const serialized = GameStateSerializer.serialize(state);
+            
+            const firestoreUpdates: Record<string, any> = {
+                ...this._flattenForUpdate(serialized),
+                'gameState.version': increment(1),
+                'gameState.updatedAt': Date.now(),
+                updatedAt: serverTimestamp()
             };
 
-            await updateDoc(this._roomRef, {
-                gameState: finalState,
-                updatedAt: serverTimestamp()
-            });
+            await updateDoc(this._roomRef, firestoreUpdates);
 
-            networkStatsStore.recordWrite('GameStateSync:pushState', finalState);
-            logService.state(`[FirebaseGameStateSync] State pushed, version: ${this._stateVersion}`);
+            networkStatsStore.recordWrite('GameStateSync:pushState', serialized);
+            logService.state(`[FirebaseGameStateSync] FULL STATE pushed. Anticipating version > ${this._stateVersion}`);
         } catch (error) {
             logService.error('[FirebaseGameStateSync] Push state error:', error);
         }
     }
 
-    async updateVote(playerId: string, vote: VoteType): Promise<void> {
+    async patchState(updates: Partial<SyncableGameState>): Promise<void> {
         if (!this._roomRef || !this._isConnected) {
-            logService.error('[FirebaseGameStateSync] Cannot update vote: not connected');
+            logService.error('[FirebaseGameStateSync] Cannot patch state: not connected');
             return;
         }
 
         try {
-            const fieldPath = `gameState.noMovesVotes.${playerId}`;
-
-            await updateDoc(this._roomRef, {
-                [fieldPath]: vote,
+            const firestoreUpdates: Record<string, any> = {
+                'gameState.updatedAt': Date.now(),
                 'gameState.version': increment(1),
                 updatedAt: serverTimestamp()
+            };
+
+            Object.entries(updates).forEach(([key, value]) => {
+                if (key === 'version' || key === 'updatedAt') return;
+                
+                if (['boardState', 'playerState', 'scoreState', 'gameOver'].includes(key)) {
+                    const tempState = { [key]: value } as any;
+                    const serialized = GameStateSerializer.serialize(tempState);
+                    const serializedKey = key === 'gameOver' ? 'gameOverSerialized' : key;
+                    firestoreUpdates[`gameState.${serializedKey}`] = serialized[serializedKey];
+                } else {
+                    firestoreUpdates[`gameState.${key}`] = value;
+                }
             });
 
-            networkStatsStore.recordWrite('GameStateSync:updateVote', { playerId, vote });
-            logService.logicMove(`[FirebaseGameStateSync] Vote updated atomically for ${playerId}: ${vote}`);
+            await updateDoc(this._roomRef, firestoreUpdates);
+
+            networkStatsStore.recordWrite('GameStateSync:patchState', updates);
+            logService.state(`[FirebaseGameStateSync] PATCH pushed. Fields: ${Object.keys(updates).join(', ')}`);
         } catch (error) {
-            logService.error('[FirebaseGameStateSync] Update vote error:', error);
+            logService.error('[FirebaseGameStateSync] Patch state error:', error);
         }
     }
 
-    // FIX: Реалізація атомарного оновлення запиту на завершення
+    async updateVote(playerId: string, vote: VoteType): Promise<void> {
+        if (!this._roomRef || !this._isConnected) return;
+        const fieldPath = `gameState.noMovesVotes.${playerId}`;
+        await updateDoc(this._roomRef, {
+            [fieldPath]: vote,
+            'gameState.version': increment(1),
+            updatedAt: serverTimestamp()
+        });
+        logService.state(`[FirebaseGameStateSync] Vote patched for ${playerId}`);
+    }
+
     async updateFinishRequest(playerId: string, requested: boolean): Promise<void> {
-        if (!this._roomRef || !this._isConnected) {
-            logService.error('[FirebaseGameStateSync] Cannot update finish request: not connected');
-            return;
-        }
-
-        try {
-            const fieldPath = `gameState.finishRequests.${playerId}`;
-
-            await updateDoc(this._roomRef, {
-                [fieldPath]: requested,
-                'gameState.version': increment(1),
-                updatedAt: serverTimestamp()
-            });
-
-            networkStatsStore.recordWrite('GameStateSync:updateFinishRequest', { playerId, requested });
-            logService.logicMove(`[FirebaseGameStateSync] Finish request updated atomically for ${playerId}: ${requested}`);
-        } catch (error) {
-            logService.error('[FirebaseGameStateSync] Update finish request error:', error);
-        }
+        if (!this._roomRef || !this._isConnected) return;
+        const fieldPath = `gameState.finishRequests.${playerId}`;
+        await updateDoc(this._roomRef, {
+            [fieldPath]: requested,
+            'gameState.version': increment(1),
+            updatedAt: serverTimestamp()
+        });
+        logService.state(`[FirebaseGameStateSync] Finish request patched for ${playerId}`);
     }
 
     async pullState(): Promise<SyncableGameState | null> {
         if (!this._roomRef) return null;
-
         try {
             const snapshot = await getDoc(this._roomRef);
             if (!snapshot.exists()) return null;
-
             const data = snapshot.data() as FirebaseRoomDocument;
-            return GameStateSerializer.deserialize(data.gameState);
+            const state = GameStateSerializer.deserialize(data.gameState);
+            if (state && data.gameState?.version) {
+                this._stateVersion = data.gameState.version;
+                logService.state(`[FirebaseGameStateSync] Initial state pulled. Version: ${this._stateVersion}`);
+            }
+            return state;
         } catch (error) {
             logService.error('[FirebaseGameStateSync] Pull state error:', error);
             return null;
@@ -184,89 +223,72 @@ export class FirebaseGameStateSync implements IGameStateSync {
     }
 
     async pushMove(moveData: SyncMoveData): Promise<void> {
-        if (!this._roomRef || !this._db) {
-            logService.error('[FirebaseGameStateSync] Cannot push move: not connected');
-            return;
-        }
-
-        try {
-            const movesCollection = collection(this._roomRef, 'moves');
-            await addDoc(movesCollection, {
-                ...moveData,
-                createdAt: serverTimestamp()
-            });
-
-            networkStatsStore.recordWrite('GameStateSync:pushMove', moveData);
-            logService.logicMove('[FirebaseGameStateSync] Move pushed:', moveData);
-        } catch (error) {
-            logService.error('[FirebaseGameStateSync] Push move error:', error);
-        }
+        if (!this._roomRef || !this._db) return;
+        const movesCollection = collection(this._roomRef, 'moves');
+        await addDoc(movesCollection, { ...moveData, createdAt: serverTimestamp() });
     }
 
     subscribe(callback: GameStateSyncCallback): () => void {
         this._subscribers.add(callback);
-        return () => {
-            this._subscribers.delete(callback);
-        };
+        return () => this._subscribers.delete(callback);
     }
 
     async cleanup(): Promise<void> {
-        if (this._unsubscribeSnapshot) {
-            this._unsubscribeSnapshot();
-            this._unsubscribeSnapshot = null;
-        }
-
+        if (this._unsubscribeSnapshot) this._unsubscribeSnapshot();
         this._subscribers.clear();
         this._isConnected = false;
         this._sessionId = null;
         this._roomRef = null;
         this._db = null;
-
+        this._stateVersion = 0;
         logService.init('[FirebaseGameStateSync] Cleaned up');
     }
 
     private _subscribeToRoomUpdates(): void {
         if (!this._roomRef) return;
-
-        this._unsubscribeSnapshot = onSnapshot(
-            this._roomRef,
-            (snapshot) => {
-                if (!snapshot.exists()) {
-                    this._notifySubscribers({ type: 'game_ended', reason: 'room_deleted' });
-                    return;
-                }
-
-                const data = snapshot.data() as FirebaseRoomDocument;
-                networkStatsStore.recordRead('GameStateSync:Snapshot', data);
-
-                if (data.gameState) {
-                    if (data.gameState.version >= this._stateVersion) {
-                        this._stateVersion = data.gameState.version;
-                        const remoteState = GameStateSerializer.deserialize(data.gameState);
-
-                        if (remoteState) {
-                            this._notifySubscribers({
-                                type: 'state_updated',
-                                state: remoteState
-                            });
-                        }
-                    }
-                }
-            },
-            (error) => {
-                logService.error('[FirebaseGameStateSync] Snapshot error:', error);
-                this._isConnected = false;
-                this._notifySubscribers({ type: 'connection_lost' });
+        this._unsubscribeSnapshot = onSnapshot(this._roomRef, (snapshot) => {
+            if (!snapshot.exists()) {
+                this._notifySubscribers({ type: 'game_ended', reason: 'room_deleted' });
+                return;
             }
-        );
+            const data = snapshot.data() as FirebaseRoomDocument;
+            
+            if (!data.gameState) {
+                if (this._stateVersion !== 0) {
+                    logService.state(`[FirebaseGameStateSync] Remote state is null. Resetting local version from ${this._stateVersion} to 0`);
+                    this._stateVersion = 0;
+                }
+                return;
+            }
+
+            if (data.gameState) {
+                const remoteVersion = data.gameState.version || 0;
+                
+                if (remoteVersion > this._stateVersion) {
+                    const oldVersion = this._stateVersion;
+                    this._stateVersion = remoteVersion;
+                    const remoteState = GameStateSerializer.deserialize(data.gameState);
+                    if (remoteState) {
+                        logService.state(`[FirebaseGameStateSync] State updated: ${oldVersion} -> ${remoteVersion}`);
+                        this._notifySubscribers({ type: 'state_updated', state: remoteState });
+                    }
+                } else if (remoteVersion < this._stateVersion) {
+                    logService.error(`[FirebaseGameStateSync] VERSION REGRESSION DETECTED! Local: ${this._stateVersion}, Remote: ${remoteVersion}`);
+                }
+            }
+        }, (error) => {
+            logService.error('[FirebaseGameStateSync] Snapshot error:', error);
+            this._isConnected = false;
+            this._notifySubscribers({ type: 'connection_lost' });
+        });
     }
 
     private _notifySubscribers(event: GameStateSyncEvent): void {
         this._subscribers.forEach((callback) => {
-            try {
-                callback(event);
-            } catch (error) {
-                logService.error('[FirebaseGameStateSync] Subscriber error:', error);
+            try { 
+                callback(event); 
+            } catch (error) { 
+                logService.error('[FirebaseGameStateSync] Subscriber callback failed:', error); 
             }
         });
     }

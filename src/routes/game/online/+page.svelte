@@ -8,6 +8,8 @@
     import { base } from "$app/paths";
     import { onMount } from "svelte";
 
+    import { page } from "$app/stores";
+
     function initOnlineGame() {
         const session = roomService.getSession();
         if (!session.roomId || !session.playerId) {
@@ -18,12 +20,16 @@
             return;
         }
 
+        // ПЕРЕВІРКА: чи ми щойно з лобі?
+        const fromLobby = $page.url.searchParams.get("from") === "lobby";
+
         logService.init(
-            `[OnlineGamePage] Initializing online game for room: ${session.roomId}`,
+            `[OnlineGamePage] Initializing online game for room: ${session.roomId} (New Game: ${fromLobby})`,
         );
 
         gameModeService.initializeGameMode("online", true, {
             roomId: session.roomId,
+            isNewGame: fromLobby
         });
     }
 

@@ -8,22 +8,16 @@ import { logService } from '$lib/services/logService';
 
 /**
  * Headless ігровий рушій.
- * Містить тільки чисту логіку правил гри без залежностей від Svelte-сторів.
+ * Stateless версія: не зберігає стан, а приймає його як аргумент.
+ * Це гарантує використання завжди актуальних даних (SSoT).
  */
 export class GameEngine {
-  private state: CombinedGameState;
+  // Ми залишаємо settings тут, але вони також можуть бути передані в метод,
+  // проте для зручності використання в BaseGameMode залишимо можливість їх оновлення.
   private settings: GameSettingsState;
 
-  constructor(initialState: CombinedGameState, settings: GameSettingsState) {
-    this.state = JSON.parse(JSON.stringify(initialState)); // Глибока копія для ізоляції
+  constructor(settings: GameSettingsState) {
     this.settings = settings;
-  }
-
-  /**
-   * Повертає поточний стан рушія.
-   */
-  public getState(): CombinedGameState {
-    return this.state;
   }
 
   /**
@@ -35,16 +29,19 @@ export class GameEngine {
 
   /**
    * Виконує хід та повертає результат і зміни стану.
+   * Тепер приймає currentState як аргумент.
    */
   public performMove(
+    currentState: CombinedGameState,
     direction: MoveDirectionType,
     distance: number,
     playerIndex: number,
     actualGameMode: string
   ): MoveResult {
     logService.logicMove(`[GameEngine] performMove: ${direction} ${distance} (player ${playerIndex})`);
+    logService.logicMove(`[GameEngine] Current Pos BEFORE move: [${currentState.playerRow}, ${currentState.playerCol}]`);
 
-    const piece = new Piece(this.state.playerRow!, this.state.playerCol!, this.state.boardSize);
+    const piece = new Piece(currentState.playerRow!, currentState.playerCol!, currentState.boardSize);
     const newPosition = piece.calculateNewPosition(direction, distance);
 
     // 1. Валідація меж
@@ -53,18 +50,18 @@ export class GameEngine {
     }
 
     // 2. Валідація заблокованих клітинок
-    if (isCellBlocked(newPosition.row, newPosition.col, this.state.cellVisitCounts, this.settings)) {
+    if (isCellBlocked(newPosition.row, newPosition.col, currentState.cellVisitCounts, this.settings)) {
       return { success: false, reason: 'blocked_cell' };
     }
 
     // 3. Розрахунок очок
-    const scoreChanges = calculateMoveScore(this.state, newPosition, playerIndex, this.settings, distance, direction);
+    const scoreChanges = calculateMoveScore(currentState, newPosition, playerIndex, this.settings, distance, direction);
 
     // 4. Оновлення стану відвіданих клітинок
-    const startCellKey = `${this.state.playerRow}-${this.state.playerCol}`;
+    const startCellKey = `${currentState.playerRow}-${currentState.playerCol}`;
     const updatedCellVisitCounts = { 
-      ...this.state.cellVisitCounts, 
-      [startCellKey]: (this.state.cellVisitCounts[startCellKey] || 0) + 1 
+      ...currentState.cellVisitCounts, 
+      [startCellKey]: (currentState.cellVisitCounts[startCellKey] || 0) + 1 
     };
 
     // 5. Визначення очок для додавання (різна логіка для режимів)
@@ -78,8 +75,8 @@ export class GameEngine {
         playerRow: newPosition.row,
         playerCol: newPosition.col,
         cellVisitCounts: updatedCellVisitCounts,
-        moveQueue: [...this.state.moveQueue, { player: playerIndex + 1, direction, distance, to: newPosition }],
-        moveHistory: [...this.state.moveHistory, { 
+        moveQueue: [...currentState.moveQueue, { player: playerIndex + 1, direction, distance, to: newPosition }],
+        moveHistory: [...currentState.moveHistory, { 
           pos: newPosition, 
           blocked: [] as { row: number; col: number }[], 
           visits: updatedCellVisitCounts, 
@@ -88,20 +85,17 @@ export class GameEngine {
         }] as MoveHistoryEntry[],
       },
       playerState: {
-        players: this.state.players.map((p, i) => 
+        players: currentState.players.map((p, i) => 
           i === playerIndex ? { ...p, score: p.score + baseScoreToAdd } : p
         ),
       },
       scoreState: {
-        penaltyPoints: this.state.penaltyPoints + scoreChanges.penaltyPoints,
-        movesInBlockMode: this.state.movesInBlockMode + scoreChanges.movesInBlockModeChange,
-        jumpedBlockedCells: this.state.jumpedBlockedCells + scoreChanges.jumpedBlockedCellsChange,
-        distanceBonus: (this.state.distanceBonus || 0) + scoreChanges.distanceBonusChange,
+        penaltyPoints: currentState.penaltyPoints + scoreChanges.penaltyPoints,
+        movesInBlockMode: currentState.movesInBlockMode + scoreChanges.movesInBlockModeChange,
+        jumpedBlockedCells: currentState.jumpedBlockedCells + scoreChanges.jumpedBlockedCellsChange,
+        distanceBonus: (currentState.distanceBonus || 0) + scoreChanges.distanceBonusChange,
       }
     };
-
-    // Оновлюємо внутрішній стан
-    this.applyChanges(changes);
 
     return {
       success: true,
@@ -110,16 +104,5 @@ export class GameEngine {
       bonusPoints: scoreChanges.bonusPoints,
       penaltyPoints: scoreChanges.penaltyPointsForMove
     };
-  }
-
-  /**
-   * Внутрішній метод для застосування змін до стану рушія.
-   */
-  private applyChanges(changes: NonNullable<MoveResult['changes']>): void {
-    if (changes.boardState) Object.assign(this.state, changes.boardState);
-    if (changes.playerState) {
-        if (changes.playerState.players) this.state.players = changes.playerState.players;
-    }
-    if (changes.scoreState) Object.assign(this.state, changes.scoreState);
   }
 }

@@ -17,13 +17,21 @@ import { gameEventBus } from './gameEventBus';
 import { modalService } from './modalService';
 import { navigateToGame } from './uiService';
 
+let lastMoveTimestamp: number = 0;
+const MOVE_COOLDOWN_MS = 250; // Чверть секунди для запобігання деренчанню
+
 export const userActionService = {
   selectDirection(direction: Direction): void {
     const uiState = get(uiStateStore);
-    // FIX: Блокуємо вибір, якщо гра завершена
-    if (uiState?.isGameOver) return;
+    // FIX: Блокуємо вибір, якщо гра завершена або йде хід
+    if (uiState?.isGameOver || uiState?.isComputerMoveInProgress) return;
 
     logService.logicMove(`[userActionService] setDirection called with: ${direction}`);
+    // DIAGNOSTIC: Log stack trace to find source of call
+    console.groupCollapsed(`[userActionService] setDirection trace for ${direction}`);
+    console.trace();
+    console.groupEnd();
+
     const boardState = get(boardStore);
     if (!uiState || !boardState) return;
 
@@ -64,6 +72,19 @@ export const userActionService = {
     const uiState = get(uiStateStore);
     // FIX: Блокуємо виконання, якщо гра завершена або йде хід комп'ютера
     if (uiState?.isComputerMoveInProgress || uiState?.isGameOver) return;
+
+    // СИСТЕМНИЙ ЗАХИСТ: Запобігаємо занадто швидким повторним ходам (деренчання)
+    const now = Date.now();
+    if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
+      logService.error('[userActionService] executeMove blocked: too soon after last move.');
+      return;
+    }
+    lastMoveTimestamp = now;
+
+    // DIAGNOSTIC: Log stack trace to find source of call
+    console.groupCollapsed(`[userActionService] executeMove trace for ${direction} ${distance}`);
+    console.trace();
+    console.groupEnd();
 
     const activeGameMode = gameModeService.getCurrentMode();
     if (activeGameMode) {

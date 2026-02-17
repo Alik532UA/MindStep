@@ -191,13 +191,6 @@ export class OnlineMatchController {
     }
 
     private async syncState(overrides: Partial<SyncableGameState>) {
-        const currentState = await this.stateSync.pullState();
-        if (currentState) {
-            await this.stateSync.pushState({
-                ...currentState,
-                ...overrides,
-                updatedAt: Date.now()
-            });
-        }
+        await this.stateSync.patchState(overrides);
     }
 }

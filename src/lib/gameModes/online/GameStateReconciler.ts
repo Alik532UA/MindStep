@@ -23,33 +23,59 @@ export class GameStateReconciler {
 
     public apply(remoteState: SyncableGameState): void {
         const currentBoard = get(boardStore);
+        const isGameOver = get(uiStateStore).isGameOver;
 
-        if (currentBoard && remoteState.boardState) {
-            if (remoteState.boardState.moveHistory.length < currentBoard.moveHistory.length) {
+        if (remoteState.boardState) {
+            const oldQueueLength = currentBoard?.moveQueue?.length || 0;
+            const newQueueLength = remoteState.boardState.moveQueue?.length || 0;
+
+            logService.state(`[Reconciler] Comparing queues: Local=${oldQueueLength}, Remote=${newQueueLength}, isGameOver=${isGameOver}`);
+
+            if (currentBoard && remoteState.boardState.moveHistory.length < currentBoard.moveHistory.length) {
                 logService.GAME_MODE('[Reconciler] Detected game reset. Resetting animation service.');
                 gameEventBus.dispatch('GAME_RESET');
             }
 
-            const oldQueueLength = currentBoard.moveQueue.length;
-            const newQueueLength = remoteState.boardState.moveQueue.length;
-
-            if (newQueueLength > oldQueueLength) {
+            // Тільки якщо гра ще триває, ми додаємо нові ходи до черги анімації
+            if (newQueueLength > oldQueueLength && !isGameOver) {
                 const newMoves = remoteState.boardState.moveQueue.slice(oldQueueLength);
+                logService.state(`[Reconciler] Found ${newMoves.length} new moves to animate.`);
+
                 newMoves.forEach(move => {
+                    logService.animation('[Reconciler] Dispatching animation event for move:', move);
                     gameEventBus.dispatch('new_move_added', move);
                     this.handleOpponentVoiceover(move);
                 });
             }
         }
 
-        if (remoteState.boardState) boardStore.set(remoteState.boardState);
-        if (remoteState.playerState) playerStore.set(remoteState.playerState);
-        if (remoteState.scoreState) scoreStore.set(remoteState.scoreState);
+        // --- ДІАГНОСТИКА: Оновлюємо стори з детальним логуванням ---
+        try {
+            if (remoteState.boardState) {
+                logService.state('[Reconciler] Updating boardStore...');
+                boardStore.set(remoteState.boardState);
+            }
+            if (remoteState.playerState) {
+                logService.state('[Reconciler] Updating playerStore...', {
+                    currentPlayer: remoteState.playerState.currentPlayerIndex,
+                    players: remoteState.playerState.players.map(p => ({
+                        name: p.name,
+                        type: p.type,
+                        isComputer: p.isComputer
+                    }))
+                });
+                playerStore.set(remoteState.playerState);
+            }
+            if (remoteState.scoreState) {
+                logService.state('[Reconciler] Updating scoreStore...');
+                scoreStore.set(remoteState.scoreState);
+            }
+        } catch (e: any) {
+            logService.error(`[Reconciler] Error during store updates: ${e?.message}`, e);
+            throw e;
+        }
 
         if (remoteState.settings) {
-            // FIX: Застосовуємо тільки ті налаштування, які прийшли з сервера і є спільними.
-            // Локальні налаштування (голос, віджети) залишаються без змін, бо їх немає в remoteState.settings
-            // (завдяки змінам в OnlineStateSynchronizer).
             gameSettingsStore.updateSettings(remoteState.settings);
         }
 
@@ -65,7 +91,6 @@ export class GameStateReconciler {
         const settings = get(gameSettingsStore);
 
         if (movePlayerIndex !== myIndex && settings.speechEnabled && settings.speechFor.onlineOpponentMove) {
-            logService.speech(`[Reconciler] Speaking opponent move: ${move.direction} ${move.distance}`);
             speakMove(
                 { direction: move.direction, distance: move.distance },
                 (get(appSettingsStore) as AppSettingsState).language || 'uk',
@@ -88,12 +113,13 @@ export class GameStateReconciler {
             }
         } else {
             const votes = remoteState.noMovesVotes || {};
-            const totalPlayers = remoteState.playerState.players.length;
+            const totalPlayers = remoteState.playerState?.players?.length || 0;
+            if (totalPlayers === 0) return;
+
             const majorityThreshold = Math.floor(totalPlayers / 2) + 1;
             const finishCount = Object.values(votes).filter(v => v === 'finish').length;
 
             if (finishCount >= majorityThreshold) {
-                logService.GAME_MODE('[Reconciler] Ignoring missing remote GameOver because majority voted FINISH.');
                 return;
             }
 
@@ -111,7 +137,6 @@ export class GameStateReconciler {
         if (!remoteState.noMovesClaim) {
             const currentModal = get(modalStore);
             if (currentModal.isOpen && (currentModal.dataTestId === 'player-no-moves-modal' || currentModal.dataTestId === 'opponent-trapped-modal')) {
-                logService.GAME_MODE('[Reconciler] NoMoves claim cleared on server. Closing modal.');
                 gameEventBus.dispatch('CloseModal');
             }
             return;
@@ -120,7 +145,6 @@ export class GameStateReconciler {
         const claim = remoteState.noMovesClaim;
 
         if (claim.timestamp > this.lastProcessedNoMovesClaim) {
-            logService.GAME_MODE('[Reconciler] Processing NoMoves claim. Showing modal for ALL players.');
             this.lastProcessedNoMovesClaim = claim.timestamp;
 
             timeService.stopTurnTimer();
@@ -141,6 +165,8 @@ export class GameStateReconciler {
     private updateModalButtonsState(remoteState: SyncableGameState) {
         const currentModal = get(modalStore);
         if (currentModal.isOpen && (currentModal.dataTestId === 'player-no-moves-modal' || currentModal.dataTestId === 'opponent-trapped-modal')) {
+            if (!remoteState.playerState) return;
+
             const t = get(tStore);
             const votes = remoteState.noMovesVotes || {};
             const totalPlayers = remoteState.playerState.players.length;
@@ -157,31 +183,20 @@ export class GameStateReconciler {
             let updated = false;
 
             const continueBtnText = `${t('modal.continueGame')} (${continueCount}/${totalPlayers})`;
-            if (newButtons[0].text !== continueBtnText) {
-                newButtons[0] = {
-                    ...newButtons[0],
-                    text: continueBtnText,
-                    textKey: undefined,
-                    disabled: false
-                };
+            if (newButtons[0] && newButtons[0].text !== continueBtnText) {
+                newButtons[0] = { ...newButtons[0], text: continueBtnText, textKey: undefined, disabled: false };
                 updated = true;
             }
 
             const baseFinishText = t('modal.finishGameWithBonus', { bonus: remoteState.noMovesClaim?.boardSize || 0 });
             const finishBtnText = `${baseFinishText} (${finishCount}/${totalPlayers})`;
 
-            if (newButtons[1].text !== finishBtnText) {
-                newButtons[1] = {
-                    ...newButtons[1],
-                    text: finishBtnText,
-                    textKey: undefined,
-                    disabled: false
-                };
+            if (newButtons[1] && newButtons[1].text !== finishBtnText) {
+                newButtons[1] = { ...newButtons[1], text: finishBtnText, textKey: undefined, disabled: false };
                 updated = true;
             }
 
             if (updated) {
-                logService.modal(`[Reconciler] Updating modal buttons: Continue=${continueCount}, Finish=${finishCount}`);
                 modalStore.update(s => ({ ...s, buttons: newButtons }));
             }
         }

@@ -45,7 +45,7 @@
             room = updatedRoom;
 
             if (room.status === "playing") {
-                goto(`${base}/game/online`);
+                goto(`${base}/game/online?from=lobby`);
             }
         });
     });

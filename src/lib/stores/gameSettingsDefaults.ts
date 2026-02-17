@@ -67,7 +67,7 @@ export const defaultGameSettings: GameSettingsState = {
 
     // Block Mode
     blockModeEnabled: false,
-    blockOnVisitCount: 0,
+    blockOnVisitCount: 1,
 
     // Звукові налаштування
     speechEnabled: true,

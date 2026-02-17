@@ -30,6 +30,10 @@ class AiService {
     playerState: PlayerState,
     uiState: UiState
   ): Promise<{ direction: MoveDirectionType; distance: number } | null> {
+    logService.logicVirtualPlayer('AiService.getComputerMove CALLED', { 
+      currentPlayer: playerState?.currentPlayerIndex,
+      players: playerState?.players?.map(p => ({ name: p.name, type: p.type }))
+    });
     if (!boardState || !playerState || !uiState) return null;
 
     logService.testMode('aiService: отримано стан', { boardState, playerState, uiState });

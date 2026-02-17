@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { get } from 'svelte/store';
 import { logService } from './logService';
+import { maintenanceService } from './maintenanceService';
 
 type HotkeyAction = {
     action: (event?: KeyboardEvent) => void;
@@ -10,7 +11,24 @@ type HotkeyAction = {
 const contextStack = writable<string[]>(['global']);
 const hotkeyRegistry = new Map<string, Map<string, HotkeyAction>>();
 
+// Логіка для Hard Reset (KeyR sequence)
+let resetKeyCounter = 0;
+const RESET_THRESHOLD = import.meta.env.DEV ? 5 : 55;
+
 function handleKeydown(event: KeyboardEvent) {
+    // 0. Спеціальна перевірка на Hard Reset (KeyR)
+    if (event.code === 'KeyR') {
+        resetKeyCounter++;
+        logService.hotkey(`[hotkeyService] KeyR pressed. Count: ${resetKeyCounter}/${RESET_THRESHOLD}`);
+        if (resetKeyCounter >= RESET_THRESHOLD) {
+            resetKeyCounter = 0;
+            maintenanceService.hardReset();
+            return;
+        }
+    } else {
+        resetKeyCounter = 0;
+    }
+
     // 1. Перевірка на фокус в полях вводу (Global Input Protection)
     const target = event.target as HTMLElement;
     const isInputActive =

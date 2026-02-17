@@ -58,6 +58,33 @@ export class LocalGameStateSync implements IGameStateSync {
         logService.state(`[LocalGameStateSync] State pushed, version: ${this._stateVersion}`);
     }
 
+    async patchState(updates: Partial<SyncableGameState>): Promise<void> {
+        logService.state(`[LocalGameStateSync] patchState called with updates:`, Object.keys(updates));
+        const currentState = await this.pullState();
+        if (currentState) {
+            const newState = { ...currentState, ...updates };
+            await this.pushState(newState);
+        } else {
+            logService.error(`[LocalGameStateSync] patchState failed: No current state to patch.`);
+        }
+    }
+
+    async resetState(): Promise<void> {
+        this._stateVersion = 0;
+        this._localVotes = {};
+        this._notifySubscribers({
+            type: 'state_updated',
+            state: {
+                boardState: null as any,
+                playerState: null as any,
+                scoreState: null as any,
+                version: 0,
+                updatedAt: Date.now()
+            }
+        });
+        logService.state(`[LocalGameStateSync] State reset.`);
+    }
+
     async updateVote(playerId: string, vote: VoteType): Promise<void> {
         this._localVotes[playerId] = vote;
         logService.logicMove(`[LocalGameStateSync] Vote updated locally for ${playerId}: ${vote}`);

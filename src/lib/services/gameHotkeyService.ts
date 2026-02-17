@@ -54,6 +54,8 @@ function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
     });
 }
 
+let lastKeybindingsJson = '';
+
 export function registerGameAction(action: KeybindingAction, handler: (event?: KeyboardEvent) => void) {
     // Змінено на hotkey
     logService.hotkey(`[gameHotkeyService] Registering game action handler: ${action}`);
@@ -68,8 +70,18 @@ export function initializeGameHotkeys() {
     }
 
     unsubscribeGameSettings = gameSettingsStore.subscribe(settings => {
+        const currentKeybindingsJson = JSON.stringify(settings.keybindings);
+        const currentConflictResolutionJson = JSON.stringify(settings.keyConflictResolution);
+        const stateKey = `${currentKeybindingsJson}|${currentConflictResolutionJson}`;
+
+        if (stateKey === lastKeybindingsJson) {
+            return;
+        }
+
+        lastKeybindingsJson = stateKey;
+
         // Змінено на hotkey
-        logService.hotkey('[gameHotkeyService] Game settings changed, re-registering all hotkeys.');
+        logService.hotkey('[gameHotkeyService] Keybindings changed, re-registering all hotkeys.');
         hotkeyService.unregister('game');
 
         const keyToActionMap = new Map<string, KeybindingAction[]>();

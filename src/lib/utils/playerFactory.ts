@@ -140,7 +140,13 @@ export function createOnlinePlayers(onlinePlayers?: OnlinePlayer[], hostId?: str
     });
 
     return sortedPlayers.map((p, index) => {
-        return createHumanPlayer(index + 1, p.name, p.color);
+        return createPlayer({
+            id: index + 1,
+            name: p.name,
+            type: 'human',
+            color: p.color,
+            isComputer: false
+        });
     });
 }
 

@@ -68,6 +68,8 @@ export interface IGameStateSync {
 
     initialize(sessionId?: string): Promise<void>;
     pushState(state: SyncableGameState): Promise<void>;
+    patchState(updates: Partial<SyncableGameState>): Promise<void>;
+    resetState(): Promise<void>;
     pullState(): Promise<SyncableGameState | null>;
     pushMove(moveData: SyncMoveData): Promise<void>;
 

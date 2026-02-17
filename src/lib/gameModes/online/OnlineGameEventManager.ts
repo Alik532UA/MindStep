@@ -11,6 +11,8 @@ import type { OnlineMatchController } from './OnlineMatchController';
 
 export interface EventManagerCallbacks {
     onSyncState: (overrides?: any) => void;
+    onSyncSettings: () => void;
+    onPatchState: (updates: any) => void;
     isApplyingRemoteState: () => boolean;
 }
 
@@ -30,7 +32,7 @@ export class OnlineGameEventManager {
         this.subscriptions.push(
             gameSettingsStore.subscribe(settings => {
                 if (!this.callbacks.isApplyingRemoteState() && this.roomId) {
-                    this.callbacks.onSyncState();
+                    this.callbacks.onSyncSettings();
                 }
             })
         );
@@ -81,8 +83,8 @@ export class OnlineGameEventManager {
                 timeService.stopTurnTimer();
 
                 if (this.myPlayerId && !payload.isRemote) {
-                    logService.GAME_MODE('[OnlineEventManager] Local NoMoves claim detected. Syncing to server.');
-                    this.callbacks.onSyncState({
+                    logService.GAME_MODE('[OnlineEventManager] Local NoMoves claim detected. Patching to server.');
+                    this.callbacks.onPatchState({
                         noMovesClaim: {
                             playerId: this.myPlayerId,
                             scoreDetails: payload.scoreDetails,
@@ -99,8 +101,8 @@ export class OnlineGameEventManager {
         this.subscriptions.push(
             gameEventBus.subscribe('GameOver', (payload: GameOverPayload) => {
                 if (!this.callbacks.isApplyingRemoteState() && this.roomId) {
-                    logService.GAME_MODE('[OnlineEventManager] Local GameOver detected. Syncing to server.');
-                    this.callbacks.onSyncState({
+                    logService.GAME_MODE('[OnlineEventManager] Local GameOver detected. Patching to server.');
+                    this.callbacks.onPatchState({
                         gameOver: payload,
                         finishRequests: {}, // FIX: Очищаємо запити на завершення
                         continueRequests: {},

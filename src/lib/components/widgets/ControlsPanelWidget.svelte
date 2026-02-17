@@ -43,23 +43,20 @@
   });
 
   function handleDirection(e: CustomEvent<any>) {
-    logService.action(`Click: "Напрямок: ${e.detail}" (ControlsPanelWidget)`);
+    // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
     userActionService.selectDirection(e.detail);
   }
   function handleDistance(e: CustomEvent<any>) {
-    logService.action(`Click: "Відстань: ${e.detail}" (ControlsPanelWidget)`);
+    // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
     userActionService.selectDistance(e.detail);
   }
   function handleCentral() {
-    logService.action('Click: "Центральна кнопка" (ControlsPanelWidget)');
     if (centerInfoProps.clickable) onConfirmClick();
   }
   function handleConfirm() {
-    logService.action('Click: "Підтвердити хід" (ControlsPanelWidget)');
     onConfirmClick();
   }
   function handleNoMoves() {
-    logService.action('Click: "Ходів немає" (ControlsPanelWidget)');
     userActionService.claimNoMoves();
   }
 

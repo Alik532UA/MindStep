@@ -26,7 +26,7 @@
       <MultiPlayerScoreDisplay {players} scoreStore={$scoreStore} />
     {:else}
       <SinglePlayerScoreDisplay
-        score={pState.players[0]?.score || 0}
+        score={players[0]?.score || 0}
         scoreStore={$scoreStore}
       />
     {/if}

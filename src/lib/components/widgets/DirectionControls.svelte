@@ -42,6 +42,8 @@
   $: confirmButtonBlocked =
     isConfirmDisabled || !selectedDirection || !selectedDistance;
 
+  let registeredDistances = new Set<number>();
+
   onMount(() => {
     isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -60,11 +62,19 @@
 
   $: {
     if (distanceRows && distanceRows.length > 0) {
-      distanceRows.flat().forEach((dist) => {
-        registerGameAction(`distance-${dist}` as any, () =>
-          handleDistance(dist),
-        );
-      });
+      const flatDistances = distanceRows.flat();
+      // Перевіряємо чи змінився набір відстаней
+      const hasChanges = flatDistances.length !== registeredDistances.size || 
+                        flatDistances.some(d => !registeredDistances.has(d));
+      
+      if (hasChanges) {
+        flatDistances.forEach((dist) => {
+          registerGameAction(`distance-${dist}` as any, () =>
+            handleDistance(dist),
+          );
+        });
+        registeredDistances = new Set(flatDistances);
+      }
     }
   }
 

@@ -36,17 +36,9 @@ export abstract class BaseGameMode implements IGameMode {
   protected initEngine(): void {
     // Скидаємо старий двигун перед ініціалізацією нового
     this.engine = null;
-
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    const scoreState = get(scoreStore);
-    const uiState = get(uiStateStore);
     const settings = get(gameSettingsStore);
-
-    if (boardState && playerState && scoreState) {
-      const combinedState = { ...boardState, ...playerState, ...scoreState, ...uiState };
-      this.engine = new GameEngine(combinedState, settings);
-    }
+    // Ініціалізуємо Stateless Engine тільки з налаштуваннями
+    this.engine = new GameEngine(settings);
   }
 
   // Змінено з abstract на virtual (з дефолтною реалізацією)
@@ -84,7 +76,7 @@ export abstract class BaseGameMode implements IGameMode {
     playerStore.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
 
     const nextPlayer = get(playerStore)?.players[nextPlayerIndex];
-    logService.GAME_MODE(`advanceToNextPlayer: Наступний гравець: ${nextPlayer?.type} (індекс ${nextPlayerIndex}).`);
+    logService.GAME_MODE(`advanceToNextPlayer: Наступний гравець: ${nextPlayer?.name}, Тип: ${nextPlayer?.type}, isComputer: ${nextPlayer?.isComputer}`);
 
     if (nextPlayer?.type === 'ai' || nextPlayer?.type === 'computer') {
       logService.GAME_MODE('advanceToNextPlayer: Заплановано хід комп\'ютера (через таймер).');
@@ -128,19 +120,9 @@ export abstract class BaseGameMode implements IGameMode {
 
     boardStore.update(s => s ? ({ ...s, ...continuationData }) : null);
 
-    // Оновлюємо двигун при скиданні дошки, використовуючи актуальні дані
+    // Оновлюємо двигун при скиданні дошки (перестворюємо з новими налаштуваннями)
     if (this.engine) {
-      const playerState = get(playerStore);
-      const scoreState = get(scoreStore);
-      if (playerState && scoreState) {
-        const engineState = {
-          ...boardState,
-          ...continuationData,
-          ...playerState,
-          ...scoreState
-        };
-        this.engine = new GameEngine(engineState, settings);
-      }
+      this.engine = new GameEngine(settings);
     }
 
     availableMovesService.updateAvailableMoves();
@@ -172,12 +154,22 @@ export abstract class BaseGameMode implements IGameMode {
 
     const playerState = get(playerStore);
     const boardState = get(boardStore);
-    if (!playerState || !boardState || boardState.playerRow === null || boardState.playerCol === null) return;
+    const scoreState = get(scoreStore);
+    const uiState = get(uiStateStore);
+
+    if (!playerState || !boardState || !scoreState || !uiState || boardState.playerRow === null || boardState.playerCol === null) return;
+
+    const currentPlayer = playerState.players[playerState.currentPlayerIndex];
+    logService.logicMove(`[BaseGameMode.handlePlayerMove] EXECUTION START: playerIndex=${playerState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, isComputer=${currentPlayer?.isComputer}, direction=${direction}, distance=${distance}`);
 
     // Оновлюємо налаштування в двигуні перед ходом (на випадок змін)
     this.engine.updateSettings(get(gameSettingsStore));
 
+    // Створюємо актуальний знімок стану ПЕРЕД ходом (SSoT)
+    const currentGameState = { ...boardState, ...playerState, ...scoreState, ...uiState };
+
     const moveResult = this.engine.performMove(
+      currentGameState,
       direction,
       distance,
       playerState.currentPlayerIndex,
@@ -334,11 +326,13 @@ export abstract class BaseGameMode implements IGameMode {
   }
 
   protected async triggerComputerMove(): Promise<void> {
+    const playerState = get(playerStore);
+    const currentPlayer = playerState?.players[playerState?.currentPlayerIndex || 0];
+    logService.GAME_MODE(`BaseGameMode.triggerComputerMove CALLED. Checking permissions... Player: ${currentPlayer?.name}, Type: ${currentPlayer?.type}, isComputer: ${currentPlayer?.isComputer}`);
     logService.GAME_MODE('triggerComputerMove: Початок ходу комп\'ютера.');
     uiStateStore.update(s => s ? ({ ...s, isComputerMoveInProgress: true }) : null);
 
     const boardState = get(boardStore);
-    const playerState = get(playerStore);
     const uiState = get(uiStateStore);
     if (!boardState || !playerState || !uiState) return;
 
