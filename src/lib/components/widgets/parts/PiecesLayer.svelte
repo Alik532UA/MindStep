@@ -1,10 +1,14 @@
 <script lang="ts">
   import PlayerPiece from "../PlayerPiece.svelte";
 
-  export let row: number | null;
-  export let col: number | null;
-  export let boardSize: number;
-  export let showPiece: boolean;
+  interface Props {
+    row: number | null;
+    col: number | null;
+    boardSize: number;
+    showPiece: boolean;
+  }
+
+  let { row, col, boardSize, showPiece }: Props = $props();
 </script>
 
 <div class="pieces-layer" style="--board-size: {boardSize}">

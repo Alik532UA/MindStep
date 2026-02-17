@@ -1,5 +1,9 @@
 <script lang="ts">
-  export let boardSize: number;
+  interface Props {
+    boardSize: number;
+  }
+
+  let { boardSize }: Props = $props();
 </script>
 
 <div class="static-grid" style="--board-size: {boardSize}">

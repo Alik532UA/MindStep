@@ -4,15 +4,9 @@
   import { modalStore } from "$lib/stores/modalStore";
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
-  import { animationStore } from "$lib/stores/animationStore.js";
-  import {
-    visualPosition,
-    visualCellVisitCounts,
-    availableMoves,
-    currentPlayer,
-  } from "$lib/stores/derivedState.ts";
-  import { derived, get } from "svelte/store";
-  import PlayerPiece from "./PlayerPiece.svelte";
+  import { animationState } from "$lib/stores/animationState.svelte";
+  import { derivedState } from "$lib/stores/derivedState.svelte";
+  import { get } from "svelte/store";
   import { logService } from "$lib/services/logService.js";
   import { isCellBlocked } from "$lib/utils/boardUtils.ts";
   import { boardState } from "$lib/stores/boardState.svelte";
@@ -50,15 +44,10 @@
     };
   }
 
-  const showAvailableMoves = derived(
-    [gameSettingsStore, animationStore, currentPlayer],
-    ([$gameSettingsStore, $animationStore, $currentPlayer]) => {
-      return (
-        $gameSettingsStore.showMoves &&
-        !$animationStore.isAnimating &&
-        $currentPlayer?.type === "human"
-      );
-    },
+  const showAvailableMoves = $derived(
+    $gameSettingsStore.showMoves &&
+    !animationState.state.isAnimating &&
+    derivedState.currentPlayer?.type === "human"
   );
 
   function showBoardClickHint(e: Event) {
@@ -101,7 +90,8 @@
     }
   });
 
-  function onCellRightClick(event: MouseEvent, row: number, col: number): void {
+  function onCellRightClick(data: { event: MouseEvent; row: number; col: number }): void {
+    const { event, row, col } = data;
     event.preventDefault();
     const settings = get(gameSettingsStore);
     if (
@@ -109,7 +99,7 @@
       settings.blockModeEnabled &&
       !(row === bState.playerRow && col === bState.playerCol)
     ) {
-      const visualCounts = get(visualCellVisitCounts) as Record<string, number>;
+      const visualCounts = derivedState.visualCellVisitCounts;
       const blocked = isCellBlocked(row, col, visualCounts, settings);
       logService.ui(
         `${blocked ? "Розблокування" : "Блокування"} клітинки [${row},${col}]`,
@@ -148,26 +138,26 @@
           
           <EffectsLayer 
             boardSize={currentBoardSize} 
-            visualCellVisitCounts={$visualCellVisitCounts} 
+            visualCellVisitCounts={derivedState.visualCellVisitCounts} 
             gameSettings={$gameSettingsStore} 
           />
 
           <InteractionLayer 
             boardSize={currentBoardSize}
-            availableMoves={$availableMoves}
-            showMoves={$showAvailableMoves}
+            availableMoves={derivedState.availableMoves}
+            showMoves={showAvailableMoves}
           />
 
           <PiecesLayer 
-            row={$visualPosition.row} 
-            col={$visualPosition.col} 
+            row={derivedState.visualPosition.row} 
+            col={derivedState.visualPosition.col} 
             boardSize={currentBoardSize} 
             showPiece={$gameSettingsStore.showPiece}
           />
 
           <InputLayer 
             boardSize={currentBoardSize} 
-            on:cellRightClick={(e) => onCellRightClick(e.detail.event, e.detail.row, e.detail.col)}
+            oncellRightClick={onCellRightClick}
           />
         </div>
       </div>

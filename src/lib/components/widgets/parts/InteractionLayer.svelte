@@ -1,16 +1,18 @@
 <script lang="ts">
-  import type { MoveDirectionType } from "$lib/models/Piece";
+  interface Props {
+    boardSize: number;
+    availableMoves: Array<{ row: number; col: number; isPenalty: boolean }>;
+    showMoves: boolean;
+  }
 
-  export let boardSize: number;
-  export let availableMoves: Array<{ row: number; col: number; isPenalty: boolean }>;
-  export let showMoves: boolean;
+  let { boardSize, availableMoves, showMoves }: Props = $props();
 
-  $: movesMap = showMoves 
+  let movesMap = $derived(showMoves 
     ? availableMoves.reduce((acc, move) => {
         acc[`${move.row}-${move.col}`] = move;
         return acc;
       }, {} as Record<string, { isPenalty: boolean }>)
-    : {};
+    : {});
 </script>
 
 <div class="interaction-layer" style="--board-size: {boardSize}">

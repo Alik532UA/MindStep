@@ -2,9 +2,13 @@
   import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils";
   import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
 
-  export let boardSize: number;
-  export let visualCellVisitCounts: Record<string, number>;
-  export let gameSettings: GameSettingsState;
+  interface Props {
+    boardSize: number;
+    visualCellVisitCounts: Record<string, number>;
+    gameSettings: GameSettingsState;
+  }
+
+  let { boardSize, visualCellVisitCounts, gameSettings }: Props = $props();
 </script>
 
 <div class="effects-layer" style="--board-size: {boardSize}">

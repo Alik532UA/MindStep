@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  interface Props {
+    boardSize: number;
+    oncellRightClick?: (data: { event: MouseEvent; row: number; col: number }) => void;
+  }
 
-  export let boardSize: number;
-
-  const dispatch = createEventDispatcher();
+  let { boardSize, oncellRightClick }: Props = $props();
 
   function handleContextMenu(event: MouseEvent) {
     event.preventDefault();
@@ -12,7 +13,7 @@
     const col = target.getAttribute('data-col');
 
     if (row !== null && col !== null) {
-      dispatch("cellRightClick", { 
+      oncellRightClick?.({ 
         event, 
         row: parseInt(row, 10), 
         col: parseInt(col, 10) 
