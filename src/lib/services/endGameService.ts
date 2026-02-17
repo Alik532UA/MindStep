@@ -68,9 +68,17 @@ export const endGameService = {
           else cleanMode = 'training';
         }
 
+        const lastPlayedInfo = {
+          mode: cleanMode,
+          size: bState.boardSize,
+          score: finalScoreDetails.totalScore,
+          timestamp: Date.now()
+        };
+
         leaderboardService.submitScore(finalScoreDetails.totalScore, {
           mode: cleanMode,
-          size: bState.boardSize
+          size: bState.boardSize,
+          lastPlayed: lastPlayedInfo
         });
 
         logService.score('[endGameService] Checking achievements with final score...');
@@ -79,8 +87,6 @@ export const endGameService = {
           gameMode: cleanMode,
           boardSize: bState.boardSize
         });
-
-        this.saveLastPlayedInfo(cleanMode, bState.boardSize, finalScoreDetails.totalScore);
       }
     }
 
@@ -129,27 +135,12 @@ export const endGameService = {
     logService.score('[endGameService] Dispatching GameOver event:', gameOverPayload);
     gameOverState.setGameOver(gameOverPayload);
 
-    // @ts-ignore
-    gameEventBus.dispatch('GameOver', { ...gameOverPayload, state: { ...bState, ...finalPlayerState, ...scoreState.state!, ...uStateFinal } });
-  },
+        // @ts-ignore
 
-  async saveLastPlayedInfo(mode: string, size: number, score: number) {
-    const user = authService.getCurrentUser();
-    if (!user) return;
+        gameEventBus.dispatch('GameOver', { ...gameOverPayload, state: { ...bState, ...finalPlayerState, ...scoreState.state!, ...uStateFinal } });
 
-    try {
-      const db = getFirestore(getFirebaseApp());
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        lastPlayed: {
-          mode,
-          size,
-          score,
-          timestamp: Date.now()
-        }
-      });
-    } catch (e) {
-      console.warn('Failed to save last played info', e);
-    }
-  }
-};
+      }
+
+    };
+
+    

@@ -7,8 +7,10 @@ import { logService } from '$lib/services/logService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { timeService } from '$lib/services/timeService';
 import { gameService } from '$lib/services/gameService';
+import { endGameService } from '$lib/services/endGameService';
 import { scoreState } from '$lib/stores/scoreState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 
 export class TrainingGameMode extends BaseGameMode {
@@ -41,9 +43,14 @@ export class TrainingGameMode extends BaseGameMode {
     const bState = boardState.state;
     if (!bState) return;
 
-    gameOverState.resetGameOverState();
-    scoreState.update(s => s ? { ...s, noMovesBonus: (s.noMovesBonus || 0) + bState.boardSize } : null);
-    noMovesService.dispatchNoMovesEvent(playerType);
+    if (gameSettingsState.state.blockModeEnabled) {
+      gameOverState.resetGameOverState();
+      scoreState.update(s => s ? { ...s, noMovesBonus: (s.noMovesBonus || 0) + bState.boardSize } : null);
+      noMovesService.dispatchNoMovesEvent(playerType);
+    } else {
+      const reason = playerType === 'human' ? 'modal.gameOverReasonNoMoves' : 'modal.gameOverReasonComputerNoMoves';
+      await endGameService.endGame(reason);
+    }
   }
 
   protected startTurn(): void {

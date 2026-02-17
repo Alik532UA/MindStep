@@ -58,9 +58,9 @@ class LeaderboardService {
 
     async submitScore(
         score: number,
-        context: { mode: string; size: number; variant?: string }
+        context: { mode: string; size: number; variant?: string; lastPlayed?: any }
     ) {
-        const { mode, size, variant = 'default' } = context;
+        const { mode, size, variant = 'default', lastPlayed } = context;
         const leaderboardKey = this.getLeaderboardKey(mode, size, variant);
 
         logService.score(`[Leaderboard] Processing score: ${score} for key: ${leaderboardKey}`);
@@ -83,10 +83,12 @@ class LeaderboardService {
         if (!user) return;
 
         const userRef = doc(this.db, 'users', user.uid);
-
-        // FIX: Генеруємо ID на основі часу замість випадкового
         const scoreId = this.generateTimestampId();
         const scoreRef = doc(this.db, 'scores', scoreId);
+        
+        // Підготовлюємо дані заздалегідь
+        const timestamp = Date.now();
+        const safeDisplayName = user.displayName || 'Anonymous';
 
         try {
             await runTransaction(this.db, async (transaction) => {
@@ -97,11 +99,11 @@ class LeaderboardService {
                     const userData = userDocSnap.data() as UserDocument;
                     currentDbBest = userData.stats?.[leaderboardKey] || 0;
                 } else {
-                    const newUser: Partial<UserDocument> = {
-                        displayName: user.displayName || null,
+                    const newUser: UserDocument = {
+                        displayName: safeDisplayName,
                         isAnonymous: user.isAnonymous,
-                        createdAt: Date.now(),
-                        lastActive: Date.now(),
+                        createdAt: timestamp,
+                        lastActive: timestamp,
                         stats: {},
                         unlockedRewards: {}
                     };
@@ -110,33 +112,41 @@ class LeaderboardService {
 
                 const scoreData: ScoreDocument = {
                     uid: user.uid,
-                    displayName: user.displayName || null,
+                    displayName: safeDisplayName,
                     gameMode: mode,
                     boardSize: size,
                     variant,
                     score,
-                    timestamp: Date.now(),
+                    timestamp,
                     leaderboardKey
                 };
                 transaction.set(scoreRef, scoreData);
 
+                const userUpdates: any = {};
                 if (score > currentDbBest) {
-                    transaction.update(userRef, {
-                        [`stats.${leaderboardKey}`]: score,
-                        lastActive: Date.now()
-                    });
+                    userUpdates[`stats.${leaderboardKey}`] = score;
                     logService.score(`[Leaderboard] Cloud Personal Best Updated for ${leaderboardKey}!`);
-                } else {
-                    transaction.update(userRef, { lastActive: Date.now() });
+                }
+                
+                if (lastPlayed) {
+                    userUpdates.lastPlayed = lastPlayed;
+                }
+
+                // ВАЖЛИВО: Не оновлюємо lastActive тут, щоб уникнути конфліктів з presenceService
+                if (Object.keys(userUpdates).length > 0) {
+                    transaction.update(userRef, userUpdates);
                 }
             });
         } catch (e) {
             logService.error('[Leaderboard] Failed to submit score to cloud', e);
+            // Fallback: використовуємо setDoc з merge для надійності
+            const fallbackData: any = {
+                stats: { [leaderboardKey]: score }
+            };
+            if (lastPlayed) fallbackData.lastPlayed = lastPlayed;
+
             try {
-                await setDoc(userRef, {
-                    stats: { [leaderboardKey]: score },
-                    lastActive: Date.now()
-                }, { merge: true });
+                await setDoc(userRef, fallbackData, { merge: true });
             } catch (retryError) {
                 logService.error('[Leaderboard] Retry failed', retryError);
             }

@@ -38,28 +38,40 @@ export function getCenterInfoState({
   isPlayerTurn: boolean;
   previousPlayerColor?: string | null;
 }): CenterInfoState {
-  // FIX: Видалено залежність від isPauseBetweenMoves.
-  // Логіка гри оновлюється миттєво, тому UI повинен відображати стан негайно.
+  // RADICAL FIX: Якщо це не хід гравця, ми ОБНУЛЯЄМО його вибір для відображення
+  const effectiveDirection = isPlayerTurn ? selectedDirection : null;
+  const effectiveDistance = isPlayerTurn ? selectedDistance : null;
+
+  // DEBUG LOG
+  if (selectedDirection || selectedDistance || lastComputerMove) {
+    logService.ui('[getCenterInfoState] Calculating state:', {
+      isPlayerTurn,
+      selectedDirection,
+      selectedDistance,
+      effectiveDirection,
+      hasLastCompMove: !!lastComputerMove
+    });
+  }
 
   // 1. Якщо гравець вибрав хід (напрямок + відстань) - показуємо кнопку підтвердження
-  if (selectedDirection && selectedDistance) {
+  if (effectiveDirection && effectiveDistance) {
     let dir = '';
-    if (directionArrows[selectedDirection]) {
-      dir = directionArrows[selectedDirection];
+    if (directionArrows[effectiveDirection]) {
+      dir = directionArrows[effectiveDirection];
     }
     return {
       class: 'confirm-btn-active',
-      content: `${dir}${selectedDistance}`,
-      clickable: isPlayerTurn,
-      aria: `Підтвердити хід: ${dir}${selectedDistance}`
+      content: `${dir}${effectiveDistance}`,
+      clickable: true,
+      aria: `Підтвердити хід: ${dir}${effectiveDistance}`
     };
   }
 
   // 2. Якщо вибрано тільки напрямок
-  if (selectedDirection) {
+  if (effectiveDirection) {
     let dir = '';
-    if (directionArrows[selectedDirection]) {
-      dir = directionArrows[selectedDirection];
+    if (directionArrows[effectiveDirection]) {
+      dir = directionArrows[effectiveDirection];
     }
     return {
       class: 'direction-distance-state',
@@ -70,18 +82,18 @@ export function getCenterInfoState({
   }
 
   // 3. Якщо вибрано тільки відстань
-  if (!selectedDirection && selectedDistance) {
+  if (!effectiveDirection && effectiveDistance) {
     return {
       class: 'direction-distance-state',
-      content: String(selectedDistance),
+      content: String(effectiveDistance),
       clickable: false,
-      aria: `Вибрано відстань: ${selectedDistance}`
+      aria: `Вибрано відстань: ${effectiveDistance}`
     };
   }
 
   // 4. Якщо немає вибору гравця, показуємо останній хід комп'ютера
   // Це має відбуватися миттєво після оновлення логіки, незалежно від анімації.
-  if (!selectedDirection && !selectedDistance && lastComputerMove) {
+  if (lastComputerMove) {
     let dir = '';
     let dist = '';
     if (lastComputerMove.direction && directionArrows[lastComputerMove.direction]) {
@@ -98,8 +110,8 @@ export function getCenterInfoState({
     };
   }
 
-  // 5. Якщо немає ходу комп'ютера, показуємо останній хід гравця (для локальних ігор)
-  if (!selectedDirection && !selectedDistance && !lastComputerMove && lastPlayerMove) {
+  // 5. Якщо немає ходу комп'ютера, показуємо останній хід гравця (ТІЛЬКИ якщо зараз хід гравця)
+  if (isPlayerTurn && lastPlayerMove) {
     let dir = '';
     let dist = '';
     if (lastPlayerMove.direction && directionArrows[lastPlayerMove.direction]) {

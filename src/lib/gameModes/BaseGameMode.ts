@@ -41,7 +41,16 @@ export abstract class BaseGameMode implements IGameMode {
 
   // Змінено з abstract на virtual (з дефолтною реалізацією)
   async handleNoMoves(playerType: 'human' | 'computer'): Promise<void> {
-    await noMovesService.dispatchNoMovesEvent(playerType);
+    const settings = gameSettingsState.state;
+    
+    if (settings.blockModeEnabled) {
+      // Якщо режим блокування увімкнено - показуємо модальне вікно "Блискучий аналіз"
+      await noMovesService.dispatchNoMovesEvent(playerType);
+    } else {
+      // Якщо режим блокування вимкнено - гра завершується
+      const reason = playerType === 'human' ? 'modal.gameOverReasonNoMoves' : 'modal.gameOverReasonComputerNoMoves';
+      await endGameService.endGame(reason);
+    }
   }
 
   // Змінено з abstract на virtual
@@ -67,23 +76,31 @@ export abstract class BaseGameMode implements IGameMode {
   // Змінено з abstract на virtual
   protected async advanceToNextPlayer(): Promise<void> {
     logService.GAME_MODE('advanceToNextPlayer: Передача ходу наступному гравцю.');
-    const currentPlayerState = playerState.state;
-    if (!currentPlayerState || !currentPlayerState.players) return;
-    const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
+    const pState = playerState.state;
+    if (!pState || !pState.players || pState.players.length === 0) return;
+    
+    const nextPlayerIndex = (pState.currentPlayerIndex + 1) % pState.players.length;
 
-    playerState.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
+    logService.state(`[BaseGameMode] Switching player: ${pState.currentPlayerIndex} -> ${nextPlayerIndex}`);
+    
+    // МИТТЄВО оновлюємо індекс гравця
+    playerState.setCurrentPlayer(nextPlayerIndex);
 
-    const nextPlayer = playerState.state?.players[nextPlayerIndex];
+    const nextPlayer = playerState.state.players[nextPlayerIndex];
     logService.GAME_MODE(`advanceToNextPlayer: Наступний гравець: ${nextPlayer?.name}, Тип: ${nextPlayer?.type}, isComputer: ${nextPlayer?.isComputer}`);
 
-    if (nextPlayer?.type === 'ai' || nextPlayer?.type === 'computer') {
+    if (nextPlayer?.type === 'ai' || nextPlayer?.type === 'computer' || nextPlayer?.isComputer) {
       logService.GAME_MODE('advanceToNextPlayer: Заплановано хід комп\'ютера (через таймер).');
+      // Встановлюємо прапорець НЕГАЙНО, щоб UI знав, що йде хід комп'ютера
+      uiState.update(s => ({ ...s, isComputerMoveInProgress: true }));
+      
       // НАВІЩО: Використовуємо setTimeout(0), щоб розірвати ланцюжок синхронних викликів.
-      // Це дає Svelte-сторам та UI можливість оновитися ПЕРЕД початком нового ходу.
       setTimeout(() => {
         this.triggerComputerMove();
       }, 0);
     } else {
+      // Якщо наступний гравець - людина, переконуємося що прапорець вимкнено
+      uiState.update(s => ({ ...s, isComputerMoveInProgress: false }));
       this.startTurn();
     }
   }
@@ -188,9 +205,12 @@ export abstract class BaseGameMode implements IGameMode {
       playerState.update(s => s ? ({ ...s, ...moveResult.changes!.playerState }) : null);
       scoreState.update(s => s ? ({ ...s, ...moveResult.changes!.scoreState }) : null);
 
-      // Оновлюємо останній хід у uiState
+      // Оновлюємо останній хід у uiState та ГАРАНТОВАНО СКИТАЄМО вибір гравця
       uiState.update(s => ({
         ...s,
+        selectedDirection: null,
+        selectedDistance: null,
+        isFirstMove: false,
         lastMove: {
           direction,
           distance,
@@ -345,7 +365,6 @@ export abstract class BaseGameMode implements IGameMode {
     const currentPlayer = pState?.players[pState?.currentPlayerIndex || 0];
     logService.GAME_MODE(`BaseGameMode.triggerComputerMove CALLED. Checking permissions... Player: ${currentPlayer?.name}, Type: ${currentPlayer?.type}, isComputer: ${currentPlayer?.isComputer}`);
     logService.GAME_MODE('triggerComputerMove: Початок ходу комп\'ютера.');
-    uiState.update(s => s ? ({ ...s, isComputerMoveInProgress: true }) : s);
 
     const bState = boardState.state;
     const uState = uiState.state;

@@ -9,32 +9,39 @@ export interface PlayerState {
   currentPlayerIndex: number;
 }
 
+export const initialPlayerState: PlayerState = {
+    players: [],
+    currentPlayerIndex: 0
+};
+
 class PlayerStateRune {
-    private _state = $state<PlayerState | null>(null);
+    private _state = $state<PlayerState>({
+        players: [],
+        currentPlayerIndex: 0
+    });
 
     get state() {
         return this._state;
     }
 
-    set state(value: PlayerState | null) {
+    set state(value: PlayerState) {
         this._state = value;
     }
 
-    set(value: PlayerState | null) {
+    set(value: PlayerState) {
         this._state = value;
     }
 
-    update(fn: (s: PlayerState | null) => PlayerState | null) {
+    update(fn: (s: PlayerState) => PlayerState) {
         this._state = fn(this._state);
     }
 
     setCurrentPlayer(index: number) {
-        if (!this._state) return;
-        this._state.currentPlayerIndex = index;
+        this._state = { ...this._state, currentPlayerIndex: index };
     }
 
     addPlayer() {
-        if (!this._state || this._state.players.length >= 8) return;
+        if (this._state.players.length >= 8) return;
         
         const usedColors = this._state.players.map((p) => p.color);
         const usedNames = this._state.players.map((p) => p.name);
@@ -70,7 +77,7 @@ class PlayerStateRune {
     }
 
     reset() {
-        this._state = null;
+        this._state = { ...initialPlayerState };
     }
 }
 

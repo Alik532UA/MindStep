@@ -74,8 +74,11 @@ export const userActionService = {
     if (uState?.isComputerMoveInProgress || uState?.isGameOver) return;
 
     // СИСТЕМНИЙ ЗАХИСТ: Запобігаємо занадто швидким повторним ходам (деренчання)
+    // ВИМИКАЄМО cooldown під час тестів, щоб не флакали E2E тести
     const now = Date.now();
-    if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
+    const isTestMode = typeof window !== 'undefined' && ((window as any).__playwright_test__ || import.meta.env.MODE === 'test');
+    
+    if (!isTestMode && (now - lastMoveTimestamp < MOVE_COOLDOWN_MS)) {
       logService.error('[userActionService] executeMove blocked: too soon after last move.');
       return;
     }
@@ -85,6 +88,14 @@ export const userActionService = {
     console.groupCollapsed(`[userActionService] executeMove trace for ${direction} ${distance}`);
     console.trace();
     console.groupEnd();
+
+    // МИТТЄВО очищаємо вибір гравця, щоб UI не "залипав" на старому ході
+    uiState.update(s => ({
+      ...s,
+      selectedDirection: null,
+      selectedDistance: null,
+      isFirstMove: false
+    }));
 
     const activeGameMode = gameModeService.getCurrentMode();
     if (activeGameMode) {

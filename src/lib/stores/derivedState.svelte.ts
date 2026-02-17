@@ -116,14 +116,16 @@ export const derivedState = {
 
     get isPlayerTurn() {
         const pState = playerState.state;
-        if (!pState) return false;
+        if (!pState || !pState.players || pState.players.length === 0) return false;
 
         const currentPlayerIndex = pState.currentPlayerIndex;
         const currentPlayer = pState.players[currentPlayerIndex];
+        if (!currentPlayer) return false;
+
         const uState = uiState.state;
 
         const isOnline = uState?.intendedGameType === 'online';
-        const isHuman = currentPlayer?.type === 'human';
+        const isHuman = currentPlayer.type === 'human';
         const isMyOnlineTurn = isOnline && uState.onlinePlayerIndex === currentPlayerIndex;
 
         if (isOnline) {

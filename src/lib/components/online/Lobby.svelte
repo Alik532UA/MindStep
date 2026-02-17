@@ -1,20 +1,14 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { roomService } from "$lib/services/roomService";
-    import type { Room, OnlinePlayer } from "$lib/types/online";
+    import { lobbyController } from "$lib/controllers/LobbyController.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
     import LobbyHeader from "./lobby/LobbyHeader.svelte";
     import LobbyPlayerList from "./lobby/LobbyPlayerList.svelte";
     import LobbySettings from "./lobby/LobbySettings.svelte";
     import ChatWidget from "./ChatWidget.svelte";
-    import { goto, beforeNavigate } from "$app/navigation";
-    import { base } from "$app/paths";
-    import type { Unsubscribe } from "firebase/firestore";
-    import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
+    import { beforeNavigate } from "$app/navigation";
     import { fly, fade } from "svelte/transition";
-
-    import { logService } from "$lib/services/logService";
 
     interface Props {
         roomId: string;
@@ -22,116 +16,23 @@
 
     let { roomId }: Props = $props();
 
-    let room = $state<Room | null>(null);
-    let myPlayerId = $state<string | null>(null);
-    let unsubscribe: Unsubscribe | null = null;
-    let isLeaving = $state(false);
-
     onMount(() => {
-        const session = roomService.getSession();
-        myPlayerId = session.playerId;
-
-        if (!myPlayerId) {
-            // No player ID in session, cannot join.
-            roomService.clearSession();
-            goto(`${base}/online`);
-            return;
-        }
-
-        unsubscribe = roomService.subscribeToRoom(roomId, (updatedRoom) => {
-            if (!updatedRoom) {
-                // Room does not exist anymore (expired or deleted)
-                // We MUST clear the session to prevent auto-rejoin loops or "Abandoned Game" modals
-                roomService.clearSession();
-                goto(`${base}/online`);
-                return;
-            }
-            room = updatedRoom;
-
-            if (room.status === "playing") {
-                goto(`${base}/game/online?from=lobby`);
-            }
-        });
+        lobbyController.initialize(roomId);
     });
 
-    beforeNavigate(async ({ to, cancel }) => {
-        logService.ui("[Lobby] beforeNavigate:", {
-            routeId: to?.route.id,
-            pathname: to?.url?.pathname,
-        });
-
-        const isGameRoute =
-            to?.route.id === "/game/online" ||
-            to?.url?.pathname?.includes("/game/online");
-
-        if (isGameRoute) {
-            logService.ui("[Lobby] Navigating to game. Not leaving room.");
-            return;
-        }
-        if (isLeaving) return;
-
-        if (myPlayerId && roomId) {
-            logService.ui("[Lobby] Navigating away. Leaving room.");
-            isLeaving = true;
-            roomService.leaveRoom(roomId, myPlayerId);
-        }
+    beforeNavigate(({ to }) => {
+        lobbyController.handleNavigation(to);
     });
 
     onDestroy(() => {
-        if (unsubscribe) unsubscribe();
+        lobbyController.cleanup();
     });
-
-    async function toggleReady() {
-        if (!room || !myPlayerId) return;
-        const me = room.players[myPlayerId];
-        await roomService.toggleReady(roomId, myPlayerId, !me.isReady);
-    }
-
-    async function handleStartGame() {
-        if (!room) return;
-        await roomService.startGame(roomId);
-    }
-
-    async function handleLeave() {
-        if (!myPlayerId) return;
-        isLeaving = true;
-        await roomService.leaveRoom(roomId, myPlayerId);
-        goto(`${base}/online`);
-    }
-
-    function handleUpdatePlayer(data: Partial<OnlinePlayer>) {
-        if (!room || !myPlayerId) return;
-        roomService.updatePlayer(roomId, myPlayerId, data);
-        if (data.name) {
-            localStorage.setItem("online_playerName", data.name);
-        }
-    }
-
-    function handleUpdateSetting(key: keyof GameSettingsState, value: any) {
-        if (!room) return;
-        roomService.updateRoomSettings(roomId, { [key]: value });
-    }
-
-    function handleUpdateRoomSetting(key: string, value: any) {
-        if (!room) return;
-        roomService.updateRoomSettings(roomId, { [key]: value } as any);
-    }
-
-    let playersList = $derived(room
-        ? Object.values(room.players).sort((a, b) => a.joinedAt - b.joinedAt)
-        : []);
-
-    let myPlayer = $derived(room && myPlayerId ? room.players[myPlayerId] : null);
-
-    let amIHost = $derived(room && myPlayerId ? room.hostId === myPlayerId : false);
-    let canEditSettings = $derived(amIHost || (room && room.allowGuestSettings));
-    let myName = $derived(myPlayer ? myPlayer.name : "Player");
 </script>
 
 <div class="lobby-page" data-testid="lobby-container">
-    <FloatingBackButton onclick={handleLeave} />
+    <FloatingBackButton onclick={() => lobbyController.leave()} />
 
-    {#if room && myPlayerId}
+    {#if lobbyController.room && lobbyController.myPlayerId}
         <div class="lobby-content" in:fade={{ duration: 300 }}>
             <div class="lobby-grid">
                 <!-- Ліва колонка: Хедер та Налаштування -->
@@ -139,14 +40,20 @@
                     class="column left-column"
                     in:fly={{ y: 20, duration: 400, delay: 100 }}
                 >
-                    <LobbyHeader {room} {roomId} {amIHost} />
+                    <LobbyHeader
+                        room={lobbyController.room}
+                        {roomId}
+                        amIHost={lobbyController.amIHost}
+                    />
 
                     <LobbySettings
-                        {room}
-                        {canEditSettings}
-                        {amIHost}
-                        onUpdateSetting={handleUpdateSetting}
-                        onUpdateRoomSetting={handleUpdateRoomSetting}
+                        room={lobbyController.room}
+                        canEditSettings={lobbyController.canEditSettings}
+                        amIHost={lobbyController.amIHost}
+                        onUpdateSetting={(k, v) =>
+                            lobbyController.updateSetting(k, v)}
+                        onUpdateRoomSetting={(k, v) =>
+                            lobbyController.updateRoomSetting(k, v)}
                     />
                 </div>
 
@@ -156,14 +63,14 @@
                     in:fly={{ y: 20, duration: 400, delay: 200 }}
                 >
                     <LobbyPlayerList
-                        players={playersList}
-                        {myPlayerId}
-                        hostId={room.hostId}
-                        {amIHost}
-                        roomStatus={room.status}
-                        onUpdatePlayer={handleUpdatePlayer}
-                        onToggleReady={toggleReady}
-                        onStartGame={handleStartGame}
+                        players={lobbyController.playersList}
+                        myPlayerId={lobbyController.myPlayerId}
+                        hostId={lobbyController.room.hostId}
+                        amIHost={lobbyController.amIHost}
+                        roomStatus={lobbyController.room.status}
+                        onUpdatePlayer={(d) => lobbyController.updatePlayer(d)}
+                        onToggleReady={() => lobbyController.toggleReady()}
+                        onStartGame={() => lobbyController.startGame()}
                     />
                 </div>
             </div>
@@ -171,9 +78,9 @@
             <!-- Floating Chat Widget -->
             <ChatWidget
                 {roomId}
-                playerId={myPlayerId}
-                playerName={myName}
-                playerColor={myPlayer?.color || "#ffd700"}
+                playerId={lobbyController.myPlayerId}
+                playerName={lobbyController.myName}
+                playerColor={lobbyController.myPlayer?.color || "#ffd700"}
             />
         </div>
     {:else}

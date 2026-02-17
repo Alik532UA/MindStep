@@ -43,7 +43,7 @@
         {/if}
     </div>
     <button class="close-btn" on:click={remove} aria-label="Закрити">
-        <NotoEmoji name="multiplication_sign" size="16px" />
+        <NotoEmoji name="cross_mark" size="16px" />
     </button>
 </div>
 
