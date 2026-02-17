@@ -41,14 +41,6 @@ export function getCenterInfoState({
   // FIX: Видалено залежність від isPauseBetweenMoves.
   // Логіка гри оновлюється миттєво, тому UI повинен відображати стан негайно.
 
-  logService.ui('[centerInfoUtil] Calculating state', {
-    selectedDirection,
-    selectedDistance,
-    lastComputerMove,
-    lastPlayerMove,
-    isPlayerTurn
-  });
-
   // 1. Якщо гравець вибрав хід (напрямок + відстань) - показуємо кнопку підтвердження
   if (selectedDirection && selectedDistance) {
     let dir = '';

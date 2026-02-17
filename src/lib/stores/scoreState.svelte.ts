@@ -28,6 +28,10 @@ class ScoreStateRune {
         this._state = value;
     }
 
+    set(value: ScoreState | null) {
+        this._state = value;
+    }
+
     update(fn: (s: ScoreState | null) => ScoreState | null) {
         this._state = fn(this._state);
     }

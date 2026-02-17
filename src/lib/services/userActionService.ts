@@ -1,4 +1,3 @@
-import { get } from 'svelte/store';
 import { tick } from 'svelte';
 import { modalStore } from '$lib/stores/modalStore';
 import { gameModeService } from './gameModeService';
@@ -6,11 +5,12 @@ import { logService } from './logService';
 import type { Direction } from '$lib/utils/gameUtils';
 import { navigationService } from './navigationService';
 import { gameSettingsStore, type GameModePreset } from '$lib/stores/gameSettingsStore.js';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { endGameService } from './endGameService';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { gameService } from './gameService';
 import ReplayViewer from '$lib/components/ReplayViewer.svelte';
 import { gameEventBus } from './gameEventBus';
@@ -22,9 +22,9 @@ const MOVE_COOLDOWN_MS = 250; // Чверть секунди для запобі
 
 export const userActionService = {
   selectDirection(direction: Direction): void {
-    const uiState = get(uiStateStore);
+    const uState = uiState.state;
     // FIX: Блокуємо вибір, якщо гра завершена або йде хід
-    if (uiState?.isGameOver || uiState?.isComputerMoveInProgress) return;
+    if (uState?.isGameOver || uState?.isComputerMoveInProgress) return;
 
     logService.logicMove(`[userActionService] setDirection called with: ${direction}`);
     // DIAGNOSTIC: Log stack trace to find source of call
@@ -32,11 +32,11 @@ export const userActionService = {
     console.trace();
     console.groupEnd();
 
-    const boardState = get(boardStore);
-    if (!uiState || !boardState) return;
+    const bState = boardState.state;
+    if (!uState || !bState) return;
 
-    const { boardSize } = boardState;
-    const { selectedDirection, selectedDistance } = uiState;
+    const { boardSize } = bState;
+    const { selectedDirection, selectedDistance } = uState;
     const maxDist = boardSize - 1;
     let newDistance = selectedDistance;
 
@@ -46,32 +46,32 @@ export const userActionService = {
       newDistance = (!selectedDistance || selectedDistance >= maxDist) ? 1 : selectedDistance + 1;
     }
 
-    uiStateStore.update(s => s ? ({ ...s, selectedDirection: direction, selectedDistance: newDistance }) : null);
+    uiState.update(s => ({ ...s, selectedDirection: direction, selectedDistance: newDistance }));
   },
 
   selectDistance(distance: number): void {
-    const uiState = get(uiStateStore);
+    const uState = uiState.state;
     // FIX: Блокуємо вибір, якщо гра завершена
-    if (uiState?.isGameOver) return;
+    if (uState?.isGameOver) return;
 
     logService.logicMove(`[userActionService] setDistance called with: ${distance}`);
-    uiStateStore.update(s => s ? ({ ...s, selectedDistance: distance }) : null);
+    uiState.update(s => ({ ...s, selectedDistance: distance }));
   },
 
   confirmMove(): void {
-    const uiState = get(uiStateStore);
+    const uState = uiState.state;
     // FIX: Блокуємо підтвердження, якщо гра завершена
-    if (uiState?.isGameOver) return;
+    if (uState?.isGameOver) return;
 
-    if (uiState?.selectedDirection && uiState?.selectedDistance) {
-      this.executeMove(uiState.selectedDirection, uiState.selectedDistance);
+    if (uState?.selectedDirection && uState?.selectedDistance) {
+      this.executeMove(uState.selectedDirection, uState.selectedDistance);
     }
   },
 
   async executeMove(direction: Direction, distance: number): Promise<void> {
-    const uiState = get(uiStateStore);
+    const uState = uiState.state;
     // FIX: Блокуємо виконання, якщо гра завершена або йде хід комп'ютера
-    if (uiState?.isComputerMoveInProgress || uiState?.isGameOver) return;
+    if (uState?.isComputerMoveInProgress || uState?.isGameOver) return;
 
     // СИСТЕМНИЙ ЗАХИСТ: Запобігаємо занадто швидким повторним ходам (деренчання)
     const now = Date.now();
@@ -93,9 +93,9 @@ export const userActionService = {
   },
 
   async claimNoMoves(): Promise<void> {
-    const uiState = get(uiStateStore);
+    const uState = uiState.state;
     // FIX: Блокуємо дію, якщо гра завершена
-    if (uiState?.isComputerMoveInProgress || uiState?.isGameOver) return;
+    if (uState?.isComputerMoveInProgress || uState?.isGameOver) return;
 
     const activeGameMode = gameModeService.getCurrentMode();
     if (activeGameMode) {
@@ -104,15 +104,15 @@ export const userActionService = {
   },
 
   async changeBoardSize(newSize: number): Promise<void> {
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    const scoreState = get(scoreStore);
-    if (!boardState || !playerState || !scoreState) return;
+    const bState = boardState.state;
+    const pState = playerState.state;
+    const sState = scoreState.state;
+    if (!bState || !pState || !sState) return;
 
-    const score = playerState.players.reduce((acc: number, p: { score: number }) => acc + p.score, 0);
-    if (newSize === boardState.boardSize) return;
+    const score = pState.players.reduce((acc: number, p: { score: number }) => acc + p.score, 0);
+    if (newSize === bState.boardSize) return;
 
-    if (score === 0 && scoreState.penaltyPoints === 0) {
+    if (score === 0 && sState.penaltyPoints === 0) {
       const activeGameMode = gameModeService.getCurrentMode();
       if (activeGameMode) {
         activeGameMode.restartGame({ newSize });
@@ -139,7 +139,7 @@ export const userActionService = {
     if (currentModeName === 'local') {
       gameModeService.initializeGameMode('local', false);
     } else {
-      const settings = get(gameSettingsStore);
+      const settings = gameSettingsState.state;
       if (settings.gameMode) {
         gameModeService.initializeGameMode(settings.gameMode, false);
       } else {
@@ -147,7 +147,7 @@ export const userActionService = {
           currentMode.restartGame();
         } else {
           logService.state('ERROR: [userActionService] requestRestart called without an active game mode or setting.');
-          const currentBoardSize = get(boardStore)?.boardSize;
+          const currentBoardSize = boardState.state?.boardSize;
           gameService.initializeNewGame({ size: currentBoardSize });
         }
       }
@@ -166,9 +166,9 @@ export const userActionService = {
   },
 
   async requestReplay(): Promise<void> {
-    const boardState = get(boardStore);
-    if (!boardState) return;
-    const { moveHistory, boardSize } = boardState;
+    const bState = boardState.state;
+    if (!bState) return;
+    const { moveHistory, boardSize } = bState;
 
     modalStore.showModal({
       component: ReplayViewer,
@@ -186,7 +186,7 @@ export const userActionService = {
 
   async finishWithBonus(reasonKey: string): Promise<void> {
     // FIX: Перевірка на завершення гри тут теж корисна, хоча основний захист в endGameService
-    if (get(uiStateStore).isGameOver) return;
+    if (uiState.state.isGameOver) return;
 
     logService.logicMove('[userActionService] finishWithBonus called with reason:', reasonKey);
     await endGameService.endGame(reasonKey);
@@ -225,8 +225,8 @@ export const userActionService = {
   },
 
   async handleModalAction(action: string, payload?: any): Promise<void> {
-    const uiState = get(uiStateStore);
-    if (uiState?.isComputerMoveInProgress) {
+    const uState = uiState.state;
+    if (uState?.isComputerMoveInProgress) {
       return;
     }
     try {

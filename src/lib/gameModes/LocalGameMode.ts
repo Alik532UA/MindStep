@@ -1,20 +1,20 @@
-import { get } from 'svelte/store';
-import { BaseGameMode } from './index';
+import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from '$lib/services/logService';
 import { timeService } from '$lib/services/timeService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
 import { gameService } from '$lib/services/gameService';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { boardStore } from '$lib/stores/boardStore.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { boardState } from '$lib/stores/boardState.svelte';
 import { resetPlayerScore, createDefaultLocalPlayers } from '$lib/utils/playerFactory';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 import { BASE_TURN_DURATION, DEV_TIME_MULTIPLIER, COMPUTER_TURN_DELAY } from '$lib/config/timeConstants';
 import { dev } from '$app/environment';
+import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 export class LocalGameMode extends BaseGameMode {
   constructor() {
@@ -29,7 +29,7 @@ export class LocalGameMode extends BaseGameMode {
     });
 
     // Check for 'observer' mode to disable timer
-    const currentSettings = get(gameSettingsStore);
+    const currentSettings = gameSettingsState.state;
     if (currentSettings.gameMode === 'observer') {
       this.turnDuration = 0; // Disable timer
     } else {
@@ -69,11 +69,11 @@ export class LocalGameMode extends BaseGameMode {
   }
 
   getPlayersConfiguration(): Player[] {
-    const playerState = get(playerStore);
-    if (playerState) {
+    const pState = playerState.state;
+    if (pState) {
       // SSoT: Беремо поточних гравців, але ОБОВ'ЯЗКОВО скидаємо їхній рахунок до 0
       // для нової гри.
-      return playerState.players.map(p => resetPlayerScore(p));
+      return pState.players.map(p => resetPlayerScore(p));
     }
     // If no players in store (e.g. F5 refresh), generate default players
     return createDefaultLocalPlayers();
@@ -84,7 +84,7 @@ export class LocalGameMode extends BaseGameMode {
   }
 
   protected async advanceToNextPlayer(): Promise<void> {
-    const currentPlayerState = get(playerStore);
+    const currentPlayerState = playerState.state;
     if (!currentPlayerState) return;
     const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
 
@@ -94,14 +94,14 @@ export class LocalGameMode extends BaseGameMode {
       this.flushRoundScores();
     }
 
-    playerStore.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
+    playerState.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
 
     await this.checkComputerTurn();
     this.startTurn();
   }
 
   private flushRoundScores(): void {
-    playerStore.update(s => {
+    playerState.update(s => {
       if (!s) return null;
       const newPlayers = s.players.map(p => ({
         ...p,
@@ -115,25 +115,19 @@ export class LocalGameMode extends BaseGameMode {
 
   protected async applyScoreChanges(scoreChanges: ScoreChangesData): Promise<void> {
     const { bonusPoints, penaltyPoints } = scoreChanges;
-    const playerState = get(playerStore);
-    if (!playerState) return;
+    const pState = playerState.state;
+    if (!pState) return;
 
-    playerStore.update(s => {
+    playerState.update(s => {
       if (!s) return null;
       const newPlayers = [...s.players];
       const playerToUpdate = { ...newPlayers[s.currentPlayerIndex] };
 
       // Local Game Scoring Rule: Score split (Fixed + Round)
-      // We add points to roundScore. Fixed 'score' is updated only at the end of the round.
-      // Note: bonusPoints here already includes distance bonus + jump bonus (from scoreService)
-      // and does NOT include baseScoreChange (filtered out in performMove for local mode).
       const currentRoundScore = playerToUpdate.roundScore || 0;
       // Calculate net change for this move
       const moveScore = bonusPoints - penaltyPoints;
       playerToUpdate.roundScore = currentRoundScore + moveScore;
-
-      // NOTE: We do NOT update playerToUpdate.score here anymore.
-      // It serves as the 'Fixed Score' reference.
 
       logService.score(`[LocalGameMode] applyScoreChanges for ${playerToUpdate.name}:`, {
         bonusPointsFromMove: bonusPoints,
@@ -150,13 +144,11 @@ export class LocalGameMode extends BaseGameMode {
 
   private async checkComputerTurn(): Promise<void> {
     // Local mode is typically Human vs Human, but keeping this for safety if mixed mode is possible
-    const state = get(playerStore);
-    if (!state) return;
-    const currentPlayer = state.players[state.currentPlayerIndex];
+    const pState = playerState.state;
+    if (!pState) return;
+    const currentPlayer = pState.players[pState.currentPlayerIndex];
 
     if (currentPlayer.type === 'computer' || currentPlayer.isComputer) {
-      // Note: 'computer' check depends on Player model type literal. Assuming 'computer' or 'ai'.
-      // Player type is 'human' | 'computer' usually.
       await new Promise(resolve => setTimeout(resolve, COMPUTER_TURN_DELAY));
       await this.triggerComputerMove();
     }

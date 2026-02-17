@@ -1,12 +1,12 @@
 // src/lib/services/availableMovesService.ts
-import { get } from 'svelte/store';
-import { boardStore, type BoardState } from '$lib/stores/boardStore.svelte';
-import { gameSettingsStore, type GameSettingsState } from '$lib/stores/gameSettingsStore';
+import { boardState, type BoardState } from '$lib/stores/boardState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import { Piece, MoveDirection } from '../models/Piece';
 import { isCellBlocked, isMirrorMove } from '$lib/utils/boardUtils';
-import { availableMovesStore } from '$lib/stores/availableMovesStore';
+import { availableMovesState } from '$lib/stores/availableMovesState.svelte';
 import { logService } from '$lib/services/logService';
-import { playerStore, type PlayerState } from '$lib/stores/playerStore.svelte';
+import { playerState, type PlayerState } from '$lib/stores/playerState.svelte';
 
 /**
  * "Чиста" функція для розрахунку доступних ходів.
@@ -20,15 +20,15 @@ import { playerStore, type PlayerState } from '$lib/stores/playerStore.svelte';
 // Це дозволяє aiService передавати їй будь-який стан (актуальний, гіпотетичний)
 // і гарантує, що логіка розрахунку ходів завжди буде передбачуваною і вільною від побічних ефектів.
 // НЕ ВИДАЛЯЙТЕ ПАРАМЕТРИ І НЕ ВИКОРИСТОВУЙТЕ get() ВСЕРЕДИНІ.
-export function calculateAvailableMoves(boardState: BoardState, playerState: PlayerState, settings: GameSettingsState) {
-  if (!boardState || !playerState || boardState.playerRow === null || boardState.playerCol === null) {
+export function calculateAvailableMoves(bState: BoardState, pState: PlayerState, settings: GameSettingsState) {
+  if (!bState || !pState || bState.playerRow === null || bState.playerCol === null) {
     logService.logicAvailability('(calculateAvailableMoves) No board state or player position, returning empty moves');
     return [];
   }
 
-  const { playerRow, playerCol, boardSize, cellVisitCounts, moveHistory } = boardState;
+  const { playerRow, playerCol, boardSize, cellVisitCounts, moveHistory } = bState;
   logService.logicAvailability(`(calculateAvailableMoves) Calculating for position [${playerRow}, ${playerCol}]`);
-  const { players, currentPlayerIndex } = playerState;
+  const { players, currentPlayerIndex } = pState;
   const lastMoveEntry = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
   
   const availableMoves = [];
@@ -72,19 +72,19 @@ export function calculateAvailableMoves(boardState: BoardState, playerState: Pla
 
 export const availableMovesService = {
   updateAvailableMoves() {
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    const settings = get(gameSettingsStore);
+    const bState = boardState.state;
+    const pState = playerState.state;
+    const settings = gameSettingsState.state;
 
-    logService.logicAvailability(`[availableMovesService] updateAvailableMoves called. BoardState present: ${!!boardState}, PlayerState present: ${!!playerState}`);
+    logService.logicAvailability(`[availableMovesService] updateAvailableMoves called. BoardState present: ${!!bState}, PlayerState present: ${!!pState}`);
 
-    if (!boardState || !playerState) {
-      availableMovesStore.set([]);
+    if (!bState || !pState) {
+      availableMovesState.state = [];
       return;
     }
     
-    const moves = calculateAvailableMoves(boardState, playerState, settings);
-    availableMovesStore.set(moves);
+    const moves = calculateAvailableMoves(bState, pState, settings);
+    availableMovesState.state = moves;
   },
-  getAvailableMoves: () => get(availableMovesStore)
+  getAvailableMoves: () => availableMovesState.state
 };

@@ -1,10 +1,8 @@
-// src/lib/gameModes/BaseGameMode.ts
-import { get } from 'svelte/store';
 import { tick } from 'svelte';
 import { aiService } from '$lib/services/aiService';
 import type { IGameMode } from './gameMode.interface';
 import type { Player } from '$lib/models/player';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameOverStore } from '$lib/stores/gameOverStore';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { sideEffectService, type SideEffect } from '$lib/services/sideEffectService';
@@ -15,10 +13,10 @@ import { endGameService } from '$lib/services/endGameService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
 import { timeService } from '$lib/services/timeService';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { appSettingsStore } from '$lib/stores/appSettingsStore';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
 import { voiceControlService } from '$lib/services/voiceControlService';
@@ -36,7 +34,7 @@ export abstract class BaseGameMode implements IGameMode {
   protected initEngine(): void {
     // Скидаємо старий двигун перед ініціалізацією нового
     this.engine = null;
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
     // Ініціалізуємо Stateless Engine тільки з налаштуваннями
     this.engine = new GameEngine(settings);
   }
@@ -52,11 +50,11 @@ export abstract class BaseGameMode implements IGameMode {
     this.resetBoardForContinuation();
 
     // Специфічна логіка: після "немає ходів" зазвичай хід повертається до людини
-    const playerState = get(playerStore);
-    const humanPlayerIndex = playerState?.players.findIndex(p => p.type === 'human');
+    const pState = playerState.state;
+    const humanPlayerIndex = pState?.players.findIndex(p => p.type === 'human');
 
-    if (playerState && humanPlayerIndex !== undefined && humanPlayerIndex !== -1) {
-      playerStore.update(s => s ? { ...s, currentPlayerIndex: humanPlayerIndex } : null);
+    if (pState && humanPlayerIndex !== undefined && humanPlayerIndex !== -1) {
+      playerState.update(s => s ? { ...s, currentPlayerIndex: humanPlayerIndex } : null);
       logService.GAME_MODE('continueAfterNoMoves: Хід повернуто гравцю-людині.', { humanPlayerIndex });
     } else {
       await this.advanceToNextPlayer();
@@ -69,13 +67,13 @@ export abstract class BaseGameMode implements IGameMode {
   // Змінено з abstract на virtual
   protected async advanceToNextPlayer(): Promise<void> {
     logService.GAME_MODE('advanceToNextPlayer: Передача ходу наступному гравцю.');
-    const currentPlayerState = get(playerStore);
+    const currentPlayerState = playerState.state;
     if (!currentPlayerState || !currentPlayerState.players) return;
     const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
 
-    playerStore.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
+    playerState.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
 
-    const nextPlayer = get(playerStore)?.players[nextPlayerIndex];
+    const nextPlayer = playerState.state?.players[nextPlayerIndex];
     logService.GAME_MODE(`advanceToNextPlayer: Наступний гравець: ${nextPlayer?.name}, Тип: ${nextPlayer?.type}, isComputer: ${nextPlayer?.isComputer}`);
 
     if (nextPlayer?.type === 'ai' || nextPlayer?.type === 'computer') {
@@ -103,14 +101,14 @@ export abstract class BaseGameMode implements IGameMode {
    * Специфічна логіка режиму (перемикання гравців, таймери) залишається в конкретних реалізаціях.
    */
   protected resetBoardForContinuation(): void {
-    const boardState = get(boardStore);
-    const settings = get(gameSettingsStore);
-    if (!boardState || boardState.playerRow === null || boardState.playerCol === null) return;
+    const bState = boardState.state;
+    const settings = gameSettingsState.state;
+    if (!bState || bState.playerRow === null || bState.playerCol === null) return;
 
     const continuationData = {
       cellVisitCounts: {} as Record<string, number>,
       moveHistory: [{
-        pos: { row: boardState.playerRow, col: boardState.playerCol },
+        pos: { row: bState.playerRow, col: bState.playerCol },
         blocked: [] as { row: number; col: number }[],
         visits: {},
         blockModeEnabled: settings.blockModeEnabled
@@ -118,7 +116,7 @@ export abstract class BaseGameMode implements IGameMode {
       moveQueue: [] as MoveQueueItem[],
     };
 
-    boardStore.update(s => s ? ({ ...s, ...continuationData }) : null);
+    boardState.update(s => s ? ({ ...s, ...continuationData }) : null);
 
     // Оновлюємо двигун при скиданні дошки (перестворюємо з новими налаштуваннями)
     if (this.engine) {
@@ -152,41 +150,59 @@ export abstract class BaseGameMode implements IGameMode {
       return;
     }
 
-    const playerState = get(playerStore);
-    const boardState = get(boardStore);
-    const scoreState = get(scoreStore);
-    const uiState = get(uiStateStore);
+    const pState = playerState.state;
+    const bState = boardState.state;
+    const sState = scoreState.state;
+    const uState = uiState.state;
 
-    if (!playerState || !boardState || !scoreState || !uiState || boardState.playerRow === null || boardState.playerCol === null) return;
+    if (!pState || !bState || !sState || !uState || bState.playerRow === null || bState.playerCol === null) return;
 
-    const currentPlayer = playerState.players[playerState.currentPlayerIndex];
-    logService.logicMove(`[BaseGameMode.handlePlayerMove] EXECUTION START: playerIndex=${playerState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, isComputer=${currentPlayer?.isComputer}, direction=${direction}, distance=${distance}`);
+    const currentPlayer = pState.players[pState.currentPlayerIndex];
+    logService.logicMove(`[BaseGameMode.handlePlayerMove] EXECUTION START: playerIndex=${pState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, isComputer=${currentPlayer?.isComputer}, direction=${direction}, distance=${distance}`);
+
+    // МИТТЄВО очищаємо вибір гравця, щоб UI не "залипав" на старому ході
+    uiState.update(s => ({
+      ...s,
+      selectedDirection: null,
+      selectedDistance: null,
+      isFirstMove: false
+    }));
 
     // Оновлюємо налаштування в двигуні перед ходом (на випадок змін)
-    this.engine.updateSettings(get(gameSettingsStore));
+    this.engine.updateSettings(gameSettingsState.state);
 
     // Створюємо актуальний знімок стану ПЕРЕД ходом (SSoT)
-    const currentGameState = { ...boardState, ...playerState, ...scoreState, ...uiState };
+    const currentGameState = { ...bState, ...pState, ...sState, ...uState };
 
     const moveResult = this.engine.performMove(
       currentGameState,
       direction,
       distance,
-      playerState.currentPlayerIndex,
+      pState.currentPlayerIndex,
       this.getModeName()
     );
 
     if (moveResult.success && moveResult.changes) {
-      // МИТТЄВЕ оновлення сторів (для логіки)
-      boardStore.update(s => s ? ({ ...s, ...moveResult.changes!.boardState }) : null);
-      playerStore.update(s => s ? ({ ...s, ...moveResult.changes!.playerState }) : null);
-      scoreStore.update(s => s ? ({ ...s, ...moveResult.changes!.scoreState }) : null);
+      // МИТТЄВЕ оновлення (через руни)
+      boardState.update(s => s ? ({ ...s, ...moveResult.changes!.boardState }) : null);
+      playerState.update(s => s ? ({ ...s, ...moveResult.changes!.playerState }) : null);
+      scoreState.update(s => s ? ({ ...s, ...moveResult.changes!.scoreState }) : null);
+
+      // Оновлюємо останній хід у uiState
+      uiState.update(s => ({
+        ...s,
+        lastMove: {
+          direction,
+          distance,
+          player: pState.currentPlayerIndex
+        }
+      }));
 
       // Event-Driven UI: Повідомляємо про успішний хід
       gameEventBus.dispatch('GAME_MOVE_SUCCESS', {
         direction,
         distance,
-        playerIndex: playerState.currentPlayerIndex,
+        playerIndex: pState.currentPlayerIndex,
         bonusPoints: moveResult.bonusPoints || 0,
         penaltyPoints: moveResult.penaltyPoints || 0,
         newPosition: moveResult.newPosition!
@@ -204,14 +220,13 @@ export abstract class BaseGameMode implements IGameMode {
       });
 
       // Обробка побічних ефектів (TTS)
-      const settings = get(gameSettingsStore);
-      const currentPlayer = playerState.players[playerState.currentPlayerIndex];
+      const settings = gameSettingsState.state;
+      const currentPlayer = pState.players[pState.currentPlayerIndex];
       let shouldSpeak = false;
 
       if (settings.speechEnabled) {
-        const uiState = get(uiStateStore);
-        if (uiState.intendedGameType === 'online') {
-          shouldSpeak = playerState.currentPlayerIndex === uiState.onlinePlayerIndex
+        if (uState.intendedGameType === 'online') {
+          shouldSpeak = pState.currentPlayerIndex === uState.onlinePlayerIndex
             ? settings.speechFor.onlineMyMove
             : settings.speechFor.onlineOpponentMove;
         } else {
@@ -225,7 +240,7 @@ export abstract class BaseGameMode implements IGameMode {
           type: 'speak_move',
           payload: {
             move: { direction, distance },
-            lang: get(appSettingsStore).language || 'uk',
+            lang: (appSettingsStore as any).language || 'uk', // appSettingsStore все ще стор
             voiceURI: settings.selectedVoiceURI,
             onEndCallback,
             force: true
@@ -239,7 +254,7 @@ export abstract class BaseGameMode implements IGameMode {
       gameEventBus.dispatch('GAME_MOVE_FAILURE', {
         direction,
         distance,
-        playerIndex: playerState.currentPlayerIndex,
+        playerIndex: pState.currentPlayerIndex,
         reason: moveResult.reason
       });
       await this.onPlayerMoveFailure(moveResult.reason, direction, distance);
@@ -247,11 +262,11 @@ export abstract class BaseGameMode implements IGameMode {
   }
 
   protected async onPlayerMoveSuccess(): Promise<void> {
-    const playerState = get(playerStore);
-    const currentPlayer = playerState!.players[playerState!.currentPlayerIndex];
+    const pState = playerState.state;
+    const currentPlayer = pState!.players[pState!.currentPlayerIndex];
 
     if (currentPlayer.type === 'human') {
-      const settings = get(gameSettingsStore);
+      const settings = gameSettingsState.state;
       if (settings.autoHideBoard) {
         gameEventBus.dispatch('UI_REQUEST_HIDE_BOARD', { delay: 0 });
       }
@@ -263,27 +278,27 @@ export abstract class BaseGameMode implements IGameMode {
   }
 
   protected async onPlayerMoveFailure(reason: string | undefined, direction: MoveDirectionType, distance: number): Promise<void> {
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    if (!boardState || !playerState || boardState.playerRow === null || boardState.playerCol === null) return;
+    const bState = boardState.state;
+    const pState = playerState.state;
+    if (!bState || !pState || bState.playerRow === null || bState.playerCol === null) return;
 
-    const piece = new Piece(boardState.playerRow, boardState.playerCol, boardState.boardSize);
+    const piece = new Piece(bState.playerRow, bState.playerCol, bState.boardSize);
     const finalInvalidPosition = piece.calculateNewPosition(direction, distance);
 
     const finalMoveForAnimation = {
-      player: playerState.currentPlayerIndex + 1,
+      player: pState.currentPlayerIndex + 1,
       direction: direction,
       distance: distance,
       to: finalInvalidPosition
     };
 
-    boardStore.update(s => {
+    boardState.update(s => {
       if (!s) return null;
       const updatedMoveHistory = [...s.moveHistory, {
         pos: { row: finalInvalidPosition.row, col: finalInvalidPosition.col },
         blocked: [] as { row: number, col: number }[],
         visits: { ...s.cellVisitCounts },
-        blockModeEnabled: get(gameSettingsStore).blockModeEnabled
+        blockModeEnabled: gameSettingsState.state.blockModeEnabled
       }];
       return {
         ...s,
@@ -312,7 +327,7 @@ export abstract class BaseGameMode implements IGameMode {
     logService.GAME_MODE(`[${this.constructor.name}] cleanup called`);
     timeService.stopGameTimer();
     timeService.stopTurnTimer();
-    uiStateStore.destroy();
+    uiState.reset();
     uiEffectsStore.destroy();
   }
 
@@ -326,47 +341,38 @@ export abstract class BaseGameMode implements IGameMode {
   }
 
   protected async triggerComputerMove(): Promise<void> {
-    const playerState = get(playerStore);
-    const currentPlayer = playerState?.players[playerState?.currentPlayerIndex || 0];
+    const pState = playerState.state;
+    const currentPlayer = pState?.players[pState?.currentPlayerIndex || 0];
     logService.GAME_MODE(`BaseGameMode.triggerComputerMove CALLED. Checking permissions... Player: ${currentPlayer?.name}, Type: ${currentPlayer?.type}, isComputer: ${currentPlayer?.isComputer}`);
     logService.GAME_MODE('triggerComputerMove: Початок ходу комп\'ютера.');
-    uiStateStore.update(s => s ? ({ ...s, isComputerMoveInProgress: true }) : null);
+    uiState.update(s => s ? ({ ...s, isComputerMoveInProgress: true }) : s);
 
-    const boardState = get(boardStore);
-    const uiState = get(uiStateStore);
-    if (!boardState || !playerState || !uiState) return;
+    const bState = boardState.state;
+    const uState = uiState.state;
+    if (!bState || !pState || !uState) return;
 
-    const computerMove = await aiService.getComputerMove(boardState, playerState, uiState);
+    const computerMove = await aiService.getComputerMove(bState, pState, uState);
     logService.GAME_MODE('triggerComputerMove: Результат getComputerMove:', computerMove);
 
     if (computerMove) {
       logService.GAME_MODE('triggerComputerMove: Комп\'ютер має хід, виконуємо...');
       const { direction, distance } = computerMove;
 
-      // ЧОМУ: Консолідуємо логіку ввімкнення голосового керування.
-      // Замість дублювання логіки та передчасного виклику, ми завжди використовуємо
-      // onEndCallback, який спрацьовує після завершення анімації ходу комп'ютера.
-      // Це гарантує, що розпізнавання мови не конфліктує з іншими UI-процесами.
-      // Прапор voiceMoveRequested скидається тут, оскільки його призначення виконано.
-      const onEndCallback = get(uiStateStore).voiceMoveRequested ? () => {
+      const onEndCallback = uiState.state.voiceMoveRequested ? () => {
         logService.voiceControl('[triggerComputerMove] onEndCallback: Re-enabling voice control.');
         voiceControlService.startListening();
-        uiStateStore.update(s => ({ ...s, voiceMoveRequested: false }));
+        uiState.update(s => ({ ...s, voiceMoveRequested: false }));
       } : undefined;
 
       await this.handlePlayerMove(direction, distance, onEndCallback);
       // Set to false after successful move
-      uiStateStore.update(s => s ? ({ ...s, isComputerMoveInProgress: false }) : null);
+      uiState.update(s => s ? ({ ...s, isComputerMoveInProgress: false }) : s);
     } else {
       logService.GAME_MODE('triggerComputerMove: У комп\'ютера немає ходів, викликаємо handleNoMoves.');
       // Set to false before handling no moves
-      uiStateStore.update(s => s ? ({ ...s, isComputerMoveInProgress: false }) : null);
+      uiState.update(s => s ? ({ ...s, isComputerMoveInProgress: false }) : s);
       await this.handleNoMoves('computer');
     }
-
-    // ВИДАЛЕНО: Цей блок викликав startListening() передчасно, до завершення анімації,
-    // що призводило до негайного припинення розпізнавання.
-    // if (get(uiStateStore).voiceMoveRequested) { ... }
 
     await tick();
   }

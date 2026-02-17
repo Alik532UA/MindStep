@@ -6,21 +6,21 @@ import { calculateFinalScore } from './scoreService';
 import { endGameService } from './endGameService';
 import { availableMovesService } from './availableMovesService';
 import { gameStore } from '$lib/stores/gameStore';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { gameModeService } from './gameModeService';
 
 export const noMovesService = {
   async claimNoMoves(): Promise<void> {
-    const playerState = get(playerStore);
-    if (!playerState) return;
+    const pState = playerState.state;
+    if (!pState) return;
 
     const availableMoves = availableMovesService.getAvailableMoves();
 
     if (availableMoves.length > 0) {
-      const currentPlayerName = playerState.players[playerState.currentPlayerIndex].name;
+      const currentPlayerName = pState.players[pState.currentPlayerIndex].name;
       await endGameService.endGame('modal.gameOverReasonPlayerLied', { playerName: currentPlayerName });
     } else {
       this.dispatchNoMovesEvent('human');
@@ -29,13 +29,13 @@ export const noMovesService = {
 
   dispatchNoMovesEvent(playerType: 'human' | 'computer') {
     logService.GAME_MODE('[noMovesService] dispatchNoMovesEvent called', { playerType });
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    const scoreState = get(scoreStore);
-    const uiState = get(uiStateStore);
-    if (!boardState || !playerState || !scoreState || !uiState) return;
+    const bState = boardState.state;
+    const pState = playerState.state;
+    const sState = scoreState.state;
+    const uState = uiState.state;
+    if (!bState || !pState || !sState || !uState) return;
 
-    const scoreDetails = calculateFinalScore(boardState, playerState, scoreState, uiState, 'training');
+    const scoreDetails = calculateFinalScore(bState, pState, sState, uState, 'training');
 
     // FIX: Визначаємо режим гри для правильного формування payload
     const currentGameMode = gameModeService.getCurrentMode();
@@ -46,7 +46,7 @@ export const noMovesService = {
 
     if (isMultiplayer) {
       // Для мультиплеєра формуємо список рахунків усіх гравців
-      playerScores = playerState.players.map(p => ({
+      playerScores = pState.players.map(p => ({
         playerId: p.id,
         score: p.score + (p.roundScore || 0), // Показуємо поточний сумарний рахунок (фіксований + раунд)
         name: p.name,
@@ -59,7 +59,7 @@ export const noMovesService = {
     gameEventBus.dispatch('ShowNoMovesModal', {
       playerType,
       scoreDetails,
-      boardSize: boardState.boardSize,
+      boardSize: bState.boardSize,
       playerScores // Передаємо список гравців
     });
 

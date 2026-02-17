@@ -1,14 +1,13 @@
-import { get } from 'svelte/store';
 import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
 import { logService } from '$lib/services/logService';
 import { gameService } from '$lib/services/gameService';
 import { createOnlinePlayers } from '$lib/utils/playerFactory';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import type { IGameStateSync, GameStateSyncEvent, SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { createFirebaseGameStateSync } from '$lib/sync/FirebaseGameStateSync';
@@ -19,7 +18,7 @@ import type { MoveDirectionType } from '$lib/models/Piece';
 import { notificationService } from '$lib/services/notificationService';
 import type { Room } from '$lib/types/online';
 import { endGameService } from '$lib/services/endGameService';
-import { modalStore, type ModalState } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { networkStatsStore } from '$lib/stores/networkStatsStore';
 
 
@@ -93,9 +92,9 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   private resetLocalStores() {
-    boardStore.set(null);
-    playerStore.set(null);
-    scoreStore.set(null);
+    boardState.set(null);
+    playerState.set(null);
+    scoreState.set(null);
     gameEventBus.dispatch('GAME_RESET');
   }
 
@@ -123,7 +122,7 @@ export class OnlineGameMode extends BaseGameMode {
     this.amIHost = this.roomData.hostId === this.myPlayerId;
     this.myPlayerIndex = this.amIHost ? 0 : 1;
 
-    uiStateStore.update(s => ({
+    uiState.update(s => ({
       ...s,
       amIHost: this.amIHost,
       onlinePlayerIndex: this.myPlayerIndex,
@@ -220,7 +219,7 @@ export class OnlineGameMode extends BaseGameMode {
     this.unsubscribeRoom = roomService.subscribeToRoom(this.roomId!, (updatedRoom) => {
       if (!updatedRoom) {
         logService.GAME_MODE('[OnlineGameMode] Room deleted while playing.');
-        const isGameOver = get(uiStateStore).isGameOver;
+        const isGameOver = uiState.state.isGameOver;
         if (!isGameOver) {
           // Кімнату видалено (ймовірно всі опоненти вийшли)
           endGameService.endGame('modal.gameOverReasonOpponentsLeft');
@@ -233,7 +232,7 @@ export class OnlineGameMode extends BaseGameMode {
       this.amIHost = updatedRoom.hostId === this.myPlayerId;
       if (wasHost !== this.amIHost) {
         logService.init(`[OnlineGameMode] Host role changed: ${wasHost} -> ${this.amIHost}`);
-        uiStateStore.update(s => ({ ...s, amIHost: this.amIHost }));
+        uiState.update(s => ({ ...s, amIHost: this.amIHost }));
       }
       this.matchController?.checkForVictory(updatedRoom);
       this.presenceManager?.handleRoomUpdate(updatedRoom);
@@ -279,7 +278,7 @@ export class OnlineGameMode extends BaseGameMode {
       this.applyLocalSettings();
       gameEventBus.dispatch('GAME_INITIALIZED', { newSize });
 
-      if (get(boardStore)) {
+      if (boardState.state) {
         // Даємо UI час відрендеритися перед початком ходу
         setTimeout(() => {
           this.startTurn();
@@ -320,14 +319,14 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   async handlePlayerMove(direction: MoveDirectionType, distance: number, onEndCallback?: () => void): Promise<void> {
-    const playerState = get(playerStore);
-    if (!playerState || this.myPlayerIndex === -1) return;
+    const pState = playerState.state;
+    if (!pState || this.myPlayerIndex === -1) return;
 
-    const currentPlayer = playerState.players[playerState.currentPlayerIndex];
-    logService.GAME_MODE(`[OnlineGameMode.handlePlayerMove] Called: playerIndex=${playerState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, myIndex=${this.myPlayerIndex}, direction=${direction}, distance=${distance}`);
+    const currentPlayer = pState.players[pState.currentPlayerIndex];
+    logService.GAME_MODE(`[OnlineGameMode.handlePlayerMove] Called: playerIndex=${pState.currentPlayerIndex}, playerName=${currentPlayer?.name}, playerType=${currentPlayer?.type}, myIndex=${this.myPlayerIndex}, direction=${direction}, distance=${distance}`);
 
-    if (playerState.currentPlayerIndex !== this.myPlayerIndex) {
-      logService.GAME_MODE(`[OnlineGameMode] Move rejected: Not my turn. Local index: ${this.myPlayerIndex}, Current turn index: ${playerState.currentPlayerIndex}, Player Type: ${currentPlayer?.type}`);
+    if (pState.currentPlayerIndex !== this.myPlayerIndex) {
+      logService.GAME_MODE(`[OnlineGameMode] Move rejected: Not my turn. Local index: ${this.myPlayerIndex}, Current turn index: ${pState.currentPlayerIndex}, Player Type: ${currentPlayer?.type}`);
       notificationService.show({ type: 'warning', messageRaw: 'Зачекайте свого ходу!' });
       return;
     }
@@ -344,8 +343,8 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   async claimNoMoves(): Promise<void> {
-    const playerState = get(playerStore);
-    if (playerState?.currentPlayerIndex !== this.myPlayerIndex) {
+    const pState = playerState.state;
+    if (pState?.currentPlayerIndex !== this.myPlayerIndex) {
       notificationService.show({ type: 'warning', messageRaw: 'Зачекайте свого ходу!' });
       return;
     }
@@ -394,7 +393,7 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   protected async advanceToNextPlayer(): Promise<void> {
-    const currentPlayerState = get(playerStore);
+    const currentPlayerState = playerState.state;
     if (!currentPlayerState) return;
     const nextPlayerIndex = (currentPlayerState.currentPlayerIndex + 1) % currentPlayerState.players.length;
 
@@ -405,13 +404,13 @@ export class OnlineGameMode extends BaseGameMode {
       this.flushRoundScores();
     }
 
-    playerStore.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
+    playerState.update(s => s ? { ...s, currentPlayerIndex: nextPlayerIndex } : null);
 
     this.startTurn();
   }
 
   private flushRoundScores(): void {
-    playerStore.update(s => {
+    playerState.update(s => {
       if (!s) return null;
       const newPlayers = s.players.map(p => ({
         ...p,
@@ -425,10 +424,10 @@ export class OnlineGameMode extends BaseGameMode {
 
   protected async applyScoreChanges(scoreChanges: ScoreChangesData): Promise<void> {
     const { bonusPoints, penaltyPoints } = scoreChanges;
-    const playerState = get(playerStore);
-    if (!playerState) return;
+    const pState = playerState.state;
+    if (!pState) return;
 
-    playerStore.update(s => {
+    playerState.update(s => {
       if (!s) return null;
       const newPlayers = [...s.players];
       const playerToUpdate = { ...newPlayers[s.currentPlayerIndex] };
@@ -470,7 +469,7 @@ export class OnlineGameMode extends BaseGameMode {
 
     this.isApplyingRemoteState = true;
 
-    const previousPlayerIndex = get(playerStore)?.currentPlayerIndex;
+    const previousPlayerIndex = playerState.state?.currentPlayerIndex;
 
     if (this.reconciler) {
       this.reconciler.apply(remoteState);
@@ -486,10 +485,9 @@ export class OnlineGameMode extends BaseGameMode {
 
     const newPlayerIndex = remoteState.playerState.currentPlayerIndex;
     const isNewTurn = previousPlayerIndex !== newPlayerIndex;
-    const isGameActive = !get(uiStateStore).isGameOver;
+    const isGameActive = !uiState.state.isGameOver;
 
-    // FIX: Explicitly cast get(modalStore) to ModalState to fix TS error
-    const currentModalState = get(modalStore) as ModalState;
+    const currentModalState = modalStateRune.state;
     if (isNewTurn && isGameActive && !currentModalState.isOpen) {
       logService.GAME_MODE(`[OnlineGameMode] Turn changed (${previousPlayerIndex} -> ${newPlayerIndex}). Restarting timer.`);
       this.startTurn();

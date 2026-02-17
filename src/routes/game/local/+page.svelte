@@ -3,14 +3,13 @@
   import { WIDGETS } from "$lib/stores/layoutStore";
   import { gameModeService } from "$lib/services/gameModeService";
   import { logService } from "$lib/services/logService";
-  import { get } from "svelte/store";
-  import { boardStore } from '$lib/stores/boardStore.svelte';
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+  import { boardState } from '$lib/stores/boardState.svelte';
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 
   function initLocalGame() {
-    const boardState = get(boardStore);
-    if (!boardState || boardState.moveHistory.length <= 1) {
-      const currentSettings = get(gameSettingsStore);
+    const bState = boardState.state;
+    if (!bState || bState.moveHistory.length <= 1) {
+      const currentSettings = gameSettingsState.state;
       const preservedPresets = ["observer", "beginner", "experienced", "pro"];
 
       if (
@@ -38,10 +37,11 @@
 
   function filterWidgets(id: string): boolean {
     // Local observer mode should not have a timer
+    const settings = gameSettingsState.state;
     if (
       id === WIDGETS.TIMER &&
-      (get(gameSettingsStore).gameMode === "local-observer" ||
-        get(gameSettingsStore).gameMode === "observer")
+      (settings.gameMode === "local-observer" ||
+        settings.gameMode === "observer")
     ) {
       return false;
     }

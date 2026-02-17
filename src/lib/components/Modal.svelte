@@ -10,7 +10,7 @@
   import { logService } from "$lib/services/logService";
   import hotkeyService from "$lib/services/hotkeyService";
   import { trapFocus } from "$lib/actions/trapFocus.js";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import { gameEventBus } from "$lib/services/gameEventBus";
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
   import BaseModal from "$lib/components/ui/BaseModal.svelte";
@@ -204,7 +204,7 @@
         <ModalActionButtons
           modalState={mState}
           {currentModalContext}
-          isComputerMoveInProgress={$uiStateStore?.isComputerMoveInProgress}
+          isComputerMoveInProgress={uiState.state?.isComputerMoveInProgress}
           bind:buttonRefs
         >
           {#if children}

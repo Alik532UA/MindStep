@@ -1,18 +1,17 @@
-import { get } from 'svelte/store';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { calculateFinalScore, determineWinner } from './scoreService';
 import { gameEventBus } from './gameEventBus';
 import { logService } from './logService';
 import { timeService } from './timeService';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore, initialScoreState } from '$lib/stores/scoreStore.svelte';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState, initialScoreState } from '$lib/stores/scoreState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import type { Player } from '$lib/models/player';
 import { tick } from 'svelte';
 import { gameModeService } from './gameModeService';
 import { leaderboardService } from './leaderboardService';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { authService } from './authService';
 import { doc, updateDoc, getFirestore } from 'firebase/firestore';
 import { getFirebaseApp } from './firebaseService';
@@ -22,25 +21,26 @@ export const endGameService = {
   // FIX: Додано параметр specificPlayerIndex для явного вказання гравця, що програв/ініціював завершення
   async endGame(reasonKey: string, reasonValues: Record<string, any> | null = null, specificPlayerIndex?: number): Promise<void> {
     // FIX: Запобігаємо повторному виклику, якщо гра вже завершена.
-    if (get(uiStateStore).isGameOver) {
+    const uState = uiState.state;
+    if (uState.isGameOver) {
       logService.GAME_MODE(`[endGameService] Game already over. Ignoring duplicate call for reason: '${reasonKey}'`);
       return;
     }
 
     logService.GAME_MODE(`[endGameService] endGame called with reason: '${reasonKey}', specificPlayerIndex: ${specificPlayerIndex}`);
 
-    uiStateStore.update(s => s ? ({ ...s, isGameOver: true, gameOverReasonKey: reasonKey, gameOverReasonValues: reasonValues }) : null);
+    uiState.update(s => ({ ...s, isGameOver: true, gameOverReasonKey: reasonKey, gameOverReasonValues: reasonValues }));
     timeService.stopGameTimer();
     timeService.stopTurnTimer();
 
     await tick();
 
-    const boardState = get(boardStore);
-    const playerState = get(playerStore);
-    const scoreState = get(scoreStore);
-    const uiState = get(uiStateStore);
+    const bState = boardState.state;
+    const pState = playerState.state;
+    const sState = scoreState.state;
+    const uStateFinal = uiState.state;
 
-    if (!boardState || !playerState || !scoreState || !uiState) {
+    if (!bState || !pState || !sState || !uStateFinal) {
       logService.score('[endGameService] Aborted: one or more stores are not available.');
       return;
     }
@@ -48,48 +48,48 @@ export const endGameService = {
     const currentGameMode = gameModeService.getCurrentMode();
     const gameType = currentGameMode ? currentGameMode.getModeName() : 'training';
 
-    const finalScoreDetails = calculateFinalScore(boardState, playerState, scoreState, uiState, gameType);
+    const finalScoreDetails = calculateFinalScore(bState, pState, sState, uStateFinal, gameType);
     logService.score('[endGameService] Final score calculated:', finalScoreDetails);
 
     if (gameType !== 'local' && gameType !== 'online') {
-      const humanPlayer = playerState.players.find(p => p.type === 'human');
+      const humanPlayer = pState.players.find(p => p.type === 'human');
       if (humanPlayer) {
-        const updatedPlayers = playerState.players.map(p =>
+        const updatedPlayers = pState.players.map(p =>
           p.id === humanPlayer.id ? { ...p, score: finalScoreDetails.totalScore } : p
         );
-        playerStore.set({ ...playerState, players: updatedPlayers });
+        playerState.state = { ...pState, players: updatedPlayers };
 
         logService.score('[endGameService] Submitting score to leaderboard...');
 
         let cleanMode = gameType;
         if (gameType === 'virtual-player') {
-          const preset = get(gameSettingsStore).gameMode;
+          const preset = gameSettingsState.state.gameMode;
           if (preset && preset.includes('timed')) cleanMode = 'timed';
           else cleanMode = 'training';
         }
 
         leaderboardService.submitScore(finalScoreDetails.totalScore, {
           mode: cleanMode,
-          size: boardState.boardSize
+          size: bState.boardSize
         });
 
         logService.score('[endGameService] Checking achievements with final score...');
         rewardsService.checkAchievements({
           score: finalScoreDetails.totalScore,
           gameMode: cleanMode,
-          boardSize: boardState.boardSize
+          boardSize: bState.boardSize
         });
 
-        this.saveLastPlayedInfo(cleanMode, boardState.boardSize, finalScoreDetails.totalScore);
+        this.saveLastPlayedInfo(cleanMode, bState.boardSize, finalScoreDetails.totalScore);
       }
     }
 
-    scoreStore.set(initialScoreState);
+    scoreState.state = initialScoreState;
 
-    const finalPlayerState = get(playerStore)!;
+    const finalPlayerState = playerState.state!;
 
     // FIX: Визначаємо індекс гравця для логіки перемоги/поразки.
-    const playerIndexForLogic = specificPlayerIndex !== undefined ? specificPlayerIndex : playerState.currentPlayerIndex;
+    const playerIndexForLogic = specificPlayerIndex !== undefined ? specificPlayerIndex : pState.currentPlayerIndex;
 
     const { winners, loser } = determineWinner(finalPlayerState, reasonKey, playerIndexForLogic);
 
@@ -127,10 +127,10 @@ export const endGameService = {
     };
 
     logService.score('[endGameService] Dispatching GameOver event:', gameOverPayload);
-    gameOverStore.setGameOver(gameOverPayload);
+    gameOverState.setGameOver(gameOverPayload);
 
     // @ts-ignore
-    gameEventBus.dispatch('GameOver', { ...gameOverPayload, state: { ...boardState, ...finalPlayerState, ...get(scoreStore)!, ...uiState } });
+    gameEventBus.dispatch('GameOver', { ...gameOverPayload, state: { ...bState, ...finalPlayerState, ...scoreState.state!, ...uStateFinal } });
   },
 
   async saveLastPlayedInfo(mode: string, size: number, score: number) {

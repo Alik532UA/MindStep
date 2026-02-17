@@ -4,7 +4,7 @@
 
 import type { GameModeState } from './gameModeStore';
 
-const initialGameModeState: GameModeState = {
+export const initialGameModeState: GameModeState = {
     activeMode: null,
 };
 

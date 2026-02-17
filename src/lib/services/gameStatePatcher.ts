@@ -1,11 +1,11 @@
 // src/lib/services/gameStatePatcher.ts
 import { logService } from './logService';
-import { boardStore } from '$lib/stores/boardStore.svelte';
+import { boardState } from '$lib/stores/boardState.svelte';
 
 class GameStatePatcher {
   applyPatch(serverState: any): void {
-    logService.logicMove('[GameStatePatcher] Applying server state to local boardStore...');
-    boardStore.set(serverState);
+    logService.logicMove('[GameStatePatcher] Applying server state to local boardState...');
+    boardState.set(serverState);
     logService.logicMove('[GameStatePatcher] Patch applied.');
   }
 }

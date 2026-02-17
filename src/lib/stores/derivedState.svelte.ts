@@ -1,7 +1,7 @@
 import { boardState } from './boardState.svelte';
-import type { BoardState } from './boardStore.svelte';
+import type { BoardState } from './boardState.svelte';
 import { playerState } from './playerState.svelte';
-import type { PlayerState } from './playerStore.svelte';
+import type { PlayerState } from './playerState.svelte';
 import { uiState } from './uiState.svelte';
 import type { UiState } from '$lib/types/uiState';
 import { timerState } from './timerState.svelte';
@@ -9,6 +9,7 @@ import { animationState } from './animationState.svelte';
 import { availableMovesState } from './availableMovesState.svelte';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { Move } from '$lib/utils/gameUtils';
+import { logService } from '$lib/services/logService';
 
 const oppositeDirections: Record<string, string> = {
     'up': 'down', 'down': 'up',
@@ -45,26 +46,33 @@ function calculateStartPosition(move: { direction: MoveDirectionType, distance: 
 
 export const derivedState = {
     get lastComputerMove() {
-        const uiStateVal = uiState.state;
-        const playerStoreVal = playerState.state;
-        const boardStoreVal = boardState.state;
+        const uState = uiState.state;
+        const pState = playerState.state;
+        const bState = boardState.state;
 
-        if (!playerStoreVal) return null;
+        if (!pState) return null;
 
-        if (uiStateVal?.lastMove) {
-            const p = playerStoreVal.players[uiStateVal.lastMove.player];
-            if (p?.type === 'ai' || p?.type === 'computer') {
+        // 1. Пріоритет: явний запис останнього ходу в uiState
+        if (uState?.lastMove) {
+            const p = pState.players[uState.lastMove.player];
+            if (p?.type === 'ai' || p?.type === 'computer' || p?.isComputer) {
                 return {
-                    direction: uiStateVal.lastMove.direction,
-                    distance: uiStateVal.lastMove.distance
+                    direction: uState.lastMove.direction,
+                    distance: uState.lastMove.distance
                 };
             }
         }
 
-        if (!boardStoreVal || boardStoreVal.moveQueue.length === 0) return null;
-        const lastMove = boardStoreVal.moveQueue[boardStoreVal.moveQueue.length - 1];
-        const pMod = playerStoreVal.players[lastMove.player - 1];
-        if (pMod?.type === 'ai' || pMod?.type === 'computer') {
+        // 2. Фолбек: останній елемент з черги ходів (якщо тип гравця — комп'ютер)
+        if (!bState || bState.moveQueue.length === 0) {
+            return null;
+        }
+        const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
+        const pMod = pState.players[lastMove.player - 1]; // moveQueue player is 1-indexed
+        
+        const isComp = pMod?.type === 'ai' || pMod?.type === 'computer' || pMod?.isComputer;
+
+        if (isComp) {
             return {
                 direction: lastMove.direction,
                 distance: lastMove.distance
@@ -74,26 +82,30 @@ export const derivedState = {
     },
 
     get lastPlayerMove() {
-        const uiStateVal = uiState.state;
-        const playerStoreVal = playerState.state;
-        const boardStoreVal = boardState.state;
+        const uState = uiState.state;
+        const pState = playerState.state;
+        const bState = boardState.state;
 
-        if (!playerStoreVal) return null;
+        if (!pState) return null;
 
-        if (uiStateVal?.lastMove) {
-            const p = playerStoreVal.players[uiStateVal.lastMove.player];
-            if (p?.type === 'human') {
+        // 1. Пріоритет: явний запис останнього ходу в uiState
+        if (uState?.lastMove) {
+            const p = pState.players[uState.lastMove.player];
+            if (p?.type === 'human' && !p?.isComputer) {
                 return {
-                    direction: uiStateVal.lastMove.direction,
-                    distance: uiStateVal.lastMove.distance
+                    direction: uState.lastMove.direction,
+                    distance: uState.lastMove.distance
                 };
             }
         }
 
-        if (!boardStoreVal || boardStoreVal.moveQueue.length === 0) return null;
-        const lastMove = boardStoreVal.moveQueue[boardStoreVal.moveQueue.length - 1];
-        const pMod = playerStoreVal.players[lastMove.player - 1];
-        if (pMod?.type === 'human') {
+        // 2. Фолбек: останній елемент з черги ходів (якщо тип гравця — людина)
+        if (!bState || bState.moveQueue.length === 0) return null;
+        const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
+        const pMod = pState.players[lastMove.player - 1];
+        
+        const isHuman = pMod?.type === 'human' && !pMod?.isComputer;
+        if (isHuman) {
             return {
                 direction: lastMove.direction,
                 distance: lastMove.distance
@@ -108,13 +120,17 @@ export const derivedState = {
 
         const currentPlayerIndex = pState.currentPlayerIndex;
         const currentPlayer = pState.players[currentPlayerIndex];
-        const uiStateVal = uiState.state;
+        const uState = uiState.state;
 
-        if (uiStateVal?.intendedGameType === 'online') {
-            return uiStateVal.onlinePlayerIndex === currentPlayerIndex;
+        const isOnline = uState?.intendedGameType === 'online';
+        const isHuman = currentPlayer?.type === 'human';
+        const isMyOnlineTurn = isOnline && uState.onlinePlayerIndex === currentPlayerIndex;
+
+        if (isOnline) {
+            return isMyOnlineTurn;
         }
 
-        return currentPlayer?.type === 'human';
+        return isHuman;
     },
 
     get visualPosition() {
@@ -191,6 +207,43 @@ export const derivedState = {
 
     get availableMoves() {
         return availableMovesState.state;
+    },
+
+    get distanceRows() {
+        const bState = boardState.state;
+        if (!bState) return [];
+        const dists = Array.from({ length: bState.boardSize - 1 }, (_, i) => i + 1);
+        
+        if (dists.length <= 4) return [dists];
+        if (dists.length === 5) return [dists.slice(0, 3), dists.slice(3)];
+        if (dists.length === 6) return [dists.slice(0, 3), dists.slice(3)];
+        if (dists.length === 7) return [dists.slice(0, 4), dists.slice(4)];
+        if (dists.length === 8) return [dists.slice(0, 4), dists.slice(4)];
+        
+        const chunk = (arr: number[], n: number) => {
+            const res = [];
+            for (let i = 0; i < arr.length; i += n) res.push(arr.slice(i, i + n));
+            return res;
+        };
+        return chunk(dists, 4);
+    },
+
+    get isConfirmButtonDisabled() {
+        const uState = uiState.state;
+        const pState = playerState.state;
+        if (!uState || !pState) return true;
+        const isHumanTurn = pState.players[pState.currentPlayerIndex]?.type === 'human';
+        const { selectedDirection, selectedDistance, isComputerMoveInProgress } = uState;
+        return !isHumanTurn || isComputerMoveInProgress || !selectedDirection || !selectedDistance;
+    },
+
+    get previousPlayerColor() {
+        const pState = playerState.state;
+        if (!pState) return null;
+        const { players, currentPlayerIndex } = pState;
+        if (players.length === 0) return null;
+        const previousPlayerIndex = (currentPlayerIndex + players.length - 1) % players.length;
+        return players[previousPlayerIndex]?.color || null;
     },
 
     get remainingTime() {

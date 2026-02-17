@@ -50,13 +50,19 @@ export function createGameInfoMessage(ctx: GameInfoContext) {
         uiState,
     } = ctx;
 
-    if (!playerState) return { type: "SIMPLE", content: "" };
+    if (!playerState || !playerState.players || playerState.players.length === 0) {
+        return { type: "SIMPLE", content: "" };
+    }
 
     const humanPlayersCount = playerState.players.filter(
-        (p: any) => p.type === "human",
+        (p: any) => p?.type === "human",
     ).length;
     const isLocalGame = humanPlayersCount > 1;
     const currentPlayer = playerState.players[playerState.currentPlayerIndex];
+
+    if (!currentPlayer) {
+        return { type: "SIMPLE", content: t("gameBoard.gameInfo.gameStarted") };
+    }
 
     if (isGameOver)
         return { type: "SIMPLE", content: t("gameBoard.gameInfo.gameOver") };

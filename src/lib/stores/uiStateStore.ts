@@ -45,34 +45,8 @@ function createUiStateStore() {
       unsubscribers.forEach(u => u());
       unsubscribers = [];
 
-      unsubscribers.push(
-        gameEventBus.subscribe('GAME_MOVE_SUCCESS', (payload) => {
-          uiState.update(s => ({
-            ...s,
-            selectedDirection: null,
-            selectedDistance: null,
-            isFirstMove: false,
-            lastMove: {
-              direction: payload.direction,
-              distance: payload.distance,
-              player: payload.playerIndex
-            }
-          }));
-          syncStore();
-        })
-      );
-
-      unsubscribers.push(
-        gameEventBus.subscribe('GAME_MOVE_FAILURE', () => {
-          uiState.update(s => ({
-            ...s,
-            selectedDirection: null,
-            selectedDistance: null,
-            lastMove: null
-          }));
-          syncStore();
-        })
-      );
+      // БІЛЬШІСТЬ ЛОГІКИ ПЕРЕНЕСЕНО В BaseGameMode (Svelte 5 Runes)
+      // Залишаємо тільки ті івенти, які не обробляються в GameMode
 
       unsubscribers.push(
         gameEventBus.subscribe('GameOver', () => {

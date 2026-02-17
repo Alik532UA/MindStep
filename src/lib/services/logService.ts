@@ -53,8 +53,8 @@ const defaultConfig: LogConfig = {
     [LOG_GROUPS.LOGIC_VIRTUAL_PLAYER]: false,
     [LOG_GROUPS.LOGIC_AVAILABILITY]: false, 
     [LOG_GROUPS.LOGIC_TIME]: false,
-    [LOG_GROUPS.SCORE]: true,
-    [LOG_GROUPS.UI]: false,
+    [LOG_GROUPS.SCORE]: false,
+    [LOG_GROUPS.UI]: true,
     [LOG_GROUPS.TOOLTIP]: false,
     [LOG_GROUPS.ANIMATION]: false,
     [LOG_GROUPS.INIT]: false,
@@ -181,7 +181,16 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
         saveLogToSession(logText);
         
         if (isLogEnabled) {
-            debugLogStore.add(logText);
+            // ЧОМУ: Використовуємо setTimeout тільки в браузері для UI-логів. 
+            // Під час тестів уникаємо асинхронних оновлень стану, щоб не ламати таймінги Playwright.
+            if (import.meta.env.MODE === 'test') {
+                // В тестах просто логуємо в консоль, не оновлюючи реактивний стор логів асинхронно
+                return;
+            }
+
+            setTimeout(() => {
+                debugLogStore.add(logText);
+            }, 0);
         }
     }
 

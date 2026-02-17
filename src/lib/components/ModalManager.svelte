@@ -7,7 +7,7 @@
 	import { t as tStore } from "$lib/i18n/typedI18n";
 	import type { TranslationKey } from "$lib/types/i18n";
 	import { locale } from "svelte-i18n";
-	import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+	import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 	import { speakText } from "$lib/services/speechService";
 	import GameOverContent from "$lib/components/modals/GameOverContent.svelte";
 
@@ -26,10 +26,10 @@
 						? "modal.playerNoMovesContent"
 						: "modal.computerNoMovesContent";
 
-				if (get(gameSettingsStore).speakModalTitles) {
+				if (gameSettingsState.state.speakModalTitles) {
 					const title = get(tStore)(titleKey as TranslationKey);
 					const lang = get(locale) || "uk";
-					const voiceURI = get(gameSettingsStore).selectedVoiceURI;
+					const voiceURI = gameSettingsState.state.selectedVoiceURI;
 					speakText(title, lang, voiceURI, undefined);
 				}
 

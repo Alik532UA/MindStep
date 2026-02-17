@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { uiState } from "$lib/stores/uiStore";
   import { appSettingsStore } from "$lib/stores/appSettingsStore.js";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
-  import { get } from "svelte/store";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { gameModeService } from "$lib/services/gameModeService";
   import { userActionService } from "$lib/services/userActionService";
   import { logService } from "$lib/services/logService.js";
@@ -10,8 +8,8 @@
   import PlayerColorProvider from "$lib/components/PlayerColorProvider.svelte";
   import hotkeyService from "$lib/services/hotkeyService";
   import { gameStore } from "$lib/stores/gameStore";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
-  import { boardStore } from '$lib/stores/boardStore.svelte';
+  import { uiState } from "$lib/stores/uiState.svelte";
+  import { boardState } from '$lib/stores/boardState.svelte';
   import { enableAllGameCheckboxesIfNeeded } from "$lib/utils/uiUtils.js";
 
   import {
@@ -19,18 +17,19 @@
     cleanupGameHotkeys,
     registerGameAction,
   } from "$lib/services/gameHotkeyService";
-  import { testModeStore } from "$lib/stores/testModeStore";
+  import { testModeState } from "$lib/stores/testModeState.svelte";
   import "$lib/services/commandService.ts";
   import { animationService } from "$lib/services/animationService";
   import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
   import { urlSyncService } from "$lib/services/urlSyncService";
+  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
 
   let { children }: { children: Snippet } = $props();
 
   // НАВІЩО: Синхронізуємо URL з налаштуваннями стору ТІЛЬКИ коли ми знаходимося 
   // в контексті гри. Це дозволяє Deep Linking працювати без циклів редиректів.
   $effect(() => {
-    const settings = $gameSettingsStore;
+    const settings = gameSettingsState.state;
     urlSyncService.updateUrlFromSettings(settings);
   });
 
@@ -44,17 +43,17 @@
       activeGameMode.cleanup();
     }
     gameStore.reset();
-    uiStateStore.reset();
-    boardStore.reset();
+    uiState.reset();
+    boardState.reset();
     hotkeyService.popContext();
     cleanupGameHotkeys();
   });
 
   onMount(() => {
-    const boardState = get(boardStore);
+    const bState = boardState.state;
 
-    if (boardState) {
-      const moveHistory = boardState.moveHistory;
+    if (bState) {
+      const moveHistory = bState.moveHistory;
       logService.init(
         `[GameLayout] onMount. moveHistory.length is ${moveHistory.length}.`,
       );
@@ -66,7 +65,7 @@
       }
     } else {
       logService.init(
-        "[GameLayout] onMount: boardStore is null (game not initialized yet). Skipping initial settings check.",
+        "[GameLayout] onMount: boardState is null (game not initialized yet). Skipping initial settings check.",
       );
     }
 
@@ -83,13 +82,13 @@
       gameSettingsStore.toggleShowBoard();
     });
     registerGameAction("increase-board", () => {
-      const currentSize = get(gameSettingsStore).boardSize;
+      const currentSize = gameSettingsState.state.boardSize;
       if (currentSize < 9) {
         userActionService.changeBoardSize(currentSize + 1);
       }
     });
     registerGameAction("decrease-board", () => {
-      const currentSize = get(gameSettingsStore).boardSize;
+      const currentSize = gameSettingsState.state.boardSize;
       if (currentSize > 2) {
         userActionService.changeBoardSize(currentSize - 1);
       }
@@ -98,7 +97,7 @@
       gameSettingsStore.toggleSpeech();
     });
 
-    if (import.meta.env.DEV || get(testModeStore)?.isEnabled) {
+    if (import.meta.env.DEV || testModeState.state.isEnabled) {
       (window as any).userActionService = userActionService;
       (window as any).gameModeService = gameModeService;
       (window as any).appSettingsStore = appSettingsStore;

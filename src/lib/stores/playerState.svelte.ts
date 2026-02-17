@@ -20,6 +20,10 @@ class PlayerStateRune {
         this._state = value;
     }
 
+    set(value: PlayerState | null) {
+        this._state = value;
+    }
+
     update(fn: (s: PlayerState | null) => PlayerState | null) {
         this._state = fn(this._state);
     }

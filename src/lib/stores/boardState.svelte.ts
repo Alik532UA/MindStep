@@ -31,6 +31,10 @@ class BoardStateRune {
         this._state = value;
     }
 
+    set(value: BoardState | null) {
+        this._state = value;
+    }
+
     update(fn: (s: BoardState | null) => BoardState | null) {
         this._state = fn(this._state);
     }

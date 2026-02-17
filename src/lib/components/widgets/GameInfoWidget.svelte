@@ -7,6 +7,7 @@
   import { quintOut } from "svelte/easing";
   import { playerState } from '$lib/stores/playerState.svelte';
   import { uiState } from "$lib/stores/uiState.svelte";
+  import { logService } from "$lib/services/logService";
   import CompactComputerMove from "$lib/components/widgets/game-info/CompactComputerMove.svelte";
   import StructuredMessage from "$lib/components/widgets/game-info/StructuredMessage.svelte";
 
@@ -19,23 +20,38 @@
   let isCompact = $derived($gameSettingsStore.showGameInfoWidget === "compact");
 
   let displayMessage = $derived.by(() => {
-    if (!playerState.state) return { type: "text", content: "" };
+    const pState = playerState.state;
+    const uState = uiState.state;
+    if (!pState || !uState) return { type: "SIMPLE", content: "" };
 
     const context: GameInfoContext = {
-      playerState: playerState.state,
+      playerState: pState,
       isGameOver: derivedState.isGameOver,
-      isFirstMove: uiState.state?.isFirstMove ?? true,
+      isFirstMove: uState.isFirstMove,
       lastComputerMove: derivedState.lastComputerMove,
       lastPlayerMove: derivedState.lastPlayerMove,
       isPlayerTurn: derivedState.isPlayerTurn,
       translate: $t,
       isCompact: isCompact,
       gameSettings: $gameSettingsStore,
-      uiState: uiState.state as any,
+      uiState: uState as any,
     };
+
+    // БЕЗПЕЧНИЙ ЛОГ: Використовуємо setTimeout, щоб не порушувати цикл реактивності
+    setTimeout(() => {
+      logService.ui('[GameInfoWidget] Context updated:', {
+        isFirstMove: context.isFirstMove,
+        isPlayerTurn: context.isPlayerTurn,
+        lastComputerMove: !!context.lastComputerMove,
+        intendedGameType: uState.intendedGameType
+      });
+    }, 0);
 
     return createGameInfoMessage(context);
   });
+
+  // Використовуємо рядковий ключ для анімацій, щоб уникнути перезапусків при зміні посилань на об'єкт
+  let animationKey = $derived(JSON.stringify(displayMessage));
 </script>
 
 {#if $i18nReady && playerState.state}
@@ -47,7 +63,7 @@
       data-testid="game-info-panel"
     >
       <div class="game-info-content" data-testid="game-info-content">
-        {#key displayMessage}
+        {#key animationKey}
           <div
             class="fade-wrapper"
             in:fade={{ duration: 250, delay: 250 }}

@@ -1,15 +1,14 @@
-import { get } from 'svelte/store';
 import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
 import { createTrainingPlayers } from '$lib/utils/playerFactory';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from '$lib/services/logService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { timeService } from '$lib/services/timeService';
 import { gameService } from '$lib/services/gameService';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { boardStore } from '$lib/stores/boardStore.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { boardState } from '$lib/stores/boardState.svelte';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 
 export class TrainingGameMode extends BaseGameMode {
@@ -39,11 +38,11 @@ export class TrainingGameMode extends BaseGameMode {
 
   async handleNoMoves(playerType: 'human' | 'computer'): Promise<void> {
     logService.GAME_MODE(`handleNoMoves: Обробка ситуації "немає ходів" для гравця типу: ${playerType}.`);
-    const boardState = get(boardStore);
-    if (!boardState) return;
+    const bState = boardState.state;
+    if (!bState) return;
 
-    gameOverStore.resetGameOverState();
-    scoreStore.update(s => s ? { ...s, noMovesBonus: (s.noMovesBonus || 0) + boardState.boardSize } : null);
+    gameOverState.resetGameOverState();
+    scoreState.update(s => s ? { ...s, noMovesBonus: (s.noMovesBonus || 0) + bState.boardSize } : null);
     noMovesService.dispatchNoMovesEvent(playerType);
   }
 

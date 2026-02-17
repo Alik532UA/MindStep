@@ -1,10 +1,9 @@
-import { get } from 'svelte/store';
-import { boardStore, type BoardState } from '$lib/stores/boardStore.svelte';
-import { playerStore, type PlayerState } from '$lib/stores/playerStore.svelte';
-import { scoreStore, type ScoreState } from '$lib/stores/scoreStore.svelte';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { testModeStore } from '$lib/stores/testModeStore';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { boardState, type BoardState } from '$lib/stores/boardState.svelte';
+import { playerState, type PlayerState } from '$lib/stores/playerState.svelte';
+import { scoreState, type ScoreState } from '$lib/stores/scoreState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { testModeState } from '$lib/stores/testModeState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { getInitialPosition } from '$lib/utils/initialPositionUtils';
 import { createEmptyBoard } from '$lib/utils/boardUtils';
 import type { Player, BonusHistoryItem } from '$lib/models/player';
@@ -13,8 +12,10 @@ import { animationService } from './animationService';
 import { logService } from './logService';
 import { DEFAULT_PLAYER_NAMES } from '$lib/config/defaultPlayers';
 import { getRandomUnusedColor } from '$lib/utils/playerUtils';
-import { initialUIState, uiStateStore, type UiState } from '$lib/stores/uiStateStore';
+import { uiState } from '$lib/stores/uiState.svelte';
+import { initialUIState, type UiState } from '$lib/types/uiState';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
+import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 export const gameService = {
   initializeNewGame(config: {
@@ -23,16 +24,14 @@ export const gameService = {
   } = {}) {
     logService.init('[GameService] initializeNewGame: Створення нового ігрового стану...', config);
 
-    // Ініціалізація слухачів подій для UI сторів
-    uiStateStore.initEventListeners();
+    // Ініціалізація слухачів подій для UI
     uiEffectsStore.initEventListeners();
 
     // FIX: Спочатку скидаємо анімацію, щоб очистити черги і таймери.
-    // Це запобігає конфліктам між старими анімаціями і новим станом дошки.
     animationService.reset();
 
-    const settings = get(gameSettingsStore);
-    const testModeState = get(testModeStore);
+    const settings = gameSettingsState.state;
+    const tState = testModeState.state;
     const size = config.size ?? settings.boardSize;
 
     if (!config.players) {
@@ -49,14 +48,15 @@ export const gameService = {
           isComputer: false,
           penaltyPoints: 0,
           bonusPoints: 0,
-          bonusHistory: [] as BonusHistoryItem[]
+          bonusHistory: [] as BonusHistoryItem[],
+          roundScore: 0
         };
       });
     }
 
     const players = config.players;
 
-    const { row: initialRow, col: initialCol } = getInitialPosition(size, testModeState);
+    const { row: initialRow, col: initialCol } = getInitialPosition(size, tState);
     const board = createEmptyBoard(size);
     board[initialRow][initialCol] = 1;
 
@@ -83,7 +83,7 @@ export const gameService = {
       distanceBonus: 0,
     };
 
-    const currentUiState = get(uiStateStore);
+    const currentUiState = uiState.state;
 
     const newUiState: UiState = {
       ...initialUIState,
@@ -93,13 +93,13 @@ export const gameService = {
       testModeOverrides: currentUiState.testModeOverrides
     };
 
-    // Оновлюємо всі стори
-    boardStore.set(initialBoardState);
-    playerStore.set(initialPlayerState);
-    scoreStore.set(initialScoreState);
-    uiStateStore.set(newUiState);
+    // Оновлюємо стани (руни)
+    boardState.state = initialBoardState;
+    playerState.state = initialPlayerState;
+    scoreState.state = initialScoreState;
+    uiState.state = newUiState;
 
-    gameOverStore.resetGameOverState();
+    gameOverState.resetGameOverState();
 
     gameSettingsStore.updateSettings({
       showBoard: true,
@@ -108,9 +108,5 @@ export const gameService = {
     });
 
     availableMovesService.updateAvailableMoves();
-
-    // animationService.reset() вже викликано на початку, але для надійності
-    // можна викликати ще раз, якщо є підозра на асинхронні ефекти,
-    // але в даному випадку це зайве.
   }
 };

@@ -3,12 +3,11 @@
   import { WIDGETS } from "$lib/stores/layoutStore";
   import { gameModeService } from "$lib/services/gameModeService";
   import { logService } from "$lib/services/logService";
-  import { get } from "svelte/store";
-  import { boardStore } from '$lib/stores/boardStore.svelte';
+  import { boardState } from '$lib/stores/boardState.svelte';
 
   function initTimedGame() {
-    const boardState = get(boardStore);
-    if (!boardState || boardState.moveHistory.length <= 1) {
+    const bState = boardState.state;
+    if (!bState || bState.moveHistory.length <= 1) {
       logService.init(
         '[TimedGamePage] onMount: No active game found, initializing "timed" mode.',
       );

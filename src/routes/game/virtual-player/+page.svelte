@@ -3,15 +3,14 @@
   import { WIDGETS } from "$lib/stores/layoutStore";
   import { gameModeService } from "$lib/services/gameModeService";
   import { logService } from "$lib/services/logService";
-  import { get } from "svelte/store";
-  import { boardStore } from '$lib/stores/boardStore.svelte';
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { boardState } from '$lib/stores/boardState.svelte';
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 
   function initVirtualPlayerGame() {
-    const boardState = get(boardStore);
+    const bState = boardState.state;
     // Only initialize if there is no game in progress.
-    if (!boardState || boardState.moveHistory.length <= 1) {
-      const settings = get(gameSettingsStore);
+    if (!bState || bState.moveHistory.length <= 1) {
+      const settings = gameSettingsState.state;
       const selectedMode = settings.gameMode;
 
       logService.init(
@@ -27,9 +26,9 @@
     }
   }
 
-  $: settings = $gameSettingsStore;
+  let settings = $derived(gameSettingsState.state);
 
-  $: widgetFilter = (id: string): boolean => {
+  let widgetFilter = $derived((id: string): boolean => {
     if (id === WIDGETS.PLAYER_TURN_INDICATOR) return false;
 
     if (
@@ -40,7 +39,7 @@
       return false;
     }
     return true;
-  };
+  });
 </script>
 
 <GamePageLayout initLogic={initVirtualPlayerGame} {widgetFilter} />

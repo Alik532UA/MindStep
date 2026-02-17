@@ -1,55 +1,46 @@
 <script lang="ts">
   import { userActionService } from "$lib/services/userActionService";
   import { t } from "$lib/i18n/typedI18n";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
-  import {
-    isPlayerTurn,
-    isConfirmButtonDisabled,
-    lastComputerMove,
-    lastPlayerMove,
-    distanceRows,
-    previousPlayerColor,
-  } from "$lib/stores/derivedState";
-  import { modalStore } from "$lib/stores/modalStore";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
+  import { derivedState } from "$lib/stores/derivedState.svelte";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import DirectionControls from "./DirectionControls.svelte";
   import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
   import { getCenterInfoState, type CenterInfoState } from "$lib/utils/centerInfoUtil";
   import { logService } from "$lib/services/logService.js";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
-  import { voiceControlStore } from "$lib/stores/voiceControlStore";
-  import { debugLogStore } from "$lib/stores/debugLogStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
+  import { voiceControlState } from "$lib/stores/voiceControlState.svelte";
+  import { debugLogState } from "$lib/stores/debugLogState.svelte";
 
   let showDebug = $state(false);
   let clickCount = $state(0);
   let clickTimer: ReturnType<typeof setTimeout>;
 
-  let selectedDirection = $derived($uiStateStore?.selectedDirection);
-  let selectedDistance = $derived($uiStateStore?.selectedDistance);
-  let isMoveInProgress = $derived($uiStateStore?.isComputerMoveInProgress);
+  let selectedDirection = $derived(uiState.state?.selectedDirection);
+  let selectedDistance = $derived(uiState.state?.selectedDistance);
+  let isMoveInProgress = $derived(uiState.state?.isComputerMoveInProgress);
 
   $effect(() => {
     logService.ui("[ControlsPanelWidget] Reactive change detected", {
       selectedDirection,
       selectedDistance,
-      isConfirmButtonDisabled: $isConfirmButtonDisabled,
+      isConfirmButtonDisabled: derivedState.isConfirmButtonDisabled,
     });
   });
 
   let centerInfoProps = $derived<CenterInfoState>(getCenterInfoState({
     selectedDirection: selectedDirection,
     selectedDistance,
-    lastComputerMove: $lastComputerMove,
-    lastPlayerMove: $lastPlayerMove,
-    isPlayerTurn: $isPlayerTurn,
-    previousPlayerColor: $previousPlayerColor,
+    lastComputerMove: derivedState.lastComputerMove,
+    lastPlayerMove: derivedState.lastPlayerMove,
+    isPlayerTurn: derivedState.isPlayerTurn,
+    previousPlayerColor: derivedState.previousPlayerColor,
   }));
 
   function handleDirection(dir: any) {
-    // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
     userActionService.selectDirection(dir);
   }
   function handleDistance(dist: any) {
-    // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
     userActionService.selectDistance(dist);
   }
   function handleCentral() {
@@ -63,8 +54,10 @@
   }
 
   function onConfirmClick() {
-    if ($isConfirmButtonDisabled) {
-      modalStore.showModal({
+    if (derivedState.isConfirmButtonDisabled) {
+      modalStateRune.update(s => ({
+        ...s,
+        isOpen: true,
         component: SimpleModalContent,
         variant: "menu",
         dataTestId: "confirm-move-hint-modal",
@@ -76,12 +69,12 @@
               labelKey: "modal.ok" as const,
               variant: "primary",
               isHot: true,
-              onClick: () => modalStore.closeModal(),
+              onClick: () => modalStateRune.reset(),
               dataTestId: "confirm-move-hint-ok-btn",
             },
           ],
         },
-      });
+      }));
       return;
     }
     userActionService.confirmMove();
@@ -125,11 +118,11 @@ ${generalLogs}`;
   }
 
   function clearLogs() {
-    debugLogStore.clear();
+    debugLogState.clear();
   }
 </script>
 
-{#if $uiStateStore}
+{#if uiState.state}
   <div class="game-controls-panel" data-testid="controls-panel">
     <!-- FIX: Додано data-testid для заголовка, який вмикає дебаг -->
     <div
@@ -143,10 +136,10 @@ ${generalLogs}`;
       {$t("gameControls.selectDirectionAndDistance")}
     </div>
     <DirectionControls
-      distanceRows={$distanceRows}
-      isPlayerTurn={$isPlayerTurn}
-      blockModeEnabled={$gameSettingsStore.blockModeEnabled}
-      isConfirmDisabled={$isConfirmButtonDisabled}
+      distanceRows={derivedState.distanceRows}
+      isPlayerTurn={derivedState.isPlayerTurn}
+      blockModeEnabled={gameSettingsState.state.blockModeEnabled}
+      isConfirmDisabled={derivedState.isConfirmButtonDisabled}
       {centerInfoProps}
       {isMoveInProgress}
       {selectedDirection}
@@ -164,19 +157,19 @@ ${generalLogs}`;
           <button class="debug-btn" onclick={clearLogs}>Clear</button>
         </div>
         <p>Recognized Text:</p>
-        <pre id="voice-transcript">{$voiceControlStore.lastTranscript ||
+        <pre id="voice-transcript">{voiceControlState.state.lastTranscript ||
             "No speech detected yet."}</pre>
-        {#if $voiceControlStore.recognitionError}
+        {#if voiceControlState.state.recognitionError}
           <p>Recognition Error Details:</p>
           <pre id="recognition-error">{JSON.stringify(
-              $voiceControlStore.recognitionError,
+              voiceControlState.state.recognitionError,
               null,
               2,
             )}</pre>
         {/if}
         <p>--- General Logs ---</p>
         <div id="general-logs" class="logs-container">
-          {#each $debugLogStore as log, i (i)}
+          {#each debugLogState.state as log, i (i)}
             <div class="log-entry">{log}</div>
           {/each}
         </div>

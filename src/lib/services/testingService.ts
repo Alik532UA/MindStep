@@ -4,21 +4,23 @@
 // Він гарантує, що кожен тест починається з чистого та передбачуваного стану,
 // вирішуючи проблему "гонки станів" при паралельному виконанні тестів.
 
-import { animationStore, initialState as initialAnimationState } from '$lib/stores/animationStore';
+import { animationState } from '$lib/stores/animationState.svelte';
 import { appSettingsStore } from '$lib/stores/appSettingsStore';
-import { availableMovesStore } from '$lib/stores/availableMovesStore';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { gameModeStore, initialState as initialGameModeState } from '$lib/stores/gameModeStore';
-import { gameOverStore } from '$lib/stores/gameOverStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { availableMovesState } from '$lib/stores/availableMovesState.svelte';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { gameModeState, initialGameModeState } from '$lib/stores/gameModeState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameStore } from '$lib/stores/gameStore';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { testModeStore, initialState as initialTestModeState } from '$lib/stores/testModeStore';
-import { timerStore } from '$lib/stores/timerStore';
-import { uiStateStore, initialUIState } from '$lib/stores/uiStateStore';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { testModeState } from '$lib/stores/testModeState.svelte';
+import { timerState } from '$lib/stores/timerState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
 import { replayAutoPlayStore } from '$lib/stores/replayAutoPlayStore';
+import { initialUIState } from '$lib/types/uiState';
+import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';
 
 /**
  * Скидає всі стори до їхніх початкових значень та скасовує побічні ефекти.
@@ -29,18 +31,24 @@ export function resetAllStores() {
   uiEffectsStore.cancelAllEffects();
   replayAutoPlayStore.cancelAllEffects();
 
-  // 2. Скидання стану сторів
-  animationStore.set(initialAnimationState);
+  // 2. Скидання стану сторів (через руни)
+  animationState.reset();
   appSettingsStore.reset();
-  availableMovesStore.set([]);
-  boardStore.set(null);
-  gameModeStore.set(initialGameModeState);
-  gameOverStore.resetGameOverState();
-  gameSettingsStore.resetSettings();
+  availableMovesState.reset();
+  boardState.reset();
+  gameModeState.state = { ...initialGameModeState };
+  gameOverState.resetGameOverState();
+  gameSettingsState.state = { ...defaultGameSettings };
   gameStore.reset();
-  playerStore.set(null);
-  scoreStore.set(null);
-  testModeStore.set(initialTestModeState);
-  timerStore.reset();
-  uiStateStore.set(initialUIState);
+  playerState.reset();
+  scoreState.reset();
+  testModeState.state = { 
+    isEnabled: false, 
+    startPositionMode: 'random', 
+    manualStartPosition: null, 
+    computerMoveMode: 'random', 
+    manualComputerMove: { direction: null, distance: null } 
+  };
+  timerState.reset();
+  uiState.reset();
 }

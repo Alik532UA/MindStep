@@ -1,16 +1,15 @@
 <script lang="ts">
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
   import { modalStore } from "$lib/stores/modalStore";
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { animationState } from "$lib/stores/animationState.svelte";
   import { derivedState } from "$lib/stores/derivedState.svelte";
-  import { get } from "svelte/store";
   import { logService } from "$lib/services/logService.js";
   import { isCellBlocked } from "$lib/utils/boardUtils.ts";
   import { boardState } from "$lib/stores/boardState.svelte";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import BoardHiddenInfoWidget from "./BoardHiddenInfoWidget.svelte";
   import StaticGridLayer from "./parts/StaticGridLayer.svelte";
   import EffectsLayer from "./parts/EffectsLayer.svelte";
@@ -45,7 +44,7 @@
   }
 
   const showAvailableMoves = $derived(
-    $gameSettingsStore.showMoves &&
+    gameSettingsState.state.showMoves &&
     !animationState.state.isAnimating &&
     derivedState.currentPlayer?.type === "human"
   );
@@ -81,7 +80,7 @@
   let showHiddenInfoWidget = $state(false);
 
   $effect(() => {
-    if (!$gameSettingsStore.showBoard && $uiStateStore.showBoardHiddenInfo) {
+    if (!gameSettingsState.state.showBoard && uiState.state.showBoardHiddenInfo) {
       setTimeout(() => {
         showHiddenInfoWidget = true;
       }, 500);
@@ -93,7 +92,7 @@
   function onCellRightClick(data: { event: MouseEvent; row: number; col: number }): void {
     const { event, row, col } = data;
     event.preventDefault();
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
     if (
       bState &&
       settings.blockModeEnabled &&
@@ -108,15 +107,15 @@
   }
 
   $effect(() => {
-    if ($gameSettingsStore.showBoard && $uiStateStore.showBoardHiddenInfo) {
-      uiStateStore.update((s) => ({ ...s, showBoardHiddenInfo: false }));
+    if (gameSettingsState.state.showBoard && uiState.state.showBoardHiddenInfo) {
+      uiState.update((s) => ({ ...s, showBoardHiddenInfo: false }));
     }
   });
 </script>
 
 {#if bState}
   {#key bState.boardSize}
-    {#if $gameSettingsStore.showBoard}
+    {#if gameSettingsState.state.showBoard}
       <div
         class="board-bg-wrapper game-content-block"
         style="--board-size: {currentBoardSize}"
@@ -139,7 +138,7 @@
           <EffectsLayer 
             boardSize={currentBoardSize} 
             visualCellVisitCounts={derivedState.visualCellVisitCounts} 
-            gameSettings={$gameSettingsStore} 
+            gameSettings={gameSettingsState.state} 
           />
 
           <InteractionLayer 
@@ -152,7 +151,7 @@
             row={derivedState.visualPosition.row} 
             col={derivedState.visualPosition.col} 
             boardSize={currentBoardSize} 
-            showPiece={$gameSettingsStore.showPiece}
+            showPiece={gameSettingsState.state.showPiece}
           />
 
           <InputLayer 

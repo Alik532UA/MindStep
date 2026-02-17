@@ -1,11 +1,10 @@
 // src/lib/services/aiService.ts
-import { get } from 'svelte/store';
 import { logService } from './logService';
 import type { MoveDirectionType } from '../models/Piece';
-import type { BoardState } from '$lib/stores/boardStore.svelte';
-import type { PlayerState } from '$lib/stores/playerStore.svelte';
-import type { UiState } from '$lib/stores/uiStateStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import type { BoardState } from '$lib/stores/boardState.svelte';
+import type { PlayerState } from '$lib/stores/playerState.svelte';
+import type { UiState } from '$lib/types/uiState';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 
 class AiService {
   private worker: Worker | null = null;
@@ -46,7 +45,7 @@ class AiService {
     // Якщо воркер доступний, використовуємо його
     if (this.worker) {
       return new Promise((resolve) => {
-        const settings = get(gameSettingsStore);
+        const settings = gameSettingsState.state;
 
         const handleMessage = (e: MessageEvent) => {
           this.worker?.removeEventListener('message', handleMessage);
@@ -70,7 +69,7 @@ class AiService {
     // Фолбек на синхронний розрахунок (якщо воркер не завантажився)
     logService.testMode('aiService: воркер недоступний, виконується синхронний випадковий хід');
     const { calculateAvailableMoves } = await import('./availableMovesService');
-    const availableMoves = calculateAvailableMoves(boardState, playerState, get(gameSettingsStore));
+    const availableMoves = calculateAvailableMoves(boardState, playerState, gameSettingsState.state);
 
     if (availableMoves.length === 0) {
       logService.logicVirtualPlayer('getComputerMove: немає доступних ходів');
