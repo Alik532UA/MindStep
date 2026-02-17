@@ -4,8 +4,8 @@
   import VoiceList from "$lib/components/VoiceList.svelte";
   import { onMount, onDestroy } from "svelte";
 
-  let showFade = false;
-  let voiceListWrapper: HTMLDivElement;
+  let showFade = $state(false);
+  let voiceListWrapper = $state<HTMLDivElement | null>(null);
 
   function updateFadeState() {
     if (!voiceListWrapper) return;
@@ -51,7 +51,7 @@
         class="voice-list-wrapper"
         class:fade-bottom={showFade}
         bind:this={voiceListWrapper}
-        on:scroll={updateFadeState}
+        onscroll={updateFadeState}
       >
         <VoiceList />
       </div>

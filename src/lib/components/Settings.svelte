@@ -10,7 +10,7 @@
 
   // Tabs configuration
   type Tab = "general" | "voice" | "hotkeys";
-  let activeTab: Tab = "general";
+  let activeTab = $state<Tab>("general");
 
   onMount(() => {
     // Check URL params for tab selection
@@ -35,7 +35,7 @@
     <button
       class="tab-btn"
       class:active={activeTab === "general"}
-      on:click={() => setTab("general")}
+      onclick={() => setTab("general")}
       data-testid="settings-tab-general"
     >
       {$t("settings.tabs.general")}
@@ -43,7 +43,7 @@
     <button
       class="tab-btn"
       class:active={activeTab === "voice"}
-      on:click={() => setTab("voice")}
+      onclick={() => setTab("voice")}
       data-testid="settings-tab-voice"
     >
       {$t("settings.tabs.voice")}
@@ -51,7 +51,7 @@
     <button
       class="tab-btn"
       class:active={activeTab === "hotkeys"}
-      on:click={() => setTab("hotkeys")}
+      onclick={() => setTab("hotkeys")}
       data-testid="settings-tab-hotkeys"
     >
       {$t("settings.tabs.hotkeys")}
