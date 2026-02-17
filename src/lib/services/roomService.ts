@@ -47,7 +47,7 @@ class RoomService {
             turnDuration: 1000,
             autoHideBoard: false,
             blockModeEnabled: true,
-            blockOnVisitCount: 1,
+            blockOnVisitCount: 0,
             settingsLocked: false,
         };
 

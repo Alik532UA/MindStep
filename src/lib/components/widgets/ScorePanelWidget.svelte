@@ -4,12 +4,14 @@
   import { t } from "$lib/i18n/typedI18n";
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { playerState } from "$lib/stores/playerState.svelte";
-  import { scoreStore } from '$lib/stores/scoreStore.svelte';
+  import { scoreState } from '$lib/stores/scoreState.svelte';
 
   import SinglePlayerScoreDisplay from "./parts/SinglePlayerScoreDisplay.svelte";
   import MultiPlayerScoreDisplay from "./parts/MultiPlayerScoreDisplay.svelte";
 
   const pState = $derived(playerState.state);
+  const currentScore = $derived(scoreState.state);
+
   const isMultiplayer = $derived(pState
     ? pState.players.filter((p) => p.type === "human").length > 1
     : false);
@@ -20,14 +22,14 @@
   }
 </script>
 
-{#if !$replayStore.isReplayMode && pState && $scoreStore}
+{#if !$replayStore.isReplayMode && pState && currentScore}
   <div class="score-panel game-content-block" data-testid="score-panel">
     {#if isMultiplayer}
-      <MultiPlayerScoreDisplay {players} scoreStore={$scoreStore} />
+      <MultiPlayerScoreDisplay {players} scoreStore={currentScore} />
     {:else}
       <SinglePlayerScoreDisplay
         score={players[0]?.score || 0}
-        scoreStore={$scoreStore}
+        scoreStore={currentScore}
       />
     {/if}
     <button

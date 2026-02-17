@@ -4,8 +4,8 @@
     import { authService } from "$lib/services/authService";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
 
-    function handleNameChange(e: CustomEvent<string>) {
-        authService.updateNickname(e.detail);
+    function handleNameChange(newName: string) {
+        authService.updateNickname(newName);
     }
 </script>
 
@@ -27,7 +27,7 @@
                     canEdit={true}
                     onRandom={() =>
                         `Player ${Math.floor(Math.random() * 1000)}`}
-                    on:change={handleNameChange}
+                    onchange={handleNameChange}
                 />
             </div>
         </div>

@@ -22,8 +22,8 @@
     }
   });
 
-  function handleNameChange(e: CustomEvent<string>) {
-    playerName = e.detail;
+  function handleNameChange(newName: string) {
+    playerName = newName;
     if (playerName) {
       localStorage.setItem("online_playerName", playerName);
       logService.ui(`[OnlinePage] Player name updated to: ${playerName}`);
@@ -58,7 +58,7 @@
             value={playerName}
             canEdit={true}
             onRandom={generateRandomPlayerName}
-            on:change={handleNameChange}
+            onchange={handleNameChange}
             placeholder={$t("onlineMenu.enterNamePlaceholder")}
             dataTestId="player-name-input"
           />

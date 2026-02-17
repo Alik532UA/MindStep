@@ -1,17 +1,23 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import SvgIcons from "$lib/components/SvgIcons.svelte";
   import { logService } from "$lib/services/logService.js";
   import { customTooltip } from "$lib/actions/customTooltip.js";
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    value?: string;
+    isOpen?: boolean;
+    dataTestId?: string;
+    onchange?: (value: string) => void;
+  }
 
-  export let value = "#ffffff";
-  export let isOpen = false;
-  // FIX: Додано проп для data-testid
-  export let dataTestId = "color-picker";
+  let {
+    value = $bindable("#ffffff"),
+    isOpen = $bindable(false),
+    dataTestId = "color-picker",
+    onchange
+  }: Props = $props();
 
-  let currentValue = value;
+  let currentValue = $derived(value);
 
   const predefinedColors = [
     "#00bbf9", // голубий
@@ -24,14 +30,10 @@
     "#e63946", // червоний
   ];
 
-  $: {
-    currentValue = value;
-  }
-
   function selectColor(color: string) {
     logService.action(`Click: "Вибір кольору: ${color}" (ColorPicker)`);
     value = color;
-    dispatch("change", { value: color });
+    onchange?.(color);
     isOpen = false;
   }
 
@@ -59,13 +61,13 @@
   }
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
 <div class="color-picker" data-testid="{dataTestId}-container">
   <button
     class="color-preview"
     style="background-color: {currentValue}"
-    on:click={toggleDropdown}
+    onclick={toggleDropdown}
     use:customTooltip={"Обрати колір"}
     aria-label="Обрати колір гравця"
     data-testid="{dataTestId}-trigger"
@@ -78,7 +80,7 @@
           <button
             class="color-option"
             style="background-color: {color}"
-            on:click={() => selectColor(color)}
+            onclick={() => selectColor(color)}
             use:customTooltip={`Обрати ${color}`}
             aria-label="Обрати колір {color}"
             data-testid="{dataTestId}-option-{color}"
@@ -86,7 +88,7 @@
         {/each}
         <button
           class="color-option palette-button"
-          on:click={openColorPicker}
+          onclick={openColorPicker}
           use:customTooltip={"Відкрити палітру кольорів"}
           data-testid="{dataTestId}-palette-btn"
         >
@@ -96,7 +98,7 @@
           <button
             class="color-option"
             style="background-color: {color}"
-            on:click={() => selectColor(color)}
+            onclick={() => selectColor(color)}
             use:customTooltip={`Обрати ${color}`}
             aria-label="Обрати колір {color}"
             data-testid="{dataTestId}-option-{color}"

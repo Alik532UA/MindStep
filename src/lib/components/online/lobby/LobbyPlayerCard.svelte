@@ -6,17 +6,19 @@
     import EditableText from "$lib/components/ui/EditableText.svelte";
     import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
     import type { OnlinePlayer } from "$lib/types/online";
-    import { createEventDispatcher } from "svelte";
 
-    export let player: OnlinePlayer;
-    export let myPlayerId: string;
-    export let hostId: string;
-    export let roomStatus: "waiting" | "playing" | "finished";
+    interface Props {
+        player: OnlinePlayer;
+        myPlayerId: string;
+        hostId: string;
+        roomStatus: "waiting" | "playing" | "finished";
+        onupdate?: (data: Partial<OnlinePlayer>) => void;
+    }
 
-    const dispatch = createEventDispatcher();
+    let { player, myPlayerId, hostId, roomStatus, onupdate }: Props = $props();
 
-    $: isMe = player.id === myPlayerId;
-    $: status = getPlayerStatus(player, roomStatus);
+    let isMe = $derived(player.id === myPlayerId);
+    let status = $derived(getPlayerStatus(player, roomStatus));
 
     function getPlayerStatus(p: OnlinePlayer, status: string) {
         if (p.isReady) {
@@ -56,13 +58,13 @@
         };
     }
 
-    function handleNameChange(e: CustomEvent<string>) {
-        if (!e.detail.trim()) return;
-        dispatch("update", { name: e.detail });
+    function handleNameChange(newName: string) {
+        if (!newName.trim()) return;
+        onupdate?.({ name: newName });
     }
 
-    function handleColorChange(e: CustomEvent<{ value: string }>) {
-        dispatch("update", { color: e.detail.value });
+    function handleColorChange(newColor: string) {
+        onupdate?.({ color: newColor });
     }
 
     function getInitial(name: string): string {
@@ -84,7 +86,7 @@
                 <ColorPicker
                     value={player.color}
                     dataTestId="lobby-player-color-picker-{player.id}"
-                    on:change={handleColorChange}
+                    onchange={handleColorChange}
                 />
             </div>
         {:else}
@@ -100,7 +102,7 @@
                         value={player.name || "Player"}
                         canEdit={isMe}
                         onRandom={generateRandomPlayerName}
-                        on:change={handleNameChange}
+                        onchange={handleNameChange}
                         dataTestId={`player-name-${player.id}`}
                     />
                 </div>

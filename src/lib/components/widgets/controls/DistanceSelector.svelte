@@ -1,16 +1,23 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { t } from "$lib/i18n/typedI18n";
 
-    export let distanceRows: number[][] = [];
-    export let selectedDistance: number | null = null;
-    export let disabled: boolean = false;
+    interface Props {
+        distanceRows?: number[][];
+        selectedDistance?: number | null;
+        disabled?: boolean;
+        ondistance?: (dist: number) => void;
+    }
 
-    const dispatch = createEventDispatcher();
+    let {
+        distanceRows = [],
+        selectedDistance = null,
+        disabled = false,
+        ondistance
+    }: Props = $props();
 
     function handleDistance(dist: number) {
         if (disabled) return;
-        dispatch("distance", dist);
+        ondistance?.(dist);
     }
 </script>
 
@@ -23,7 +30,7 @@
                         class="dist-btn {selectedDistance === dist
                             ? 'active'
                             : ''}"
-                        on:click={() => handleDistance(dist)}
+                        onclick={() => handleDistance(dist)}
                         data-testid={`dist-btn-${dist}`}
                         {disabled}
                         aria-label="{$t('gameControls.distance')} {dist}"

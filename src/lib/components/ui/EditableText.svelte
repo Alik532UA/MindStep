@@ -1,21 +1,33 @@
 <script lang="ts">
-    import { createEventDispatcher, tick } from "svelte";
+    import { tick } from "svelte";
     import { customTooltip } from "$lib/actions/customTooltip";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-    export let value: string;
-    export let placeholder: string = "";
-    export let canEdit: boolean = true;
-    export let onRandom: () => string; // Функція для генерації випадкового значення
-    export let minLength: number = 1;
-    export let maxLength: number = 20;
-    export let dataTestId: string = "";
+    interface Props {
+        value: string;
+        placeholder?: string;
+        canEdit?: boolean;
+        onRandom: () => string; // Функція для генерації випадкового значення
+        minLength?: number;
+        maxLength?: number;
+        dataTestId?: string;
+        onchange?: (value: string) => void;
+    }
 
-    const dispatch = createEventDispatcher();
+    let {
+        value = $bindable(),
+        placeholder = "",
+        canEdit = true,
+        onRandom,
+        minLength = 1,
+        maxLength = 20,
+        dataTestId = "",
+        onchange
+    }: Props = $props();
 
-    let isEditing = false;
-    let tempValue = value;
-    let inputRef: HTMLInputElement;
+    let isEditing = $state(false);
+    let tempValue = $state(value);
+    let inputRef = $state<HTMLInputElement | null>(null);
 
     async function startEditing() {
         if (!canEdit) return;
@@ -29,7 +41,7 @@
         if (tempValue.trim().length < minLength) return;
         value = tempValue.trim();
         isEditing = false;
-        dispatch("change", value);
+        onchange?.(value);
     }
 
     function cancel() {
@@ -41,7 +53,7 @@
         if (!canEdit) return;
         const randomValue = onRandom();
         value = randomValue;
-        dispatch("change", value);
+        onchange?.(value);
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -60,14 +72,14 @@
                 bind:value={tempValue}
                 {placeholder}
                 maxlength={maxLength}
-                on:keydown={handleKeydown}
-                on:blur={save}
+                onkeydown={handleKeydown}
+                onblur={save}
                 class="editable-input"
                 data-testid="{dataTestId}-input"
             />
             <button
                 class="icon-btn save"
-                on:mousedown|preventDefault={save}
+                onmousedown={(e) => { e.preventDefault(); save(); }}
                 title="Зберегти"
                 data-testid="{dataTestId}-save-btn"
             >
@@ -75,7 +87,7 @@
             </button>
             <button
                 class="icon-btn cancel"
-                on:mousedown|preventDefault={cancel}
+                onmousedown={(e) => { e.preventDefault(); cancel(); }}
                 title="Скасувати"
                 data-testid="{dataTestId}-cancel-btn"
             >
@@ -93,7 +105,7 @@
                 <div class="actions">
                     <button
                         class="icon-btn edit"
-                        on:click={startEditing}
+                        onclick={startEditing}
                         use:customTooltip={"Редагувати"}
                         data-testid="{dataTestId}-edit-btn"
                     >
@@ -101,7 +113,7 @@
                     </button>
                     <button
                         class="icon-btn random"
-                        on:click={handleRandom}
+                        onclick={handleRandom}
                         use:customTooltip={"Випадкове ім'я"}
                         data-testid="{dataTestId}-random-btn"
                     >

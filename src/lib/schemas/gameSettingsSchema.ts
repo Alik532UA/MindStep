@@ -28,7 +28,7 @@ export const GameSettingsSchema = z.object({
     showGameInfoWidget: z.enum(['hidden', 'shown', 'compact']),
     boardSize: z.number().min(2).max(20),
     blockModeEnabled: z.boolean(),
-    blockOnVisitCount: z.number().min(1),
+    blockOnVisitCount: z.number().min(0),
     speechEnabled: z.boolean(),
     selectedVoiceURI: z.string().nullable(),
     speechRate: z.number().min(0.1).max(10),

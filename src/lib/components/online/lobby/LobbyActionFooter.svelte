@@ -2,29 +2,32 @@
     import { t } from "$lib/i18n/typedI18n";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
-    import { createEventDispatcher } from "svelte";
 
-    export let amIHost: boolean;
-    export let isMyPlayerReady: boolean = false; // Default false to be safe
-    export let allReady: boolean;
-    export let roomStatus: "waiting" | "playing" | "finished";
-
-    const dispatch = createEventDispatcher();
-
-    function onToggleReady() {
-        dispatch("toggleReady");
+    interface Props {
+        amIHost: boolean;
+        isMyPlayerReady?: boolean;
+        allReady: boolean;
+        roomStatus: "waiting" | "playing" | "finished";
+        ontoggleReady?: () => void;
+        onstartGame?: () => void;
     }
 
-    function onStartGame() {
-        dispatch("startGame");
-    }
+    let {
+        amIHost,
+        isMyPlayerReady = false,
+        allReady,
+        roomStatus,
+        ontoggleReady,
+        onstartGame
+    }: Props = $props();
+
 </script>
 
 <div class="actions-footer">
     <StyledButton
         variant={isMyPlayerReady ? "default" : "primary"}
         size="large"
-        onclick={onToggleReady}
+        onclick={ontoggleReady}
         dataTestId="toggle-ready-btn"
         class="action-btn ready-btn"
         disabled={roomStatus !== "waiting"}
@@ -44,7 +47,7 @@
             variant="primary"
             size="large"
             disabled={!allReady}
-            onclick={onStartGame}
+            onclick={onstartGame}
             dataTestId="start-game-btn"
             class="action-btn start-btn"
         >

@@ -17,8 +17,8 @@
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
 
-    function handleNameChange(e: CustomEvent<string>) {
-        authService.updateNickname(e.detail);
+    function handleNameChange(newName: string) {
+        authService.updateNickname(newName);
     }
 
     function handleLogout() {
@@ -59,7 +59,7 @@
             value={$userProfileStore?.displayName || "Player"}
             canEdit={true}
             onRandom={generateRandomPlayerName}
-            on:change={handleNameChange}
+            onchange={handleNameChange}
             dataTestId="profile-nickname-edit"
         />
     </div>
@@ -107,7 +107,7 @@
                     ? $t("common.loading")
                     : $t("ui.auth.savePasswordBtn")}
             </StyledButton>
-            <button class="link-btn" on:click={cancelMode}>
+            <button class="link-btn" onclick={cancelMode}>
                 {$t("ui.auth.cancelChangePasswordBtn")}
             </button>
         </div>
@@ -136,7 +136,7 @@
                     ? $t("common.loading")
                     : $t("ui.auth.confirmDeleteBtn")}
             </StyledButton>
-            <button class="link-btn" on:click={cancelMode}>
+            <button class="link-btn" onclick={cancelMode}>
                 {$t("ui.auth.cancelDeleteBtn")}
             </button>
         </div>

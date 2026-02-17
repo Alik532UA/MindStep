@@ -21,8 +21,7 @@
         setTimeout(() => (isCopied = false), 2000);
     }
 
-    function handleRoomNameChange(e: CustomEvent<string>) {
-        const newName = e.detail;
+    function handleRoomNameChange(newName: string) {
         if (newName && newName !== room.name) {
             logService.action(`[LobbyHeader] Renaming room to: ${newName}`);
             roomService.renameRoom(roomId, newName);
@@ -43,7 +42,7 @@
             value={room.name}
             canEdit={amIHost}
             onRandom={generateRandomRoomName}
-            on:change={handleRoomNameChange}
+            onchange={handleRoomNameChange}
             dataTestId="room-name-editable"
         />
     </div>

@@ -16,8 +16,8 @@
     let isPrivate = false;
     let isCreating = false;
 
-    function handleRoomNameChange(e: CustomEvent<string>) {
-        roomName = e.detail;
+    function handleRoomNameChange(newName: string) {
+        roomName = newName;
     }
 
     async function handleCreate() {
@@ -67,7 +67,7 @@
                 value={roomName}
                 canEdit={true}
                 onRandom={generateRandomRoomName}
-                on:change={handleRoomNameChange}
+                onchange={handleRoomNameChange}
                 placeholder={$t("onlineMenu.roomNamePlaceholder")}
                 dataTestId="room-name-input"
             />

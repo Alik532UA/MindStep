@@ -42,8 +42,8 @@
           <ColorPicker
             value={player.color}
             dataTestId="player-color-picker-{player.id}"
-            on:change={(e) =>
-              handleUpdatePlayer(player.id, { color: e.detail.value })}
+            onchange={(newColor) =>
+              handleUpdatePlayer(player.id, { color: newColor })}
           />
           <button
             class="player-type-btn"

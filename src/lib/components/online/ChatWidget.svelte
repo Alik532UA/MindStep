@@ -9,16 +9,26 @@
     import ChatMessagesList from "./chat/ChatMessagesList.svelte";
     import ChatInput from "./chat/ChatInput.svelte";
 
-    export let roomId: string;
-    export let playerId: string;
-    export let playerName: string;
-    export let playerColor: string = "#ffd700"; // Default gold
-    export let variant: "floating" | "embedded" = "floating";
+    interface Props {
+        roomId: string;
+        playerId: string;
+        playerName: string;
+        playerColor?: string;
+        variant?: "floating" | "embedded";
+    }
 
-    let isOpen = variant === "embedded";
-    let messages: ChatMessage[] = [];
+    let {
+        roomId,
+        playerId,
+        playerName,
+        playerColor = "#ffd700",
+        variant = "floating"
+    }: Props = $props();
+
+    let isOpen = $state(variant === "embedded");
+    let messages = $state<ChatMessage[]>([]);
     let unsubscribe: Unsubscribe | null = null;
-    let hasUnread = false;
+    let hasUnread = $state(false);
 
     // Toggle chat visibility (only for floating)
     function toggleChat() {
@@ -48,8 +58,7 @@
         if (unsubscribe) unsubscribe();
     });
 
-    async function handleSend(e: CustomEvent<string>) {
-        const text = e.detail;
+    async function handleSend(text: string) {
         await roomService.sendMessage(roomId, playerId, playerName, text);
     }
 </script>
@@ -66,7 +75,7 @@
                     <h3>{$t("onlineMenu.chat.title")}</h3>
                     <button
                         class="close-btn"
-                        on:click={toggleChat}
+                        onclick={toggleChat}
                         data-testid="chat-close-btn"
                     >
                         <SvgIcons name="arrow-down" width="16" height="16" />
@@ -74,14 +83,14 @@
                 </div>
 
                 <ChatMessagesList {messages} {playerId} {playerColor} />
-                <ChatInput on:send={handleSend} />
+                <ChatInput onsend={handleSend} />
             </div>
         {/if}
 
         <button
             class="chat-fab"
             class:unread={hasUnread}
-            on:click={toggleChat}
+            onclick={toggleChat}
             aria-label="Toggle Chat"
             data-testid="chat-toggle-btn"
         >
@@ -99,7 +108,7 @@
     <!-- EMBEDDED VARIANT -->
     <div class="chat-window embedded" data-testid="chat-window-embedded">
         <ChatMessagesList {messages} {playerId} {playerColor} />
-        <ChatInput on:send={handleSend} />
+        <ChatInput onsend={handleSend} />
     </div>
 {/if}
 

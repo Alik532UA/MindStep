@@ -1,14 +1,17 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
-    import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher();
-    let newMessage = "";
+    interface Props {
+        onsend?: (message: string) => void;
+    }
+
+    let { onsend }: Props = $props();
+    let newMessage = $state("");
 
     function sendMessage() {
         if (!newMessage.trim()) return;
-        dispatch("send", newMessage.trim());
+        onsend?.(newMessage.trim());
         newMessage = "";
     }
 
@@ -24,13 +27,13 @@
         type="text"
         bind:value={newMessage}
         placeholder={$t("onlineMenu.chat.placeholder")}
-        on:keydown={handleKeydown}
+        onkeydown={handleKeydown}
         maxlength="100"
         data-testid="chat-input-field"
     />
     <button
         class="send-icon-btn"
-        on:click={sendMessage}
+        onclick={sendMessage}
         data-testid="chat-send-btn"
     >
         <SvgIcons name="arrow-up" width="18" height="18" />

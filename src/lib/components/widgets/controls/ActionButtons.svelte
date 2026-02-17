@@ -1,22 +1,39 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { voiceControlStore } from "$lib/stores/voiceControlStore";
 
-    export let confirmDisabled: boolean = false;
-    export let blockModeEnabled: boolean = false;
-    export let isVoiceSupported: boolean = false;
-    export let disabled: boolean = false;
-    export let isIos: boolean = false;
+    interface Props {
+        confirmDisabled?: boolean;
+        blockModeEnabled?: boolean;
+        isVoiceSupported?: boolean;
+        disabled?: boolean;
+        isIos?: boolean;
+        onconfirm?: () => void;
+        onnoMoves?: () => void;
+        onvoiceCommand?: () => void;
+    }
 
-    const dispatch = createEventDispatcher();
+    let {
+        confirmDisabled = false,
+        blockModeEnabled = false,
+        isVoiceSupported = false,
+        disabled = false,
+        isIos = false,
+        onconfirm,
+        onnoMoves,
+        onvoiceCommand
+    }: Props = $props();
 
-    $: voiceButtonStyle = `box-shadow: 0 0 0 ${$voiceControlStore.volume * 20}px rgba(229, 57, 53, ${Math.min($voiceControlStore.volume * 2, 1)});`;
-    $: voiceButtonTooltip = isVoiceSupported
-        ? $t("gameControls.voiceCommandTitle")
-        : $t("gameControls.voiceCommandNotSupported");
+    let voiceButtonStyle = $derived(
+        `box-shadow: 0 0 0 ${$voiceControlStore.volume * 20}px rgba(229, 57, 53, ${Math.min($voiceControlStore.volume * 2, 1)});`
+    );
+    let voiceButtonTooltip = $derived(
+        isVoiceSupported
+            ? $t("gameControls.voiceCommandTitle")
+            : $t("gameControls.voiceCommandNotSupported")
+    );
 </script>
 
 <div class="action-btns">
@@ -24,7 +41,7 @@
         variant="primary"
         size="large"
         disabled={confirmDisabled || disabled}
-        onclick={() => dispatch("confirm")}
+        onclick={onconfirm}
         tooltip={$t("gameControls.confirm")}
         dataTestId="confirm-move-btn"
         style="width: 90%;"
@@ -40,7 +57,7 @@
             variant="warning"
             size="large"
             {disabled}
-            onclick={() => dispatch("noMoves")}
+            onclick={onnoMoves}
             tooltip={$t("gameControls.noMovesTitle")}
             dataTestId="no-moves-btn"
             style="width: 90%;"
@@ -57,7 +74,7 @@
             variant="info"
             size="large"
             disabled={!isVoiceSupported || disabled}
-            onclick={() => dispatch("voiceCommand")}
+            onclick={onvoiceCommand}
             tooltip={voiceButtonTooltip}
             dataTestId="voice-command-btn"
             class={$voiceControlStore.lastTranscript !== "" ? "active" : ""}

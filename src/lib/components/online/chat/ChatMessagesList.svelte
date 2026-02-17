@@ -1,17 +1,20 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import type { ChatMessage } from "$lib/services/roomService";
-    import { afterUpdate } from "svelte";
 
-    export let messages: ChatMessage[] = [];
-    export let playerId: string;
-    export let playerColor: string;
+    interface Props {
+        messages?: ChatMessage[];
+        playerId: string;
+        playerColor: string;
+    }
 
-    let chatContainer: HTMLElement;
+    let { messages = [], playerId, playerColor }: Props = $props();
 
-    afterUpdate(() => {
-        if (chatContainer) {
-            // Simple auto-scroll
+    let chatContainer = $state<HTMLElement | null>(null);
+
+    $effect(() => {
+        if (chatContainer && messages.length > 0) {
+            // Simple auto-scroll on new messages
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     });

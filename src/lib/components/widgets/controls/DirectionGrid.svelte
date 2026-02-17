@@ -1,14 +1,23 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
     import type { MoveDirectionType } from "$lib/models/Piece";
     import { t } from "$lib/i18n/typedI18n";
 
-    export let selectedDirection: MoveDirectionType | null = null;
-    export let disabled: boolean = false;
-    export let centerInfoProps: any = {};
+    interface Props {
+        selectedDirection?: MoveDirectionType | null;
+        disabled?: boolean;
+        centerInfoProps?: any;
+        ondirection?: (dir: MoveDirectionType) => void;
+        oncentral?: () => void;
+    }
 
-    const dispatch = createEventDispatcher();
+    let {
+        selectedDirection = null,
+        disabled = false,
+        centerInfoProps = {},
+        ondirection,
+        oncentral
+    }: Props = $props();
 
     const directions: (MoveDirectionType | null)[] = [
         "up-left",
@@ -39,13 +48,13 @@
 
     function handleDirection(dir: MoveDirectionType) {
         if (disabled) return;
-        dispatch("direction", dir);
+        ondirection?.(dir);
     }
 
     function handleCentral() {
         // Центральна кнопка керується власною логікою clickable
         if (!centerInfoProps.clickable) return;
-        dispatch("central");
+        oncentral?.();
     }
 </script>
 
@@ -55,7 +64,7 @@
             <button
                 class="dir-btn {selectedDirection === dir ? 'active' : ''}"
                 use:hotkeyTooltip={dir}
-                on:click={() => handleDirection(dir)}
+                onclick={() => handleDirection(dir)}
                 data-testid={`dir-btn-${dir}`}
                 {disabled}
                 aria-label={$t(`gameControls.${dir}` as any)}
@@ -70,7 +79,7 @@
                 class="control-btn center-info {centerInfoProps.class}"
                 type="button"
                 aria-label={centerInfoProps.aria}
-                on:click={handleCentral}
+                onclick={handleCentral}
                 tabindex="0"
                 disabled={false}
                 style={centerInfoProps.backgroundColor

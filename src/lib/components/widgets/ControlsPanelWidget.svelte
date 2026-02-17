@@ -19,36 +19,38 @@
   import { voiceControlStore } from "$lib/stores/voiceControlStore";
   import { debugLogStore } from "$lib/stores/debugLogStore";
 
-  let showDebug = false;
-  let clickCount = 0;
-  let clickTimer: NodeJS.Timeout;
+  let showDebug = $state(false);
+  let clickCount = $state(0);
+  let clickTimer: ReturnType<typeof setTimeout>;
 
-  $: selectedDirection = $uiStateStore?.selectedDirection;
-  $: selectedDistance = $uiStateStore?.selectedDistance;
-  $: isMoveInProgress = $uiStateStore?.isComputerMoveInProgress;
+  let selectedDirection = $derived($uiStateStore?.selectedDirection);
+  let selectedDistance = $derived($uiStateStore?.selectedDistance);
+  let isMoveInProgress = $derived($uiStateStore?.isComputerMoveInProgress);
 
-  $: logService.ui("[ControlsPanelWidget] Reactive change detected", {
-    selectedDirection,
-    selectedDistance,
-    isConfirmButtonDisabled: $isConfirmButtonDisabled,
+  $effect(() => {
+    logService.ui("[ControlsPanelWidget] Reactive change detected", {
+      selectedDirection,
+      selectedDistance,
+      isConfirmButtonDisabled: $isConfirmButtonDisabled,
+    });
   });
 
-  $: centerInfoProps = getCenterInfoState({
+  let centerInfoProps = $derived(getCenterInfoState({
     selectedDirection: selectedDirection,
     selectedDistance,
     lastComputerMove: $lastComputerMove,
     lastPlayerMove: $lastPlayerMove,
     isPlayerTurn: $isPlayerTurn,
     previousPlayerColor: $previousPlayerColor,
-  });
+  }));
 
-  function handleDirection(e: CustomEvent<any>) {
+  function handleDirection(dir: any) {
     // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
-    userActionService.selectDirection(e.detail);
+    userActionService.selectDirection(dir);
   }
-  function handleDistance(e: CustomEvent<any>) {
+  function handleDistance(dist: any) {
     // ВАЖЛИВО: DirectionControls вже залогував клік. Не дублюємо тут.
-    userActionService.selectDistance(e.detail);
+    userActionService.selectDistance(dist);
   }
   function handleCentral() {
     if (centerInfoProps.clickable) onConfirmClick();
@@ -132,8 +134,8 @@ ${generalLogs}`;
     <!-- FIX: Додано data-testid для заголовка, який вмикає дебаг -->
     <div
       class="select-direction-label"
-      on:click={handleLabelClick}
-      on:keydown={handleLabelClick}
+      onclick={handleLabelClick}
+      onkeydown={handleLabelClick}
       role="button"
       tabindex="0"
       data-testid="controls-panel-title"
@@ -141,17 +143,6 @@ ${generalLogs}`;
       {$t("gameControls.selectDirectionAndDistance")}
     </div>
     <DirectionControls
-      availableDirections={[
-        "up-left",
-        "up",
-        "up-right",
-        "left",
-        null,
-        "right",
-        "down-left",
-        "down",
-        "down-right",
-      ]}
       distanceRows={$distanceRows}
       isPlayerTurn={$isPlayerTurn}
       blockModeEnabled={$gameSettingsStore.blockModeEnabled}
@@ -160,17 +151,17 @@ ${generalLogs}`;
       {isMoveInProgress}
       {selectedDirection}
       {selectedDistance}
-      on:direction={handleDirection}
-      on:distance={handleDistance}
-      on:central={handleCentral}
-      on:confirm={handleConfirm}
-      on:noMoves={handleNoMoves}
+      ondirection={handleDirection}
+      ondistance={handleDistance}
+      oncentral={handleCentral}
+      onconfirm={handleConfirm}
+      onnoMoves={handleNoMoves}
     />
     {#if showDebug}
       <div class="debug-panel" data-testid="voice-debug-panel">
         <div class="debug-controls">
-          <button class="debug-btn" on:click={copyLogs}>Copy</button>
-          <button class="debug-btn" on:click={clearLogs}>Clear</button>
+          <button class="debug-btn" onclick={copyLogs}>Copy</button>
+          <button class="debug-btn" onclick={clearLogs}>Clear</button>
         </div>
         <p>Recognized Text:</p>
         <pre id="voice-transcript">{$voiceControlStore.lastTranscript ||

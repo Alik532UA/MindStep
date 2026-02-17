@@ -8,20 +8,33 @@
     import LobbyPlayerCard from "./LobbyPlayerCard.svelte";
     import LobbyActionFooter from "./LobbyActionFooter.svelte";
 
-    export let players: OnlinePlayer[];
-    export let myPlayerId: string;
-    export let hostId: string;
-    export let roomStatus: "waiting" | "playing" | "finished";
-    export let onUpdatePlayer: (data: Partial<OnlinePlayer>) => void;
-    export let onToggleReady: () => void;
-    export let onStartGame: () => void;
-    export let amIHost: boolean;
+    interface Props {
+        players: OnlinePlayer[];
+        myPlayerId: string;
+        hostId: string;
+        roomStatus: "waiting" | "playing" | "finished";
+        onUpdatePlayer: (data: Partial<OnlinePlayer>) => void;
+        onToggleReady: () => void;
+        onStartGame: () => void;
+        amIHost: boolean;
+    }
 
-    $: allReady = players.length >= 2 && players.every((p) => p.isReady);
-    $: myPlayer = players.find((p) => p.id === myPlayerId);
+    let {
+        players,
+        myPlayerId,
+        hostId,
+        roomStatus,
+        onUpdatePlayer,
+        onToggleReady,
+        onStartGame,
+        amIHost
+    }: Props = $props();
 
-    function handleUpdatePlayer(e: CustomEvent<Partial<OnlinePlayer>>) {
-        onUpdatePlayer(e.detail);
+    let allReady = $derived(players.length >= 2 && players.every((p) => p.isReady));
+    let myPlayer = $derived(players.find((p) => p.id === myPlayerId));
+
+    function handleUpdatePlayer(data: Partial<OnlinePlayer>) {
+        onUpdatePlayer(data);
     }
 </script>
 
@@ -46,7 +59,7 @@
                     {myPlayerId}
                     {hostId}
                     {roomStatus}
-                    on:update={handleUpdatePlayer}
+                    onupdate={handleUpdatePlayer}
                 />
             </div>
         {/each}
@@ -64,8 +77,8 @@
         isMyPlayerReady={myPlayer?.isReady}
         {allReady}
         {roomStatus}
-        on:toggleReady={onToggleReady}
-        on:startGame={onStartGame}
+        ontoggleReady={onToggleReady}
+        onstartGame={onStartGame}
     />
 </div>
 

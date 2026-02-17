@@ -14,14 +14,18 @@
     import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
     import { fly, fade } from "svelte/transition";
 
-    import { logService } from "$lib/services/logService"; // Import logService
+    import { logService } from "$lib/services/logService";
 
-    export let roomId: string;
+    interface Props {
+        roomId: string;
+    }
 
-    let room: Room | null = null;
-    let myPlayerId: string | null = null;
+    let { roomId }: Props = $props();
+
+    let room = $state<Room | null>(null);
+    let myPlayerId = $state<string | null>(null);
     let unsubscribe: Unsubscribe | null = null;
-    let isLeaving = false;
+    let isLeaving = $state(false);
 
     onMount(() => {
         const session = roomService.getSession();
@@ -113,15 +117,15 @@
         roomService.updateRoomSettings(roomId, { [key]: value } as any);
     }
 
-    $: playersList = room
+    let playersList = $derived(room
         ? Object.values(room.players).sort((a, b) => a.joinedAt - b.joinedAt)
-        : [];
+        : []);
 
-    $: myPlayer = room && myPlayerId ? room.players[myPlayerId] : null;
+    let myPlayer = $derived(room && myPlayerId ? room.players[myPlayerId] : null);
 
-    $: amIHost = room && myPlayerId ? room.hostId === myPlayerId : false;
-    $: canEditSettings = amIHost || (room && room.allowGuestSettings);
-    $: myName = myPlayer ? myPlayer.name : "Player";
+    let amIHost = $derived(room && myPlayerId ? room.hostId === myPlayerId : false);
+    let canEditSettings = $derived(amIHost || (room && room.allowGuestSettings));
+    let myName = $derived(myPlayer ? myPlayer.name : "Player");
 </script>
 
 <div class="lobby-page" data-testid="lobby-container">
