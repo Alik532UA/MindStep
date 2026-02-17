@@ -14,8 +14,8 @@
   import ToggleButton from "$lib/components/ToggleButton.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-  $: settings = $appSettingsStore;
-  $: gameSettings = $gameSettingsStore;
+  let settings = $derived($appSettingsStore);
+  let gameSettings = $derived($gameSettingsStore);
 
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
@@ -64,7 +64,7 @@
               onclick={() => selectLang(lang.code)}
             >
               <div class="lang-flag-wrapper">
-                <svelte:component this={lang.component} />
+                <lang.component />
               </div>
             </button>
           {/each}

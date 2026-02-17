@@ -12,11 +12,11 @@
   import KeybindingButton from "./KeybindingButton.svelte";
   import { actionGroups } from "$lib/config/hotkeyConfig";
 
-  let listeningFor: { action: KeybindingAction; index: number } | null = null;
+  let listeningFor = $state<{ action: KeybindingAction; index: number } | null>(null);
 
-  $: keybindings = $gameSettingsStore.keybindings;
+  let keybindings = $derived($gameSettingsStore.keybindings);
 
-  $: conflicts = (() => {
+  let conflicts = $derived((() => {
     const counts: Record<string, number> = {};
     const conflictKeys = new Set<string>();
     // Явне приведення типів для Object.values
@@ -30,7 +30,7 @@
       }
     }
     return conflictKeys;
-  })();
+  })());
 
   function listenForKey(action: KeybindingAction, index: number = -1) {
     listeningFor = { action, index };
@@ -90,8 +90,8 @@
                 isListening={listeningFor?.action === action &&
                   listeningFor?.index === i}
                 hasConflict={conflicts.has(key)}
-                on:click={() => listenForKey(action, i)}
-                on:remove={() => removeKey(action, i)}
+                onclick={() => listenForKey(action, i)}
+                onremove={() => removeKey(action, i)}
               />
             {/each}
             {#if (keybindings[action]?.length || 0) < 8}
@@ -102,7 +102,7 @@
               {:else}
                 <button
                   class="add-key-btn"
-                  on:click={() => listenForKey(action, -1)}>+</button
+                  onclick={() => listenForKey(action, -1)}>+</button
                 >
               {/if}
             {/if}
@@ -116,7 +116,7 @@
     {#if conflicts.size > 0}
       <p class="conflict-warning">{$t("controlsPage.keyConflict")}</p>
     {/if}
-    <button class="reset-button" on:click={userActionService.resetKeybindings}>
+    <button class="reset-button" onclick={userActionService.resetKeybindings}>
       {$t("controlsPage.resetToDefaults")}
     </button>
   </div>

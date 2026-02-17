@@ -2,9 +2,21 @@
     import { t } from "$lib/i18n/typedI18n";
     import { customTooltip } from "$lib/actions/customTooltip.js";
 
-    export let keyName: string;
-    export let isListening: boolean = false;
-    export let hasConflict: boolean = false;
+    interface Props {
+        keyName: string;
+        isListening?: boolean;
+        hasConflict?: boolean;
+        onclick?: () => void;
+        onremove?: () => void;
+    }
+
+    let {
+        keyName,
+        isListening = false,
+        hasConflict = false,
+        onclick,
+        onremove
+    }: Props = $props();
 
     function formatKeyCode(code: string) {
         if (!code) return "N/A";
@@ -25,18 +37,18 @@
         class="key-button"
         class:listening={isListening}
         class:conflict={hasConflict}
-        on:click
+        {onclick}
     >
         {isListening ? $t("controlsPage.pressKey") : formatKeyCode(keyName)}
     </button>
     <button
         class="remove-key-btn"
         use:customTooltip={$t("controlsPage.removeKey")}
-        on:click|stopPropagation={() => {
-            /* Event handled by parent via custom event or direct loop */
+        onclick={(e) => {
+            e.stopPropagation();
+            onremove?.();
         }}
-        on:click>×</button
-    >
+    >×</button>
 </div>
 
 <style>
