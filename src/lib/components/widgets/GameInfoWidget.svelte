@@ -1,19 +1,12 @@
 <script lang="ts">
-  import { derived } from "svelte/store";
   import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
   import { t } from "$lib/i18n/typedI18n";
-  import {
-    lastComputerMove,
-    lastPlayerMove,
-    isPlayerTurn,
-    isGameOver,
-    isFirstMove,
-  } from "$lib/stores/derivedState.ts";
+  import { derivedState } from "$lib/stores/derivedState.svelte";
   import { i18nReady } from "$lib/i18n/init.js";
   import { fade, slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
-  import { playerStore } from '$lib/stores/playerStore.svelte';
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { playerState } from '$lib/stores/playerState.svelte';
+  import { uiState } from "$lib/stores/uiState.svelte";
   import CompactComputerMove from "$lib/components/widgets/game-info/CompactComputerMove.svelte";
   import StructuredMessage from "$lib/components/widgets/game-info/StructuredMessage.svelte";
 
@@ -23,76 +16,49 @@
     type GameInfoContext,
   } from "$lib/services/game-info/gameInfoMessageFactory";
 
-  const isCompact = derived(
-    gameSettingsStore,
-    ($settings) => $settings.showGameInfoWidget === "compact",
-  );
+  let isCompact = $derived($gameSettingsStore.showGameInfoWidget === "compact");
 
-  const displayMessage = derived(
-    [
-      playerStore,
-      isGameOver,
-      isFirstMove,
-      lastComputerMove,
-      lastPlayerMove,
-      isPlayerTurn,
-      t,
-      isCompact,
-      gameSettingsStore,
-      uiStateStore,
-    ],
-    ([
-      $playerStore,
-      $isGameOver,
-      $isFirstMove,
-      $lastComputerMove,
-      $lastPlayerMove,
-      $isPlayerTurn,
-      $t,
-      $isCompact,
-      $gameSettings,
-      $uiState,
-    ]) => {
-      // FIX: Delegate message creation to factory
-      const context: GameInfoContext = {
-        playerState: $playerStore,
-        isGameOver: $isGameOver,
-        isFirstMove: $isFirstMove,
-        lastComputerMove: $lastComputerMove,
-        lastPlayerMove: $lastPlayerMove,
-        isPlayerTurn: $isPlayerTurn,
-        translate: $t,
-        isCompact: $isCompact,
-        gameSettings: $gameSettings,
-        uiState: $uiState,
-      };
+  let displayMessage = $derived.by(() => {
+    if (!playerState.state) return { type: "text", content: "" };
 
-      return createGameInfoMessage(context);
-    },
-  );
+    const context: GameInfoContext = {
+      playerState: playerState.state,
+      isGameOver: derivedState.isGameOver,
+      isFirstMove: uiState.state?.isFirstMove ?? true,
+      lastComputerMove: derivedState.lastComputerMove,
+      lastPlayerMove: derivedState.lastPlayerMove,
+      isPlayerTurn: derivedState.isPlayerTurn,
+      translate: $t,
+      isCompact: isCompact,
+      gameSettings: $gameSettingsStore,
+      uiState: uiState.state as any,
+    };
+
+    return createGameInfoMessage(context);
+  });
 </script>
 
-{#if $i18nReady && $playerStore}
+{#if $i18nReady && playerState.state}
   {#if $gameSettingsStore.showGameInfoWidget !== "hidden"}
     <div
       class="game-info-widget"
-      class:compact={$gameSettingsStore.showGameInfoWidget === "compact"}
+      class:compact={isCompact}
       transition:slide={{ duration: 400, easing: quintOut }}
       data-testid="game-info-panel"
     >
       <div class="game-info-content" data-testid="game-info-content">
-        {#key $displayMessage}
+        {#key displayMessage}
           <div
             class="fade-wrapper"
             in:fade={{ duration: 250, delay: 250 }}
             out:fade={{ duration: 250 }}
           >
-            {#if $displayMessage.type === "COMPACT_COMPUTER_MOVE"}
-              <CompactComputerMove message={$displayMessage as any} />
-            {:else if $displayMessage.type === "STRUCTURED"}
-              <StructuredMessage lines={$displayMessage.lines} />
+            {#if displayMessage.type === "COMPACT_COMPUTER_MOVE"}
+              <CompactComputerMove message={displayMessage as any} />
+            {:else if displayMessage.type === "STRUCTURED"}
+              <StructuredMessage lines={displayMessage.lines} />
             {:else}
-              {$displayMessage.content}
+              {displayMessage.content}
             {/if}
           </div>
         {/key}

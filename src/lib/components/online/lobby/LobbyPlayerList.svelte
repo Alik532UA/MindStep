@@ -48,21 +48,23 @@
     </div>
 
     <div class="players-list" data-testid="players-list">
-        {#each players as player (player.id)}
-            <div
-                animate:flip={{ duration: 300 }}
-                in:fly={{ y: 20, duration: 300 }}
-                role="listitem"
-            >
-                <LobbyPlayerCard
-                    {player}
-                    {myPlayerId}
-                    {hostId}
-                    {roomStatus}
-                    onupdate={handleUpdatePlayer}
-                />
-            </div>
-        {/each}
+        {#key players.length}
+            {#each players as player (player.id)}
+                <div
+                    animate:flip={{ duration: 300 }}
+                    in:fly={{ y: 20, duration: 300 }}
+                    role="listitem"
+                >
+                    <LobbyPlayerCard
+                        {player}
+                        {myPlayerId}
+                        {hostId}
+                        {roomStatus}
+                        onupdate={handleUpdatePlayer}
+                    />
+                </div>
+            {/each}
+        {/key}
 
         {#if players.length < 2 && roomStatus === "waiting"}
             <div class="waiting-card" in:fade>
