@@ -5,11 +5,11 @@
  */
 import { writable, get } from 'svelte/store';
 import { logService } from '../services/logService';
-import { uiStateStore } from './uiStateStore';
-import { boardStore } from './boardStore.svelte';
+import { boardState } from './boardState.svelte';
 import { availableMovesService } from '../services/availableMovesService';
 import { syncGameModeLogic } from '$lib/logic/settingsLogic';
 import { gameSettingsState } from './gameSettingsState.svelte';
+import { uiState } from './uiState.svelte';
 
 // Re-export types for backward compatibility
 export type {
@@ -35,8 +35,8 @@ function createGameSettingsStore() {
 
   // Helper wrapper to apply sync logic using current UI state
   const applySync = (state: GameSettingsState): GameSettingsState => {
-    const uiState = get(uiStateStore);
-    return syncGameModeLogic(state, uiState);
+    const uState = uiState.state;
+    return syncGameModeLogic(state, uState);
   };
 
   const methods = {
@@ -125,7 +125,7 @@ function createGameSettingsStore() {
         return updatedState;
       });
       syncStore();
-      boardStore.resetCellVisitCounts();
+      boardState.resetCellVisitCounts();
       availableMovesService.updateAvailableMoves();
     },
     toggleSpeech: () => {
@@ -146,7 +146,7 @@ function createGameSettingsStore() {
       const currentState = gameSettingsState.state;
 
       if (presetSettings.blockModeEnabled !== undefined && presetSettings.blockModeEnabled !== currentState.blockModeEnabled) {
-        boardStore.resetCellVisitCounts();
+        boardState.resetCellVisitCounts();
         availableMovesService.updateAvailableMoves();
       }
 

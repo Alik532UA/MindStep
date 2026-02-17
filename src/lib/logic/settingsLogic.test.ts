@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { syncGameModeLogic } from './settingsLogic';
-import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
-import type { UiState } from '$lib/stores/uiStateStore';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
+import type { UiState } from '$lib/types/uiState';
 import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';
-import { initialUIState } from '$lib/stores/uiStateStore';
+import { initialUIState } from '$lib/types/uiState';
 
 describe('settingsLogic', () => {
     const baseSettings: GameSettingsState = { ...defaultGameSettings };

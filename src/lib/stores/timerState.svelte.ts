@@ -2,7 +2,10 @@
 // SSoT для стану таймера. Використовує Svelte 5 Runes.
 // Обгортку для Svelte 4 (writable) надає timerStore.ts (bridge pattern).
 
-import type { TimerState } from './timerStore';
+export interface TimerState {
+    remainingTime: number | null;
+    turnTimeLeft: number | null;
+}
 
 const initialTimerState: TimerState = {
     remainingTime: null,

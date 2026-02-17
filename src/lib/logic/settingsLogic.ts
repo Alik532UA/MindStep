@@ -1,5 +1,5 @@
 import type { GameSettingsState, GameModePreset } from '$lib/stores/gameSettingsTypes';
-import type { UiState } from '$lib/stores/uiStateStore';
+import type { UiState } from '$lib/types/uiState';
 
 /**
  * Чиста функція для синхронізації режиму гри з контекстом UI.

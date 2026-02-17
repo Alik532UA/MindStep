@@ -1,8 +1,8 @@
 // speechService.ts: централізований сервіс для озвучення ходів, повідомлень тощо.
-import { writable, get } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { logService } from '$lib/services/logService';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { playerStore } from '$lib/stores/playerStore.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import { VoiceLoader } from './speech/voiceLoader';
 
@@ -95,7 +95,7 @@ export function speakMove(
         return;
     }
 
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
 
     if (!settings.speechEnabled) {
         logService.speech('[Speech] speakMove: Speech is globally disabled.');
@@ -109,9 +109,9 @@ export function speakMove(
         shouldSpeak = true;
         logService.speech('[Speech] speakMove: Forced speech (settings checks bypassed).');
     } else {
-        const playerState = get(playerStore);
-        if (playerState) {
-            const currentPlayer = playerState.players[playerState.currentPlayerIndex];
+        const pState = playerState.state;
+        if (pState) {
+            const currentPlayer = pState.players[pState.currentPlayerIndex];
             shouldSpeak = currentPlayer &&
                 (currentPlayer.isComputer ? settings.speechFor.computer : settings.speechFor.player);
         }
@@ -222,7 +222,7 @@ function processQueue(): void {
         return;
     }
 
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
     const utterance = new SpeechSynthesisUtterance(item.text);
     utterance.rate = settings.speechRate || 1.0;
     utterance.pitch = 1.0;
@@ -280,7 +280,7 @@ function processQueue(): void {
 export function speakTestPhrase(): void {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
     const allVoices = speechSynthesis.getVoices();
     if (allVoices.length === 0) {
         loadAndGetVoices();

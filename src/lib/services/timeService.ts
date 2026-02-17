@@ -1,5 +1,5 @@
 // file: src/lib/services/timeService.ts
-import { timerStore } from '$lib/stores/timerStore';
+import { timerState } from '$lib/stores/timerState.svelte';
 import { logService } from './logService';
 
 class TimeService {
@@ -16,10 +16,10 @@ class TimeService {
     this.isGameTimerPaused = false;
     logService.GAME_MODE(`[TimeService] Starting game timer for ${duration} seconds.`);
 
-    timerStore.setRemainingTime(duration);
+    timerState.setRemainingTime(duration);
 
     this.gameTimerInterval = setInterval(() => {
-      timerStore.update(state => {
+      timerState.update(state => {
         if (state.remainingTime === null || this.isGameTimerPaused) return state;
 
         const newTime = state.remainingTime - 1;
@@ -64,10 +64,10 @@ class TimeService {
     this.isTurnTimerPaused = false;
     logService.GAME_MODE(`[TimeService] Starting turn timer for ${duration} seconds.`);
 
-    timerStore.setTurnTimeLeft(duration);
+    timerState.setTurnTimeLeft(duration);
 
     this.turnTimerInterval = setInterval(() => {
-      timerStore.update(state => {
+      timerState.update(state => {
         if (state.turnTimeLeft === null || this.isTurnTimerPaused) return state;
 
         const newTime = state.turnTimeLeft - 1;

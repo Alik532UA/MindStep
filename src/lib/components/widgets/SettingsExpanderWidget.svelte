@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { gameModeStore } from "$lib/stores/gameModeStore";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+  import { gameModeState } from "$lib/stores/gameModeState.svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import { onMount, tick } from "svelte";
   import { logService } from "$lib/services/logService";
   import { boardState } from "$lib/stores/boardState.svelte";
@@ -29,7 +29,7 @@
   let contentRef = $state<HTMLDivElement>();
 
   function syncExpanderStateToStore(open: boolean) {
-    uiStateStore.update((s) => ({ ...s, isSettingsExpanderOpen: open }));
+    uiState.update((s) => ({ ...s, isSettingsExpanderOpen: open }));
   }
 
   async function toggleExpander() {
@@ -62,8 +62,9 @@
   });
 
   $effect(() => {
+    // Реактивність на зміну режиму блокування для перерахунку висоти
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    $gameSettingsStore.blockModeEnabled;
+    gameSettingsState.state.blockModeEnabled;
 
     if (isOpen && contentRef) {
       tick().then(() => {
@@ -77,12 +78,12 @@
   });
 
   const isCompetitiveMode = $derived(
-    $gameModeStore.activeMode === "timed" ||
-    ($gameModeStore.activeMode === "local" &&
-      $gameSettingsStore.lockSettings) ||
-    ($gameModeStore.activeMode === "online" &&
-      $gameSettingsStore.settingsLocked) ||
-    $uiStateStore.settingsMode === "competitive"
+    gameModeState.state.activeMode === "timed" ||
+    (gameModeState.state.activeMode === "local" &&
+      gameSettingsState.state.lockSettings) ||
+    (gameModeState.state.activeMode === "online" &&
+      gameSettingsState.state.settingsLocked) ||
+    uiState.state.settingsMode === "competitive"
   );
 </script>
 

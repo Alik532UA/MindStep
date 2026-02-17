@@ -2,7 +2,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import { createEventDispatcher } from "svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import { testModeStore } from "$lib/stores/testModeStore";
 
   const dispatch = createEventDispatcher();

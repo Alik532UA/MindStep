@@ -8,9 +8,9 @@ import type {
     GameStateSyncEvent,
     VoteType
 } from './gameStateSync.interface';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
 import { logService } from '$lib/services/logService';
 
 /**
@@ -42,9 +42,9 @@ export class LocalGameStateSync implements IGameStateSync {
     async pushState(state: SyncableGameState): Promise<void> {
         this._stateVersion++;
 
-        if (state.boardState) boardStore.set(state.boardState);
-        if (state.playerState) playerStore.set(state.playerState);
-        if (state.scoreState) scoreStore.set(state.scoreState);
+        if (state.boardState) boardState.set(state.boardState);
+        if (state.playerState) playerState.set(state.playerState);
+        if (state.scoreState) scoreState.set(state.scoreState);
 
         if (state.noMovesVotes) {
             this._localVotes = state.noMovesVotes;
@@ -105,18 +105,18 @@ export class LocalGameStateSync implements IGameStateSync {
     }
 
     async pullState(): Promise<SyncableGameState | null> {
-        const boardState = get(boardStore);
-        const playerState = get(playerStore);
-        const scoreState = get(scoreStore);
+        const bState = boardState.state;
+        const pState = playerState.state;
+        const sState = scoreState.state;
 
-        if (!boardState || !playerState || !scoreState) {
+        if (!bState || !pState || !sState) {
             return null;
         }
 
         return {
-            boardState,
-            playerState,
-            scoreState,
+            boardState: bState,
+            playerState: pState,
+            scoreState: sState,
             version: this._stateVersion,
             updatedAt: Date.now(),
             noMovesVotes: this._localVotes

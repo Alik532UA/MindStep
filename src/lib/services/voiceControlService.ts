@@ -1,5 +1,4 @@
-import { get } from 'svelte/store';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { userActionService } from './userActionService';
 import { logService } from './logService';
 import { voiceControlStore } from '$lib/stores/voiceControlStore';
@@ -46,7 +45,7 @@ class VoiceControlService {
       logService.voiceControl('[VoiceControlService] Attempted to start listening, but API is not supported.');
       return;
     }
-    if (get(uiStateStore).isListening) {
+    if (uiState.state.isListening) {
       logService.voiceControl('[VoiceControlService] Already listening.');
       return;
     }
@@ -58,12 +57,12 @@ class VoiceControlService {
     } catch (error) {
       logService.voiceControl('[VoiceControlService] Error calling recognition.start():', error);
       voiceControlStore.setError(error);
-      uiStateStore.update(s => ({ ...s, isListening: false }));
+      uiState.update(s => ({ ...s, isListening: false }));
     }
   }
 
   public stopListening() {
-    if (!this.isSupported || !get(uiStateStore).isListening) return;
+    if (!this.isSupported || !uiState.state.isListening) return;
     logService.voiceControl('[VoiceControlService] Calling recognition.stop()');
     this.processingResult = true; // Prevent restart on manual stop
     this.recognition.stop();
@@ -71,7 +70,7 @@ class VoiceControlService {
   }
 
   public toggleListening() {
-    if (get(uiStateStore).isListening) {
+    if (uiState.state.isListening) {
       this.stopListening();
     } else {
       this.startListening();
@@ -79,7 +78,7 @@ class VoiceControlService {
   }
 
   private handleStart() {
-    uiStateStore.update(s => ({ ...s, isListening: true }));
+    uiState.update(s => ({ ...s, isListening: true }));
     logService.voiceControl('[VoiceControlService] Event: recognition started.');
     this.initAudioAnalysis();
   }
@@ -103,7 +102,7 @@ class VoiceControlService {
   }
 
   private handleEnd() {
-    uiStateStore.update(s => ({ ...s, isListening: false }));
+    uiState.update(s => ({ ...s, isListening: false }));
     logService.voiceControl('[VoiceControlService] Event: recognition ended.');
     this.stopAudioAnalysis();
 
@@ -112,7 +111,7 @@ class VoiceControlService {
     if (!this.processingResult) {
       logService.voiceControl('[VoiceControlService] Recognition ended unexpectedly, restarting...');
       setTimeout(() => {
-        if (!get(uiStateStore).isListening) {
+        if (!uiState.state.isListening) {
           this.startListening();
         }
       }, 500);
@@ -186,7 +185,7 @@ class VoiceControlService {
     } else if (result.type === 'move' && result.direction) {
       const distance = result.distance ?? 1;
       logService.voiceControl(`[VoiceControlService] Parsed command: ${result.direction} ${distance}`);
-      uiStateStore.update(s => ({ ...s, voiceMoveRequested: true }));
+      uiState.update(s => ({ ...s, voiceMoveRequested: true }));
       logService.voiceControl('[VoiceControlService] voiceMoveRequested set to true');
       userActionService.executeMove(result.direction, distance);
       this.consecutiveFailedAttempts = 0;

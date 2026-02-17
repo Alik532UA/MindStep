@@ -8,7 +8,7 @@
   import DontShowAgainCheckbox from "./DontShowAgainCheckbox.svelte";
   import { userActionService } from "$lib/services/userActionService";
   import { logService } from "$lib/services/logService";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import type { GameModePreset } from "$lib/stores/gameSettingsStore";
   import WipNotice from "./main-menu/WipNotice.svelte";
   import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
@@ -23,14 +23,14 @@
 
   function handleLocalGame() {
     logService.action('Click: "Локальна гра" (GameModeModal)');
-    uiStateStore.update((s) => ({ ...s, intendedGameType: "local" }));
+    uiState.update((s) => ({ ...s, intendedGameType: "local" }));
     modalStore.closeModal();
     goto(`${base}/local-setup`);
   }
 
   function handleOnlineGame() {
     logService.action('Click: "Онлайн гра" (GameModeModal)');
-    uiStateStore.update((s) => ({ ...s, intendedGameType: "online" }));
+    uiState.update((s) => ({ ...s, intendedGameType: "online" }));
     modalStore.closeModal();
     goto(`${base}/online`);
   }
@@ -55,7 +55,7 @@
 
     // НАВІЩО: Завжди встановлюємо тип гри перед навігацією, щоб uiService
     // вибрав правильний шлях (наприклад, /game/virtual-player).
-    uiStateStore.update((s) => ({
+    uiState.update((s) => ({
       ...s,
       intendedGameType: "virtual-player",
     }));

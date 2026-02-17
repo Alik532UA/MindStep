@@ -8,9 +8,8 @@
 
     import { onMount } from "svelte";
     import { animationService } from "$lib/services/animationService.js";
-    import { get } from "svelte/store";
-    import { boardStore } from '$lib/stores/boardStore.svelte';
-    import { replayStore } from "$lib/stores/replayStore";
+    import { boardState } from '$lib/stores/boardState.svelte';
+    import { replayStateRune } from "$lib/stores/replayStoreState.svelte";
     import { i18nReady } from "$lib/i18n/init.js";
     import { logService } from "$lib/services/logService";
 
@@ -30,8 +29,8 @@
             logService.init("[GamePageLayout] Running custom init logic.");
             initLogic();
         } else {
-            const boardState = get(boardStore);
-            if (!boardState || boardState.moveHistory.length <= 1) {
+            const bState = boardState.state;
+            if (!bState || bState.moveHistory.length <= 1) {
                 logService.init(
                     "[GamePageLayout] No active game found and no custom init logic provided.",
                 );
@@ -83,10 +82,10 @@
     }
 </script>
 
-{#if get(replayStore).isReplayMode}
+{#if replayStateRune.state.isReplayMode}
     <ReplayViewer
-        moveHistory={get(replayStore).moveHistory}
-        boardSize={get(replayStore).boardSize}
+        moveHistory={replayStateRune.state.moveHistory}
+        boardSize={replayStateRune.state.boardSize}
         autoPlayForward={true}
     />
 {:else}

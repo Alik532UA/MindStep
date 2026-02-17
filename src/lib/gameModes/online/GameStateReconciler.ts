@@ -1,20 +1,20 @@
-import { get } from 'svelte/store';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { uiStateStore } from '$lib/stores/uiStateStore';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { availableMovesService } from '$lib/services/availableMovesService';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { modalService } from '$lib/services/modalService';
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { speakMove } from '$lib/services/speechService';
 import { appSettingsStore, type AppSettingsState } from '$lib/stores/appSettingsStore';
 import { logService } from '$lib/services/logService';
 import type { SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { t as tStore } from '$lib/i18n/typedI18n';
 import { timeService } from '$lib/services/timeService';
+import { get } from 'svelte/store';
 
 export class GameStateReconciler {
     private lastProcessedNoMovesClaim: number = 0;
@@ -22,16 +22,16 @@ export class GameStateReconciler {
     constructor(private myPlayerId: string) { }
 
     public apply(remoteState: SyncableGameState): void {
-        const currentBoard = get(boardStore);
-        const isGameOver = get(uiStateStore).isGameOver;
+        const bState = boardState.state;
+        const isGameOver = uiState.state.isGameOver;
 
         if (remoteState.boardState) {
-            const oldQueueLength = currentBoard?.moveQueue?.length || 0;
+            const oldQueueLength = bState?.moveQueue?.length || 0;
             const newQueueLength = remoteState.boardState.moveQueue?.length || 0;
 
             logService.state(`[Reconciler] Comparing queues: Local=${oldQueueLength}, Remote=${newQueueLength}, isGameOver=${isGameOver}`);
 
-            if (currentBoard && remoteState.boardState.moveHistory.length < currentBoard.moveHistory.length) {
+            if (bState && remoteState.boardState.moveHistory.length < bState.moveHistory.length) {
                 logService.GAME_MODE('[Reconciler] Detected game reset. Resetting animation service.');
                 gameEventBus.dispatch('GAME_RESET');
             }
@@ -49,14 +49,14 @@ export class GameStateReconciler {
             }
         }
 
-        // --- ДІАГНОСТИКА: Оновлюємо стори з детальним логуванням ---
+        // --- ДІАГНОСТИКА: Оновлюємо стани з детальним логуванням ---
         try {
             if (remoteState.boardState) {
-                logService.state('[Reconciler] Updating boardStore...');
-                boardStore.set(remoteState.boardState);
+                logService.state('[Reconciler] Updating boardState...');
+                boardState.set(remoteState.boardState);
             }
             if (remoteState.playerState) {
-                logService.state('[Reconciler] Updating playerStore...', {
+                logService.state('[Reconciler] Updating playerState...', {
                     currentPlayer: remoteState.playerState.currentPlayerIndex,
                     players: remoteState.playerState.players.map(p => ({
                         name: p.name,
@@ -64,19 +64,19 @@ export class GameStateReconciler {
                         isComputer: p.isComputer
                     }))
                 });
-                playerStore.set(remoteState.playerState);
+                playerState.set(remoteState.playerState);
             }
             if (remoteState.scoreState) {
-                logService.state('[Reconciler] Updating scoreStore...');
-                scoreStore.set(remoteState.scoreState);
+                logService.state('[Reconciler] Updating scoreState...');
+                scoreState.set(remoteState.scoreState);
             }
         } catch (e: any) {
-            logService.error(`[Reconciler] Error during store updates: ${e?.message}`, e);
+            logService.error(`[Reconciler] Error during state updates: ${e?.message}`, e);
             throw e;
         }
 
         if (remoteState.settings) {
-            gameSettingsStore.updateSettings(remoteState.settings);
+            gameSettingsState.update(s => ({ ...s, ...remoteState.settings }));
         }
 
         this.handleGameOver(remoteState);
@@ -87,13 +87,13 @@ export class GameStateReconciler {
 
     private handleOpponentVoiceover(move: any) {
         const movePlayerIndex = move.player - 1;
-        const myIndex = get(uiStateStore).onlinePlayerIndex;
-        const settings = get(gameSettingsStore);
+        const myIndex = uiState.state.onlinePlayerIndex;
+        const settings = gameSettingsState.state;
 
         if (movePlayerIndex !== myIndex && settings.speechEnabled && settings.speechFor.onlineOpponentMove) {
             speakMove(
                 { direction: move.direction, distance: move.distance },
-                (get(appSettingsStore) as AppSettingsState).language || 'uk',
+                (appSettingsStore as any).state?.language || 'uk',
                 settings.selectedVoiceURI,
                 undefined,
                 true
@@ -103,12 +103,12 @@ export class GameStateReconciler {
 
     private handleGameOver(remoteState: SyncableGameState) {
         if (remoteState.gameOver) {
-            const currentGameOver = get(gameOverStore);
-            uiStateStore.update(s => ({ ...s, isGameOver: true }));
+            const currentGameOver = gameOverState.state;
+            uiState.update(s => ({ ...s, isGameOver: true }));
 
             if (!currentGameOver.isGameOver) {
                 logService.GAME_MODE('[Reconciler] Syncing GameOver state from server');
-                gameOverStore.setGameOver(remoteState.gameOver);
+                gameOverState.setGameOver(remoteState.gameOver);
                 modalService.showGameOverModal(remoteState.gameOver!);
             }
         } else {
@@ -123,11 +123,11 @@ export class GameStateReconciler {
                 return;
             }
 
-            uiStateStore.update(s => ({ ...s, isGameOver: false }));
-            const currentGameOver = get(gameOverStore);
+            uiState.update(s => ({ ...s, isGameOver: false }));
+            const currentGameOver = gameOverState.state;
             if (currentGameOver.isGameOver) {
                 logService.GAME_MODE('[Reconciler] Clearing local GameOver state');
-                gameOverStore.resetGameOverState();
+                gameOverState.resetGameOverState();
                 modalService.closeAllModals();
             }
         }
@@ -135,7 +135,7 @@ export class GameStateReconciler {
 
     private handleNoMovesClaim(remoteState: SyncableGameState) {
         if (!remoteState.noMovesClaim) {
-            const currentModal = get(modalStore);
+            const currentModal = modalStateRune.state;
             if (currentModal.isOpen && (currentModal.dataTestId === 'player-no-moves-modal' || currentModal.dataTestId === 'opponent-trapped-modal')) {
                 gameEventBus.dispatch('CloseModal');
             }
@@ -163,7 +163,7 @@ export class GameStateReconciler {
     }
 
     private updateModalButtonsState(remoteState: SyncableGameState) {
-        const currentModal = get(modalStore);
+        const currentModal = modalStateRune.state;
         if (currentModal.isOpen && (currentModal.dataTestId === 'player-no-moves-modal' || currentModal.dataTestId === 'opponent-trapped-modal')) {
             if (!remoteState.playerState) return;
 
@@ -197,7 +197,7 @@ export class GameStateReconciler {
             }
 
             if (updated) {
-                modalStore.update(s => ({ ...s, buttons: newButtons }));
+                modalStateRune.update(s => ({ ...s, buttons: newButtons }));
             }
         }
     }

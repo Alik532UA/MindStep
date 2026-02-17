@@ -1,9 +1,8 @@
-import { get } from 'svelte/store';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { scoreStore } from '$lib/stores/scoreStore.svelte';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { gameOverStore, type GameOverStoreState } from '$lib/stores/gameOverStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { scoreState } from '$lib/stores/scoreState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import type { IGameStateSync, SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { logService } from '$lib/services/logService';
 
@@ -21,25 +20,25 @@ export class OnlineStateSynchronizer {
             return;
         }
 
-        const boardState = get(boardStore);
-        const playerState = get(playerStore);
-        const scoreState = get(scoreStore);
-        const settings = get(gameSettingsStore);
-        const gameOverState = get(gameOverStore) as GameOverStoreState;
+        const bState = boardState.state;
+        const pState = playerState.state;
+        const sState = scoreState.state;
+        const settings = gameSettingsState.state;
+        const gOverState = gameOverState.state;
 
-        if (!boardState || !playerState || !scoreState) {
+        if (!bState || !pState || !sState) {
             // Тільки логуємо якщо ми вже в грі (є boardState)
             // Якщо його немає - це просто рання спроба синхронізації (наприклад при завантаженні налаштувань)
-            if (boardState !== null) {
-                logService.error('[OnlineStateSynchronizer] Cannot sync state: stores are empty');
+            if (bState !== null) {
+                logService.error('[OnlineStateSynchronizer] Cannot sync state: states are empty');
             }
             return;
         }
 
         const stateToPush: SyncableGameState = {
-            boardState,
-            playerState,
-            scoreState,
+            boardState: bState,
+            playerState: pState,
+            scoreState: sState,
             settings: {
                 boardSize: settings.boardSize,
                 turnDuration: settings.turnDuration,
@@ -51,7 +50,7 @@ export class OnlineStateSynchronizer {
                 showMoves: settings.showMoves,
                 settingsLocked: settings.settingsLocked
             },
-            gameOver: gameOverState.isGameOver ? gameOverState.gameResult : null,
+            gameOver: gOverState.isGameOver ? gOverState.gameResult : null,
             version: 0, // Will be set by stateSync
             updatedAt: Date.now(),
             ...overrides
@@ -71,11 +70,11 @@ export class OnlineStateSynchronizer {
         if (!this.stateSync.isConnected) return;
 
         // FIX: Не дозволяємо синхронізувати налаштування, якщо ігровий стан ще не ініціалізовано.
-        if (!get(boardStore)) {
+        if (!boardState.state) {
             return;
         }
 
-        const settings = get(gameSettingsStore);
+        const settings = gameSettingsState.state;
         
         const settingsToPatch = {
             boardSize: settings.boardSize,

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore } from "$lib/stores/modalStore";
   import BoardHiddenExplanationModal from "../modals/BoardHiddenExplanationModal.svelte";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
@@ -16,7 +16,7 @@
   }
 
   function dismissWidget() {
-    uiStateStore.update((s) => ({ ...s, showBoardHiddenInfo: false }));
+    uiState.update((s) => ({ ...s, showBoardHiddenInfo: false }));
   }
 </script>
 

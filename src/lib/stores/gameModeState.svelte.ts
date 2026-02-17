@@ -2,7 +2,9 @@
 // SSoT для стану ігрового режиму. Використовує Svelte 5 Runes.
 // Обгортку для Svelte 4 (writable) надає gameModeStore.ts (bridge pattern).
 
-import type { GameModeState } from './gameModeStore';
+export interface GameModeState {
+    activeMode: string | null;
+}
 
 export const initialGameModeState: GameModeState = {
     activeMode: null,

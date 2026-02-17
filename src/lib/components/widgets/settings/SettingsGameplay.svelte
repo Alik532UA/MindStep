@@ -1,18 +1,19 @@
 <script lang="ts">
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
-    import { gameModeStore } from "$lib/stores/gameModeStore";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
+    import { gameModeState } from "$lib/stores/gameModeState.svelte";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { userActionService } from "$lib/services/userActionService";
     import { gameModeService } from "$lib/services/gameModeService";
-    import { uiStateStore } from "$lib/stores/uiStateStore";
+    import { uiState } from "$lib/stores/uiState.svelte";
     import { logService } from "$lib/services/logService";
     import { t } from "$lib/i18n/typedI18n";
     import ToggleButton from "$lib/components/ToggleButton.svelte";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
-    import { get } from "svelte/store";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
+    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+    import { showModal, closeModal } from "$lib/stores/modalStore";
 
     interface Props {
         isCompetitiveMode?: boolean;
@@ -21,13 +22,13 @@
     let { isCompetitiveMode = false }: Props = $props();
 
     function showCompetitiveModeModal() {
-        const activeMode = get(gameModeStore).activeMode;
+        const activeMode = gameModeState.state.activeMode;
 
         const goToTrainingOnClick = () => {
-            modalStore.closeModal();
+            closeModal();
             if (activeMode === "virtual-player") {
                 userActionService.setGameModePreset("beginner");
-                uiStateStore.update((s) => ({ ...s, settingsMode: "default" }));
+                uiState.update((s) => ({ ...s, settingsMode: "default" }));
             } else {
                 gameModeService.initializeGameMode("training");
                 goto(`${base}/game/training`);
@@ -37,7 +38,7 @@
         logService.action(
             "Click: on a locked setting in competitive mode (SettingsGameplay)",
         );
-        modalStore.showModal({
+        showModal({
             component: SimpleModalContent,
             variant: "menu",
             dataTestId: "competitive-mode-modal",
@@ -54,7 +55,7 @@
                     },
                     {
                         labelKey: "modal.stay" as const,
-                        onClick: () => modalStore.closeModal(),
+                        onClick: () => closeModal(),
                         dataTestId: "stay-in-competitive-btn",
                     },
                 ],
@@ -67,8 +68,8 @@
         logService.action(
             `Click: "Вибір кількості блоків: ${count}" (SettingsGameplay)`,
         );
-        if (count > 0 && get(gameSettingsStore).showDifficultyWarningModal) {
-            modalStore.showModal({
+        if (count > 0 && gameSettingsState.state.showDifficultyWarningModal) {
+            showModal({
                 component: SimpleModalContent,
                 variant: "menu",
                 dataTestId: "expert-mode-modal",
@@ -86,13 +87,13 @@
                                 gameSettingsStore.updateSettings({
                                     blockOnVisitCount: count,
                                 });
-                                modalStore.closeModal();
+                                closeModal();
                             },
                             dataTestId: "expert-mode-confirm-btn",
                         },
                         {
                             labelKey: "modal.expertModeCancel" as const,
-                            onClick: () => modalStore.closeModal(),
+                            onClick: () => closeModal(),
                             dataTestId: "expert-mode-cancel-btn",
                         },
                     ],
@@ -126,7 +127,7 @@
 >
     <ToggleButton
         label={$t("gameModes.autoHideBoard")}
-        checked={$gameSettingsStore.autoHideBoard}
+        checked={gameSettingsState.state.autoHideBoard}
         ontoggle={isCompetitiveMode ? () => {} : handleToggleAutoHideBoard}
         dataTestId="auto-hide-board-toggle"
     />
@@ -145,14 +146,14 @@
 >
     <ToggleButton
         label={$t("gameControls.blockMode")}
-        checked={$gameSettingsStore.blockModeEnabled}
+        checked={gameSettingsState.state.blockModeEnabled}
         ontoggle={isCompetitiveMode
             ? () => {}
             : gameSettingsStore.toggleBlockMode}
         dataTestId="block-mode-toggle"
     />
 </div>
-{#if $gameSettingsStore.blockModeEnabled}
+{#if gameSettingsState.state.blockModeEnabled}
     <div
         class="settings-expander__options-group"
         data-testid="block-count-options-container"
@@ -165,7 +166,7 @@
             dataTestId="settings-block-count-group"
             options={[0, 1, 2, 3].map((count) => ({
                 label: (count + 1).toString(),
-                active: $gameSettingsStore.blockOnVisitCount === count,
+                active: gameSettingsState.state.blockOnVisitCount === count,
                 dataTestId: `settings-expander-block-count-btn-${count}`,
                 onClick: () => selectBlockCount(count),
             }))}

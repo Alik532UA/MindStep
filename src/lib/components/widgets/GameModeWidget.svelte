@@ -1,17 +1,15 @@
 <script lang="ts">
-  import { gameModeStore } from "$lib/stores/gameModeStore";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+  import { gameModeState } from "$lib/stores/gameModeState.svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { userActionService } from "$lib/services/userActionService";
   import { t } from "$lib/i18n/typedI18n";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
   import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
 
-  $: activeMode = $gameModeStore.activeMode;
-  // FIX: Явно витягуємо gameMode для реактивності
-  $: currentMode = $gameSettingsStore.gameMode;
+  let activeMode = $derived(gameModeState.state.activeMode);
+  let currentMode = $derived(gameSettingsState.state.gameMode);
 
   // Helper: перевіряє, чи відповідає поточний gameMode legacy пресету
-  // FIX: Додано аргумент mode для забезпечення реактивності
   function isPresetActive(legacyPreset: string, mode: string | null): boolean {
     if (!mode) return false;
 
@@ -36,21 +34,7 @@
     return false;
   }
 
-  let descriptionKey: string | null = null;
-
-  $: {
-    if (!currentMode) {
-      descriptionKey = null;
-    } else if (
-      currentMode.startsWith("virtual-player-") ||
-      currentMode.startsWith("local-") ||
-      currentMode.startsWith("online-")
-    ) {
-      descriptionKey = `gameModes.description.${currentMode}`;
-    } else {
-      descriptionKey = `gameModes.description.${currentMode}`;
-    }
-  }
+  let descriptionKey = $derived(currentMode ? `gameModes.description.${currentMode}` : null);
 
   async function handlePresetClick(
     preset: "beginner" | "experienced" | "pro" | "timed" | "observer",
@@ -58,15 +42,15 @@
     if (activeMode === "online") return;
     userActionService.setGameModePreset(preset);
     if (preset === "timed") {
-      uiStateStore.update((s) => ({ ...s, settingsMode: "competitive" }));
+      uiState.update((s) => ({ ...s, settingsMode: "competitive" }));
     } else {
-      uiStateStore.update((s) => ({ ...s, settingsMode: "default" }));
+      uiState.update((s) => ({ ...s, settingsMode: "default" }));
     }
     await userActionService.requestRestart();
   }
 
-  // FIX: Опції тепер залежать від currentMode через аргумент функції
-  $: localOptions = [
+  // Опції для ButtonGroup
+  let localOptions = $derived([
     {
       label: $t("gameModes.observer"),
       active: isPresetActive("observer", currentMode),
@@ -85,9 +69,9 @@
       onClick: () => handlePresetClick("pro"),
       dataTestId: "settings-game-mode-local-pro",
     },
-  ];
+  ]);
 
-  $: virtualPlayerOptions = [
+  let virtualPlayerOptions = $derived([
     {
       label: $t("gameModes.beginner"),
       active: isPresetActive("beginner", currentMode),
@@ -112,7 +96,7 @@
       onClick: () => handlePresetClick("timed"),
       dataTestId: "settings-game-mode-virtual-player-timed",
     },
-  ];
+  ]);
 </script>
 
 <div class="game-mode-widget" data-testid="game-mode-widget">
@@ -132,7 +116,7 @@
   <div
     class="description"
     data-testid="game-mode-description"
-    class:settings-expander-closed={!$uiStateStore.isSettingsExpanderOpen}
+    class:settings-expander-closed={!uiState.state.isSettingsExpanderOpen}
   >
     {#if descriptionKey}
       {$t(descriptionKey as import("$lib/types/i18n").TranslationKey)}

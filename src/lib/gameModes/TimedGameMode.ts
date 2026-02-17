@@ -1,10 +1,9 @@
 // src/lib/gameModes/TimedGameMode.ts
 import { timeService } from '$lib/services/timeService';
 import { endGameService } from '$lib/services/endGameService';
-import { get } from 'svelte/store';
 import { TrainingGameMode } from './TrainingGameMode';
-import { uiStateStore } from '$lib/stores/uiStateStore';
-import { timerStore } from '$lib/stores/timerStore';
+import { uiState } from '$lib/stores/uiState.svelte';
+import { timerState } from '$lib/stores/timerState.svelte';
 import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 import { type MoveDirectionType } from '$lib/models/Piece';
@@ -23,7 +22,7 @@ export class TimedGameMode extends TrainingGameMode {
   initialize(options: { newSize?: number } = {}): void {
     timeService.stopGameTimer();
     super.initialize(options);
-    timerStore.setRemainingTime(this.gameDuration);
+    timerState.setRemainingTime(this.gameDuration);
     gameSettingsStore.updateSettings({
       speechRate: 1.6,
       shortSpeech: true,
@@ -37,8 +36,7 @@ export class TimedGameMode extends TrainingGameMode {
   }
 
   async handlePlayerMove(direction: MoveDirectionType, distance: number): Promise<void> {
-    const state = get(uiStateStore);
-    if (state?.isFirstMove) {
+    if (uiState.state.isFirstMove) {
       this.startGameTimer();
     } else {
       this.resumeTimers();

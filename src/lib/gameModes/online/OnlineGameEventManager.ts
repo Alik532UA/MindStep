@@ -4,8 +4,7 @@ import { modalStore } from '$lib/stores/modalStore';
 import { roomService } from '$lib/services/roomService';
 import { timeService } from '$lib/services/timeService';
 import { logService } from '$lib/services/logService';
-import { uiStateStore } from '$lib/stores/uiStateStore';
-import { get } from 'svelte/store';
+import { uiState } from '$lib/stores/uiState.svelte';
 import type { GameOverPayload } from '$lib/stores/gameOverStore';
 import type { OnlineMatchController } from './OnlineMatchController';
 
@@ -68,8 +67,8 @@ export class OnlineGameEventManager {
                     timeService.pauseGameTimer();
                     timeService.stopTurnTimer();
                 } else {
-                    const uiState = get(uiStateStore);
-                    if (!uiState.isGameOver && this.turnDuration > 0) {
+                    const uState = uiState.state;
+                    if (!uState.isGameOver && this.turnDuration > 0) {
                         logService.GAME_MODE('[OnlineEventManager] Modal closed. Resuming timer.');
                         // Тут можна додати логіку відновлення таймера
                     }

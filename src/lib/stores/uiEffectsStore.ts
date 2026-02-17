@@ -1,7 +1,7 @@
-import { writable, get } from 'svelte/store';
+import { get } from 'svelte/store';
 import { gameSettingsStore } from './gameSettingsStore.js';
 import { logService } from '$lib/services/logService.js';
-import { uiStateStore } from './uiStateStore.js';
+import { uiState } from './uiState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 
 /**
@@ -27,7 +27,7 @@ function createUiEffectsStore() {
       if (settings.autoHideBoard && (settings.showBoard === forceHide)) {
         gameSettingsStore.toggleShowBoard(!forceHide);
         if (forceHide) {
-            uiStateStore.update(s => ({ ...s, showBoardHiddenInfo: true }));
+            uiState.update(s => ({ ...s, showBoardHiddenInfo: true }));
         }
       }
     }, delayMs);

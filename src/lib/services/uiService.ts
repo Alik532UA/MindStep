@@ -1,13 +1,11 @@
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
-import { gameModeService } from '$lib/services/gameModeService';
-import { uiStateStore } from '$lib/stores/uiStateStore';
-import { get } from 'svelte/store';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { uiState } from '$lib/stores/uiState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 
 export function navigateToGame() {
-  const { intendedGameType } = get(uiStateStore);
-  const { gameMode, boardSize, blockModeEnabled } = get(gameSettingsStore);
+  const { intendedGameType } = uiState.state;
+  const { gameMode, boardSize, blockModeEnabled } = gameSettingsState.state;
 
   let targetPath = "";
 

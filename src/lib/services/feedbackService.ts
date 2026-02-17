@@ -1,9 +1,9 @@
 import { getFirestoreDb } from './firebaseService';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { get } from 'svelte/store';
-import { appVersion } from '$lib/stores/versionStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { playerStore } from '$lib/stores/playerStore.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { versionState } from '$lib/stores/versionState.svelte';
 import { logService } from './logService';
 import { notificationService } from './notificationService';
 
@@ -85,18 +85,18 @@ class FeedbackService {
     }
 
     private gatherContext() {
-        const settings = get(gameSettingsStore);
-        const playerState = get(playerStore);
+        const settings = gameSettingsState.state;
+        const pState = playerState.state;
 
         let playerId = 'anonymous';
-        if (playerState && playerState.players.length > 0) {
-            playerId = playerState.players[0].id.toString();
+        if (pState && pState.players.length > 0) {
+            playerId = pState.players[0].id.toString();
         } else if (typeof localStorage !== 'undefined') {
             playerId = localStorage.getItem('online_playerName') || 'anonymous';
         }
 
         return {
-            appVersion: get(appVersion) || 'unknown',
+            appVersion: versionState.state.current || 'unknown',
             gameMode: settings.gameMode,
             screenSize: typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'unknown',
             userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',

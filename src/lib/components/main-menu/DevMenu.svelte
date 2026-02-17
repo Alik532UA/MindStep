@@ -2,7 +2,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { uiStateStore } from "$lib/stores/uiStateStore.js";
+    import { uiState } from "$lib/stores/uiState.svelte";
     import { logService } from "$lib/services/logService.js";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { modalStore } from "$lib/stores/modalStore";
@@ -29,13 +29,13 @@
     }
 
     function handleTimedGame() {
-        uiStateStore.update((s) => ({ ...s, intendedGameType: "timed" }));
+        uiState.update((s) => ({ ...s, intendedGameType: "timed" }));
         navigateTo("/game/timed");
         onClose();
     }
 
     function handleOnlineGame() {
-        uiStateStore.update((s) => ({ ...s, intendedGameType: "online" }));
+        uiState.update((s) => ({ ...s, intendedGameType: "online" }));
         navigateTo("/online");
         onClose();
     }

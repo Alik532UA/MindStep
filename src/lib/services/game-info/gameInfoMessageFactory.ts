@@ -1,5 +1,5 @@
-import type { PlayerState } from '$lib/stores/playerStore.svelte';
-import type { UiState } from "$lib/stores/uiStateStore";
+import type { PlayerState } from '$lib/stores/playerState.svelte';
+import type { UiState } from "$lib/types/uiState";
 import type { TranslationKey } from "$lib/types/i18n";
 
 export interface GameInfoContext {

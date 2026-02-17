@@ -7,7 +7,7 @@ import { timeService } from '$lib/services/timeService';
 import ReconnectionModal from '$lib/components/modals/ReconnectionModal.svelte';
 import { get } from 'svelte/store';
 import { reconnectionStore } from '$lib/stores/reconnectionStore';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { uiState } from '$lib/stores/uiState.svelte';
 
 type DisconnectHandler = (playerId: string, disconnectStartedAt: number) => void;
 type ReconnectHandler = (playerId: string) => void;
@@ -50,7 +50,7 @@ export class OnlinePresenceManager {
             const currentModal = get(modalStore);
             const hasPlayers = state.players.length > 0;
             const isReconnectionModalOpen = currentModal.isOpen && currentModal.dataTestId === 'reconnection-modal';
-            const isGameOver = get(uiStateStore).isGameOver;
+            const isGameOver = uiState.state.isGameOver;
 
             if (isGameOver) {
                 // Якщо гра завершена, закриваємо модалку очікування

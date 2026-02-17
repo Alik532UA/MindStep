@@ -1,20 +1,20 @@
 // src/lib/services/animationService.ts
-import { get } from 'svelte/store';
-import { animationStore, initialState } from '$lib/stores/animationStore';
+import { animationState } from '$lib/stores/animationState.svelte';
 import { logService } from './logService';
-import { gameModeStore } from '$lib/stores/gameModeStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { uiStateStore } from '$lib/stores/uiStateStore';
+import { gameModeState } from '$lib/stores/gameModeState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { uiState } from '$lib/stores/uiState.svelte';
 import { animationConfig, type AnimationConfigMode, type AnimationConfigPreset } from '$lib/config/animationConfig';
 import { gameEventBus } from './gameEventBus';
+import type { MoveDirectionType } from '$lib/models/Piece';
 
 function createAnimationService() {
   let unsubscribe: (() => void) | null = null;
   let animationTimeout: NodeJS.Timeout | null = null;
 
-  function addToAnimationQueue(move: import('$lib/stores/animationStore').AnimationMove) {
+  function addToAnimationQueue(move: { direction: MoveDirectionType; distance: number; player: number }) {
     logService.animation('[AnimationService] addToAnimationQueue:', move);
-    animationStore.update(state => {
+    animationState.update(state => {
       const newQueue = [...state.animationQueue, move];
 
       if (!state.isPlayingAnimation) {
@@ -27,17 +27,17 @@ function createAnimationService() {
 
   function playNextAnimation(isFirstCall = false) {
     if (isFirstCall) {
-      animationStore.update(s => ({ ...s, isAnimating: true, isPlayingAnimation: true, isComputerMoveCompleted: false, visualMoveQueue: [] }));
+      animationState.update(s => ({ ...s, isAnimating: true, isPlayingAnimation: true, isComputerMoveCompleted: false, visualMoveQueue: [] }));
     }
 
-    const state = get(animationStore);
+    const state = animationState.state;
     if (state.animationQueue.length === 0) {
-      animationStore.update(s => ({ ...s, isAnimating: false, isPlayingAnimation: false }));
+      animationState.update(s => ({ ...s, isAnimating: false, isPlayingAnimation: false }));
       return;
     }
 
     const move = state.animationQueue[0];
-    animationStore.update(s => ({
+    animationState.update(s => ({
       ...s,
       visualMoveQueue: [...s.visualMoveQueue, move]
     }));
@@ -45,9 +45,9 @@ function createAnimationService() {
     const isPlayerMove = move.player === 1;
     const animationDuration = 500;
 
-    const activeMode = get(gameModeStore).activeMode;
-    const currentPreset = get(gameSettingsStore).gameMode;
-    const isListening = get(uiStateStore).isListening;
+    const activeMode = gameModeState.state.activeMode;
+    const currentPreset = gameSettingsState.state.gameMode;
+    const isListening = uiState.state.isListening;
 
     let pauseValues = { player: 100, computer: 100 };
 
@@ -78,9 +78,9 @@ function createAnimationService() {
     if (animationTimeout) clearTimeout(animationTimeout);
     animationTimeout = setTimeout(() => {
       if (!isPlayerMove) {
-        animationStore.update(s => ({ ...s, isComputerMoveCompleted: true }));
+        animationState.update(s => ({ ...s, isComputerMoveCompleted: true }));
       }
-      animationStore.update(s => ({
+      animationState.update(s => ({
         ...s,
         animationQueue: s.animationQueue.slice(1)
       }));
@@ -94,7 +94,7 @@ function createAnimationService() {
       clearTimeout(animationTimeout);
       animationTimeout = null;
     }
-    animationStore.set(initialState);
+    animationState.reset();
   }
 
   return {

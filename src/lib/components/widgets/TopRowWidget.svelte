@@ -9,14 +9,14 @@
   import { onMount } from "svelte";
   import { get } from "svelte/store";
   import { columnStyleMode } from "$lib/stores/columnStyleStore";
-  import { uiStateStore } from "$lib/stores/uiStateStore";
+  import { uiState } from "$lib/stores/uiState.svelte";
 
   // hotkeyService більше не потрібен для реєстрації глобальних подій тут
   // import hotkeyService from "$lib/services/hotkeyService";
 
   function handleMainMenuClick() {
-    const uiState = get(uiStateStore);
-    if (uiState?.isGameOver) {
+    const uState = uiState.state;
+    if (uState?.isGameOver) {
       navigationService.goToMainMenu();
     } else {
       navigationService.goToMainMenu();

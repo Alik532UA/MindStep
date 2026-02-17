@@ -4,10 +4,9 @@ import { navigationService } from '$lib/services/navigationService';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from '$lib/services/logService';
 import type { IGameStateSync, SyncableGameState, VoteType } from '$lib/sync/gameStateSync.interface';
-import { get } from 'svelte/store';
-import { boardStore } from '$lib/stores/boardStore.svelte';
-import { playerStore } from '$lib/stores/playerStore.svelte';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { boardState } from '$lib/stores/boardState.svelte';
+import { playerState } from '$lib/stores/playerState.svelte';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import type { Room } from '$lib/types/online';
 import { endGameService } from '$lib/services/endGameService';
 import type { MoveQueueItem } from '$lib/types/gameMove';
@@ -143,16 +142,16 @@ export class OnlineMatchController {
         if (this.amIHost) {
             logService.GAME_MODE('[MatchController] I am Host. Executing CONTINUE logic.');
 
-            const currentBoard = get(boardStore);
-            if (currentBoard) {
+            const bState = boardState.state;
+            if (bState) {
                 const newBoardState = {
-                    ...currentBoard,
+                    ...bState,
                     cellVisitCounts: {},
                     moveHistory: [{
-                        pos: { row: currentBoard.playerRow!, col: currentBoard.playerCol! },
+                        pos: { row: bState.playerRow!, col: bState.playerCol! },
                         blocked: [] as { row: number; col: number }[],
                         visits: {},
-                        blockModeEnabled: get(gameSettingsStore).blockModeEnabled
+                        blockModeEnabled: gameSettingsState.state.blockModeEnabled
                     }],
                     moveQueue: [] as MoveQueueItem[],
                 };
@@ -161,14 +160,14 @@ export class OnlineMatchController {
                 this.resetBoardCallback();
                 this.advancePlayerCallback();
 
-                const newPlayerState = get(playerStore);
+                const pState = playerState.state;
 
                 gameEventBus.dispatch('CloseModal');
 
                 // Пушимо новий стан і очищаємо голоси
                 this.syncState({
                     boardState: newBoardState,
-                    playerState: newPlayerState!,
+                    playerState: pState!,
                     noMovesVotes: {}, // Очищаємо голоси
                     noMovesClaim: null
                 });

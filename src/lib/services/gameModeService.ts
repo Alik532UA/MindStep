@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { gameStore } from '$lib/stores/gameStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
-import { gameModeStore } from '$lib/stores/gameModeStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import { gameModeState } from '$lib/stores/gameModeState.svelte';
 import { BaseGameMode } from '$lib/gameModes/BaseGameMode';
 import { TrainingGameMode } from '$lib/gameModes/TrainingGameMode';
 import { LocalGameMode } from '$lib/gameModes/LocalGameMode';
@@ -9,8 +9,9 @@ import { TimedGameMode } from '$lib/gameModes/TimedGameMode';
 import { VirtualPlayerGameMode } from '$lib/gameModes/VirtualPlayerGameMode';
 import { OnlineGameMode } from '$lib/gameModes/OnlineGameMode'; // Import OnlineGameMode
 import { logService } from './logService';
-import { timerStore } from '$lib/stores/timerStore';
+import { timerState } from '$lib/stores/timerState.svelte';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';
+import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 class GameModeService {
   private modes: Map<string, BaseGameMode> = new Map();
@@ -34,7 +35,7 @@ class GameModeService {
    * @param options Додаткові параметри ініціалізації (наприклад, roomId для онлайн гри).
    */
   public initializeGameMode(modeName: string | null = null, applyPresetSettings: boolean = true, options: any = {}) {
-    const currentSettings = get(gameSettingsStore);
+    const currentSettings = gameSettingsState.state;
     let name = modeName || currentSettings.gameMode;
 
     logService.GAME_MODE(`[GameModeService] Initializing: modeName="${modeName}", storeName="${currentSettings.gameMode}"`);
@@ -71,7 +72,7 @@ class GameModeService {
     const mode = this.modes.get(implementationName);
 
     if (mode) {
-      timerStore.reset();
+      timerState.reset();
 
       const allowedPresets = [
         'virtual-player-beginner', 'virtual-player-experienced', 'virtual-player-pro', 'virtual-player-timed',
@@ -88,7 +89,7 @@ class GameModeService {
       mode.initialize(options);
 
       gameStore.setMode(mode);
-      gameModeStore.setActiveMode(implementationName);
+      gameModeState.setActiveMode(implementationName);
       logService.GAME_MODE(`Game mode initialized: ${implementationName} (from preset: ${name})`, options);
     } else {
       logService.GAME_MODE(`Unknown game mode or preset: ${name}`);
