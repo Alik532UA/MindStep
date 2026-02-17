@@ -2,10 +2,13 @@
     import type { Room } from "$lib/types/online";
     import Stepper from "$lib/components/ui/Stepper.svelte";
 
-    export let room: Room;
-    export let canEditSettings: boolean;
+    interface Props {
+        room: Room;
+        canEditSettings: boolean;
+        onUpdateSetting: (key: string, value: any) => void;
+    }
 
-    export let onUpdateSetting: (key: string, value: any) => void;
+    let { room, canEditSettings, onUpdateSetting }: Props = $props();
 
     function updateBoardSize(increment: number) {
         if (!canEditSettings) return;
@@ -41,9 +44,9 @@
             increaseTestId="board-size-increase-btn"
             valueTestId="board-size-value"
             scrubConfig={{ min: 3, max: 9, step: 1 }}
-            on:decrement={() => updateBoardSize(-1)}
-            on:increment={() => updateBoardSize(1)}
-            on:change={(e) => handleScrubChange("boardSize", e.detail)}
+            ondecrement={() => updateBoardSize(-1)}
+            onincrement={() => updateBoardSize(1)}
+            onchange={(val) => handleScrubChange("boardSize", val)}
         />
     </div>
 
@@ -57,9 +60,9 @@
             increaseTestId="turn-duration-increase-btn"
             valueTestId="turn-duration-value"
             scrubConfig={{ min: 5, max: 1000, step: 5 }}
-            on:decrement={() => updateTurnDuration(-5)}
-            on:increment={() => updateTurnDuration(5)}
-            on:change={(e) => handleScrubChange("turnDuration", e.detail)}
+            ondecrement={() => updateTurnDuration(-5)}
+            onincrement={() => updateTurnDuration(5)}
+            onchange={(val) => handleScrubChange("turnDuration", val)}
         />
     </div>
 </div>

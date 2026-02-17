@@ -137,7 +137,7 @@
   <ToggleButton
     label={$t("voiceSettings.shortSpeech")}
     checked={$gameSettingsStore.shortSpeech}
-    on:toggle={() => {
+    ontoggle={() => {
       logService.ui("Short speech toggled");
       gameSettingsStore.updateSettings({
         shortSpeech: !$gameSettingsStore.shortSpeech,
@@ -151,7 +151,7 @@
   <ToggleButton
     label={$t("voiceSettings.speakModalTitles")}
     checked={$gameSettingsStore.speakModalTitles}
-    on:toggle={() => {
+    ontoggle={() => {
       logService.ui("Speak modal titles toggled");
       gameSettingsStore.updateSettings({
         speakModalTitles: !$gameSettingsStore.speakModalTitles,

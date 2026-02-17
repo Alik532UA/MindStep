@@ -14,7 +14,11 @@
     import { base } from "$app/paths";
     import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
 
-    export let isCompetitiveMode = false;
+    interface Props {
+        isCompetitiveMode?: boolean;
+    }
+
+    let { isCompetitiveMode = false }: Props = $props();
 
     function showCompetitiveModeModal() {
         const activeMode = get(gameModeStore).activeMode;
@@ -100,7 +104,7 @@
         }
     }
 
-    function handleToggleAutoHideBoard(event: Event) {
+    function handleToggleAutoHideBoard() {
         logService.action(
             'Click: "Автоматично приховувати дошку" (SettingsGameplay)',
         );
@@ -110,10 +114,10 @@
 
 <div
     class:locked-setting={isCompetitiveMode}
-    on:click|preventDefault|stopPropagation={isCompetitiveMode
+    onclick={isCompetitiveMode
         ? showCompetitiveModeModal
         : () => {}}
-    on:keydown={(e) =>
+    onkeydown={(e) =>
         (e.key === "Enter" || e.key === " ") &&
         (isCompetitiveMode ? showCompetitiveModeModal() : () => {})}
     role="button"
@@ -123,16 +127,16 @@
     <ToggleButton
         label={$t("gameModes.autoHideBoard")}
         checked={$gameSettingsStore.autoHideBoard}
-        on:toggle={isCompetitiveMode ? () => {} : handleToggleAutoHideBoard}
+        ontoggle={isCompetitiveMode ? () => {} : handleToggleAutoHideBoard}
         dataTestId="auto-hide-board-toggle"
     />
 </div>
 <div
     class:locked-setting={isCompetitiveMode}
-    on:click|preventDefault|stopPropagation={isCompetitiveMode
+    onclick={isCompetitiveMode
         ? showCompetitiveModeModal
         : () => {}}
-    on:keydown={(e) =>
+    onkeydown={(e) =>
         (e.key === "Enter" || e.key === " ") &&
         (isCompetitiveMode ? showCompetitiveModeModal() : () => {})}
     role="button"
@@ -142,7 +146,7 @@
     <ToggleButton
         label={$t("gameControls.blockMode")}
         checked={$gameSettingsStore.blockModeEnabled}
-        on:toggle={isCompetitiveMode
+        ontoggle={isCompetitiveMode
             ? () => {}
             : gameSettingsStore.toggleBlockMode}
         dataTestId="block-mode-toggle"

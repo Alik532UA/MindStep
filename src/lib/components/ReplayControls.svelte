@@ -57,7 +57,7 @@
     <ToggleButton
       label={$t("replay.limitPath")}
       checked={limitReplayPath}
-      on:toggle={() => dispatch("toggleLimitPath")}
+      ontoggle={() => dispatch("toggleLimitPath")}
       dataTestId="limit-path-toggle"
     />
   </div>

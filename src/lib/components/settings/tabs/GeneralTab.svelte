@@ -61,7 +61,7 @@
             <button
               class="language-button"
               class:active={settings.language === lang.code}
-              on:click={() => selectLang(lang.code)}
+              onclick={() => selectLang(lang.code)}
             >
               <div class="lang-flag-wrapper">
                 <svelte:component this={lang.component} />
@@ -77,7 +77,7 @@
             <button
               class="theme-btn"
               data-theme="light"
-              on:click={() => selectTheme(style, "light")}
+              onclick={() => selectTheme(style, "light")}
             >
               <NotoEmoji name="sun" size="20px" />
             </button>
@@ -87,7 +87,7 @@
             <button
               class="theme-btn"
               data-theme="dark"
-              on:click={() => selectTheme(style, "dark")}
+              onclick={() => selectTheme(style, "dark")}
             >
               <NotoEmoji name="crescent_moon" size="20px" />
             </button>
@@ -106,7 +106,7 @@
         <ToggleButton
           label={$t("settings.showDifficultyWarningModal")}
           checked={gameSettings.showDifficultyWarningModal}
-          on:toggle={() => toggleSetting("showDifficultyWarningModal")}
+          ontoggle={() => toggleSetting("showDifficultyWarningModal")}
         />
       </div>
       <hr class="settings-divider" />

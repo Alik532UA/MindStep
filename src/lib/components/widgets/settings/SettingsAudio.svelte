@@ -32,7 +32,7 @@
     <ToggleButton
         label={$t("gameControls.speech")}
         checked={speechEnabled}
-        on:toggle={() => userActionService.toggleSpeech()}
+        ontoggle={() => userActionService.toggleSpeech()}
         dataTestId="speech-toggle"
     />
     <button
@@ -40,7 +40,7 @@
         class="settings-expander__square-btn"
         use:blurOnClick
         use:customTooltip={$t("gameControls.voiceSettingsTitle")}
-        on:click|stopPropagation={openVoiceSettings}
+        onclick={openVoiceSettings}
     >
         <SvgIcons name="voice-settings" />
     </button>

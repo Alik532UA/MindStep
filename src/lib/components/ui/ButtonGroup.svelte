@@ -7,10 +7,17 @@
         onClick?: () => void;
     }
 
-    export let options: ButtonOption[] = [];
-    export let className: string = "";
-    // FIX: Додаємо проп для ID контейнера
-    export let dataTestId: string = "";
+    interface Props {
+        options?: ButtonOption[];
+        className?: string;
+        dataTestId?: string;
+    }
+
+    let {
+        options = [],
+        className = "",
+        dataTestId = ""
+    }: Props = $props();
 </script>
 
 <div class="button-group-container {className}" data-testid={dataTestId}>
@@ -20,7 +27,7 @@
             class="group-btn"
             class:active={option.active}
             data-testid={option.dataTestId}
-            on:click={option.onClick}
+            onclick={option.onClick}
         >
             {option.label}
         </button>

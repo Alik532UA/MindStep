@@ -1,38 +1,46 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { scrubbable } from "$lib/actions/scrubbable";
 
-    export let value: string | number;
-    export let dataTestId: string = "";
-    export let disabled: boolean = false;
+    interface Props {
+        value: string | number;
+        dataTestId?: string;
+        disabled?: boolean;
+        scrubConfig?: { min: number; max: number; step?: number } | null;
+        decreaseTestId?: string;
+        increaseTestId?: string;
+        valueTestId?: string;
+        ondecrement?: () => void;
+        onincrement?: () => void;
+        onchange?: (val: number) => void;
+    }
 
-    // Конфігурація для scrubbable (опціонально)
-    export let scrubConfig: { min: number; max: number; step?: number } | null =
-        null;
-
-    // ID для кнопок
-    export let decreaseTestId: string = "";
-    export let increaseTestId: string = "";
-    export let valueTestId: string = "";
-
-    const dispatch = createEventDispatcher();
+    let {
+        value,
+        dataTestId = "",
+        disabled = false,
+        scrubConfig = null,
+        decreaseTestId = "",
+        increaseTestId = "",
+        valueTestId = "",
+        ondecrement,
+        onincrement,
+        onchange
+    }: Props = $props();
 
     // Обробник для scrubbable
     function handleScrubInput(val: number) {
-        // Для scrubbable ми очікуємо, що value буде числом
-        // Але ми не змінюємо value напряму тут, це робить батьківський компонент через подію
-        // dispatch("input", val); // Можна додати, якщо потрібно live update без збереження
+        // Опціонально для live update
     }
 
     function handleScrubChange(val: number) {
-        dispatch("change", val);
+        onchange?.(val);
     }
 </script>
 
 <div class="stepper-container" class:disabled data-testid={dataTestId}>
     <button
         class="stepper-btn"
-        on:click={() => !disabled && dispatch("decrement")}
+        onclick={() => !disabled && ondecrement?.()}
         data-testid={decreaseTestId}
         aria-label="Decrease"
         {disabled}
@@ -67,7 +75,7 @@
 
     <button
         class="stepper-btn"
-        on:click={() => !disabled && dispatch("increment")}
+        onclick={() => !disabled && onincrement?.()}
         data-testid={increaseTestId}
         aria-label="Increase"
         {disabled}

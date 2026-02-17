@@ -1,16 +1,23 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  interface Props {
+    label: string;
+    checked: boolean;
+    disabled?: boolean;
+    dataTestId?: string;
+    ontoggle?: () => void;
+  }
 
-  export let label: string;
-  export let checked: boolean;
-  export let disabled: boolean = false;
-  export let dataTestId: string | undefined = undefined;
-
-  const dispatch = createEventDispatcher();
+  let {
+    label,
+    checked = $bindable(),
+    disabled = false,
+    dataTestId,
+    ontoggle
+  }: Props = $props();
 
   function handleClick() {
     if (!disabled) {
-      dispatch("toggle");
+      ontoggle?.();
     }
   }
 </script>
@@ -19,7 +26,7 @@
   class="settings-expander__toggle-btn"
   class:active={checked}
   class:active-disabled={checked && disabled}
-  on:click={handleClick}
+  onclick={handleClick}
   {disabled}
   data-testid={dataTestId}
 >

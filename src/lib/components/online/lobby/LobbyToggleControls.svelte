@@ -5,12 +5,21 @@
     import type { Room } from "$lib/types/online";
     import { slide } from "svelte/transition";
 
-    export let room: Room;
-    export let canEditSettings: boolean;
-    export let amIHost: boolean;
+    interface Props {
+        room: Room;
+        canEditSettings: boolean;
+        amIHost: boolean;
+        onUpdateSetting: (key: string, value: any) => void;
+        onUpdateRoomSetting: (key: string, value: any) => void;
+    }
 
-    export let onUpdateSetting: (key: string, value: any) => void;
-    export let onUpdateRoomSetting: (key: string, value: any) => void;
+    let {
+        room,
+        canEditSettings,
+        amIHost,
+        onUpdateSetting,
+        onUpdateRoomSetting
+    }: Props = $props();
 </script>
 
 <div class="group-box toggles">
@@ -20,7 +29,7 @@
             label={$t("gameModes.autoHideBoard")}
             checked={room.settings.autoHideBoard}
             disabled={!canEditSettings}
-            on:toggle={() =>
+            ontoggle={() =>
                 onUpdateSetting("autoHideBoard", !room.settings.autoHideBoard)}
             dataTestId="auto-hide-board-toggle"
         />
@@ -32,7 +41,7 @@
             label={$t("gameControls.blockMode")}
             checked={room.settings.blockModeEnabled}
             disabled={!canEditSettings}
-            on:toggle={() =>
+            ontoggle={() =>
                 onUpdateSetting(
                     "blockModeEnabled",
                     !room.settings.blockModeEnabled,
@@ -47,7 +56,7 @@
             label={$t("localGame.lockSettings")}
             checked={room.settings.settingsLocked}
             disabled={!canEditSettings}
-            on:toggle={() =>
+            ontoggle={() =>
                 onUpdateSetting(
                     "settingsLocked",
                     !room.settings.settingsLocked,
@@ -62,7 +71,7 @@
             <ToggleButton
                 label={$t("onlineMenu.lobby.allowGuestSettings")}
                 checked={room.allowGuestSettings}
-                on:toggle={() =>
+                ontoggle={() =>
                     onUpdateRoomSetting(
                         "allowGuestSettings",
                         !room.allowGuestSettings,

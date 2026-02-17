@@ -12,7 +12,7 @@
     <ToggleButton
         label={$t("gameControls.blockMode")}
         bind:checked={settings.blockModeEnabled}
-        on:toggle={() => {
+        ontoggle={() => {
             const newCheckedState = !settings.blockModeEnabled;
             logService.action(
                 `Click: "Режим заблокованих клітинок: ${newCheckedState}" (LocalToggleControls)`,
@@ -28,7 +28,7 @@
     <ToggleButton
         label={$t("gameModes.autoHideBoard")}
         bind:checked={settings.autoHideBoard}
-        on:toggle={() => {
+        ontoggle={() => {
             const newCheckedState = !settings.autoHideBoard;
             logService.action(
                 `Click: "Автоматично приховувати дошку: ${newCheckedState}" (LocalToggleControls)`,
@@ -44,7 +44,7 @@
     <ToggleButton
         label={$t("localGame.lockSettings")}
         bind:checked={settings.lockSettings}
-        on:toggle={() => {
+        ontoggle={() => {
             const newCheckedState = !settings.lockSettings;
             logService.action(
                 `Click: "Заборонити змінювати правила: ${newCheckedState}" (LocalToggleControls)`,

@@ -8,16 +8,21 @@
     import LobbyParamControls from "./LobbyParamControls.svelte";
     import LobbyToggleControls from "./LobbyToggleControls.svelte";
 
-    export let room: Room;
-    export let canEditSettings: boolean;
-    export let amIHost: boolean;
+    interface Props {
+        room: Room;
+        canEditSettings: boolean;
+        amIHost: boolean;
+        onUpdateSetting: (key: keyof GameSettingsState, value: any) => void;
+        onUpdateRoomSetting: (key: string, value: any) => void;
+    }
 
-    // Callbacks for updates
-    export let onUpdateSetting: (
-        key: keyof GameSettingsState,
-        value: any,
-    ) => void;
-    export let onUpdateRoomSetting: (key: string, value: any) => void;
+    let {
+        room,
+        canEditSettings,
+        amIHost,
+        onUpdateSetting,
+        onUpdateRoomSetting
+    }: Props = $props();
 </script>
 
 <div class="settings-section">

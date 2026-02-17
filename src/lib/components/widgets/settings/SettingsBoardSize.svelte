@@ -30,7 +30,7 @@
         decreaseTestId="settings-expander-size-decrease-btn"
         increaseTestId="settings-expander-size-increase-btn"
         valueTestId="settings-expander-current-size"
-        on:decrement={() => changeBoardSize(-1)}
-        on:increment={() => changeBoardSize(1)}
+        ondecrement={() => changeBoardSize(-1)}
+        onincrement={() => changeBoardSize(1)}
     />
 </div>

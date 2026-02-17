@@ -68,8 +68,8 @@
             decreaseTestId="board-size-decrement-btn"
             increaseTestId="board-size-increment-btn"
             valueTestId="board-size-value"
-            on:decrement={() => changeBoardSize(-1)}
-            on:increment={() => changeBoardSize(1)}
+            ondecrement={() => changeBoardSize(-1)}
+            onincrement={() => changeBoardSize(1)}
         />
     </div>
 
