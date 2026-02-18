@@ -26,7 +26,7 @@
   class="floating-back-btn"
   aria-label={$t("ui.goBack") || "Повернутися назад"}
   use:customTooltip={$t("ui.goBack") || "Повернутися назад"}
-  {onclick}
+  onclick={handleClick}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"

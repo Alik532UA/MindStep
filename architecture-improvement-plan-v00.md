@@ -1,7 +1,7 @@
 ---
 title: План покращення архітектури (Audit & Improvement Plan)
 version: v0.0
-status: 95%
+status: 100%
 author: Gemini CLI
 date: 2026-02-18
 ---
@@ -66,7 +66,7 @@ date: 2026-02-18
 | **80** | **Derived State Audit** | Пройтися по `gameState.svelte.ts` та замінити ручні оновлення на `$derived`. | [x] |
 | **70** | **URL Sync for Settings** | Синхронізувати налаштування відображення (showBoard, timers) з URL Search Params. | [x] |
 | **60** | **Widget Error Boundaries** | Огорнути кожен віджет у `<svelte:boundary>`, щоб падіння одного не зупиняло гру. | [x] |
-| **50** | **A11y Audit** | Додати ARIA-мітки та клавіатурну навігацію для кастомних елементів керування. | [ ] |
+| **50** | **A11y Audit** | Додати ARIA-мітки та клавіатурну навігацію для кастомних елементів керування. | [x] |
 
 ---
 
