@@ -1,5 +1,12 @@
 // src/lib/stores/boardState.svelte.ts
-// SSoT для стану ігрової дошки. Використовує Svelte 5 Runes.
+/**
+ * @file boardState.svelte.ts
+ * @description Single Source of Truth (SSoT) для стану ігрової дошки.
+ * Використовує Svelte 5 Runes.
+ * 
+ * ВАЖЛИВО: Логічна позиція гравця та лічильники відвідувань завжди 
+ * беруться з останнього запису в moveHistory.
+ */
 
 import { logService } from '$lib/services/logService';
 import type { MoveHistoryEntry } from '$lib/models/moveHistory';
@@ -23,75 +30,73 @@ export interface BoardState {
 class BoardStateRune {
     private _state = $state<BoardState | null>(null);
 
-    // Створюємо єдиний стабільний derived стан
+    /**
+     * Обчислюваний стан дошки.
+     * Гарантує, що playerRow, playerCol та cellVisitCounts синхронізовані з moveHistory.
+     */
     private _derivedState = $derived.by(() => {
         const s = this._state;
         if (!s) return null;
 
+        const lastHistory = s.moveHistory.at(-1);
+
         return {
             ...s,
-            // Використовуємо замикання на 's', щоб гарантувати правильні посилання
-            get playerRow() { return s.moveHistory.at(-1)?.pos.row ?? null; },
-            get playerCol() { return s.moveHistory.at(-1)?.pos.col ?? null; },
-            get cellVisitCounts() { return s.moveHistory.at(-1)?.visits ?? {}; }
+            // Пріоритет віддається даним з історії ходів (логічний стан)
+            playerRow: lastHistory?.pos.row ?? s.playerRow,
+            playerCol: lastHistory?.pos.col ?? s.playerCol,
+            cellVisitCounts: lastHistory?.visits ?? s.cellVisitCounts
         } as BoardState;
     });
 
+    /**
+     * Повертає актуальний стан дошки.
+     */
     get state() {
         return this._derivedState;
     }
 
+    /**
+     * Встановлює повний стан дошки.
+     */
     set state(value: BoardState | null) {
         this._state = value;
     }
 
+    /**
+     * Метод для сумісності зі старим кодом.
+     */
     set(value: BoardState | null) {
         this._state = value;
     }
 
+    /**
+     * Оновлює стан за допомогою функції трансформації.
+     */
     update(fn: (s: BoardState | null) => BoardState | null) {
         this._state = fn(this._state);
     }
 
-    movePlayer(row: number, col: number) {
-        logService.piece(`(boardState) movePlayer to [${row}, ${col}]`);
-        if (!this._state) return;
-        
-        const oldRow = this._state.playerRow;
-        const oldCol = this._state.playerCol;
-
-        if (oldRow !== null && oldCol !== null) {
-            this._state.board[oldRow][oldCol] = 0;
-        }
-        
-        // ВАЖЛИВО: Ми все ще дозволяємо мутацію для сумісності з анімаціями,
-        // але тепер derived властивості мають пріоритет у 'state' гетері.
-        this._state.playerRow = row;
-        this._state.playerCol = col;
-        this._state.board[row][col] = 1;
-    }
-
-    incrementVisitCount(row: number, col: number) {
-        if (!this._state) return;
-        const key = `${row}-${col}`;
-        
-        // Пряма мутація властивості об'єкта
-        if (!this._state.cellVisitCounts[key]) {
-            this._state.cellVisitCounts[key] = 1;
-        } else {
-            this._state.cellVisitCounts[key]++;
-        }
-    }
-
+    /**
+     * Очищує лічильники відвідувань у поточному стані.
+     * Зверніть увагу: це вплине лише на нові записи в історії.
+     */
     resetCellVisitCounts() {
         if (!this._state) return;
-        // Очищуємо об'єкт без створення нового кореневого об'єкта стану
-        for (const key in this._state.cellVisitCounts) {
-            delete this._state.cellVisitCounts[key];
-        }
+        logService.state('(boardState) resetCellVisitCounts');
+        
+        // Створюємо новий порожній об'єкт лічильників
+        this._state.cellVisitCounts = {};
+        
+        // Якщо історія не порожня, ми можемо хотіти оновити останній запис, 
+        // але зазвичай це робиться через повне оновлення стану в GameMode.
     }
 
+    /**
+     * Скидає стан стору до початкового (null).
+     */
     reset() {
+        logService.state('(boardState) reset');
         this._state = null;
     }
 }

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import ReplayViewer from "$lib/components/ReplayViewer.svelte";
     import "$lib/css/components/game-board.css";
     import "$lib/css/components/controls.css";
     import DraggableColumns from "$lib/components/DraggableColumns.svelte";
@@ -24,6 +23,17 @@
         widgetFilter = () => true, 
         initLogic 
     }: Props = $props();
+
+    // Lazy Loading для важких компонентів
+    let ReplayViewer: any = $state(null);
+
+    $effect(() => {
+        if (replayState.state.isReplayMode && !ReplayViewer) {
+            import("$lib/components/ReplayViewer.svelte").then(m => {
+                ReplayViewer = m.default;
+            });
+        }
+    });
 
     onMount(() => {
         if (initLogic) {
@@ -85,11 +95,15 @@
 
 {#if replayState.state.isReplayMode}
     <ErrorBoundary>
-        <ReplayViewer
-            moveHistory={replayState.state.moveHistory}
-            boardSize={replayState.state.boardSize}
-            autoPlayForward={true}
-        />
+        {#if ReplayViewer}
+            <ReplayViewer
+                moveHistory={replayState.state.moveHistory}
+                boardSize={replayState.state.boardSize}
+                autoPlayForward={true}
+            />
+        {:else}
+            <div class="loading-overlay">Завантаження запису гри...</div>
+        {/if}
     </ErrorBoundary>
 {:else}
     <URLSyncManager />

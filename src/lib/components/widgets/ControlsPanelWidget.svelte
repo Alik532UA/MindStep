@@ -89,6 +89,12 @@
     }, 1000);
   }
 
+  function handleLabelKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      handleLabelClick();
+    }
+  }
+
   function copyLogs() {
     const voiceTranscript =
       document.getElementById("voice-transcript")?.innerText || "";
@@ -122,7 +128,7 @@ ${generalLogs}`;
     <div
       class="select-direction-label"
       onclick={handleLabelClick}
-      onkeydown={handleLabelClick}
+      onkeydown={handleLabelKeyDown}
       role="button"
       tabindex="0"
       data-testid="controls-panel-title"

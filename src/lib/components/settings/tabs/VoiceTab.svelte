@@ -1,11 +1,13 @@
 <script lang="ts">
   import { t } from "$lib/i18n/typedI18n";
-  import VoiceSettings from "$lib/components/VoiceSettings.svelte";
-  import VoiceList from "$lib/components/VoiceList.svelte";
   import { onMount, onDestroy } from "svelte";
 
   let showFade = $state(false);
   let voiceListWrapper = $state<HTMLDivElement | null>(null);
+
+  // Lazy Loading
+  let VoiceSettings: any = $state(null);
+  let VoiceList: any = $state(null);
 
   function updateFadeState() {
     if (!voiceListWrapper) return;
@@ -19,6 +21,15 @@
   let resizeObserver: ResizeObserver;
 
   onMount(() => {
+    // Завантажуємо компоненти після монтування таба
+    Promise.all([
+        import("$lib/components/VoiceSettings.svelte"),
+        import("$lib/components/VoiceList.svelte")
+    ]).then(([vs, vl]) => {
+        VoiceSettings = vs.default;
+        VoiceList = vl.default;
+    });
+
     if (voiceListWrapper) {
       setTimeout(updateFadeState, 0);
       resizeObserver = new ResizeObserver(updateFadeState);
@@ -41,7 +52,11 @@
   <div class="grid-column">
     <div class="settings-card">
       <span class="settings-label">{$t("settings.voiceSettings")}</span>
-      <VoiceSettings />
+      {#if VoiceSettings}
+        <VoiceSettings />
+      {:else}
+        <div class="loading-placeholder">Завантаження...</div>
+      {/if}
     </div>
   </div>
   <div class="grid-column">
@@ -53,7 +68,11 @@
         bind:this={voiceListWrapper}
         onscroll={updateFadeState}
       >
-        <VoiceList />
+        {#if VoiceList}
+          <VoiceList />
+        {:else}
+          <div class="loading-placeholder">Завантаження...</div>
+        {/if}
       </div>
     </div>
   </div>

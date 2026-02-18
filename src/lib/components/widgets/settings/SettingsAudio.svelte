@@ -3,7 +3,6 @@
     import { userActionService } from "$lib/services/userActionService";
     import { logService } from "$lib/services/logService";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
-    import VoiceSettingsModal from "../../VoiceSettingsModal.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";
     import { customTooltip } from "$lib/actions/customTooltip.js";
@@ -12,11 +11,15 @@
 
     let speechEnabled = $derived(gameSettingsState.state.speechEnabled);
 
-    function openVoiceSettings(e: MouseEvent) {
+    async function openVoiceSettings(e: MouseEvent) {
         logService.action('Click: "Voice Settings" (SettingsAudio)');
         e.stopPropagation();
+
+        // Динамічне завантаження важкого компонента модалки
+        const module = await import("../../VoiceSettingsModal.svelte");
+        
         modalStateRune.showModal({
-            component: VoiceSettingsModal,
+            component: module.default,
             variant: "menu",
             dataTestId: "voice-settings-modal",
             closeOnOverlayClick: true,

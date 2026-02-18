@@ -20,6 +20,35 @@
       });
     }
   }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.classList.contains('input-cell')) return;
+
+    const row = parseInt(target.getAttribute('data-row') || '0', 10);
+    const col = parseInt(target.getAttribute('data-col') || '0', 10);
+
+    let nextRow = row;
+    let nextCol = col;
+
+    switch (event.key) {
+      case 'ArrowUp': nextRow = Math.max(0, row - 1); break;
+      case 'ArrowDown': nextRow = Math.min(boardSize - 1, row + 1); break;
+      case 'ArrowLeft': nextCol = Math.max(0, col - 1); break;
+      case 'ArrowRight': nextCol = Math.min(boardSize - 1, col + 1); break;
+      case 'Home': nextCol = 0; break;
+      case 'End': nextCol = boardSize - 1; break;
+      case 'PageUp': nextRow = 0; break;
+      case 'PageDown': nextRow = boardSize - 1; break;
+      default: return;
+    }
+
+    event.preventDefault();
+    const nextCell = target.parentElement?.querySelector(
+      `.input-cell[data-row="${nextRow}"][data-col="${nextCol}"]`
+    ) as HTMLElement;
+    nextCell?.focus();
+  }
 </script>
 
 <!-- 
@@ -30,7 +59,9 @@
   class="input-layer" 
   style="--board-size: {boardSize}"
   oncontextmenu={handleContextMenu}
-  role="presentation"
+  onkeydown={handleKeyDown}
+  role="grid"
+  tabindex="-1"
 >
       {#each Array(boardSize) as _, rowIdx (rowIdx)}
       {#each Array(boardSize) as _, colIdx (colIdx)}

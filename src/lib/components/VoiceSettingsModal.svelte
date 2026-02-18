@@ -3,12 +3,14 @@
   import { logService } from "$lib/services/logService";
   import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
-  import VoiceSettings from "./VoiceSettings.svelte";
-  import VoiceList from "./VoiceList.svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
-  let showFade = false;
-  let voiceListContainer: HTMLDivElement | null = null;
+  let showFade = $state(false);
+  let voiceListContainer = $state<HTMLDivElement | null>(null);
+
+  // Lazy Loading
+  let VoiceSettings: any = $state(null);
+  let VoiceList: any = $state(null);
 
   function updateFadeState() {
     if (!voiceListContainer) return;
@@ -22,6 +24,15 @@
   let resizeObserver: ResizeObserver | null = null;
 
   onMount(() => {
+    // Динамічне завантаження
+    Promise.all([
+        import("./VoiceSettings.svelte"),
+        import("./VoiceList.svelte")
+    ]).then(([vs, vl]) => {
+        VoiceSettings = vs.default;
+        VoiceList = vl.default;
+    });
+
     if (voiceListContainer) {
       setTimeout(updateFadeState, 0);
 
@@ -52,7 +63,11 @@
 
   <div class="voice-settings-body">
     <div class="voice-settings-container">
-      <VoiceSettings />
+      {#if VoiceSettings}
+        <VoiceSettings />
+      {:else}
+        <div class="loading-placeholder">Завантаження...</div>
+      {/if}
     </div>
     <hr class="divider-h" />
     <div class="divider-v"></div>
@@ -60,9 +75,13 @@
       class="voice-list-container"
       class:fade-bottom={showFade}
       bind:this={voiceListContainer}
-      on:scroll={updateFadeState}
+      onscroll={updateFadeState}
     >
-      <VoiceList />
+      {#if VoiceList}
+        <VoiceList />
+      {:else}
+        <div class="loading-placeholder">Завантаження...</div>
+      {/if}
     </div>
   </div>
 
