@@ -4,7 +4,7 @@ import type { KeybindingAction } from '../stores/gameSettingsTypes';
 import hotkeyService from './hotkeyService';
 import { logService } from './logService';
 import { showArrowKeyHintModal } from './arrowKeyHintService';
-import { modalStore } from '../stores/modalStore';
+import { modalStateRune } from '../stores/modalState.svelte';
 import { t as tStore } from '$lib/i18n/typedI18n';
 import type { TranslationKey } from '../types/i18n';
 import SimpleModalContent from '../components/modals/SimpleModalContent.svelte';
@@ -17,7 +17,7 @@ function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
 
     const t = get(tStore);
 
-    modalStore.showModal({
+    modalStateRune.showModal({
         component: SimpleModalContent,
         variant: 'menu',
         dataTestId: 'key-conflict-modal',
@@ -48,7 +48,7 @@ function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
                         keyConflictResolution: { ...settings.keyConflictResolution, [key]: action }
                     });
 
-                    modalStore.closeModal();
+                    modalStateRune.closeModal();
                 }
             }))
         }

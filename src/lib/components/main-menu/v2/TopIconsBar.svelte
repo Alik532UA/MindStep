@@ -4,7 +4,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import { logService } from "$lib/services/logService.js";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
 
     import ThemeDropdown from "$lib/components/main-menu/ThemeDropdown.svelte";
@@ -42,7 +42,7 @@
 
     function openAuthModal() {
         logService.action('Click: "Account" (TopIconsBar)');
-        modalStore.showModal({
+        modalStateRune.showModal({
             title: "",
             component: AuthModal,
             dataTestId: "auth-modal",

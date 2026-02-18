@@ -1,4 +1,4 @@
-import { showModal, closeModal, closeAllModals, modalState } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { navigationService } from './navigationService';
 import { gameEventBus } from './gameEventBus';
 import { roomService } from './roomService';
@@ -65,7 +65,7 @@ function showGameOverModal(payload: GameOverPayload) {
   }
 
   // FIX: Використовуємо variant="menu" і передаємо колбеки через props
-  showModal({
+  modalStateRune.showModal({
     content: content,
     component: GameOverContent,
     variant: 'menu',
@@ -81,7 +81,7 @@ function showGameOverModal(payload: GameOverPayload) {
       onPlayAgain: () => {
         gameEventBus.dispatch('ReplayGame');
         if (uiState.state.intendedGameType !== 'online') {
-          closeAllModals();
+          modalStateRune.closeAllModals();
         }
       },
       onWatchReplay: () => {
@@ -109,7 +109,7 @@ function showGameOverModal(payload: GameOverPayload) {
 
 function showBoardResizeModal(newSize: number) {
 
-  showModal({
+  modalStateRune.showModal({
 
     component: SimpleModalContent,
 
@@ -145,7 +145,7 @@ function showBoardResizeModal(newSize: number) {
 
           labelKey: 'modal.cancel',
 
-          onClick: () => closeModal(),
+          onClick: () => modalStateRune.closeModal(),
 
           dataTestId: 'board-resize-cancel-btn'
 
@@ -163,16 +163,16 @@ function showBoardResizeModal(newSize: number) {
 
 export const modalService = {
 
-  showModal,
+  showModal: (params: any) => modalStateRune.showModal(params),
 
-  closeModal,
+  closeModal: () => modalStateRune.closeModal(),
 
-  closeAllModals,
+  closeAllModals: () => modalStateRune.closeAllModals(),
 
   showGameOverModal,
 
   showBoardResizeModal,
 
-  subscribe: modalState.subscribe
+  subscribe: (fn: any) => modalStateRune.subscribe(fn)
 
 };

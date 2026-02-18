@@ -12,7 +12,6 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
-    import { showModal, closeModal } from "$lib/stores/modalStore";
 
     interface Props {
         isCompetitiveMode?: boolean;
@@ -24,7 +23,7 @@
         const activeMode = gameModeState.state.activeMode;
 
         const goToTrainingOnClick = () => {
-            closeModal();
+            modalStateRune.closeModal();
             if (activeMode === "virtual-player") {
                 userActionService.setGameModePreset("beginner");
                 uiState.update((s) => ({ ...s, settingsMode: "default" }));
@@ -37,7 +36,7 @@
         logService.action(
             "Click: on a locked setting in competitive mode (SettingsGameplay)",
         );
-        showModal({
+        modalStateRune.showModal({
             component: SimpleModalContent,
             variant: "menu",
             dataTestId: "competitive-mode-modal",
@@ -54,7 +53,7 @@
                     },
                     {
                         labelKey: "modal.stay" as const,
-                        onClick: () => closeModal(),
+                        onClick: () => modalStateRune.closeModal(),
                         dataTestId: "stay-in-competitive-btn",
                     },
                 ],
@@ -68,7 +67,7 @@
             `Click: "Вибір кількості блоків: ${count}" (SettingsGameplay)`,
         );
         if (count > 0 && gameSettingsState.state.showDifficultyWarningModal) {
-            showModal({
+            modalStateRune.showModal({
                 component: SimpleModalContent,
                 variant: "menu",
                 dataTestId: "expert-mode-modal",
@@ -86,13 +85,13 @@
                                 gameSettingsState.updateSettings({
                                     blockOnVisitCount: count,
                                 });
-                                closeModal();
+                                modalStateRune.closeModal();
                             },
                             dataTestId: "expert-mode-confirm-btn",
                         },
                         {
                             labelKey: "modal.expertModeCancel" as const,
-                            onClick: () => closeModal(),
+                            onClick: () => modalStateRune.closeModal(),
                             dataTestId: "expert-mode-cancel-btn",
                         },
                     ],

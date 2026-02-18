@@ -2,7 +2,7 @@
     import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { userActionService } from "$lib/services/userActionService";
     import { logService } from "$lib/services/logService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import VoiceSettingsModal from "../../VoiceSettingsModal.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";
@@ -15,7 +15,7 @@
     function openVoiceSettings(e: MouseEvent) {
         logService.action('Click: "Voice Settings" (SettingsAudio)');
         e.stopPropagation();
-        modalStore.showModal({
+        modalStateRune.showModal({
             component: VoiceSettingsModal,
             variant: "menu",
             dataTestId: "voice-settings-modal",

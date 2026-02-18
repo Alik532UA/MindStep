@@ -1,7 +1,7 @@
 <script lang="ts">
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { logService } from "$lib/services/logService.js";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import HamburgerMenuModal from "$lib/components/modals/HamburgerMenuModal.svelte";
 
     interface Props {
@@ -13,7 +13,7 @@
 
     function openMenu() {
         logService.action('Click: "Open Hamburger Menu"');
-        modalStore.showModal({
+        modalStateRune.showModal({
             component: HamburgerMenuModal,
             dataTestId: "hamburger-menu-modal",
             props: {

@@ -4,7 +4,7 @@
     import { i18nReady } from "$lib/i18n/init.js";
     import { gameEventBus } from "$lib/services/gameEventBus";
     import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
-    import type { ModalState } from "$lib/stores/modalStore";
+    import type { ModalState } from "$lib/stores/modalState.svelte";
     import type { Snippet } from "svelte";
 
     interface Props {

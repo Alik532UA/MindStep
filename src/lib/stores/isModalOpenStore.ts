@@ -4,9 +4,9 @@
  */
 
 import { derived } from 'svelte/store';
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 
 export const isModalOpen = derived(
-    modalStore,
-    ($modalStore) => $modalStore.isOpen
+    modalStateRune,
+    ($modalState) => $modalState.isOpen
 );

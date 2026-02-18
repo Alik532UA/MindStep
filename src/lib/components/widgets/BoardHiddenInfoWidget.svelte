@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { modalStore } from "$lib/stores/modalStore";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import BoardHiddenExplanationModal from "../modals/BoardHiddenExplanationModal.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
   function showExplanation() {
-    modalStore.showModal({
+    modalStateRune.showModal({
       component: BoardHiddenExplanationModal,
       variant: "menu",
       dataTestId: "board-hidden-explanation-modal",

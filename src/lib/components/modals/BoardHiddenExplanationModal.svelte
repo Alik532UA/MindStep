@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     export let dataTestId = "board-hidden-explanation-modal";
 </script>
@@ -21,7 +21,7 @@
         <StyledButton
             variant="primary"
             size="large"
-            onclick={() => modalStore.closeModal()}
+            onclick={() => modalStateRune.closeModal()}
             dataTestId={`${dataTestId}-ok-btn`}
         >
             {$t("modal.ok")}

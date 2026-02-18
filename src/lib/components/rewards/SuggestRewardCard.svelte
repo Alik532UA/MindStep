@@ -1,13 +1,13 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import FeedbackModal from "$lib/components/modals/FeedbackModal.svelte";
     import { logService } from "$lib/services/logService";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
 
     function handleClick() {
         logService.action('Click: "Suggest Reward"');
-        modalStore.showModal({
+        modalStateRune.showModal({
             titleKey: "ui.feedback.title",
             dataTestId: "feedback-modal",
             component: FeedbackModal,

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { authService, userStore } from "$lib/services/authService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import UserProfile from "$lib/components/auth/UserProfile.svelte";
     import AuthForms from "$lib/components/auth/AuthForms.svelte";
 
@@ -41,13 +41,13 @@
 
         isLoading = false;
         if (success) {
-            if (mode === "reset") modalStore.closeModal();
+            if (mode === "reset") modalStateRune.closeModal();
         }
     }
 
     async function handleLogout() {
         await authService.logout();
-        modalStore.closeModal();
+        modalStateRune.closeModal();
     }
 
     async function handleDeleteAccount() {
@@ -56,7 +56,7 @@
         const success = await authService.deleteAccount(deletePassword);
         isLoading = false;
         if (success) {
-            modalStore.closeModal();
+            modalStateRune.closeModal();
         }
     }
 

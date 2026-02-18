@@ -19,7 +19,7 @@
   import ModalHeader from "./modals/parts/ModalHeader.svelte";
   import ModalActionButtons from "./modals/parts/ModalActionButtons.svelte";
   import type { Snippet } from "svelte";
-  import type { ModalButton } from "$lib/stores/modalStore";
+  import type { ModalButton } from "$lib/stores/modalState.svelte";
 
   interface Props {
     children?: Snippet;

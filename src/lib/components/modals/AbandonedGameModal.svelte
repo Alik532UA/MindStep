@@ -3,7 +3,7 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { roomService } from "$lib/services/roomService";
     import { navigationService } from "$lib/services/navigationService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     import { logService } from "$lib/services/logService";
 
@@ -24,7 +24,7 @@
         // Отримуємо актуальний стан кімнати, щоб знати куди повертати
         const room = await roomService.getRoom(roomId);
 
-        modalStore.closeModal();
+        modalStateRune.closeModal();
 
         if (room && room.status === "playing") {
             logService.ui(
@@ -41,7 +41,7 @@
 
     async function leaveGame() {
         await roomService.leaveRoom(roomId, playerId);
-        modalStore.closeModal();
+        modalStateRune.closeModal();
     }
 </script>
 

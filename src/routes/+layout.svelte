@@ -10,7 +10,7 @@
 	import ReloadPrompt from "$lib/components/pwa/ReloadPrompt.svelte";
 	import { clearCache } from "$lib/utils/cacheManager.js";
 	import Modal from "$lib/components/Modal.svelte";
-	import { modalStore } from "$lib/stores/modalStore";
+	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
 	import { page } from "$app/stores";
 	import { logService } from "$lib/services/logService.js";
@@ -141,7 +141,7 @@
 			if (!isSafeZone && !isAbandonedModalOpen) {
 				isAbandonedModalOpen = true;
 				// Determine if we should show the modal
-				modalStore.showModal({
+				modalStateRune.showModal({
 					titleKey: "onlineMenu.abandonedGame.title",
 					dataTestId: "abandoned-game-modal",
 					component: (
@@ -162,7 +162,7 @@
 				});
 			} else if (isSafeZone && isAbandonedModalOpen) {
 				// Якщо користувач повернувся в гру іншим шляхом (напр. через URL)
-				modalStore.closeModal();
+				modalStateRune.closeModal();
 				isAbandonedModalOpen = false;
 			}
 		}
@@ -177,14 +177,14 @@
 			sessionStorage.removeItem("isRestoringReplay");
 			return;
 		}
-		modalStore.closeModal();
+		modalStateRune.closeModal();
 		logService.ui("[layout] afterNavigate: hiding tooltip");
 		tooltipStore.hide();
 	});
 
 	// --- Menu Logic ---
 	function handlePlayVirtualPlayer() {
-		modalStore.showModal({
+		modalStateRune.showModal({
 			titleKey: "mainMenu.gameModeModal.title",
 			dataTestId: "game-mode-modal",
 			component: GameModeModal,
@@ -197,7 +197,7 @@
 
 	function handleFeedback() {
 		logService.action('Click: "Feedback" (Layout)');
-		modalStore.showModal({
+		modalStateRune.showModal({
 			titleKey: "ui.feedback.title",
 			dataTestId: "feedback-modal",
 			component: FeedbackModal,
@@ -239,12 +239,12 @@
 	];
 
 	function openDevMenuModal() {
-		modalStore.showModal({
+		modalStateRune.showModal({
 			component: DevMenu,
 			variant: "menu",
 			dataTestId: "dev-menu-modal",
 			props: {
-				onClose: () => modalStore.closeModal(),
+				onClose: () => modalStateRune.closeModal(),
 				versionNumber: get(appVersion).current,
 			},
 			closeOnOverlayClick: true,

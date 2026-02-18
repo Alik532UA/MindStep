@@ -5,9 +5,9 @@
     import { uiState } from "$lib/stores/uiState.svelte";
     import { logService } from "$lib/services/logService.js";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
-    export let onClose: () => void = () => modalStore.closeModal();
+    export let onClose: () => void = () => modalStateRune.closeModal();
     export let onPlayVsComputer: () => void = () => {};
     export let onLocalGame: () => void = () => {};
     export let versionNumber: string;

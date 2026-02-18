@@ -2,7 +2,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import { onMount } from "svelte";
   import hotkeyService from "$lib/services/hotkeyService";
-  import { modalStore } from "$lib/stores/modalStore";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { goto } from "$app/navigation";
   import { base } from "$app/paths";
   import DontShowAgainCheckbox from "./DontShowAgainCheckbox.svelte";
@@ -24,14 +24,14 @@
   function handleLocalGame() {
     logService.action('Click: "Локальна гра" (GameModeModal)');
     uiState.update((s) => ({ ...s, intendedGameType: "local" }));
-    modalStore.closeModal();
+    modalStateRune.closeModal();
     goto(`${base}/local-setup`);
   }
 
   function handleOnlineGame() {
     logService.action('Click: "Онлайн гра" (GameModeModal)');
     uiState.update((s) => ({ ...s, intendedGameType: "online" }));
-    modalStore.closeModal();
+    modalStateRune.closeModal();
     goto(`${base}/online`);
   }
 
@@ -65,7 +65,7 @@
         showFaqModal();
       } else {
         userActionService.navigateToGame();
-        modalStore.closeModal();
+        modalStateRune.closeModal();
       }
       return;
     }
@@ -73,7 +73,7 @@
     if (mode === "beginner") {
       showFaqModal();
     } else {
-      modalStore.closeModal();
+      modalStateRune.closeModal();
       userActionService.navigateToGame();
     }
   }
@@ -83,19 +83,19 @@
     // Для чистоти коду виносимо імпорт в змінну
     const FAQModal = (await import("./FAQModal.svelte")).default;
 
-    modalStore.showModal({
+    modalStateRune.showModal({
       dataTestId: "faq-modal",
       component: FAQModal,
       variant: "menu",
       buttons: [],
       props: {
         onOk: () => {
-          modalStore.closeModal();
+          modalStateRune.closeModal();
           userActionService.navigateToGame();
         },
         onRules: () => {
           goto(`${base}/rules`);
-          modalStore.closeModal();
+          modalStateRune.closeModal();
         },
       },
     });
@@ -175,7 +175,7 @@
   <div class="checkbox-wrapper">
     <DontShowAgainCheckbox
       modalType="gameMode"
-      tid={`${$modalStore.dataTestId}-dont-show-again-switch`}
+      tid={`${modalStateRune.state.dataTestId}-dont-show-again-switch`}
       {scope}
     />
   </div>

@@ -6,7 +6,7 @@ import { gameEventBus } from './gameEventBus';
 import { logService } from './logService';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { GameOverPayload } from '$lib/stores/gameOverStore';
-import type { ModalState } from '$lib/stores/modalStore';
+import type { ModalState } from '$lib/stores/modalState.svelte';
 
 export type SideEffect =
   | { type: 'navigate'; payload: string }

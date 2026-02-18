@@ -6,7 +6,7 @@
     import { logService } from "$lib/services/logService";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import DontShowAgainCheckbox from "../../DontShowAgainCheckbox.svelte";
-    import type { ModalState } from "$lib/stores/modalStore";
+    import type { ModalState } from "$lib/stores/modalState.svelte";
     import type { Snippet } from "svelte";
 
     interface Props {

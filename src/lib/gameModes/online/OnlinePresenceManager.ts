@@ -2,7 +2,7 @@ import { roomPlayerService } from "$lib/services/room/roomPlayerService";
 import { presenceService } from "$lib/services/presenceService";
 import { logService } from "$lib/services/logService";
 import type { OnlinePlayer, Room } from "$lib/types/online";
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { timeService } from '$lib/services/timeService';
 import ReconnectionModal from '$lib/components/modals/ReconnectionModal.svelte';
 import { get } from 'svelte/store';
@@ -47,7 +47,7 @@ export class OnlinePresenceManager {
 
         // Автоматичне керування модалкою на основі стану reconnectionStore
         this.unsubscribeFromStore = reconnectionStore.subscribe(state => {
-            const currentModal = get(modalStore);
+            const currentModal = modalStateRune.state;
             const hasPlayers = state.players.length > 0;
             const isReconnectionModalOpen = currentModal.isOpen && currentModal.dataTestId === 'reconnection-modal';
             const isGameOver = uiState.state.isGameOver;
@@ -56,7 +56,7 @@ export class OnlinePresenceManager {
                 // Якщо гра завершена, закриваємо модалку очікування
                 if (isReconnectionModalOpen) {
                     logService.presence(`[Presence] Game Over. Closing ReconnectionModal.`);
-                    modalStore.closeModal();
+                    modalStateRune.closeModal();
                     timeService.resumeTurnTimer();
                 }
                 return;
@@ -65,7 +65,7 @@ export class OnlinePresenceManager {
             if (hasPlayers && !isReconnectionModalOpen) {
                 logService.presence(`[Presence] Players disconnected (${state.players.length}). Opening modal.`);
                 timeService.pauseTurnTimer();
-                modalStore.showModal({
+                modalStateRune.showModal({
                     component: ReconnectionModal,
                     variant: 'menu',
                     dataTestId: 'reconnection-modal',
@@ -75,7 +75,7 @@ export class OnlinePresenceManager {
                 });
             } else if (!hasPlayers && isReconnectionModalOpen) {
                 logService.presence(`[Presence] All players returned. Closing modal.`);
-                modalStore.closeModal();
+                modalStateRune.closeModal();
                 timeService.resumeTurnTimer();
             }
         });

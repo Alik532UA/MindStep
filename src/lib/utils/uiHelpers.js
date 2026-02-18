@@ -1,4 +1,4 @@
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { logService } from '$lib/services/logService.js';
 import { clearCache } from '$lib/utils/cacheManager.js';
 import { goto } from '$app/navigation';
@@ -9,7 +9,7 @@ import SimpleModalContent from '$lib/components/modals/SimpleModalContent.svelte
 
 
 export function showGameModeSelector() {
-  modalStore.showModal({
+  modalStateRune.showModal({
     dataTestId: 'game-mode-modal',
     component: GameModeModal,
     variant: 'menu',
@@ -19,24 +19,24 @@ export function showGameModeSelector() {
 }
 
 export function showGameInfoModal() {
-  modalStore.showModal({
+  modalStateRune.showModal({
     dataTestId: 'faq-modal',
     component: FAQModal,
     variant: 'menu',
     buttons: [],
     closeOnOverlayClick: true,
     props: {
-      onOk: () => modalStore.closeModal(),
+      onOk: () => modalStateRune.closeModal(),
       onRules: () => {
         goto(`${base}/rules`);
-        modalStore.closeModal();
+        modalStateRune.closeModal();
       }
     }
   });
 }
 
 export function showClearCacheModal() {
-  modalStore.showModal({
+  modalStateRune.showModal({
     component: SimpleModalContent,
     variant: 'menu',
     dataTestId: 'clear-cache-modal',
@@ -50,7 +50,7 @@ export function showClearCacheModal() {
           onClick: () => {
             logService.ui('Повне очищення кешу', 'info');
             clearCache({ keepAppearance: false });
-            modalStore.closeModal();
+            modalStateRune.closeModal();
           },
           dataTestId: 'full-clear-cache-btn'
         },
@@ -60,13 +60,13 @@ export function showClearCacheModal() {
           onClick: () => {
             logService.ui('Очищення кешу зі збереженням вигляду', 'info');
             clearCache({ keepAppearance: true });
-            modalStore.closeModal();
+            modalStateRune.closeModal();
           },
           dataTestId: 'keep-appearance-clear-cache-btn'
         },
         {
           labelKey: 'modal.cancel',
-          onClick: () => modalStore.closeModal(),
+          onClick: () => modalStateRune.closeModal(),
           dataTestId: 'cancel-clear-cache-btn'
         }
       ]

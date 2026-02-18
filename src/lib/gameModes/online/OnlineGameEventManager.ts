@@ -1,6 +1,6 @@
 import { gameEventBus, type ShowNoMovesModalPayload } from '$lib/services/gameEventBus';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { roomService } from '$lib/services/roomService';
 import { timeService } from '$lib/services/timeService';
 import { logService } from '$lib/services/logService';
@@ -61,7 +61,7 @@ export class OnlineGameEventManager {
         );
 
         this.subscriptions.push(
-            modalStore.subscribe(state => {
+            modalStateRune.subscribe(state => {
                 if (state.isOpen) {
                     logService.GAME_MODE('[OnlineEventManager] Modal opened. Pausing timer.');
                     timeService.pauseGameTimer();

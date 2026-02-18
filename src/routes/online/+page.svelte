@@ -4,7 +4,7 @@
   import CreateRoomModal from "$lib/components/online/CreateRoomModal.svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import EditableText from "$lib/components/ui/EditableText.svelte";
-  import { modalStore } from "$lib/stores/modalStore";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { onMount } from "svelte";
   import { logService } from "$lib/services/logService";
@@ -31,7 +31,7 @@
   }
 
   function openCreateRoomModal() {
-    modalStore.showModal({
+    modalStateRune.showModal({
       // titleKey видалено, бо заголовок тепер всередині компонента
       component: CreateRoomModal,
       dataTestId: "create-room-modal",

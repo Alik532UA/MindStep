@@ -1,6 +1,7 @@
 # Private documentation (separate repository)
 .private/
 .temp/
+GEMINI-general.md
 
 # Gemini service files
 .gemini_commit_log.txt

@@ -2,13 +2,13 @@
     import { t } from "$lib/i18n/typedI18n";
     import ChatWidget from "$lib/components/online/ChatWidget.svelte";
     import { userProfileStore } from "$lib/services/auth/userProfileService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     // Використовуємо фіксований ID для глобального чату
     const GLOBAL_CHAT_ID = "global-chat";
 
     function close() {
-        modalStore.closeModal();
+        modalStateRune.closeModal();
     }
 </script>
 

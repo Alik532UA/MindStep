@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { logService } from "$lib/services/logService";
-  import { modalStore } from "$lib/stores/modalStore";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import VoiceSettings from "./VoiceSettings.svelte";
   import VoiceList from "./VoiceList.svelte";
@@ -70,7 +70,7 @@
     <StyledButton
       variant="primary"
       size="large"
-      onclick={() => modalStore.closeModal()}
+      onclick={() => modalStateRune.closeModal()}
       dataTestId="voice-settings-save-footer-btn"
     >
       {$t("common.save")}

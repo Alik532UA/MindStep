@@ -3,7 +3,7 @@
 	import { gameEventBus } from "$lib/services/gameEventBus";
 	import { userActionService } from "$lib/services/userActionService";
 	import { get } from "svelte/store";
-	import { modalStore } from "$lib/stores/modalStore";
+	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { t as tStore } from "$lib/i18n/typedI18n";
 	import type { TranslationKey } from "$lib/types/i18n";
 	import { locale } from "svelte-i18n";
@@ -33,7 +33,7 @@
 					speakText(title, lang, voiceURI, undefined);
 				}
 
-				modalStore.showModal({
+				modalStateRune.showModal({
 					component: GameOverContent,
 					variant: "menu",
 					content: {

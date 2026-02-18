@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import { roomService } from "$lib/services/roomService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { logService } from "$lib/services/logService";
@@ -40,7 +40,7 @@
                 finalRoomName,
             );
 
-            modalStore.closeModal();
+            modalStateRune.closeModal();
             await goto(`${base}/online/lobby/${roomId}`);
         } catch (e: any) {
             logService.error("[CreateRoomModal] Failed to create room", e);
@@ -98,7 +98,7 @@
 
         <StyledButton
             variant="default"
-            onclick={() => modalStore.closeModal()}
+            onclick={() => modalStateRune.closeModal()}
             dataTestId="create-room-cancel-btn"
         >
             {$t("onlineMenu.cancel")}

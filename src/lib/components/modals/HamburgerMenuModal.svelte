@@ -3,7 +3,7 @@
     import { base } from "$app/paths";
     import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.js";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
     import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
@@ -12,7 +12,7 @@
     export let onFeedback: () => void;
 
     function closeMenu() {
-        modalStore.closeModal();
+        modalStateRune.closeModal();
     }
 
     function navigateTo(route: string) {
@@ -23,7 +23,7 @@
 
     function openAuthModal() {
         logService.action('Click: "Account" (HamburgerMenuModal)');
-        modalStore.showModalAsReplacement({
+        modalStateRune.showModalAsReplacement({
             component: AuthModal,
             dataTestId: "auth-modal",
             buttons: [],

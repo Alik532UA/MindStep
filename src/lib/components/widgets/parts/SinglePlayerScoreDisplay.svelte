@@ -1,6 +1,6 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import SimpleModalContent from "../../modals/SimpleModalContent.svelte";
     import { customTooltip } from "$lib/actions/customTooltip.js";
     import type { ScoreState } from "$lib/stores/scoreState.svelte";
@@ -13,7 +13,7 @@
     let { score = 0, scoreStore }: Props = $props();
 
     function showScoreInfo() {
-        modalStore.showModal({
+        modalStateRune.showModal({
             component: SimpleModalContent,
             variant: "menu",
             dataTestId: "score-info-modal",
@@ -25,7 +25,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onclick: () => modalStore.closeModal(),
+                        onclick: () => modalStateRune.closeModal(),
                         dataTestId: "score-info-ok-btn",
                     },
                 ],
@@ -34,7 +34,7 @@
     }
 
     function showPenaltyInfo() {
-        modalStore.showModal({
+        modalStateRune.showModal({
             component: SimpleModalContent,
             variant: "menu",
             dataTestId: "penalty-info-modal",
@@ -46,7 +46,7 @@
                         labelKey: "modal.ok",
                         variant: "primary",
                         isHot: true,
-                        onclick: () => modalStore.closeModal(),
+                        onclick: () => modalStateRune.closeModal(),
                         dataTestId: "penalty-info-ok-btn",
                     },
                 ],

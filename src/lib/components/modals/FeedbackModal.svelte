@@ -4,7 +4,7 @@
         feedbackService,
         type FeedbackType,
     } from "$lib/services/feedbackService";
-    import { modalStore } from "$lib/stores/modalStore";
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { logService } from "$lib/services/logService";
     import { onMount } from "svelte";
 
@@ -45,7 +45,7 @@
             logService.ui(
                 "[FeedbackModal] User not logged in. Redirecting to AuthModal.",
             );
-            modalStore.showModalAsReplacement({
+            modalStateRune.showModalAsReplacement({
                 component: AuthModal,
                 dataTestId: "auth-modal",
                 variant: "menu",
@@ -55,7 +55,7 @@
             logService.ui(
                 "[FeedbackModal] User logged in. Opening GlobalChatModal.",
             );
-            modalStore.showModalAsReplacement({
+            modalStateRune.showModalAsReplacement({
                 component: GlobalChatModal,
                 dataTestId: "global-chat-modal",
                 variant: "standard",
@@ -87,7 +87,7 @@
                 actualResult,
                 expectedResult,
             });
-            modalStore.closeModal();
+            modalStateRune.closeModal();
         } catch (e) {
             isSubmitting = false;
         }
@@ -95,7 +95,7 @@
 
     function goBack() {
         if (initialType) {
-            modalStore.closeModal();
+            modalStateRune.closeModal();
         } else {
             selectedType = null;
             textContent = "";

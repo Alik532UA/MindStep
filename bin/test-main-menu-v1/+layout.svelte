@@ -8,7 +8,7 @@
 	import UpdateNotification from "$lib/components/UpdateNotification.svelte";
 	import { clearCache } from "$lib/utils/cacheManager.js";
 	import Modal from "$lib/components/Modal.svelte";
-	import { modalStore } from "$lib/stores/modalStore";
+	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
 	import { logService } from "$lib/services/logService.js";
 	import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";

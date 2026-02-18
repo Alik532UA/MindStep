@@ -1,4 +1,4 @@
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import hotkeyService from './hotkeyService';
 import SimpleModalContent from '../components/modals/SimpleModalContent.svelte';
 
@@ -12,11 +12,11 @@ export function showArrowKeyHintModal() {
   hotkeyService.pushContext(context);
 
   const closeModal = () => {
-    modalStore.closeModal();
+    modalStateRune.closeModal();
     hotkeyService.popContext(context);
   };
 
-  modalStore.showModal({
+  modalStateRune.showModal({
     component: SimpleModalContent,
     variant: 'menu',
     dataTestId: 'arrow-key-hint-modal',

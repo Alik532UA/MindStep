@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import { modalStore } from '$lib/stores/modalStore';
+import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { gameModeService } from './gameModeService';
 import { logService } from './logService';
 import type { Direction } from '$lib/utils/gameUtils';
@@ -137,7 +137,7 @@ export const userActionService = {
   },
 
   async requestRestart(): Promise<void> {
-    modalStore.closeModal();
+    modalStateRune.closeModal();
 
     const currentMode = gameModeService.getCurrentMode();
     const currentModeName = currentMode?.getModeName();
@@ -166,7 +166,7 @@ export const userActionService = {
   },
 
   async requestRestartWithSize(newSize: number): Promise<void> {
-    modalStore.closeModal();
+    modalStateRune.closeModal();
     const activeGameMode = gameModeService.getCurrentMode();
     if (activeGameMode) {
       activeGameMode.restartGame({ newSize });
@@ -181,7 +181,7 @@ export const userActionService = {
     if (!bState) return;
     const { moveHistory, boardSize } = bState;
 
-    modalStore.showModal({
+    modalStateRune.showModal({
       component: ReplayViewer,
       variant: 'menu', // FIX
       buttons: [], // FIX
