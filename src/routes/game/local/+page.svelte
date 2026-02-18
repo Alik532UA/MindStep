@@ -1,12 +1,12 @@
 <script lang="ts">
   import GamePageLayout from "$lib/components/layouts/GamePageLayout.svelte";
-  import { gameController } from "$lib/controllers/GameController.svelte";
+  import { localGameController } from "$lib/controllers/LocalGameController.svelte";
 
   function initLocalGame() {
-    gameController.initGame("LocalGamePage", "local");
+    localGameController.init("LocalGamePage");
   }
 
-  const widgetFilter = (id: string) => gameController.shouldShowWidget(id);
+  const widgetFilter = (id: string) => localGameController.shouldShowWidget(id);
 </script>
 
 <GamePageLayout initLogic={initLocalGame} {widgetFilter} />

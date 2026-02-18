@@ -1,12 +1,12 @@
 <script lang="ts">
   import GamePageLayout from "$lib/components/layouts/GamePageLayout.svelte";
-  import { gameController } from "$lib/controllers/GameController.svelte";
+  import { trainingGameController } from "$lib/controllers/TrainingGameController.svelte";
 
   function initTrainingGame() {
-    gameController.initGame("TrainingPage", "training");
+    trainingGameController.init("TrainingPage");
   }
 
-  const widgetFilter = (id: string) => gameController.shouldShowWidget(id);
+  const widgetFilter = (id: string) => trainingGameController.shouldShowWidget(id);
 </script>
 
 <GamePageLayout initLogic={initTrainingGame} {widgetFilter} />

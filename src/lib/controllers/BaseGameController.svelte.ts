@@ -1,7 +1,7 @@
 /**
- * @file GameController.svelte.ts
- * @description Headless контролер для управління ігровим процесом на сторінках /game/*.
- * Централізує ініціалізацію та фільтрацію віджетів.
+ * @file BaseGameController.svelte.ts
+ * @description Базовий клас для контролерів управління ігровим процесом.
+ * Визначає спільну логіку для всіх режимів гри.
  */
 
 import { gameModeService } from "$lib/services/gameModeService";
@@ -10,28 +10,28 @@ import { boardState } from '$lib/stores/boardState.svelte';
 import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 import { WIDGETS } from "$lib/stores/layoutState.svelte";
 
-class GameController {
+export abstract class BaseGameController {
   // --- State ---
-  private settings = $derived(gameSettingsState.state);
-  private bState = $derived(boardState.state);
+  protected settings = $derived(gameSettingsState.state);
+  protected bState = $derived(boardState.state);
 
   // --- Logic ---
 
   /**
-   * Ініціалізує гру, якщо вона ще не запущена.
-   * @param context Контекст (назва сторінки) для логування.
-   * @param defaultMode Режим за замовчуванням, якщо в налаштуваннях порожньо.
+   * Абстрактний метод для ініціалізації специфічного режиму.
    */
-  initGame(context: string, defaultMode: string = "local") {
-    if (!this.bState || this.bState.moveHistory.length <= 1) {
-      const modeToInit = this.settings.gameMode || defaultMode;
-      
-      logService.init(`[${context}] onMount: No active game. Initializing mode: "${modeToInit}"`);
+  abstract init(context: string): void;
 
-      // Для локального режиму іноді не треба скидати налаштування пресетів
-      const shouldApplyPreset = context !== "LocalGamePage" || !["observer", "beginner", "experienced", "pro"].includes(this.settings.gameMode || "");
-      
-      gameModeService.initializeGameMode(modeToInit, shouldApplyPreset);
+  /**
+   * Спільна логіка ініціалізації гри.
+   * @param context Контекст (назва сторінки) для логування.
+   * @param mode Режим гри.
+   * @param shouldApplyPreset Чи застосовувати пресет налаштувань.
+   */
+  protected baseInit(context: string, mode: string, shouldApplyPreset: boolean = true) {
+    if (!this.bState || this.bState.moveHistory.length <= 1) {
+      logService.init(`[${context}] onMount: No active game. Initializing mode: "${mode}"`);
+      gameModeService.initializeGameMode(mode, shouldApplyPreset);
     } else {
       logService.init(`[${context}] onMount: Active game found, not re-initializing.`);
     }
@@ -39,6 +39,7 @@ class GameController {
 
   /**
    * Визначає, чи потрібно відображати віджет.
+   * Може бути перевизначений у нащадках.
    * @param id ID віджета.
    * @returns boolean
    */
@@ -52,7 +53,7 @@ class GameController {
       return isTimedMode && !isObserver;
     }
 
-    // 2. Індикатор ходу: не показуємо в деяких режимах (наприклад, проти ШІ)
+    // 2. Індикатор ходу: не показуємо в деяких режимах
     if (id === WIDGETS.PLAYER_TURN_INDICATOR) {
         if (mode === 'online' || (mode && mode.startsWith('online-'))) return true;
         
@@ -67,5 +68,3 @@ class GameController {
     return true;
   }
 }
-
-export const gameController = new GameController();

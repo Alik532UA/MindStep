@@ -1,12 +1,12 @@
 <script lang="ts">
   import GamePageLayout from "$lib/components/layouts/GamePageLayout.svelte";
-  import { gameController } from "$lib/controllers/GameController.svelte";
+  import { timedGameController } from "$lib/controllers/TimedGameController.svelte";
 
   function initTimedGame() {
-    gameController.initGame("TimedGamePage", "timed");
+    timedGameController.init("TimedGamePage");
   }
 
-  const widgetFilter = (id: string) => gameController.shouldShowWidget(id);
+  const widgetFilter = (id: string) => timedGameController.shouldShowWidget(id);
 </script>
 
 <GamePageLayout initLogic={initTimedGame} {widgetFilter} />
