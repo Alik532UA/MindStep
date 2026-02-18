@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { notificationStore } from '$lib/stores/notificationStore';
+    import { notificationState } from '$lib/stores/notificationState.svelte';
     import Toast from './Toast.svelte';
     import { flip } from 'svelte/animate';
 
-    $: notifications = $notificationStore;
+    const notifications = $derived(notificationState.state);
 </script>
 
 <div class="toast-container" aria-live="polite">

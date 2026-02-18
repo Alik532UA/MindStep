@@ -1,6 +1,5 @@
 import type { Achievement, RewardConditionContext } from '$lib/types/rewards';
-import { rewardsStore } from '$lib/stores/rewardsStore';
-import { get } from 'svelte/store';
+import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { logService } from './logService';
 import { notificationService } from './notificationService';
 
@@ -84,11 +83,11 @@ class RewardsService {
   constructor() { }
 
   init() {
-    rewardsStore.init();
+    rewardsState.init();
   }
 
   checkAchievements(context: { score: number; gameMode: string; boardSize: number }) {
-    const state = get(rewardsStore);
+    const state = rewardsState.state;
 
     ACHIEVEMENTS.forEach(achievement => {
       if (state.unlockedRewards[achievement.id]) return;
@@ -100,7 +99,7 @@ class RewardsService {
   }
 
   private unlockAchievement(achievement: Achievement) {
-    rewardsStore.unlock(achievement.id);
+    rewardsState.unlock(achievement.id);
 
     notificationService.show({
       type: 'achievement',

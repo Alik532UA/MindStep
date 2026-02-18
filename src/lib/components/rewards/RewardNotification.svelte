@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { notificationStore } from "$lib/stores/notificationStore";
+    import { notificationState } from "$lib/stores/notificationState.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
     import { t } from "$lib/i18n/typedI18n";
     import type { TranslationKey } from "$lib/types/i18n";
     import { flip } from "svelte/animate";
     import { fly } from "svelte/transition";
 
-    $: notifications = $notificationStore;
+    const notifications = $derived(notificationState.state);
 </script>
 
 <div class="notification-container">

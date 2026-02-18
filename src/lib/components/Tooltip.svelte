@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TooltipData } from "$lib/stores/tooltipStore";
+  import type { TooltipData } from "$lib/stores/tooltipState.svelte";
 
   export let x = 0;
   export let y = 0;

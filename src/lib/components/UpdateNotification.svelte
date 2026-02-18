@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
-  import { testModeStore } from "$lib/stores/testModeStore";
+  import { testModeState } from "$lib/stores/testModeState.svelte";
 
   const dispatch = createEventDispatcher();
   function reload() {
@@ -11,7 +11,7 @@
   }
 
   // НАВІЩО: Не показуємо сповіщення в тестовому режимі, щоб не блокувати E2E тести.
-  const isHidden = $derived($testModeStore.isEnabled);
+  const isHidden = $derived(testModeState.state.isEnabled);
 </script>
 
 {#if !isHidden}

@@ -3,8 +3,8 @@ import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { getFirebaseApp } from '../firebaseService';
 import { logService } from '../logService';
-import { rewardsStore } from '$lib/stores/rewardsStore';
-import { appVersion } from '$lib/stores/versionStore';
+import { rewardsState } from '$lib/stores/rewardsState.svelte';
+import { versionState } from '$lib/stores/versionState.svelte';
 
 export interface UserProfile {
     uid: string;
@@ -41,7 +41,7 @@ class UserProfileService {
     async syncUserProfile(user: User) {
         const userRef = doc(this.db, 'users', user.uid);
 
-        rewardsStore.syncWithCloud(user.uid);
+        rewardsState.syncWithCloud(user.uid);
 
         try {
             const snap = await getDoc(userRef);
@@ -78,7 +78,7 @@ class UserProfileService {
                     isAnonymous: user.isAnonymous
                 });
             } else {
-                const currentVersion = get(appVersion);
+                const currentVersion = versionState.state.current;
                 const initialData = {
                     displayName: localName,
                     bestTimeScore: localBest,

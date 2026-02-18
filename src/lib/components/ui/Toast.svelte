@@ -6,7 +6,7 @@
         Notification,
         NotificationType,
     } from "$lib/types/notification";
-    import { notificationStore } from "$lib/stores/notificationStore";
+    import { notificationState } from "$lib/stores/notificationState.svelte";
     import NotoEmoji from "../NotoEmoji.svelte";
 
     export let notification: Notification;
@@ -20,7 +20,7 @@
     };
 
     function remove() {
-        notificationStore.remove(notification.id);
+        notificationState.remove(notification.id);
     }
 </script>
 

@@ -1,7 +1,7 @@
 import { uiState } from '$lib/stores/uiState.svelte';
 import { userActionService } from './userActionService';
 import { logService } from './logService';
-import { voiceControlStore } from '$lib/stores/voiceControlStore';
+import { voiceControlState } from '$lib/stores/voiceControlState.svelte';
 import { voiceCommandParser, type VoiceCommandResult } from './voice/VoiceCommandParser';
 
 class VoiceControlService {
@@ -56,7 +56,7 @@ class VoiceControlService {
       // isListening is set to true in handleStart
     } catch (error) {
       logService.voiceControl('[VoiceControlService] Error calling recognition.start():', error);
-      voiceControlStore.setError(error);
+      voiceControlState.setError(error);
       uiState.update(s => ({ ...s, isListening: false }));
     }
   }
@@ -85,16 +85,16 @@ class VoiceControlService {
 
   private handleResult(event: SpeechRecognitionEvent) {
     this.processingResult = true; // We are processing a result, don't restart
-    voiceControlStore.setError(null); // Clear any previous error
+    voiceControlState.setError(null); // Clear any previous error
     const transcript = event.results[0][0].transcript.trim();
-    voiceControlStore.setTranscript(transcript);
+    voiceControlState.setTranscript(transcript);
     logService.voiceControl(`[VoiceControlService] Event: result received. Transcript: ${transcript}`);
     this.processTranscript(transcript);
   }
 
   private handleError(event: SpeechRecognitionErrorEvent) {
     logService.voiceControl(`[VoiceControlService] Event: error. Error event:`, event.error);
-    voiceControlStore.setError(event); // Store the full error object
+    voiceControlState.setError(event); // Store the full error object
     if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
       this.processingResult = true; // Permanent error, don't restart
     }
@@ -133,8 +133,8 @@ class VoiceControlService {
       logService.voiceControl('[VoiceControlService] Audio analysis initialized.');
     } catch (err) {
       logService.voiceControl('[VoiceControlService] Error initializing audio analysis:', err);
-      voiceControlStore.setError(err);
-      voiceControlStore.setVolume(0);
+      voiceControlState.setError(err);
+      voiceControlState.setVolume(0);
     }
   }
 
@@ -154,7 +154,7 @@ class VoiceControlService {
     }
     this.analyser = null;
     this.dataArray = null;
-    voiceControlStore.setVolume(0);
+    voiceControlState.setVolume(0);
     logService.voiceControl('[VoiceControlService] Audio analysis stopped.');
   }
 
@@ -167,7 +167,7 @@ class VoiceControlService {
       sum += amplitude * amplitude;
     }
     const volume = Math.sqrt(sum / this.dataArray.length) / 100; // Normalize to a 0-1 range (approx)
-    voiceControlStore.setVolume(volume);
+    voiceControlState.setVolume(volume);
 
     this.animationFrameId = requestAnimationFrame(this.updateVolume);
   }

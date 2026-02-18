@@ -2,20 +2,17 @@
   import { onMount } from "svelte";
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import {
-    availableVoices,
-    isLoading,
-    initializeVoices,
-  } from "$lib/stores/voiceStore";
+    voiceState,
+  } from "$lib/stores/voiceState.svelte";
   import { t } from "$lib/i18n/typedI18n";
-  import { get } from "svelte/store";
   import { speakTestPhrase } from "$lib/services/speechService";
 
   const settings = $derived(gameSettingsState.state);
   let selectedVoiceURI = $derived(settings.selectedVoiceURI ?? "");
 
   onMount(() => {
-    if (get(availableVoices).length === 0) {
-      initializeVoices();
+    if (voiceState.availableVoices.length === 0) {
+      voiceState.initializeVoices();
     }
   });
 
@@ -25,14 +22,14 @@
   }
 </script>
 
-{#if $isLoading}
+{#if voiceState.isLoading}
   <div class="loader-container">
     <div class="loading-spinner"></div>
     <p>{$t("voiceSettings.loading")}</p>
   </div>
-{:else if $availableVoices.length > 0}
+{:else if voiceState.availableVoices.length > 0}
   <div class="voice-list button-group" data-testid="voice-list">
-    {#each $availableVoices as voice (voice.voiceURI)}
+    {#each voiceState.availableVoices as voice (voice.voiceURI)}
       <button
         class="voice-selection-button"
         class:active={selectedVoiceURI === voice.voiceURI}

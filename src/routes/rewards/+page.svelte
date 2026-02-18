@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { rewardsStore } from "$lib/stores/rewardsStore";
+    import { rewardsState } from "$lib/stores/rewardsState.svelte";
     import { ACHIEVEMENTS } from "$lib/services/rewardsService";
     import RewardCard from "$lib/components/rewards/RewardCard.svelte";
     import SuggestRewardCard from "$lib/components/rewards/SuggestRewardCard.svelte";
@@ -12,7 +12,7 @@
     import type { UnlockedReward, Achievement } from "$lib/types/rewards";
 
     onMount(() => {
-        rewardsStore.markAllAsSeen();
+        rewardsState.markAllAsSeen();
         hotkeyService.pushContext("rewards-page");
     });
 
@@ -20,11 +20,11 @@
         hotkeyService.popContext();
     });
 
-    $: unlockedMap = $rewardsStore.unlockedRewards;
+    const unlockedMap = $derived(rewardsState.state.unlockedRewards);
 
     // --- Achievements Grouping Logic ---
 
-    $: displayAchievements = groupAchievements(ACHIEVEMENTS, unlockedMap);
+    const displayAchievements = $derived(groupAchievements(ACHIEVEMENTS, unlockedMap));
 
     function groupAchievements(
         all: Achievement[],

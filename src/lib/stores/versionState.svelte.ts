@@ -18,14 +18,30 @@ class VersionStateRune {
     
     setVersion(version: string) {
         this._state.current = version;
+        this.notifySubscribers();
     }
 
     setMinVersion(version: string) {
         this._state.minRequired = version;
+        this.notifySubscribers();
     }
 
     setUpdateAvailable(available: boolean) {
         this._state.updateAvailable = available;
+        this.notifySubscribers();
+    }
+
+    // --- Bridge Support ---
+    private subscribers: Set<(s: VersionInfo) => void> = new Set();
+
+    subscribe(fn: (s: VersionInfo) => void): () => void {
+        fn(this._state);
+        this.subscribers.add(fn);
+        return () => this.subscribers.delete(fn);
+    }
+
+    private notifySubscribers() {
+        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 

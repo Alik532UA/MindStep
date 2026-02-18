@@ -1,4 +1,4 @@
-import { tooltipStore } from '$lib/stores/tooltipStore';
+import { tooltipState } from '$lib/stores/tooltipState.svelte';
 import { logService } from '$lib/services/logService.js';
 
 /**
@@ -17,17 +17,17 @@ export function customTooltip(node, customContent) {
   const mouseOver = (event) => {
     if (tooltipContent) {
       logService.tooltip('mouseOver: scheduling tooltip show for owner', node);
-      tooltipStore.scheduleShow(tooltipContent, event.pageX + 10, event.pageY + 10, 700, node);
+      tooltipState.scheduleShow(tooltipContent, event.pageX + 10, event.pageY + 10, 700, node);
     }
   };
 
   const mouseMove = (/** @type {MouseEvent} */ event) => {
-    tooltipStore.move(event.pageX + 10, event.pageY + 10);
+    tooltipState.move(event.pageX + 10, event.pageY + 10);
   };
 
   const mouseLeave = () => {
     logService.tooltip('mouseLeave: hiding tooltip');
-    tooltipStore.hide();
+    tooltipState.hide();
   };
 
   node.addEventListener('mouseover', mouseOver);
@@ -50,10 +50,10 @@ export function customTooltip(node, customContent) {
       node.title = originalTitle;
 
       // Cancel any scheduled tooltips for this specific node
-      tooltipStore.cancelForOwner(node);
+      tooltipState.cancelForOwner(node);
       
       // Also attempt to hide any active tooltip if it belongs to this node
-      tooltipStore.hideIfOwner(node);
+      tooltipState.hideIfOwner(node);
     }
   };
 }

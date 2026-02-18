@@ -17,7 +17,7 @@ import { writable } from 'svelte/store';
 import { logService } from './logService';
 import { doc, getFirestore, deleteDoc } from 'firebase/firestore';
 import { notificationService } from './notificationService';
-import { rewardsStore } from '$lib/stores/rewardsStore';
+import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { userProfileService } from './auth/userProfileService';
 import { errorHandlerService } from './errorHandlerService';
 
@@ -100,7 +100,7 @@ class AuthService {
 
             userProfileService.clearLocalUserData();
             userProfileService.resetLocalProfile();
-            rewardsStore.reset();
+            rewardsState.reset();
 
             notificationService.show({ type: 'info', messageRaw: 'Ви вийшли з акаунту.' });
             return true;
