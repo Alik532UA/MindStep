@@ -14,6 +14,7 @@
   import { gameEventBus } from "$lib/services/gameEventBus";
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
   import BaseModal from "$lib/components/ui/BaseModal.svelte";
+  import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
   import ExpertModeVolumeControl from "./modals/parts/ExpertModeVolumeControl.svelte";
   import ModalHeader from "./modals/parts/ModalHeader.svelte";
@@ -152,53 +153,55 @@
         </ModalHeader>
       {/if}
 
-      <div
-        class="modal-body"
-        class:is-faq={typeof mState.content === "object" &&
-          mState.content &&
-          "isFaq" in (mState.content as any) &&
-          (mState.content as any).isFaq}
-        bind:this={modalContent}
-        data-testid={`${mState.dataTestId}-content`}
-      >
-        {#if typeof mState.content === "object" && mState.content && "reason" in (mState.content as any) && !mState.component}
-          <p
-            class="reason"
-            data-testid={`${mState.dataTestId}-content-reason`}
-            data-i18n-key={(mState.content as any).reasonKey}
-          >
-            {(mState.content as any).reason}
-          </p>
-        {/if}
+      <ErrorBoundary compact={true}>
+        <div
+          class="modal-body"
+          class:is-faq={typeof mState.content === "object" &&
+            mState.content &&
+            "isFaq" in (mState.content as any) &&
+            (mState.content as any).isFaq}
+          bind:this={modalContent}
+          data-testid={`${mState.dataTestId}-content`}
+        >
+          {#if typeof mState.content === "object" && mState.content && "reason" in (mState.content as any) && !mState.component}
+            <p
+              class="reason"
+              data-testid={`${mState.dataTestId}-content-reason`}
+              data-i18n-key={(mState.content as any).reasonKey}
+            >
+              {(mState.content as any).reason}
+            </p>
+          {/if}
 
-        {#if mState.component}
-          {@const Component = mState.component as any}
-          <Component
-            {...mState.props}
-            content={mState.content}
-            dataTestId={mState.dataTestId}
-            scope={currentModalContext}
-          />
-        {:else if typeof mState.content === "object" && mState.content && "isFaq" in (mState.content as any) && (mState.content as any).isFaq}
-          <FAQModal />
-        {:else if typeof mState.content === "object" && mState.content && "key" in (mState.content as any) && "actions" in (mState.content as any)}
-          <p class="reason">
-            {$t("modal.keyConflictContent", {
-              key: (mState.content as any).key as string,
-            })}
-          </p>
-        {:else if mState.contentKey}
-          <p class="reason">
-            {$t(mState.contentKey as import("$lib/types/i18n").TranslationKey, mState.content as any)}
-          </p>
-        {:else if typeof mState.content === "string" && mState.content}
-          <p class="reason">{mState.content}</p>
-        {/if}
+          {#if mState.component}
+            {@const Component = mState.component as any}
+            <Component
+              {...mState.props}
+              content={mState.content}
+              dataTestId={mState.dataTestId}
+              scope={currentModalContext}
+            />
+          {:else if typeof mState.content === "object" && mState.content && "isFaq" in (mState.content as any) && (mState.content as any).isFaq}
+            <FAQModal />
+          {:else if typeof mState.content === "object" && mState.content && "key" in (mState.content as any) && "actions" in (mState.content as any)}
+            <p class="reason">
+              {$t("modal.keyConflictContent", {
+                key: (mState.content as any).key as string,
+              })}
+            </p>
+          {:else if mState.contentKey}
+            <p class="reason">
+              {$t(mState.contentKey as import("$lib/types/i18n").TranslationKey, mState.content as any)}
+            </p>
+          {:else if typeof mState.content === "string" && mState.content}
+            <p class="reason">{mState.content}</p>
+          {/if}
 
-        {#if mState.content && typeof mState.content === "object" && "scoreDetails" in (mState.content as any) && !mState.component}
-          <GameOverContent content={mState.content} />
-        {/if}
-      </div>
+          {#if mState.content && typeof mState.content === "object" && "scoreDetails" in (mState.content as any) && !mState.component}
+            <GameOverContent content={mState.content} />
+          {/if}
+        </div>
+      </ErrorBoundary>
 
       {#if mState.buttons.length > 0}
         <ModalActionButtons

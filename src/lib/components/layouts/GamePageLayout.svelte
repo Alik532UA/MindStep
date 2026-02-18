@@ -12,6 +12,7 @@
     import { replayState } from "$lib/stores/replayState.svelte";
     import { i18nReady } from "$lib/i18n/init.js";
     import { logService } from "$lib/services/logService";
+    import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
     interface Props {
         widgetFilter?: (widgetId: string) => boolean;
@@ -82,11 +83,13 @@
 </script>
 
 {#if replayState.state.isReplayMode}
-    <ReplayViewer
-        moveHistory={replayState.state.moveHistory}
-        boardSize={replayState.state.boardSize}
-        autoPlayForward={true}
-    />
+    <ErrorBoundary>
+        <ReplayViewer
+            moveHistory={replayState.state.moveHistory}
+            boardSize={replayState.state.boardSize}
+            autoPlayForward={true}
+        />
+    </ErrorBoundary>
 {:else}
     <DraggableColumns
         {columns}
