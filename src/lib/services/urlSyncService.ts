@@ -10,11 +10,19 @@ import { debounce } from '$lib/utils/debounce';
 export const urlSyncService = {
     /**
      * Отримує параметри з URL.
+     * @param urlObj Об'єкт URL (опціонально). Якщо не передано, використовується window.location.
      */
-    getParamsFromUrl() {
-        if (typeof window === 'undefined') return {};
+    getParamsFromUrl(urlObj?: URL) {
+        let url: URL;
         
-        const url = new URL(window.location.href);
+        if (urlObj) {
+            url = urlObj;
+        } else if (typeof window !== 'undefined') {
+            url = new URL(window.location.href);
+        } else {
+            return {};
+        }
+
         const params: Record<string, any> = {};
         
         const mode = url.searchParams.get('mode');

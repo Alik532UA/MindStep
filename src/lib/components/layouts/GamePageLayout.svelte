@@ -5,6 +5,7 @@
     import DraggableColumns from "$lib/components/DraggableColumns.svelte";
     import { layoutStateRune, type WidgetId } from "$lib/stores/layoutState.svelte";
     import { widgetRegistry } from "$lib/config/widgetRegistry"; // <-- Новий імпорт
+    import URLSyncManager from "$lib/components/utils/URLSyncManager.svelte"; // <-- Новий імпорт
 
     import { onMount } from "svelte";
     import { animationService } from "$lib/services/animationService.js";
@@ -91,6 +92,7 @@
         />
     </ErrorBoundary>
 {:else}
+    <URLSyncManager />
     <DraggableColumns
         {columns}
         {itemContent}
