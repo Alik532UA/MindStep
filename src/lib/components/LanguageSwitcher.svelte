@@ -1,6 +1,6 @@
 <script lang="ts">
   import { locale } from "svelte-i18n";
-  import { appSettingsStore } from "../stores/appSettingsStore.js";
+  import { appSettingsState } from "../stores/appSettingsState.svelte";
   import { logService } from "$lib/services/logService.js";
 
   let showDropdown = $state(false);
@@ -18,7 +18,7 @@
 
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
-    appSettingsStore.updateSettings({ language: lang });
+    appSettingsState.updateSettings({ language: lang });
     localStorage.setItem("language", lang);
     locale.set(lang);
     showDropdown = false;

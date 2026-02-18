@@ -1,7 +1,7 @@
 // src/lib/stores/gameSettingsTypes.ts
 /**
  * @file Types for game settings.
- * @description Contains all type definitions for the gameSettingsStore.
+ * @description Contains all type definitions for game settings.
  * Extracted to reduce file size and improve maintainability.
  */
 

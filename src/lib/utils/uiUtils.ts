@@ -1,11 +1,11 @@
-import { get } from 'svelte/store';
-import { gameSettingsStore, type GameSettingsState } from '$lib/stores/gameSettingsStore.js';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import { logService } from '$lib/services/logService.js';
 
 // НАВІЩО: Гарантуємо, що всі візуальні опції (showBoard, showPiece, showMoves) будуть активовані для коректного UX при старті нової гри.
 export function enableAllGameCheckboxesIfNeeded() {
   logService.ui('enableAllGameCheckboxesIfNeeded called');
-  const s = get(gameSettingsStore);
+  const s = gameSettingsState.state;
   
   // НАВІЩО (Архітектурне виправлення): Замість трьох окремих викликів, які
   // провокували три оновлення стору, ми збираємо всі зміни в один об'єкт
@@ -25,6 +25,6 @@ export function enableAllGameCheckboxesIfNeeded() {
   }
 
   if (Object.keys(settingsToUpdate).length > 0) {
-    gameSettingsStore.updateSettings(settingsToUpdate);
+    gameSettingsState.updateSettings(settingsToUpdate);
   }
 }

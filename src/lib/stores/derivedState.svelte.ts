@@ -7,6 +7,8 @@ import type { UiState } from '$lib/types/uiState';
 import { timerState } from './timerState.svelte';
 import { animationState } from './animationState.svelte';
 import { availableMovesState } from './availableMovesState.svelte';
+import { appSettingsState } from './appSettingsState.svelte';
+import { languages } from '$lib/constants';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { Move } from '$lib/utils/gameUtils';
 import { logService } from '$lib/services/logService';
@@ -254,5 +256,10 @@ export const derivedState = {
 
     get isGameOver() {
         return uiState.state?.isGameOver ?? false;
+    },
+
+    get currentLanguageFlagComponent() {
+        const langCode = appSettingsState.state.language;
+        return languages.find(lang => lang.code === langCode)?.component || languages[0].component;
     }
 };

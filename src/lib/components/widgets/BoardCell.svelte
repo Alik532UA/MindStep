@@ -1,7 +1,7 @@
 <script lang="ts">
   import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils";
   import { createEventDispatcher } from "svelte";
-  import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
+  import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 
   export let rowIdx: number;
   export let colIdx: number;

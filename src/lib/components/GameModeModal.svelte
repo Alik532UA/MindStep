@@ -9,7 +9,7 @@
   import { userActionService } from "$lib/services/userActionService";
   import { logService } from "$lib/services/logService";
   import { uiState } from "$lib/stores/uiState.svelte";
-  import type { GameModePreset } from "$lib/stores/gameSettingsStore";
+  import type { GameModePreset } from "$lib/stores/gameSettingsTypes";
   import WipNotice from "./main-menu/WipNotice.svelte";
   import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";

@@ -1,5 +1,5 @@
 import { gameEventBus, type ShowNoMovesModalPayload } from '$lib/services/gameEventBus';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { modalStore } from '$lib/stores/modalStore';
 import { roomService } from '$lib/services/roomService';
 import { timeService } from '$lib/services/timeService';
@@ -29,7 +29,7 @@ export class OnlineGameEventManager {
     public setupSubscriptions() {
         // 1. Settings Sync
         this.subscriptions.push(
-            gameSettingsStore.subscribe(settings => {
+            gameSettingsState.subscribe(settings => {
                 if (!this.callbacks.isApplyingRemoteState() && this.roomId) {
                     this.callbacks.onSyncSettings();
                 }

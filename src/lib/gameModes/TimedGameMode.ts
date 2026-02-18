@@ -4,7 +4,7 @@ import { endGameService } from '$lib/services/endGameService';
 import { TrainingGameMode } from './TrainingGameMode';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { timerState } from '$lib/stores/timerState.svelte';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 
 import { type MoveDirectionType } from '$lib/models/Piece';
 import { TIMED_GAME_DEFAULT_DURATION } from '$lib/config/timeConstants';
@@ -23,7 +23,7 @@ export class TimedGameMode extends TrainingGameMode {
     timeService.stopGameTimer();
     super.initialize(options);
     timerState.setRemainingTime(this.gameDuration);
-    gameSettingsStore.updateSettings({
+    gameSettingsState.updateSettings({
       speechRate: 1.6,
       shortSpeech: true,
       speechFor: {

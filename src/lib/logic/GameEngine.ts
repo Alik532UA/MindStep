@@ -2,7 +2,7 @@ import { Piece, type MoveDirectionType } from '../models/Piece';
 import { isCellBlocked } from '$lib/utils/boardUtils';
 import { calculateMoveScore } from '$lib/services/scoreService';
 import type { CombinedGameState, MoveResult } from '$lib/models/gameState';
-import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import type { MoveHistoryEntry } from '$lib/models/moveHistory';
 import { logService } from '$lib/services/logService';
 

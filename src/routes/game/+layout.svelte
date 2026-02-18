@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appSettingsStore } from "$lib/stores/appSettingsStore.js";
+  import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { gameModeService } from "$lib/services/gameModeService";
   import { userActionService } from "$lib/services/userActionService";
@@ -22,7 +22,6 @@
   import { animationService } from "$lib/services/animationService";
   import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
   import { urlSyncService } from "$lib/services/urlSyncService";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
 
   let { children }: { children: Snippet } = $props();
 
@@ -73,13 +72,13 @@
     initializeGameHotkeys();
 
     registerGameAction("auto-hide-board", () => {
-      gameSettingsStore.toggleAutoHideBoard();
+      gameSettingsState.toggleAutoHideBoard();
     });
     registerGameAction("toggle-block-mode", () => {
-      gameSettingsStore.toggleBlockMode();
+      gameSettingsState.toggleBlockMode();
     });
     registerGameAction("toggle-board", () => {
-      gameSettingsStore.toggleShowBoard();
+      gameSettingsState.toggleShowBoard();
     });
     registerGameAction("increase-board", () => {
       const currentSize = gameSettingsState.state.boardSize;
@@ -94,14 +93,14 @@
       }
     });
     registerGameAction("toggle-speech", () => {
-      gameSettingsStore.toggleSpeech();
+      gameSettingsState.toggleSpeech();
     });
 
     if (import.meta.env.DEV || testModeState.state.isEnabled) {
       (window as any).userActionService = userActionService;
       (window as any).gameModeService = gameModeService;
-      (window as any).appSettingsStore = appSettingsStore;
-      (window as any).gameSettingsStore = gameSettingsStore;
+      (window as any).appSettingsState = appSettingsState;
+      (window as any).gameSettingsState = gameSettingsState;
     }
     animationService.initialize();
 

@@ -1,7 +1,6 @@
 /**
  * @file Preset configurations for game modes.
  * @description Contains all preset definitions for different game modes.
- * Extracted from gameSettingsStore.ts to reduce file size.
  */
 
 import type { GameModePreset, GameSettingsState } from './gameSettingsTypes';

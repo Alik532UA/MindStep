@@ -3,7 +3,7 @@ import type { Player } from '$lib/models/player';
 import { logService } from '$lib/services/logService';
 import { gameService } from '$lib/services/gameService';
 import { createOnlinePlayers } from '$lib/utils/playerFactory';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
@@ -135,7 +135,7 @@ export class OnlineGameMode extends BaseGameMode {
   private applyRoomSettings() {
     if (this.roomData && this.roomData.settings) {
       this.isApplyingRemoteState = true;
-      gameSettingsStore.updateSettings({
+      gameSettingsState.updateSettings({
         ...this.roomData.settings,
         settingsLocked: this.roomData.settingsLocked
       });
@@ -291,7 +291,7 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   private applyLocalSettings() {
-    gameSettingsStore.updateSettings({
+    gameSettingsState.updateSettings({
       speechRate: 1.6,
       shortSpeech: true,
       speechFor: {

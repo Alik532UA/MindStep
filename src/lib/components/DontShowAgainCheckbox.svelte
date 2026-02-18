@@ -1,17 +1,25 @@
 <script lang="ts">
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
   import { logService } from "$lib/services/logService.js";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import hotkeyService from "$lib/services/hotkeyService";
 
-  export let tid = "";
-  export let modalType: "gameMode" | "expertMode" = "gameMode";
-  export let scope: string;
+  interface Props {
+    tid?: string;
+    modalType?: "gameMode" | "expertMode";
+    scope: string;
+  }
 
-  let dontShowAgain = false;
-  let inputEl: HTMLInputElement | null = null;
+  let { 
+    tid = "", 
+    modalType = "gameMode", 
+    scope 
+  }: Props = $props();
+
+  let dontShowAgain = $state(false);
+  let inputEl: HTMLInputElement | null = $state(null);
 
   function handleCheckboxChange(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
@@ -20,20 +28,22 @@
         `[DontShowAgainCheckbox] handleCheckboxChange called with checked: ${input.checked}`,
       );
       if (modalType === "gameMode") {
-        gameSettingsStore.updateSettings({ showGameModeModal: !input.checked });
+        gameSettingsState.update((s) => ({ ...s, showGameModeModal: !input.checked }));
       } else if (modalType === "expertMode") {
-        gameSettingsStore.updateSettings({
+        gameSettingsState.update((s) => ({
+          ...s,
           showDifficultyWarningModal: !input.checked,
-        });
+        }));
       }
     }
   }
 
   onMount(() => {
+    const settings = gameSettingsState.state;
     if (modalType === "gameMode") {
-      dontShowAgain = !$gameSettingsStore.showGameModeModal;
+      dontShowAgain = !settings.showGameModeModal;
     } else if (modalType === "expertMode") {
-      dontShowAgain = !$gameSettingsStore.showDifficultyWarningModal;
+      dontShowAgain = !settings.showDifficultyWarningModal;
     }
     logService.ui(
       `[DontShowAgainCheckbox] onMount. dontShowAgain is ${dontShowAgain}`,
@@ -58,7 +68,7 @@
         <input
           type="checkbox"
           bind:checked={dontShowAgain}
-          on:change={handleCheckboxChange}
+          onchange={handleCheckboxChange}
           bind:this={inputEl}
         />
         <span class="slider"></span>

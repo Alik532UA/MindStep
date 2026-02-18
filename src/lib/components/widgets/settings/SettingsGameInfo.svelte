@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+    import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
+
+    const settings = $derived(gameSettingsState.state);
 </script>
 
 <h3
@@ -19,23 +21,23 @@
         {
             value: "hidden",
             label: $t("settings.gameInfoWidget.hidden"),
-            active: $gameSettingsStore.showGameInfoWidget === "hidden",
+            active: settings.showGameInfoWidget === "hidden",
             dataTestId: "settings-expander-game-info-widget-hidden-btn",
-            onClick: () => gameSettingsStore.setGameInfoWidgetState("hidden"),
+            onClick: () => gameSettingsState.update(s => ({ ...s, showGameInfoWidget: "hidden" })),
         },
         {
             value: "shown",
             label: $t("settings.gameInfoWidget.shown"),
-            active: $gameSettingsStore.showGameInfoWidget === "shown",
+            active: settings.showGameInfoWidget === "shown",
             dataTestId: "settings-expander-game-info-widget-shown-btn",
-            onClick: () => gameSettingsStore.setGameInfoWidgetState("shown"),
+            onClick: () => gameSettingsState.update(s => ({ ...s, showGameInfoWidget: "shown" })),
         },
         {
             value: "compact",
             label: $t("settings.gameInfoWidget.compact"),
-            active: $gameSettingsStore.showGameInfoWidget === "compact",
+            active: settings.showGameInfoWidget === "compact",
             dataTestId: "settings-expander-game-info-widget-compact-btn",
-            onClick: () => gameSettingsStore.setGameInfoWidgetState("compact"),
+            onClick: () => gameSettingsState.update(s => ({ ...s, showGameInfoWidget: "compact" })),
         },
     ]}
 />

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+    import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { userActionService } from "$lib/services/userActionService";
     import { logService } from "$lib/services/logService";
     import { modalStore } from "$lib/stores/modalStore";
@@ -10,7 +10,7 @@
     import ToggleButton from "$lib/components/ToggleButton.svelte";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
 
-    $: speechEnabled = $gameSettingsStore.speechEnabled;
+    let speechEnabled = $derived(gameSettingsState.state.speechEnabled);
 
     function openVoiceSettings(e: MouseEvent) {
         logService.action('Click: "Voice Settings" (SettingsAudio)');

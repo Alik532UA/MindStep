@@ -1,5 +1,5 @@
-import { appSettingsStore } from "$lib/stores/appSettingsStore";
-import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
+import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 import { settingsPersistenceService } from "$lib/services/SettingsPersistenceService";
 import { debounce } from "$lib/utils/debounce";
 import { initializeI18n } from "$lib/i18n/init.js";
@@ -17,44 +17,34 @@ const APP_VERSION_KEY = "app_version";
 const VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 class AppInitializationService {
-    private unsubscribeGameSettings: (() => void) | null = null;
     private versionCheckIntervalId: any = null;
 
     public initialize() {
         logService.init("[AppInitializationService] Starting initialization...");
 
-        // 1. Initialize app settings (theme, language)
-        appSettingsStore.init();
-
-        // 2. Initialize game settings
+        // 1. Initialize game settings
         // Priority: URL > LocalStorage > Defaults
         const loadedGameSettings = settingsPersistenceService.load();
         const urlParams = urlSyncService.getParamsFromUrl();
         
         const finalSettings = { ...loadedGameSettings, ...urlParams };
-        gameSettingsStore.set(finalSettings);
+        gameSettingsState.state = finalSettings;
 
-        // 3. Subscribe to game settings changes to persist them
-        const debouncedSave = debounce(settingsPersistenceService.save, 300);
-        this.unsubscribeGameSettings = gameSettingsStore.subscribe((settings) => {
-            debouncedSave(settings);
-        });
-
-        // 4. Initialize internationalization
+        // 3. Initialize internationalization
         initializeI18n();
 
-        // 5. Initialize other services
+        // 4. Initialize other services
         initializeTestModeSync();
         rewardsService.init();
         animationService.initialize();
 
-        // 6. Check for updates
+        // 5. Check for updates
         this.checkForUpdates();
         this.startPeriodicVersionCheck();
 
-        // 7. Expose debug tools in DEV
+        // 6. Expose debug tools in DEV
         if (import.meta.env.DEV) {
-            (window as any).appSettingsStore = appSettingsStore;
+            (window as any).appSettingsState = appSettingsState;
         }
 
         // Remove preload class
@@ -66,9 +56,6 @@ class AppInitializationService {
     }
 
     public cleanup() {
-        if (this.unsubscribeGameSettings) {
-            this.unsubscribeGameSettings();
-        }
         this.stopPeriodicVersionCheck();
     }
 

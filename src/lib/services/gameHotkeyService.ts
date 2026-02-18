@@ -1,5 +1,6 @@
 import { get } from 'svelte/store';
-import { gameSettingsStore, type KeybindingAction } from '../stores/gameSettingsStore';
+import { gameSettingsState } from '../stores/gameSettingsState.svelte';
+import type { KeybindingAction } from '../stores/gameSettingsTypes';
 import hotkeyService from './hotkeyService';
 import { logService } from './logService';
 import { showArrowKeyHintModal } from './arrowKeyHintService';
@@ -30,7 +31,7 @@ function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
                 onClick: () => {
                     logService.action(`[gameHotkeyService] User resolved conflict for '${key}'. Chose action: ${action}`);
 
-                    const settings = get(gameSettingsStore);
+                    const settings = gameSettingsState.state;
                     const newKeybindings = { ...settings.keybindings };
 
                     actions.forEach(conflictingAction => {
@@ -42,7 +43,7 @@ function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
                         }
                     });
 
-                    gameSettingsStore.updateSettings({
+                    gameSettingsState.updateSettings({
                         keybindings: newKeybindings,
                         keyConflictResolution: { ...settings.keyConflictResolution, [key]: action }
                     });
@@ -69,7 +70,7 @@ export function initializeGameHotkeys() {
         unsubscribeGameSettings();
     }
 
-    unsubscribeGameSettings = gameSettingsStore.subscribe(settings => {
+    unsubscribeGameSettings = gameSettingsState.subscribe(settings => {
         const currentKeybindingsJson = JSON.stringify(settings.keybindings);
         const currentConflictResolutionJson = JSON.stringify(settings.keyConflictResolution);
         const stateKey = `${currentKeybindingsJson}|${currentConflictResolutionJson}`;

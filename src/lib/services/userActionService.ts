@@ -4,7 +4,7 @@ import { gameModeService } from './gameModeService';
 import { logService } from './logService';
 import type { Direction } from '$lib/utils/gameUtils';
 import { navigationService } from './navigationService';
-import { gameSettingsStore, type GameModePreset } from '$lib/stores/gameSettingsStore.js';
+import type { GameModePreset } from '$lib/stores/gameSettingsTypes';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { endGameService } from './endGameService';
 import { boardState } from '$lib/stores/boardState.svelte';
@@ -130,7 +130,7 @@ export const userActionService = {
       } else {
         gameService.initializeNewGame({ size: newSize });
       }
-      gameSettingsStore.updateSettings({ boardSize: newSize });
+      gameSettingsState.updateSettings({ boardSize: newSize });
     } else {
       modalService.showBoardResizeModal(newSize);
     }
@@ -173,7 +173,7 @@ export const userActionService = {
     } else {
       gameService.initializeNewGame({ size: newSize });
     }
-    gameSettingsStore.updateSettings({ boardSize: newSize });
+    gameSettingsState.updateSettings({ boardSize: newSize });
   },
 
   async requestReplay(): Promise<void> {
@@ -279,15 +279,15 @@ export const userActionService = {
   },
 
   async toggleSpeech(): Promise<void> {
-    gameSettingsStore.toggleSpeech();
+    gameSettingsState.toggleSpeech();
   },
 
   resetKeybindings(): void {
-    gameSettingsStore.resetKeybindings();
+    gameSettingsState.resetKeybindings();
   },
 
   setGameModePreset(preset: GameModePreset): void {
-    gameSettingsStore.applyPreset(preset);
+    gameSettingsState.applyPreset(preset);
   },
 
   navigateToGame(): void {

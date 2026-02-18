@@ -19,9 +19,9 @@ test.describe('Модальне вікно вибору режиму гри', { 
     // 2. Set up the specific state for THIS test
     // Вмикаємо тестовий режим програмно
     await page.evaluate(() => {
-      const appSettingsStore = (window as any).appSettingsStore;
-      if (appSettingsStore) {
-        appSettingsStore.updateSettings({ testMode: true });
+      const appSettingsState = (window as any).appSettingsState;
+      if (appSettingsState) {
+        appSettingsState.updateSettings({ testMode: true });
       }
     });
 

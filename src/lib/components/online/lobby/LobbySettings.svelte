@@ -2,7 +2,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import type { Room } from "$lib/types/online";
-    import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
+    import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 
     // FIX: Import decomposed components
     import LobbyParamControls from "./LobbyParamControls.svelte";

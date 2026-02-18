@@ -1,6 +1,6 @@
 <script lang="ts">
   import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils";
-  import type { GameSettingsState } from "$lib/stores/gameSettingsStore";
+  import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 
   interface Props {
     boardSize: number;

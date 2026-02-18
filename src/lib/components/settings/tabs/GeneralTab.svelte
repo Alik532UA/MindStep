@@ -1,9 +1,6 @@
 <script lang="ts">
-  import { appSettingsStore } from "$lib/stores/appSettingsStore";
-  import {
-    gameSettingsStore,
-    type GameSettingsState,
-  } from "$lib/stores/gameSettingsStore";
+  import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { logService } from "$lib/services/logService";
   import { clearCache } from "$lib/utils/cacheManager";
   import { t } from "$lib/i18n/typedI18n";
@@ -14,12 +11,12 @@
   import ToggleButton from "$lib/components/ToggleButton.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-  let settings = $derived($appSettingsStore);
-  let gameSettings = $derived($gameSettingsStore);
+  const settings = $derived(appSettingsState.state);
+  const gameSettings = $derived(gameSettingsState.state);
 
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
-    appSettingsStore.updateSettings({ language: lang });
+    appSettingsState.updateSettings({ language: lang });
     localStorage.setItem("language", lang);
     locale.set(lang);
   }
@@ -29,16 +26,15 @@
     theme: "light" | "dark",
   ) {
     logService.ui(`Зміна теми: ${style}, ${theme}`);
-    appSettingsStore.updateSettings({ style, theme });
+    appSettingsState.updateSettings({ style, theme });
   }
 
   function toggleSetting(name: string) {
-    const key = name as keyof GameSettingsState;
-    gameSettingsStore.updateSettings({ [key]: !gameSettings[key] });
+    gameSettingsState.update((s) => ({ ...s, [name]: !s[name as keyof typeof s] }));
   }
 
   function resetSettings() {
-    gameSettingsStore.resetSettings();
+    gameSettingsState.reset();
   }
 
   function handleKeepAppearance() {

@@ -1,20 +1,18 @@
 <script lang="ts">
   import { t } from "$lib/i18n/typedI18n";
   import type { TranslationKey } from "$lib/types/i18n";
-  import {
-    gameSettingsStore,
-    type KeybindingAction,
-  } from "$lib/stores/gameSettingsStore";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
+  import type { KeybindingAction } from "$lib/stores/gameSettingsTypes";
   import { onMount } from "svelte";
   import { userActionService } from "$lib/services/userActionService";
-  import { isModalOpen } from "$lib/stores/isModalOpenStore";
-  import { get } from "svelte/store";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
   import KeybindingButton from "./KeybindingButton.svelte";
   import { actionGroups } from "$lib/config/hotkeyConfig";
 
   let listeningFor = $state<{ action: KeybindingAction; index: number } | null>(null);
 
-  let keybindings = $derived($gameSettingsStore.keybindings);
+  const settings = $derived(gameSettingsState.state);
+  let keybindings = $derived(settings.keybindings);
 
   let conflicts = $derived((() => {
     const counts: Record<string, number> = {};
@@ -37,15 +35,15 @@
   }
 
   function removeKey(action: KeybindingAction, index: number) {
-    const newKeybindings = { ...get(gameSettingsStore).keybindings };
+    const newKeybindings = { ...settings.keybindings };
     const updatedKeys = [...(newKeybindings[action] || [])];
     updatedKeys.splice(index, 1);
     newKeybindings[action] = updatedKeys;
-    gameSettingsStore.updateSettings({ keybindings: newKeybindings });
+    gameSettingsState.update((s) => ({ ...s, keybindings: newKeybindings }));
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (get(isModalOpen)) return;
+    if (modalStateRune.state.isOpen) return;
     if (listeningFor) {
       event.preventDefault();
       if (event.code === "Escape") {
@@ -53,7 +51,7 @@
         return;
       }
       const { action, index } = listeningFor;
-      const newKeybindings = { ...get(gameSettingsStore).keybindings };
+      const newKeybindings = { ...settings.keybindings };
       const keysForAction = [...(newKeybindings[action] || [])];
       if (index !== -1) {
         keysForAction[index] = event.code;
@@ -61,7 +59,7 @@
         keysForAction.push(event.code);
       }
       newKeybindings[action] = keysForAction;
-      gameSettingsStore.updateSettings({ keybindings: newKeybindings });
+      gameSettingsState.update((s) => ({ ...s, keybindings: newKeybindings }));
       listeningFor = null;
     }
   }

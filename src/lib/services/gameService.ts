@@ -15,7 +15,6 @@ import { getRandomUnusedColor } from '$lib/utils/playerUtils';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { initialUIState, type UiState } from '$lib/types/uiState';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 export const gameService = {
   initializeNewGame(config: {
@@ -101,7 +100,7 @@ export const gameService = {
 
     gameOverState.resetGameOverState();
 
-    gameSettingsStore.updateSettings({
+    gameSettingsState.updateSettings({
       showBoard: true,
       showPiece: true,
       showMoves: true

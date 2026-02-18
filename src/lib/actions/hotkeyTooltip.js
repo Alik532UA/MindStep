@@ -1,6 +1,5 @@
 import { tooltipStore } from '$lib/stores/tooltipStore';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore.js';
-import { get } from 'svelte/store';
+import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { logService } from '$lib/services/logService.js';
 
 /**
@@ -44,7 +43,7 @@ function formatHotkeys(keys, title) {
 }
 
 /**
- * @typedef {string | {key: string, title?: string} | {action: import('$lib/stores/gameSettingsStore.js').KeybindingAction, title?: string}} HotkeyTooltipParam
+ * @typedef {string | {key: string, title?: string} | {action: import('$lib/stores/gameSettingsTypes').KeybindingAction, title?: string}} HotkeyTooltipParam
  */
 
 /**
@@ -63,11 +62,11 @@ export function hotkeyTooltip(node, param) {
 
   /** @param {HotkeyTooltipParam} newParam */
   function updateTooltipContent(newParam) {
-    const settings = get(gameSettingsStore);
+    const settings = gameSettingsState.state;
     let keys, title;
 
     if (typeof newParam === 'string') {
-      keys = settings.keybindings[/** @type {import('$lib/stores/gameSettingsStore.js').KeybindingAction} */ (newParam)];
+      keys = settings.keybindings[/** @type {import('$lib/stores/gameSettingsTypes').KeybindingAction} */ (newParam)];
       title = undefined;
     } else if (newParam && typeof newParam === 'object') {
       if ('key' in newParam && newParam.key) {
@@ -84,10 +83,10 @@ export function hotkeyTooltip(node, param) {
 
   updateTooltipContent(param);
 
-  const unsubscribe = gameSettingsStore.subscribe(settings => {
+  const unsubscribe = gameSettingsState.subscribe(settings => {
     let keys, title;
     if (typeof param === 'string') {
-      keys = settings.keybindings[/** @type {import('$lib/stores/gameSettingsStore.js').KeybindingAction} */ (param)];
+      keys = settings.keybindings[/** @type {import('$lib/stores/gameSettingsTypes').KeybindingAction} */ (param)];
       title = undefined;
     } else if (param && typeof param === 'object') {
       if ('key' in param && param.key) {
@@ -124,7 +123,7 @@ export function hotkeyTooltip(node, param) {
 
   return {
     /**
-     * @param {import('$lib/stores/gameSettingsStore.js').KeybindingAction | {key: string, title?: string} | string} newParam
+     * @param {import('$lib/stores/gameSettingsTypes').KeybindingAction | {key: string, title?: string} | string} newParam
      */
     update(newParam) {
       param = newParam;

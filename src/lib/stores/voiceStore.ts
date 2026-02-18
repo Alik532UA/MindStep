@@ -7,7 +7,7 @@ import { writable, get } from 'svelte/store';
 import { loadAndGetVoices, filterVoicesByLang } from '$lib/services/speechService';
 import { locale } from 'svelte-i18n';
 import { logService } from '$lib/services/logService';
-import { gameSettingsStore } from './gameSettingsStore';
+import { gameSettingsState } from './gameSettingsState.svelte';
 
 /**
  * Тип голосу.
@@ -54,9 +54,9 @@ export async function initializeVoices(): Promise<void> {
 
 availableVoices.subscribe(voices => {
     if (Array.isArray(voices) && voices.length > 0) {
-        const settings = get(gameSettingsStore);
+        const settings = gameSettingsState.state;
         if (!settings.selectedVoiceURI) {
-            gameSettingsStore.updateSettings({ selectedVoiceURI: voices[0].voiceURI });
+            gameSettingsState.updateSettings({ selectedVoiceURI: voices[0].voiceURI });
             logService.ui(`Default voice reactively selected: ${voices[0].name}`);
         }
     }

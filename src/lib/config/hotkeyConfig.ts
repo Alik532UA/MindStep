@@ -1,4 +1,4 @@
-import type { KeybindingAction } from "$lib/stores/gameSettingsStore";
+import type { KeybindingAction } from "$lib/stores/gameSettingsTypes";
 
 export const actionGroups: { title: string; actions: KeybindingAction[] }[] = [
     {

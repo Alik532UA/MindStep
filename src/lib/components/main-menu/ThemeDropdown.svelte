@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { appSettingsStore } from "$lib/stores/appSettingsStore.js";
+    import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
     import { logService } from "$lib/services/logService.js";
     import { t } from "$lib/i18n/typedI18n";
     import type { TranslationKey } from "$lib/types/i18n";
@@ -12,7 +12,7 @@
         theme: "light" | "dark",
     ) {
         logService.action(`Click: "Тема: ${style} ${theme}" (ThemeDropdown)`);
-        appSettingsStore.updateSettings({ style, theme });
+        appSettingsState.updateSettings({ style, theme });
         onClose();
     }
 

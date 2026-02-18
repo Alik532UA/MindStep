@@ -37,8 +37,8 @@ graph TD
 ### Налаштування
 | Файл | Призначення | SSoT для |
 |:-----|:------------|:---------|
-| `gameSettingsStore.ts` | Налаштування гри | Розмір дошки, Block Mode, голос |
-| `appSettingsStore.ts` | Налаштування додатку | Мова, тема |
+| `gameSettingsState.svelte.ts` | Налаштування гри | Розмір дошки, Block Mode, голос (Runes) |
+| `appSettingsState.svelte.ts` | Налаштування додатку | Мова, тема (Runes) |
 
 ### Похідний стан (Derived)
 | Файл | Призначення |

@@ -7,7 +7,6 @@
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import { speakTestPhrase } from "$lib/services/speechService";
   import { logService } from "$lib/services/logService.js";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
 
   // Визначаємо, чи ми в онлайн режимі
   let isOnlineMode = $derived(uiState.state.intendedGameType === "online");
@@ -18,7 +17,7 @@
     active: gameSettingsState.state.speechRate === rate,
     onClick: () => {
       logService.ui(`Speech rate changed to ${rate}`);
-      gameSettingsStore.updateSettings({ speechRate: rate });
+      gameSettingsState.updateSettings({ speechRate: rate });
       speakTestPhrase();
     },
     dataTestId: `speech-rate-${rate}-btn`,
@@ -31,7 +30,7 @@
       active: gameSettingsState.state.speechOrder === "dist_dir",
       onClick: () => {
         logService.ui("Speech order changed to dist_dir");
-        gameSettingsStore.updateSettings({ speechOrder: "dist_dir" });
+        gameSettingsState.updateSettings({ speechOrder: "dist_dir" });
       },
       dataTestId: "speech-order-dist-dir-btn",
     },
@@ -40,7 +39,7 @@
       active: gameSettingsState.state.speechOrder === "dir_dist",
       onClick: () => {
         logService.ui("Speech order changed to dir_dist");
-        gameSettingsStore.updateSettings({ speechOrder: "dir_dist" });
+        gameSettingsState.updateSettings({ speechOrder: "dir_dist" });
       },
       dataTestId: "speech-order-dir-dist-btn",
     },
@@ -54,7 +53,7 @@
           active: gameSettingsState.state.speechFor.onlineMyMove,
           onClick: () => {
             logService.ui("Speak for MY move toggled");
-            gameSettingsStore.updateSettings({
+            gameSettingsState.updateSettings({
               speechFor: {
                 ...gameSettingsState.state.speechFor,
                 onlineMyMove: !gameSettingsState.state.speechFor.onlineMyMove,
@@ -68,7 +67,7 @@
           active: gameSettingsState.state.speechFor.onlineOpponentMove,
           onClick: () => {
             logService.ui("Speak for OPPONENT move toggled");
-            gameSettingsStore.updateSettings({
+            gameSettingsState.updateSettings({
               speechFor: {
                 ...gameSettingsState.state.speechFor,
                 onlineOpponentMove:
@@ -85,7 +84,7 @@
           active: gameSettingsState.state.speechFor.player,
           onClick: () => {
             logService.ui("Speak for player toggled");
-            gameSettingsStore.updateSettings({
+            gameSettingsState.updateSettings({
               speechFor: {
                 ...gameSettingsState.state.speechFor,
                 player: !gameSettingsState.state.speechFor.player,
@@ -99,7 +98,7 @@
           active: gameSettingsState.state.speechFor.computer,
           onClick: () => {
             logService.ui("Speak for computer toggled");
-            gameSettingsStore.updateSettings({
+            gameSettingsState.updateSettings({
               speechFor: {
                 ...gameSettingsState.state.speechFor,
                 computer: !gameSettingsState.state.speechFor.computer,
@@ -138,7 +137,7 @@
     checked={gameSettingsState.state.shortSpeech}
     ontoggle={() => {
       logService.ui("Short speech toggled");
-      gameSettingsStore.updateSettings({
+      gameSettingsState.updateSettings({
         shortSpeech: !gameSettingsState.state.shortSpeech,
       });
     }}
@@ -152,7 +151,7 @@
     checked={gameSettingsState.state.speakModalTitles}
     ontoggle={() => {
       logService.ui("Speak modal titles toggled");
-      gameSettingsStore.updateSettings({
+      gameSettingsState.updateSettings({
         speakModalTitles: !gameSettingsState.state.speakModalTitles,
       });
     }}

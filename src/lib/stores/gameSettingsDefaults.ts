@@ -1,7 +1,7 @@
 // src/lib/stores/gameSettingsDefaults.ts
 /**
  * @file Default values for game settings.
- * @description Contains all default values for the gameSettingsStore.
+ * @description Contains all default values for game settings.
  * Extracted to reduce file size and improve maintainability.
  */
 

@@ -9,12 +9,14 @@
     replaySegments as calculateReplaySegments,
     replayBlockModeEnabled as calculateReplayBlockModeEnabled,
   } from "$lib/utils/replay.js";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils.ts";
   import { onMount } from "svelte";
   import { replayAutoPlayStore } from "$lib/stores/replayAutoPlayStore.js";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
+
+  const settings = $derived(gameSettingsState.state);
 
   // Props
   let {
@@ -91,7 +93,7 @@
               $replayCellVisitCounts,
               {
                 blockModeEnabled: $replayBlockModeEnabled,
-                blockOnVisitCount: $gameSettingsStore.blockOnVisitCount,
+                blockOnVisitCount: settings.blockOnVisitCount,
               },
             )}"
             class:light={(rowIdx + colIdx) % 2 === 0}
@@ -102,7 +104,7 @@
               $replayCellVisitCounts,
               {
                 blockModeEnabled: $replayBlockModeEnabled,
-                blockOnVisitCount: $gameSettingsStore.blockOnVisitCount,
+                blockOnVisitCount: settings.blockOnVisitCount,
               },
             )}
           ></div>

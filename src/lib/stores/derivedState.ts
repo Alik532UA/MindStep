@@ -3,9 +3,7 @@ import { derived } from 'svelte/store';
 import { boardState } from './boardState.svelte';
 import { playerState } from './playerState.svelte';
 import { uiState } from './uiState.svelte';
-import { appSettingsStore } from './appSettingsStore';
 import { timerState } from './timerState.svelte';
-import { languages } from '$lib/constants';
 import { animationState } from './animationState.svelte';
 import { availableMovesState } from './availableMovesState.svelte';
 import { derivedState } from './derivedState.svelte';
@@ -65,10 +63,8 @@ export const distanceRows = derived(availableDistances, $availableDistances => {
 });
 
 export const currentLanguageFlagComponent = derived(
-  appSettingsStore,
-  $appSettingsStore => {
-    return languages.find(lang => lang.code === $appSettingsStore.language)?.component || languages[0].component;
-  }
+  [],
+  () => derivedState.currentLanguageFlagComponent
 );
 
 export const currentPlayer = derived(

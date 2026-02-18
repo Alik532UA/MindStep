@@ -5,7 +5,7 @@
 // вирішуючи проблему "гонки станів" при паралельному виконанні тестів.
 
 import { animationState } from '$lib/stores/animationState.svelte';
-import { appSettingsStore } from '$lib/stores/appSettingsStore';
+import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
 import { availableMovesState } from '$lib/stores/availableMovesState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { gameModeState, initialGameModeState } from '$lib/stores/gameModeState.svelte';
@@ -33,7 +33,7 @@ export function resetAllStores() {
 
   // 2. Скидання стану сторів (через руни)
   animationState.reset();
-  appSettingsStore.reset();
+  appSettingsState.reset();
   availableMovesState.reset();
   boardState.reset();
   gameModeState.state = { ...initialGameModeState };

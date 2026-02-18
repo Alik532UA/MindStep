@@ -93,7 +93,7 @@ speakMove({ direction: 'up', distance: 1 }, 'uk', null);
 | :--- | :--- | :--- |
 | `boardStore` | Bridge / Rune | Стан дошки, позиція фішки, історія ходів. |
 | `playerStore` | Bridge / Rune | Список гравців та поточний хід. |
-| `gameSettingsStore` | Rune | Налаштування гри та пресети складності. |
+| `gameSettingsState` | Rune | Налаштування гри та пресети складності. |
 | `uiStateStore` | Rune | Стан інтерфейсу та завантаження. |
 | `modalStore` | Rune | Стан та вміст поточного модального вікна. |
 

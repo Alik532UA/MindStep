@@ -1,53 +1,63 @@
 <script lang="ts">
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+    import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
-    import { get } from "svelte/store";
 
-    export let isCompetitiveMode = false;
+    interface Props {
+        isCompetitiveMode?: boolean;
+    }
+
+    let { isCompetitiveMode = false }: Props = $props();
+
+    const settings = $derived(gameSettingsState.state);
 
     const toggleFunctions = [
+        // Hidden
         () =>
-            gameSettingsStore.updateSettings({
+            gameSettingsState.update((s) => ({
+                ...s,
                 showBoard: false,
                 showPiece: false,
                 showMoves: false,
-            }),
+            })),
+        // Board Only
         () => {
-            const current = get(gameSettingsStore).showBoard;
-            if (!current) {
-                gameSettingsStore.updateSettings({ showBoard: true });
+            if (!settings.showBoard) {
+                gameSettingsState.update((s) => ({ ...s, showBoard: true }));
             }
         },
+        // With Piece
         () => {
-            const current = get(gameSettingsStore).showPiece;
-            if (current) {
-                gameSettingsStore.updateSettings({
+            if (settings.showPiece) {
+                gameSettingsState.update((s) => ({
+                    ...s,
                     showPiece: false,
                     showMoves: false,
-                });
+                }));
             } else {
-                gameSettingsStore.updateSettings({
+                gameSettingsState.update((s) => ({
+                    ...s,
                     showBoard: true,
                     showPiece: true,
-                });
+                }));
             }
         },
+        // With Moves
         () => {
-            const current = get(gameSettingsStore).showMoves;
-            if (current) {
-                gameSettingsStore.updateSettings({ showMoves: false });
+            if (settings.showMoves) {
+                gameSettingsState.update((s) => ({ ...s, showMoves: false }));
             } else {
-                gameSettingsStore.updateSettings({
+                gameSettingsState.update((s) => ({
+                    ...s,
                     showBoard: true,
                     showPiece: true,
                     showMoves: true,
-                });
+                }));
             }
         },
     ];
 
-    function getIsActive(i: number, settings: any) {
+    function getIsActive(i: number) {
         switch (i) {
             case 0:
                 return !settings.showBoard;
@@ -72,7 +82,7 @@
         $t("settings.visibility.withMoves"),
     ].map((label, i) => ({
         label,
-        active: getIsActive(i, $gameSettingsStore),
+        active: getIsActive(i),
         dataTestId: `settings-expander-visibility-btn-${i}`,
         onClick: toggleFunctions[i],
     }))}

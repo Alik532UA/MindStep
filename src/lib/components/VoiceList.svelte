@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { onMount } from "svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import {
     availableVoices,
     isLoading,
@@ -10,11 +10,8 @@
   import { get } from "svelte/store";
   import { speakTestPhrase } from "$lib/services/speechService";
 
-  let selectedVoiceURI = "";
-
-  const unsubscribe = gameSettingsStore.subscribe((settings) => {
-    selectedVoiceURI = settings.selectedVoiceURI ?? "";
-  });
+  const settings = $derived(gameSettingsState.state);
+  let selectedVoiceURI = $derived(settings.selectedVoiceURI ?? "");
 
   onMount(() => {
     if (get(availableVoices).length === 0) {
@@ -22,14 +19,8 @@
     }
   });
 
-  onDestroy(() => {
-    if (unsubscribe) {
-      unsubscribe();
-    }
-  });
-
   function selectVoice(uri: string) {
-    gameSettingsStore.updateSettings({ selectedVoiceURI: uri });
+    gameSettingsState.updateSettings({ selectedVoiceURI: uri });
     speakTestPhrase();
   }
 </script>
@@ -45,7 +36,7 @@
       <button
         class="voice-selection-button"
         class:active={selectedVoiceURI === voice.voiceURI}
-        on:click={() => selectVoice(voice.voiceURI)}
+        onclick={() => selectVoice(voice.voiceURI)}
         data-testid="voice-selection-button-{voice.voiceURI}"
       >
         {voice.name} ({voice.lang})

@@ -14,7 +14,6 @@ import { resetPlayerScore, createDefaultLocalPlayers } from '$lib/utils/playerFa
 import type { ScoreChangesData } from '$lib/types/gameMove';
 import { BASE_TURN_DURATION, DEV_TIME_MULTIPLIER, COMPUTER_TURN_DELAY } from '$lib/config/timeConstants';
 import { dev } from '$app/environment';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 export class LocalGameMode extends BaseGameMode {
   constructor() {
@@ -37,7 +36,7 @@ export class LocalGameMode extends BaseGameMode {
       this.turnDuration = dev ? BASE_TURN_DURATION * DEV_TIME_MULTIPLIER : BASE_TURN_DURATION;
     }
 
-    gameSettingsStore.updateSettings({
+    gameSettingsState.updateSettings({
       speechRate: 1.6,
       shortSpeech: true,
       speechFor: {

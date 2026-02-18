@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { appSettingsStore } from "$lib/stores/appSettingsStore.js";
+    import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
     import { logService } from "$lib/services/logService.js";
     import { languages } from "$lib/constants";
 
@@ -7,7 +7,7 @@
 
     function selectLang(lang: "uk" | "en" | "crh" | "nl") {
         logService.action(`Click: "Мова: ${lang}" (LanguageDropdown)`);
-        appSettingsStore.updateSettings({ language: lang });
+        appSettingsState.updateSettings({ language: lang });
         onClose();
     }
 </script>

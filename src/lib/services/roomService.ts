@@ -1,7 +1,7 @@
 import { logService } from './logService';
 import type { Room, RoomSummary, OnlinePlayer } from '$lib/types/online';
-import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
-import { defaultGameSettings } from '$lib/stores/gameSettingsStore';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
+import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';
 import { v4 as uuidv4 } from 'uuid';
 import { chatService, type ChatMessage } from './chatService';
 import { roomSessionService } from './room/roomSessionService';

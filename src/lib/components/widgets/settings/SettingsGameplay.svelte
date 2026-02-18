@@ -12,7 +12,6 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
     import { showModal, closeModal } from "$lib/stores/modalStore";
 
     interface Props {
@@ -84,7 +83,7 @@
                             variant: "primary",
                             isHot: true,
                             onClick: () => {
-                                gameSettingsStore.updateSettings({
+                                gameSettingsState.updateSettings({
                                     blockOnVisitCount: count,
                                 });
                                 closeModal();
@@ -101,7 +100,7 @@
                 closeOnOverlayClick: true,
             });
         } else {
-            gameSettingsStore.updateSettings({ blockOnVisitCount: count });
+            gameSettingsState.updateSettings({ blockOnVisitCount: count });
         }
     }
 
@@ -109,7 +108,7 @@
         logService.action(
             'Click: "Автоматично приховувати дошку" (SettingsGameplay)',
         );
-        gameSettingsStore.toggleAutoHideBoard();
+        gameSettingsState.toggleAutoHideBoard();
     }
 </script>
 
@@ -149,7 +148,7 @@
         checked={gameSettingsState.state.blockModeEnabled}
         ontoggle={isCompetitiveMode
             ? () => {}
-            : gameSettingsStore.toggleBlockMode}
+            : () => gameSettingsState.toggleBlockMode()}
         dataTestId="block-mode-toggle"
     />
 </div>

@@ -17,7 +17,7 @@ import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
-import { appSettingsStore } from '$lib/stores/appSettingsStore';
+import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
 import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
 import { voiceControlService } from '$lib/services/voiceControlService';
 import { GameEngine } from '$lib/logic/GameEngine';
@@ -260,7 +260,7 @@ export abstract class BaseGameMode implements IGameMode {
           type: 'speak_move',
           payload: {
             move: { direction, distance },
-            lang: (appSettingsStore as any).language || 'uk', // appSettingsStore все ще стор
+            lang: appSettingsState.state.language || 'uk',
             voiceURI: settings.selectedVoiceURI,
             onEndCallback,
             force: true

@@ -2,12 +2,12 @@
 
 $outputFile = "bug_context.txt"
 $filesToCollect = @(
-    "src/lib/stores/appSettingsStore.ts",
+    "src/lib/stores/appSettingsState.svelte.ts",
     "src/lib/stores/uiEffectsStore.ts",
     "src/lib/components/widgets/BoardWrapperWidget.svelte",
     "src/lib/components/GameModeModal.svelte",
     "docs/elements/checkbox-auto-hide-board.md",
-    "src/lib/stores/gameState.js"
+    "src/lib/stores/boardState.svelte.ts"
 )
 
 # Clear the output file if it exists

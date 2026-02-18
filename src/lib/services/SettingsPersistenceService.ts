@@ -1,6 +1,7 @@
 // src/lib/services/SettingsPersistenceService.ts
 import { logService } from './logService';
-import { defaultGameSettings, type GameSettingsState } from '../stores/gameSettingsStore.js';
+import { defaultGameSettings } from '../stores/gameSettingsDefaults';
+import type { GameSettingsState } from '../stores/gameSettingsTypes';
 import { GameSettingsSchema } from '../schemas/gameSettingsSchema';
 
 const isBrowser = typeof window !== 'undefined';

@@ -9,7 +9,7 @@ import { gameEventBus } from '$lib/services/gameEventBus';
 import { modalService } from '$lib/services/modalService';
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { speakMove } from '$lib/services/speechService';
-import { appSettingsStore, type AppSettingsState } from '$lib/stores/appSettingsStore';
+import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
 import { logService } from '$lib/services/logService';
 import type { SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { t as tStore } from '$lib/i18n/typedI18n';
@@ -93,7 +93,7 @@ export class GameStateReconciler {
         if (movePlayerIndex !== myIndex && settings.speechEnabled && settings.speechFor.onlineOpponentMove) {
             speakMove(
                 { direction: move.direction, distance: move.distance },
-                (appSettingsStore as any).state?.language || 'uk',
+                appSettingsState.state.language || 'uk',
                 settings.selectedVoiceURI,
                 undefined,
                 true

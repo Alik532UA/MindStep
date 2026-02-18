@@ -1,4 +1,4 @@
-import type { GameSettingsState } from '$lib/stores/gameSettingsStore';
+import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import type { SyncableGameState } from '$lib/sync/gameStateSync.interface';
 
 export interface OnlinePlayer {

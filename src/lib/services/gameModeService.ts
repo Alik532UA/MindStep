@@ -11,7 +11,6 @@ import { OnlineGameMode } from '$lib/gameModes/OnlineGameMode'; // Import Online
 import { logService } from './logService';
 import { timerState } from '$lib/stores/timerState.svelte';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';
-import { gameSettingsStore } from '$lib/stores/gameSettingsStore';
 
 class GameModeService {
   private modes: Map<string, BaseGameMode> = new Map();
@@ -82,7 +81,7 @@ class GameModeService {
       ];
 
       if (applyPresetSettings && name && allowedPresets.includes(name)) {
-        gameSettingsStore.applyPreset(name as any);
+        gameSettingsState.applyPreset(name as any);
       }
 
       // Передаємо options у метод initialize режиму

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
 
   // FIX: Import decomposed components
   import LocalBoardControls from "./LocalBoardControls.svelte";
   import LocalToggleControls from "./LocalToggleControls.svelte";
 
-  $: settings = $gameSettingsStore;
+  const settings = $derived(gameSettingsState.state);
 </script>
 
 {#if settings}

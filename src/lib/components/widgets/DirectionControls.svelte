@@ -74,7 +74,7 @@
     availableDirections.forEach((dir) => {
       if (dir) {
         registerGameAction(
-          dir as import("$lib/stores/gameSettingsStore").KeybindingAction,
+          dir as import("$lib/stores/gameSettingsTypes").KeybindingAction,
           () => handleDirection(dir as MoveDirectionType),
         );
       }

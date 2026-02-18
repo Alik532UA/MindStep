@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { gameSettingsStore } from "$lib/stores/gameSettingsStore.js";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { derivedState } from "$lib/stores/derivedState.svelte";
   import { i18nReady } from "$lib/i18n/init.js";
@@ -17,7 +17,8 @@
     type GameInfoContext,
   } from "$lib/services/game-info/gameInfoMessageFactory";
 
-  let isCompact = $derived($gameSettingsStore.showGameInfoWidget === "compact");
+  const settings = $derived(gameSettingsState.state);
+  let isCompact = $derived(settings.showGameInfoWidget === "compact");
 
   let displayMessage = $derived.by(() => {
     const pState = playerState.state;
@@ -33,7 +34,7 @@
       isPlayerTurn: derivedState.isPlayerTurn,
       translate: $t,
       isCompact: isCompact,
-      gameSettings: $gameSettingsStore,
+      gameSettings: settings,
       uiState: uState as any,
     };
 
@@ -55,7 +56,7 @@
 </script>
 
 {#if $i18nReady && playerState.state}
-  {#if $gameSettingsStore.showGameInfoWidget !== "hidden"}
+  {#if settings.showGameInfoWidget !== "hidden"}
     <div
       class="game-info-widget"
       class:compact={isCompact}

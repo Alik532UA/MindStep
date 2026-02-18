@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { gameSettingsStore } from "$lib/stores/gameSettingsStore";
+    import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.js";
     import Stepper from "$lib/components/ui/Stepper.svelte";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
 
-    $: settings = $gameSettingsStore;
+    const settings = $derived(gameSettingsState.state);
     // FIX: Явно витягуємо gameMode для реактивності
-    $: currentMode = settings.gameMode;
+    const currentMode = $derived(settings.gameMode);
 
     // Helper: перевіряє, чи відповідає поточний gameMode legacy пресету
     function isPresetActive(legacyPreset: string, mode: string | null) {
@@ -30,31 +30,31 @@
         );
         const newSize = settings.boardSize + increment;
         if (newSize >= 2 && newSize <= 9) {
-            gameSettingsStore.updateSettings({ boardSize: newSize });
+            gameSettingsState.update((s) => ({ ...s, boardSize: newSize }));
         }
     }
 
     // Формуємо опції для ButtonGroup
-    $: modeOptions = [
+    const modeOptions = $derived([
         {
             label: $t("gameModes.observer"),
             active: isPresetActive("observer", currentMode),
-            onClick: () => gameSettingsStore.applyPreset("observer"),
+            onClick: () => gameSettingsState.applyPreset("observer"),
             dataTestId: "local-setup-mode-observer",
         },
         {
             label: $t("gameModes.experienced"),
             active: isPresetActive("experienced", currentMode),
-            onClick: () => gameSettingsStore.applyPreset("experienced"),
+            onClick: () => gameSettingsState.applyPreset("experienced"),
             dataTestId: "local-setup-mode-experienced",
         },
         {
             label: $t("gameModes.pro"),
             active: isPresetActive("pro", currentMode),
-            onClick: () => gameSettingsStore.applyPreset("pro"),
+            onClick: () => gameSettingsState.applyPreset("pro"),
             dataTestId: "local-setup-mode-pro",
         },
-    ];
+    ]);
 </script>
 
 <div class="settings-list-group">
