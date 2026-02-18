@@ -43,7 +43,7 @@ test.describe('Модальне вікно "Блискучий аналіз"', (
     });
 
     await test.step('Гравець натискає "Ходів немає" та перевіряє модальне вікно "Гру завершено!"', async () => {
-      await setBlockMode(page, BlockModeState.On);
+      await setBlockMode(page, BlockModeState.Off);
       await page.getByTestId('no-moves-btn').click();
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
       await expect(page.getByTestId('game-over-modal-title')).toHaveAttribute('data-i18n-key', 'modal.trainingOverTitle');

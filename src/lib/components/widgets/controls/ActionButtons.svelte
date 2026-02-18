@@ -54,22 +54,20 @@
         {$t("gameControls.confirm")}
     </StyledButton>
 
-    {#if blockModeEnabled}
-        <StyledButton
-            variant="warning"
-            size="large"
-            {disabled}
-            onclick={onnoMoves}
-            tooltip={$t("gameControls.noMovesTitle")}
-            dataTestId="no-moves-btn"
-            style="width: 90%;"
-        >
-            {#snippet icon()}
-                <span><SvgIcons name="no-moves" /></span>
-            {/snippet}
-            {$t("gameControls.noMovesTitle")}
-        </StyledButton>
-    {/if}
+    <StyledButton
+        variant="warning"
+        size="large"
+        {disabled}
+        onclick={onnoMoves}
+        tooltip={$t("gameControls.noMovesTitle")}
+        dataTestId="no-moves-btn"
+        style="width: 90%;"
+    >
+        {#snippet icon()}
+            <span><SvgIcons name="no-moves" /></span>
+        {/snippet}
+        {$t("gameControls.noMovesTitle")}
+    </StyledButton>
 
     {#if !isIos}
         <StyledButton

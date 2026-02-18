@@ -37,6 +37,16 @@ export const urlSyncService = {
         if (block !== null) {
             params.blockModeEnabled = block === 'true' || block === '1';
         }
+
+        const showBoard = url.searchParams.get('board');
+        if (showBoard !== null) {
+            params.showBoard = showBoard === 'true' || showBoard === '1';
+        }
+
+        const autoHide = url.searchParams.get('autohide');
+        if (autoHide !== null) {
+            params.autoHideBoard = autoHide === 'true' || autoHide === '1';
+        }
         
         return params;
     },
@@ -67,6 +77,24 @@ export const urlSyncService = {
             const blockVal = settings.blockModeEnabled ? '1' : '0';
             if (url.searchParams.get('block') !== blockVal) {
                 url.searchParams.set('block', blockVal);
+                changed = true;
+            }
+        }
+
+        // Перевіряємо видимість дошки
+        if (settings.showBoard !== undefined) {
+            const boardVal = settings.showBoard ? '1' : '0';
+            if (url.searchParams.get('board') !== boardVal) {
+                url.searchParams.set('board', boardVal);
+                changed = true;
+            }
+        }
+
+        // Перевіряємо автоприховування
+        if (settings.autoHideBoard !== undefined) {
+            const autoHideVal = settings.autoHideBoard ? '1' : '0';
+            if (url.searchParams.get('autohide') !== autoHideVal) {
+                url.searchParams.set('autohide', autoHideVal);
                 changed = true;
             }
         }

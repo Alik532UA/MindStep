@@ -1,5 +1,6 @@
 import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
 import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
+import { defaultGameSettings } from "$lib/stores/gameSettingsDefaults";
 import { settingsPersistenceService } from "$lib/services/SettingsPersistenceService";
 import { debounce } from "$lib/utils/debounce";
 import { initializeI18n } from "$lib/i18n/init.js";
@@ -27,7 +28,12 @@ class AppInitializationService {
         const loadedGameSettings = settingsPersistenceService.load();
         const urlParams = urlSyncService.getParamsFromUrl();
         
-        const finalSettings = { ...loadedGameSettings, ...urlParams };
+        // ВАЖЛИВО: Починаємо з defaultGameSettings, щоб гарантувати наявність усіх полів
+        const finalSettings = { 
+            ...defaultGameSettings, 
+            ...loadedGameSettings, 
+            ...urlParams 
+        };
         gameSettingsState.state = finalSettings;
 
         // 3. Initialize internationalization
