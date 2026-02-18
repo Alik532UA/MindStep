@@ -1,6 +1,6 @@
 <script lang="ts">
   import GamePageLayout from "$lib/components/layouts/GamePageLayout.svelte";
-  import { WIDGETS } from "$lib/stores/layoutStore";
+  import { WIDGETS } from "$lib/stores/layoutState.svelte";
   import { gameModeService } from "$lib/services/gameModeService";
   import { logService } from "$lib/services/logService";
   import { boardState } from '$lib/stores/boardState.svelte';

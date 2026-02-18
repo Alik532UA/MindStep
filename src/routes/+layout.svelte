@@ -2,7 +2,7 @@
 	import Header from "./Header.svelte";
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
-	import { appVersion } from "$lib/stores/versionStore";
+	import { versionState } from "$lib/stores/versionState.svelte";
 	import { onMount, onDestroy } from "svelte";
 	import { get } from "svelte/store";
 	import { base } from "$app/paths";
@@ -15,10 +15,10 @@
 	import { page } from "$app/stores";
 	import { logService } from "$lib/services/logService.js";
 	import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";
-	import { tooltipStore } from "$lib/stores/tooltipStore";
+	import { tooltipState } from "$lib/stores/tooltipState.svelte";
 	import Tooltip from "$lib/components/Tooltip.svelte";
 	import ModalManager from "$lib/components/ModalManager.svelte";
-	import { testModeStore, toggleTestMode } from "$lib/stores/testModeStore";
+	import { testModeState } from "$lib/stores/testModeState.svelte";
 	import { resetAllStores } from "$lib/services/testingService";
 	import hotkeyService from "$lib/services/hotkeyService";
 	import { i18nReady } from "$lib/i18n/init.js";
@@ -39,7 +39,15 @@
 	import { errorHandlerService } from "$lib/services/errorHandlerService";
 	import { audioService } from "$lib/services/audioService";
 
-	let showUpdateNotice = false;
+	import { untrack } from "svelte";
+
+	interface Props {
+		children?: import("svelte").Snippet;
+	}
+
+	let { children }: Props = $props();
+
+	let showUpdateNotice = $state(false);
 	const APP_VERSION_KEY = "app_version";
 
 	let testModeEnabled = false;
@@ -59,12 +67,12 @@
 		window.addEventListener("click", unlockAudio);
 		window.addEventListener("touchstart", unlockAudio);
 
-		unsubscribeTestMode = testModeStore.subscribe((state) => {
+		unsubscribeTestMode = testModeState.subscribe((state) => {
 			testModeEnabled = state.isEnabled;
 		});
 
 		// Subscribe to version changes to show update notice
-		const unsubscribeVersion = appVersion.subscribe((versionInfo) => {
+		const unsubscribeVersion = versionState.subscribe((versionInfo) => {
 			const localVersion = localStorage.getItem(APP_VERSION_KEY);
 			if (
 				versionInfo.current &&
@@ -75,8 +83,10 @@
 			}
 		});
 
-		if (import.meta.env.DEV) {
-			(window as any).toggleTestMode = toggleTestMode;
+		const isTest = import.meta.env.MODE === 'test' || (typeof window !== 'undefined' && (window as any).__playwright_test__);
+
+		if (import.meta.env.DEV || isTest) {
+			(window as any).toggleTestMode = () => testModeState.toggle();
 			(window as any).resetAllStores = resetAllStores;
 		}
 
@@ -112,11 +122,6 @@
 	onDestroy(() => {
 		if (unsubscribeTestMode) unsubscribeTestMode();
 	});
-
-	// Reactive check for online session on every navigation
-	$: if ($page) {
-		checkOnlineSession($page.url.pathname);
-	}
 
 	let isAbandonedModalOpen = false;
 
@@ -179,7 +184,7 @@
 		}
 		modalStateRune.closeModal();
 		logService.ui("[layout] afterNavigate: hiding tooltip");
-		tooltipStore.hide();
+		tooltipState.hide();
 	});
 
 	// --- Menu Logic ---
@@ -245,13 +250,13 @@
 			dataTestId: "dev-menu-modal",
 			props: {
 				onClose: () => modalStateRune.closeModal(),
-				versionNumber: get(appVersion).current,
+				versionNumber: versionState.state.current,
 			},
 			closeOnOverlayClick: true,
 		});
 	}
 
-	$: devMenuItems = $i18nReady
+	const devMenuItems = $derived($i18nReady
 		? [
 				{
 					id: "main-menu-link",
@@ -267,9 +272,9 @@
 				{
 					id: "test-mode-btn",
 					emoji: "gear", // FIX: Changed from 🛠️ to gear
-					onClick: toggleTestMode,
+					onClick: () => testModeState.toggle(),
 					primary: true,
-					isActive: $testModeStore.isEnabled,
+					isActive: testModeState.state.isEnabled,
 				},
 				{
 					id: "dev-menu-modal",
@@ -282,7 +287,7 @@
 					onClick: () => clearCache({ keepAppearance: false }),
 				},
 			]
-		: [];
+		: []);
 </script>
 
 {#if showUpdateNotice}
@@ -293,7 +298,7 @@
 
 <ErrorBoundary>
 	<div class="app">
-		{#if import.meta.env.DEV}
+		{#if import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__)}
 			<FlexibleMenu
 				items={devMenuItems}
 				position="left"
@@ -304,13 +309,13 @@
 
 		<main>
 			{#if $i18nReady}
-				<slot />
+				{@render children?.()}
 			{:else}
 				<div class="loading-screen">Loading...</div>
 			{/if}
 		</main>
 
-		{#if import.meta.env.DEV}
+		{#if import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__)}
 			<FlexibleMenu
 				items={menuItems}
 				position="right"
@@ -321,18 +326,18 @@
 		{/if}
 	</div>
 
-	{#if $tooltipStore.isVisible}
+	{#if tooltipState.state.isVisible}
 		<Tooltip
-			content={$tooltipStore.content}
-			x={$tooltipStore.x}
-			y={$tooltipStore.y}
+			content={tooltipState.state.content}
+			x={tooltipState.state.x}
+			y={tooltipState.state.y}
 		/>
 	{/if}
 	<Modal />
 	<ModalManager />
 	<ToastContainer />
 
-	{#if $testModeStore.isEnabled}
+	{#if testModeState.state.isEnabled}
 		<div
 			class="test-mode-container"
 			data-testid="test-mode-widget-container"

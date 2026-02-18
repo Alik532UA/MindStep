@@ -7,7 +7,7 @@
   import { onMount, onDestroy, type Snippet } from "svelte";
   import PlayerColorProvider from "$lib/components/PlayerColorProvider.svelte";
   import hotkeyService from "$lib/services/hotkeyService";
-  import { gameStore } from "$lib/stores/gameStore";
+  import { gameState } from "$lib/stores/gameState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import { boardState } from '$lib/stores/boardState.svelte';
   import { enableAllGameCheckboxesIfNeeded } from "$lib/utils/uiUtils.js";
@@ -41,7 +41,7 @@
     if (activeGameMode) {
       activeGameMode.cleanup();
     }
-    gameStore.reset();
+    gameState.reset();
     uiState.reset();
     boardState.reset();
     hotkeyService.popContext();
