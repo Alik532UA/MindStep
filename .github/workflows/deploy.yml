@@ -3,46 +3,68 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Запускати при пуші в гілку `main`
   push:
     branches:
       - main
-
-  # Дозволяє запускати цей воркфлоу вручну з вкладки Actions
   workflow_dispatch:
 
-# Встановлюємо дозволи для GITHUB_TOKEN, щоб дозволити розгортання на GitHub Pages 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Дозволяємо тільки одне одночасне розгортання, скасовуючи попередні
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm install
-      
+        run: npm ci || npm install
+
+      - name: Run Vitest (Unit Tests)
+        run: npx vitest run
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright (E2E Tests)
+        run: npx playwright test
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
       - name: Build
         run: npm run build
         env:
-          # Передаємо секрети з налаштувань GitHub у змінні середовища під час збірки
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
