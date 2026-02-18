@@ -66,8 +66,6 @@
     isConfirmDisabled || !selectedDirection || !selectedDistance
   );
 
-  let registeredDistances = $state(new Set<number>());
-
   onMount(() => {
     isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -85,30 +83,19 @@
   });
 
   $effect(() => {
-    if (distanceRows && distanceRows.length > 0) {
-      const flatDistances = distanceRows.flat();
-      // Перевіряємо чи змінився набір відстаней
-      const hasChanges = flatDistances.length !== registeredDistances.size || 
-                        flatDistances.some(d => !registeredDistances.has(d));
-      
-      if (hasChanges) {
-        // Очищаємо попередні відстані перед реєстрацією нових
-        registeredDistances.forEach(dist => {
-          hotkeyService.unregister(`game.distance-${dist}`);
-        });
-
-        flatDistances.forEach((dist) => {
-          registerGameAction(`distance-${dist}` as any, () =>
-            handleDistance(dist),
-          );
-        });
-        registeredDistances = new Set(flatDistances);
-      }
-    }
+    // Створюємо локальну копію актуальних дистанцій для цього запуску ефекту
+    const currentDistances = new Set(distanceRows.flat());
+    
+    currentDistances.forEach((dist) => {
+      // @ts-ignore - динамічний тип action
+      registerGameAction(`distance-${dist}`, () => handleDistance(dist));
+    });
 
     return () => {
-      // Cleanup при демонтажі компонента або зміні ефекту
-      registeredDistances.forEach(dist => {
+      // Cleanup використовує ту ж саму локальну копію (closure), 
+      // тому ми точно видалимо те, що додали в цьому циклі.
+      currentDistances.forEach((dist) => {
+        // @ts-ignore
         hotkeyService.unregister(`game.distance-${dist}`);
       });
     };

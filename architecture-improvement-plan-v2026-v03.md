@@ -84,7 +84,8 @@
 | Створення BaseGameController | 100% | Створено базовий та 4 спеціалізовані контролери |
 | Ізоляція animationState | 100% | Перевірено: GameEngine та BaseGameMode не мають імпортів animationState. |
 | URL Sync | 100% | Реалізовано через URLSyncManager.svelte та appInitializationService. |
-| Рефакторинг $effect | 0% | |
+| Рефакторинг $effect | 100% | Виправлено в BoardWrapperWidget (onoutroend) та DirectionControls (cleanup). |
+| Валідація через Zod | 100% | Додано CombinedGameStateSchema та валідацію в OnlineGameMode. |
 
 ---
 *План підготував: Gemini CLI (Svelte 5 Expert)*

@@ -75,15 +75,23 @@
 
   let showHiddenInfoWidget = $state(false);
 
+  // Скидаємо локальний стан, коли дошка з'являється
   $effect(() => {
-    if (!gameSettingsState.state.showBoard && uiState.state.showBoardHiddenInfo) {
-      setTimeout(() => {
-        showHiddenInfoWidget = true;
-      }, 500);
-    } else {
-      showHiddenInfoWidget = false;
+    if (gameSettingsState.state.showBoard) {
+        showHiddenInfoWidget = false;
+        // Також синхронізуємо глобальний стан UI, якщо потрібно
+        if (uiState.state.showBoardHiddenInfo) {
+             uiState.update((s) => ({ ...s, showBoardHiddenInfo: false }));
+        }
     }
   });
+
+  function onBoardOutroEnd() {
+    // Коли дошка повністю зникла, показуємо віджет (якщо це потрібно глобально)
+    if (uiState.state.showBoardHiddenInfo) {
+        showHiddenInfoWidget = true;
+    }
+  }
 
   function onCellRightClick(data: { event: MouseEvent; row: number; col: number }): void {
     const { event, row, col } = data;
@@ -101,12 +109,6 @@
       );
     }
   }
-
-  $effect(() => {
-    if (gameSettingsState.state.showBoard && uiState.state.showBoardHiddenInfo) {
-      uiState.update((s) => ({ ...s, showBoardHiddenInfo: false }));
-    }
-  });
 </script>
 
 {#if bState}
@@ -121,6 +123,7 @@
         tabindex="0"
         aria-label="Ігрове поле"
         transition:slideAndScale={{ duration: 500, easing: quintOut }}
+        onoutroend={onBoardOutroEnd}
         data-testid="board-wrapper"
       >
         <GameBoard

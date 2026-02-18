@@ -29,6 +29,7 @@ import { OnlineStateSynchronizer } from './online/OnlineStateSynchronizer';
 import { OnlinePresenceManager } from './online/OnlinePresenceManager';
 
 import { navigationService } from '$lib/services/navigationService';
+import { BoardStateSchema, PlayerStateSchema, ScoreStateSchema } from '$lib/schemas/gameStateSchema';
 
 export class OnlineGameMode extends BaseGameMode {
   private stateSync: IGameStateSync | null = null;
@@ -455,6 +456,22 @@ export class OnlineGameMode extends BaseGameMode {
       logService.GAME_MODE('[OnlineGameMode] Received incomplete remote state. Skipping application.');
       return;
     }
+
+    // --- ZOD VALIDATION START ---
+    const boardVal = BoardStateSchema.safeParse(remoteState.boardState);
+    const playerVal = PlayerStateSchema.safeParse(remoteState.playerState);
+    const scoreVal = ScoreStateSchema.safeParse(remoteState.scoreState);
+
+    if (!boardVal.success || !playerVal.success || !scoreVal.success) {
+        logService.error('[OnlineGameMode] Remote state validation failed!', {
+            board: boardVal.success ? 'OK' : boardVal.error,
+            player: playerVal.success ? 'OK' : playerVal.error,
+            score: scoreVal.success ? 'OK' : scoreVal.error
+        });
+        notificationService.show({ type: 'error', messageRaw: 'Data validation error' });
+        return;
+    }
+    // --- ZOD VALIDATION END ---
 
     // СИСТЕМНЕ ВИПРАВЛЕННЯ: Форсуємо тип "human" для всіх гравців в онлайн-режимі.
     // Це гарантує, що локальний AI ніколи не перехопить хід опонента, 
