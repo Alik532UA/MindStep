@@ -11,6 +11,7 @@ import { versionState } from "$lib/stores/versionState.svelte";
 import { get } from "svelte/store";
 import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
+import { uiState } from "$lib/stores/uiState.svelte";
 
 import { urlSyncService } from "$lib/services/urlSyncService";
 
@@ -43,6 +44,7 @@ class AppInitializationService {
         initializeTestModeSync();
         rewardsService.init();
         animationService.initialize();
+        this.setupVisibilityListener();
 
         // 5. Check for updates
         this.checkForUpdates();
@@ -59,6 +61,20 @@ class AppInitializationService {
         }
 
         logService.init("[AppInitializationService] Initialization complete.");
+    }
+
+    private setupVisibilityListener() {
+        if (typeof document === 'undefined') return;
+
+        document.addEventListener('visibilitychange', () => {
+            const isVisible = document.visibilityState === 'visible';
+            logService.ui(`[AppInitializationService] Visibility changed: ${document.visibilityState}`);
+            
+            uiState.update(s => ({
+                ...s,
+                isTabVisible: isVisible
+            }));
+        });
     }
 
     public cleanup() {

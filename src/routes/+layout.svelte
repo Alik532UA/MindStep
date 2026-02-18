@@ -16,6 +16,7 @@
 	import { logService } from "$lib/services/logService.js";
 	import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";
 	import { tooltipState } from "$lib/stores/tooltipState.svelte";
+	import { uiState } from "$lib/stores/uiState.svelte";
 	import Tooltip from "$lib/components/Tooltip.svelte";
 	import ModalManager from "$lib/components/ModalManager.svelte";
 	import { testModeState } from "$lib/stores/testModeState.svelte";
@@ -307,7 +308,7 @@
 			/>
 		{/if}
 
-		<main>
+		<main class:tab-hidden={!uiState.state.isTabVisible}>
 			{#if $i18nReady}
 				{@render children?.()}
 			{:else}
@@ -375,6 +376,11 @@
 		width: 100%;
 		margin: 0 auto;
 		box-sizing: border-box;
+		transition: filter 0.3s ease;
+	}
+	main.tab-hidden {
+		filter: blur(10px) grayscale(0.5);
+		pointer-events: none;
 	}
 	.loading-screen {
 		display: flex;

@@ -12,6 +12,7 @@ import { logService } from './logService';
 import { errorHandlerService } from './errorHandlerService';
 
 // Firebase конфігурація з змінних середовища Vite
+// ПРИМІТКА: Використовуємо import.meta.env, оскільки змінні мають префікс VITE_ (а не PUBLIC_)
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,

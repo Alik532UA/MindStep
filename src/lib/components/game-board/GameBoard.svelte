@@ -40,6 +40,7 @@
 
 </script>
 
+{#key boardSize}
 <div
   class="game-board"
   style="--board-size: {boardSize}"
@@ -74,6 +75,7 @@
     {oncellRightClick}
   />
 </div>
+{/key}
 
 <style>
   .game-board {

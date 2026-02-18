@@ -11,6 +11,7 @@
 import { logService } from '$lib/services/logService';
 import type { MoveHistoryEntry } from '$lib/models/moveHistory';
 import type { MoveDirectionType } from '$lib/models/Piece';
+import type { Resettable } from '$lib/types/utils';
 
 export interface BoardState {
   boardSize: number;
@@ -27,7 +28,7 @@ export interface BoardState {
   }>;
 }
 
-class BoardStateRune {
+class BoardStateRune implements Resettable {
     private _state = $state<BoardState | null>(null);
 
     /**

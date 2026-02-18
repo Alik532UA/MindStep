@@ -11,6 +11,7 @@ import { getRandomUnusedColor } from '$lib/utils/playerUtils';
 import { roomFirestoreService } from './room/roomFirestoreService';
 import type { Unsubscribe } from 'firebase/firestore';
 import { errorHandlerService } from './errorHandlerService';
+import { RoomError, AuthError } from '$lib/models/errors';
 
 const ROOM_TIMEOUT_MS = 600000;
 const MAX_PLAYERS = 8;
@@ -80,7 +81,7 @@ class RoomService {
             return roomId;
         } catch (error) {
             errorHandlerService.handle(error, { context: 'RoomService:CreateRoom' });
-            throw error;
+            throw new RoomError('Failed to create room', 'CREATE_FAILED', { originalError: error });
         }
     }
 
@@ -193,7 +194,7 @@ class RoomService {
         try {
             const roomData = await roomFirestoreService.getRoomDoc(roomId);
 
-            if (!roomData) throw new Error('Room not found');
+            if (!roomData) throw new RoomError('Room not found', 'NOT_FOUND', { roomId });
 
             const existingSession = roomSessionService.getSession();
 
@@ -207,7 +208,7 @@ class RoomService {
                      roomSessionService.clearSession();
                      // Можна також викликати leaveRoom, щоб почистити за собою, але це не обов'язково
                      await roomPlayerService.leaveRoom(roomId, existingSession.playerId);
-                     throw new Error('Game ended because all opponents left.');
+                     throw new AuthError('Game ended because all opponents left.', 'RECONNECT_ABORTED');
                 }
 
                 logService.init(`[RoomService] Reconnecting as existing player`);
@@ -220,8 +221,8 @@ class RoomService {
                 return existingSession.playerId;
             }
 
-            if (Object.keys(roomData.players).length >= MAX_PLAYERS) throw new Error('Room is full');
-            if (roomData.status === 'playing') throw new Error('Game already started');
+            if (Object.keys(roomData.players).length >= MAX_PLAYERS) throw new RoomError('Room is full', 'FULL');
+            if (roomData.status === 'playing') throw new RoomError('Game already started', 'ALREADY_STARTED');
 
             const usedColors = Object.values(roomData.players).map(p => p.color);
             const playerColor = getRandomUnusedColor(usedColors);
@@ -244,6 +245,7 @@ class RoomService {
             roomSessionService.saveSession(roomId, playerId);
             return playerId;
         } catch (error) {
+            if (error instanceof RoomError || error instanceof AuthError) throw error;
             errorHandlerService.handle(error, { context: 'RoomService:JoinRoom' });
             throw error;
         }

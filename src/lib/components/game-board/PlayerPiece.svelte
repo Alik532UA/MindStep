@@ -64,4 +64,13 @@
       opacity: 1;
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piece-container {
+      animation: none;
+    }
+    .player-piece {
+      transition: none;
+    }
+  }
 </style>

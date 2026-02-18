@@ -9,8 +9,9 @@ import { logService } from "$lib/services/logService";
 import { boardState } from '$lib/stores/boardState.svelte';
 import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 import { WIDGETS } from "$lib/stores/layoutState.svelte";
+import type { Resettable } from "$lib/types/utils";
 
-export abstract class BaseGameController {
+export abstract class BaseGameController implements Resettable {
   // --- State ---
   protected settings = $derived(gameSettingsState.state);
   protected bState = $derived(boardState.state);
@@ -21,6 +22,22 @@ export abstract class BaseGameController {
    * Абстрактний метод для ініціалізації специфічного режиму.
    */
   abstract init(context: string): void;
+
+  /**
+   * Скидає стан контролера.
+   */
+  reset(): void {
+    logService.init("[BaseGameController] reset() called.");
+    // Базова реалізація може бути порожньою або скидати загальні стори
+  }
+
+  /**
+   * Очищає ресурси контролера при демонтажі компонента.
+   */
+  cleanup(): void {
+    logService.init("[BaseGameController] cleanup() called.");
+    this.reset();
+  }
 
   /**
    * Спільна логіка ініціалізації гри.

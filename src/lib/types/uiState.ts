@@ -23,6 +23,7 @@ export interface UiState {
   onlinePlayerIndex: number | null; // 0 (Host) або 1 (Guest)
   amIHost: boolean;
   shouldShowGameModeModalOnLoad: boolean;
+  isTabVisible: boolean;
 }
 
 export const initialUIState: UiState = {
@@ -42,5 +43,6 @@ export const initialUIState: UiState = {
   lastMove: null,
   onlinePlayerIndex: null,
   amIHost: false,
-  shouldShowGameModeModalOnLoad: false
+  shouldShowGameModeModalOnLoad: false,
+  isTabVisible: true
 };

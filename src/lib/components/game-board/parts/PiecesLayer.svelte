@@ -13,11 +13,13 @@
 
 <div class="pieces-layer" style="--board-size: {boardSize}">
   {#if showPiece && row !== null && col !== null}
-    <PlayerPiece
-      {row}
-      {col}
-      {boardSize}
-    />
+    {#key `${row}-${col}`}
+      <PlayerPiece
+        {row}
+        {col}
+        {boardSize}
+      />
+    {/key}
   {/if}
 </div>
 
