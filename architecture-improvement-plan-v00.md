@@ -1,7 +1,7 @@
 ---
 title: План покращення архітектури (Audit & Improvement Plan)
 version: v0.0
-status: 30%
+status: 90%
 author: Gemini CLI
 date: 2026-02-18
 ---
@@ -62,9 +62,9 @@ date: 2026-02-18
 | :--- | :--- | :--- | :--- |
 | **95** | **Strict Board Decoupling** | Видалити будь-які прямі зв'язки з логікою гри з `game-board`. Рендер тільки по даних. | [x] |
 | **90** | **Shared Game Controller** | Створити уніфікований контролер для `local` та `virtual-player`, щоб усунути дублювання. | [x] |
-| **85** | **Snippets Migration** | Замінити "Props Soup" (showTitle, isDisabled тощо) на Snippets у базових UI компонентах. | [ ] |
-| **80** | **Derived State Audit** | Пройтися по `gameState.svelte.ts` та замінити ручні оновлення на `$derived`. | [ ] |
-| **70** | **URL Sync for Settings** | Синхронізувати налаштування відображення (showBoard, timers) з URL Search Params. | [ ] |
+| **85** | **Snippets Migration** | Замінити "Props Soup" (showTitle, isDisabled тощо) на Snippets у базових UI компонентах. | [x] |
+| **80** | **Derived State Audit** | Пройтися по `gameState.svelte.ts` та замінити ручні оновлення на `$derived`. | [x] |
+| **70** | **URL Sync for Settings** | Синхронізувати налаштування відображення (showBoard, timers) з URL Search Params. | [x] |
 | **60** | **Widget Error Boundaries** | Огорнути кожен віджет у `<svelte:boundary>`, щоб падіння одного не зупиняло гру. | [ ] |
 | **50** | **A11y Audit** | Додати ARIA-мітки та клавіатурну навігацію для кастомних елементів керування. | [ ] |
 

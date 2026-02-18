@@ -1,18 +1,31 @@
-<script>
+<script lang="ts">
   import { slide } from "svelte/transition";
+  import type { Snippet } from "svelte";
 
-  export let isOpen = false;
+  interface Props {
+    isOpen?: boolean;
+    title?: Snippet;
+    children?: Snippet;
+  }
+
+  let { 
+    isOpen = $bindable(false), 
+    title, 
+    children 
+  }: Props = $props();
 </script>
 
 <div class="accordion-section" class:open={isOpen}>
   <button 
     class="accordion-header" 
-    on:click={() => (isOpen = !isOpen)}
+    onclick={() => (isOpen = !isOpen)}
     aria-expanded={isOpen}
   >
     <div class="header-content">
       <h2 class="accordion-title">
-        <slot name="title" />
+        {#if title}
+          {@render title()}
+        {/if}
       </h2>
     </div>
     <span class="accordion-toggle" aria-hidden="true">
@@ -29,9 +42,11 @@
     </span>
   </button>
   {#if isOpen}
-    <div class="accordion-content" transition:slide|local>
+    <div class="accordion-content" transition:slide>
       <div class="content-wrapper">
-        <slot />
+        {#if children}
+          {@render children()}
+        {/if}
       </div>
     </div>
   {/if}

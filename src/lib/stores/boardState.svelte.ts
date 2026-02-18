@@ -23,8 +23,22 @@ export interface BoardState {
 class BoardStateRune {
     private _state = $state<BoardState | null>(null);
 
+    // Створюємо єдиний стабільний derived стан
+    private _derivedState = $derived.by(() => {
+        const s = this._state;
+        if (!s) return null;
+
+        return {
+            ...s,
+            // Використовуємо замикання на 's', щоб гарантувати правильні посилання
+            get playerRow() { return s.moveHistory.at(-1)?.pos.row ?? null; },
+            get playerCol() { return s.moveHistory.at(-1)?.pos.col ?? null; },
+            get cellVisitCounts() { return s.moveHistory.at(-1)?.visits ?? {}; }
+        } as BoardState;
+    });
+
     get state() {
-        return this._state;
+        return this._derivedState;
     }
 
     set state(value: BoardState | null) {
@@ -43,11 +57,15 @@ class BoardStateRune {
         logService.piece(`(boardState) movePlayer to [${row}, ${col}]`);
         if (!this._state) return;
         
-        // Svelte 5 дозволяє прямі мутації всередині $state об'єктів та масивів
-        if (this._state.playerRow !== null && this._state.playerCol !== null) {
-            this._state.board[this._state.playerRow][this._state.playerCol] = 0;
+        const oldRow = this._state.playerRow;
+        const oldCol = this._state.playerCol;
+
+        if (oldRow !== null && oldCol !== null) {
+            this._state.board[oldRow][oldCol] = 0;
         }
         
+        // ВАЖЛИВО: Ми все ще дозволяємо мутацію для сумісності з анімаціями,
+        // але тепер derived властивості мають пріоритет у 'state' гетері.
         this._state.playerRow = row;
         this._state.playerCol = col;
         this._state.board[row][col] = 1;

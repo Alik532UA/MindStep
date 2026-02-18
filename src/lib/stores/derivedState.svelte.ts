@@ -46,15 +46,14 @@ function calculateStartPosition(move: { direction: MoveDirectionType, distance: 
 
 // === ОБЧИСЛЮВАЛЬНІ ЗНАЧЕННЯ ($derived) ===
 
-export const derivedState = {
-    get lastComputerMove() {
+class DerivedState {
+    lastComputerMove = $derived.by(() => {
         const uState = uiState.state;
         const pState = playerState.state;
         const bState = boardState.state;
 
         if (!pState) return null;
 
-        // 1. Пріоритет: явний запис останнього ходу в uiState
         if (uState?.lastMove) {
             const p = pState.players[uState.lastMove.player];
             if (p?.type === 'ai' || p?.type === 'computer' || p?.isComputer) {
@@ -65,32 +64,22 @@ export const derivedState = {
             }
         }
 
-        // 2. Фолбек: останній елемент з черги ходів (якщо тип гравця — комп'ютер)
-        if (!bState || bState.moveQueue.length === 0) {
-            return null;
-        }
+        if (!bState || bState.moveQueue.length === 0) return null;
         const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
-        const pMod = pState.players[lastMove.player - 1]; // moveQueue player is 1-indexed
-        
-        const isComp = pMod?.type === 'ai' || pMod?.type === 'computer' || pMod?.isComputer;
-
-        if (isComp) {
-            return {
-                direction: lastMove.direction,
-                distance: lastMove.distance
-            };
+        const pMod = pState.players[lastMove.player - 1];
+        if (pMod?.type === 'ai' || pMod?.type === 'computer' || pMod?.isComputer) {
+            return { direction: lastMove.direction, distance: lastMove.distance };
         }
         return null;
-    },
+    });
 
-    get lastPlayerMove() {
+    lastPlayerMove = $derived.by(() => {
         const uState = uiState.state;
         const pState = playerState.state;
         const bState = boardState.state;
 
         if (!pState) return null;
 
-        // 1. Пріоритет: явний запис останнього ходу в uiState
         if (uState?.lastMove) {
             const p = pState.players[uState.lastMove.player];
             if (p?.type === 'human' && !p?.isComputer) {
@@ -101,22 +90,16 @@ export const derivedState = {
             }
         }
 
-        // 2. Фолбек: останній елемент з черги ходів (якщо тип гравця — людина)
         if (!bState || bState.moveQueue.length === 0) return null;
         const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
         const pMod = pState.players[lastMove.player - 1];
-        
-        const isHuman = pMod?.type === 'human' && !pMod?.isComputer;
-        if (isHuman) {
-            return {
-                direction: lastMove.direction,
-                distance: lastMove.distance
-            };
+        if (pMod?.type === 'human' && !pMod?.isComputer) {
+            return { direction: lastMove.direction, distance: lastMove.distance };
         }
         return null;
-    },
+    });
 
-    get isPlayerTurn() {
+    isPlayerTurn = $derived.by(() => {
         const pState = playerState.state;
         if (!pState || !pState.players || pState.players.length === 0) return false;
 
@@ -125,25 +108,19 @@ export const derivedState = {
         if (!currentPlayer) return false;
 
         const uState = uiState.state;
-
         const isOnline = uState?.intendedGameType === 'online';
         const isHuman = currentPlayer.type === 'human';
         const isMyOnlineTurn = isOnline && uState.onlinePlayerIndex === currentPlayerIndex;
 
-        if (isOnline) {
-            return isMyOnlineTurn;
-        }
+        return isOnline ? isMyOnlineTurn : isHuman;
+    });
 
-        return isHuman;
-    },
-
-    get visualPosition() {
+    visualPosition = $derived.by(() => {
         const boardStoreVal = boardState.state;
         const animationStoreVal = animationState.state;
 
         if (!boardStoreVal) return { row: null, col: null };
 
-        // FIX: New Game Guard
         if (boardStoreVal.moveHistory.length <= 1) {
             return { row: boardStoreVal.playerRow, col: boardStoreVal.playerCol };
         }
@@ -168,20 +145,16 @@ export const derivedState = {
         }
 
         return { row: boardStoreVal.playerRow, col: boardStoreVal.playerCol };
-    },
+    });
 
-    get visualCellVisitCounts() {
+    visualCellVisitCounts = $derived.by(() => {
         const boardStoreVal = boardState.state;
         const animationStoreVal = animationState.state;
         const vPos = this.visualPosition;
 
         if (!boardStoreVal) return {};
 
-        if (boardStoreVal.moveHistory.length <= 1) {
-            return boardStoreVal.cellVisitCounts;
-        }
-
-        if (!animationStoreVal.isAnimating) {
+        if (boardStoreVal.moveHistory.length <= 1 || !animationStoreVal.isAnimating) {
             return boardStoreVal.cellVisitCounts;
         }
 
@@ -193,73 +166,52 @@ export const derivedState = {
             entry.pos.row === vPos.row && entry.pos.col === vPos.col
         );
 
-        if (relevantHistoryEntry && relevantHistoryEntry.visits) {
-            return relevantHistoryEntry.visits;
-        }
-        return boardStoreVal.moveHistory[boardStoreVal.moveHistory.length - 1]?.visits || {};
-    },
+        return relevantHistoryEntry?.visits || boardStoreVal.moveHistory.at(-1)?.visits || {};
+    });
 
-    get currentPlayer() {
-        const p = playerState.state;
-        return p ? p.players[p.currentPlayerIndex] : null;
-    },
+    currentPlayer = $derived(playerState.state ? playerState.state.players[playerState.state.currentPlayerIndex] : null);
+    currentPlayerColor = $derived(this.currentPlayer?.color || null);
+    availableMoves = $derived(availableMovesState.state);
 
-    get currentPlayerColor() {
-        const p = this.currentPlayer;
-        return p ? p.color : null;
-    },
-
-    get availableMoves() {
-        return availableMovesState.state;
-    },
-
-    get distanceRows() {
+    distanceRows = $derived.by(() => {
         const bState = boardState.state;
         if (!bState) return [];
         const dists = Array.from({ length: bState.boardSize - 1 }, (_, i) => i + 1);
         
         if (dists.length <= 4) return [dists];
-        if (dists.length === 5) return [dists.slice(0, 3), dists.slice(3)];
-        if (dists.length === 6) return [dists.slice(0, 3), dists.slice(3)];
-        if (dists.length === 7) return [dists.slice(0, 4), dists.slice(4)];
-        if (dists.length === 8) return [dists.slice(0, 4), dists.slice(4)];
+        const chunkSize = dists.length <= 8 ? (dists.length <= 6 ? 3 : 4) : 4;
         
         const chunk = (arr: number[], n: number) => {
             const res = [];
             for (let i = 0; i < arr.length; i += n) res.push(arr.slice(i, i + n));
             return res;
         };
-        return chunk(dists, 4);
-    },
+        return chunk(dists, chunkSize);
+    });
 
-    get isConfirmButtonDisabled() {
+    isConfirmButtonDisabled = $derived.by(() => {
         const uState = uiState.state;
         const pState = playerState.state;
         if (!uState || !pState) return true;
         const isHumanTurn = pState.players[pState.currentPlayerIndex]?.type === 'human';
-        const { selectedDirection, selectedDistance, isComputerMoveInProgress } = uState;
-        return !isHumanTurn || isComputerMoveInProgress || !selectedDirection || !selectedDistance;
-    },
+        const { selectedDirection, selectedDistance, isComputerMoveInProgress, isGameOver } = uState;
+        return isGameOver || !isHumanTurn || isComputerMoveInProgress || !selectedDirection || !selectedDistance;
+    });
 
-    get previousPlayerColor() {
+    previousPlayerColor = $derived.by(() => {
         const pState = playerState.state;
-        if (!pState) return null;
-        const { players, currentPlayerIndex } = pState;
-        if (players.length === 0) return null;
-        const previousPlayerIndex = (currentPlayerIndex + players.length - 1) % players.length;
-        return players[previousPlayerIndex]?.color || null;
-    },
+        if (!pState || pState.players.length === 0) return null;
+        const previousPlayerIndex = (pState.currentPlayerIndex + pState.players.length - 1) % pState.players.length;
+        return pState.players[previousPlayerIndex]?.color || null;
+    });
 
-    get remainingTime() {
-        return timerState.state.remainingTime ?? 0;
-    },
+    remainingTime = $derived(timerState.state.remainingTime ?? 0);
+    isGameOver = $derived(uiState.state?.isGameOver ?? false);
 
-    get isGameOver() {
-        return uiState.state?.isGameOver ?? false;
-    },
-
-    get currentLanguageFlagComponent() {
+    currentLanguageFlagComponent = $derived.by(() => {
         const langCode = appSettingsState.state.language;
         return languages.find(lang => lang.code === langCode)?.component || languages[0].component;
-    }
-};
+    });
+}
+
+export const derivedState = new DerivedState();

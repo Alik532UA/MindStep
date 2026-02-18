@@ -1,3 +1,5 @@
+import type { Snippet } from 'svelte';
+
 export interface IMenuItem {
     id: string;
     icon?: string; // Name of the icon for SvgIcons component
@@ -7,6 +9,7 @@ export interface IMenuItem {
     isActive?: boolean; // Highlight active state
     primary?: boolean; // Explicit flag for the central FAB (optional, as index 2 is default)
     dataTestId?: string;
+    snippet?: Snippet; // Svelte 5 Snippet for custom content
 }
 
 export interface IFlexibleMenuProps {

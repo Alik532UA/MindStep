@@ -18,18 +18,18 @@
   </div>
 
   <AccordionSection isOpen={true}>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="trophy" size="1.2em" />
       {$t("rulesPage.goalTitle")}
-    </span>
+    {/snippet}
     <p class="rules-text">{$t("rulesPage.goalText")}</p>
   </AccordionSection>
 
   <AccordionSection>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="gear" size="1.2em" />
       {$t("rulesPage.moveProcessTitle")}
-    </span>
+    {/snippet}
     <ol>
       <li>
         <b>{$t("rulesPage.step1")}</b>
@@ -54,10 +54,10 @@
   </AccordionSection>
 
   <AccordionSection>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="1st_place_medal" size="1.2em" />
       {$t("rulesPage.winningAndLosing")}
-    </span>
+    {/snippet}
     <div class="rules-cards-row">
       <div class="rules-card rules-lose">
         <h3>{$t("rulesPage.youLose")}</h3>
@@ -78,10 +78,10 @@
   </AccordionSection>
 
   <AccordionSection>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="game_die" size="1.2em" />
       {$t("rulesPage.gameModes")}
-    </span>
+    {/snippet}
     <div class="rules-cards-row">
       <div class="rules-card rules-mode-normal">
         <h3>{$t("rulesPage.normalMode")}</h3>
@@ -95,10 +95,10 @@
   </AccordionSection>
 
   <AccordionSection>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="memo" size="1.2em" />
       {$t("rulesPage.specialRules")}
-    </span>
+    {/snippet}
     <div class="rules-card rules-no-moves">
       <h2>{$t("rulesPage.noMovesButtonTitle")}</h2>
       <p>{$t("rulesPage.noMovesButtonText1")}</p>
@@ -120,10 +120,10 @@
   </AccordionSection>
 
   <AccordionSection>
-    <span slot="title">
+    {#snippet title()}
       <NotoEmoji name="fire" size="1.2em" />
       {$t("rulesPage.proModeTitle")}
-    </span>
+    {/snippet}
     <div class="rules-card rules-pro-mode">
       <p>{$t("rulesPage.proModeText")}</p>
       <p><b>{$t("rulesPage.proModeTip")}</b></p>

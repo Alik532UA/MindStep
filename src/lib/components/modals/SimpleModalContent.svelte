@@ -26,6 +26,10 @@
         scope?: string;
         showDontShowAgain?: boolean;
         dontShowAgainType?: "gameMode" | "expertMode";
+        // Snippets for flexibility
+        titleSnippet?: import("svelte").Snippet;
+        bodySnippet?: import("svelte").Snippet;
+        footerSnippet?: import("svelte").Snippet;
     }
 
     let {
@@ -39,7 +43,10 @@
         dataTestId = "simple-modal",
         scope = "",
         showDontShowAgain = false,
-        dontShowAgainType = "gameMode"
+        dontShowAgainType = "gameMode",
+        titleSnippet,
+        bodySnippet,
+        footerSnippet
     }: Props = $props();
 
     let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
@@ -55,7 +62,9 @@
 </script>
 
 <div class="simple-modal-content" data-testid={`${dataTestId}-content`}>
-    {#if titleKey || title}
+    {#if titleSnippet}
+        {@render titleSnippet()}
+    {:else if titleKey || title}
         <h2
             class="modal-title-menu"
             data-testid={`${dataTestId}-title`}
@@ -65,7 +74,9 @@
         </h2>
     {/if}
 
-    {#if contentKey || content}
+    {#if bodySnippet}
+        {@render bodySnippet()}
+    {:else if contentKey || content}
         <p
             class="message-text"
             data-testid={`${dataTestId}-message`}
@@ -85,7 +96,9 @@
         </div>
     {/if}
 
-    {#if actions.length > 0}
+    {#if footerSnippet}
+        {@render footerSnippet()}
+    {:else if actions.length > 0}
         <div class="actions-column">
             {#each actions as action, i}
                 <StyledButton

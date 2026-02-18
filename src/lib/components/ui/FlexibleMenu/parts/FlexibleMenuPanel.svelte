@@ -31,17 +31,21 @@
                 data-testid="{position}-menu-slot-{i}"
             >
                 {#if displayItems[i]}
-                    <MenuButton
-                        item={{
-                            ...displayItems[i],
-                            primary:
-                                displayItems[i].primary !== undefined
-                                    ? displayItems[i].primary
-                                    : i === 2,
-                        }}
-                        dataTestId={displayItems[i].dataTestId ||
-                            `menu-button-${displayItems[i].id}`}
-                    />
+                    {#if displayItems[i].snippet && !displayItems[i].onClick}
+                        {@render displayItems[i].snippet?.()}
+                    {:else}
+                        <MenuButton
+                            item={{
+                                ...displayItems[i],
+                                primary:
+                                    displayItems[i].primary !== undefined
+                                        ? displayItems[i].primary
+                                        : i === 2,
+                            }}
+                            dataTestId={displayItems[i].dataTestId ||
+                                `menu-button-${displayItems[i].id}`}
+                        />
+                    {/if}
                 {/if}
             </div>
         {/each}

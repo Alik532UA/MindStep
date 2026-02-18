@@ -31,7 +31,9 @@
     data-testid={dataTestId}
 >
     <div class="icon-wrapper">
-        {#if item.icon}
+        {#if item.snippet}
+            {@render item.snippet()}
+        {:else if item.icon}
             <SvgIcons name={item.icon} />
         {:else if item.emoji}
             <!-- FIX: Прибрано хардкод перевірки на конкретні емодзі. 
