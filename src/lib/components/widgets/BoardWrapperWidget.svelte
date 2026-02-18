@@ -11,11 +11,7 @@
   import { boardState } from "$lib/stores/boardState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import BoardHiddenInfoWidget from "./BoardHiddenInfoWidget.svelte";
-  import StaticGridLayer from "./parts/StaticGridLayer.svelte";
-  import EffectsLayer from "./parts/EffectsLayer.svelte";
-  import InteractionLayer from "./parts/InteractionLayer.svelte";
-  import PiecesLayer from "./parts/PiecesLayer.svelte";
-  import InputLayer from "./parts/InputLayer.svelte";
+  import GameBoard from "../game-board/GameBoard.svelte";
 
   // SSoT: Використовуємо стан з Runes
   const bState = $derived(boardState.state);
@@ -127,38 +123,16 @@
         transition:slideAndScale={{ duration: 500, easing: quintOut }}
         data-testid="board-wrapper"
       >
-        <div
-          class="game-board"
-          style="--board-size: {currentBoardSize}"
-          role="grid"
-          data-testid="game-board"
-        >
-          <StaticGridLayer boardSize={currentBoardSize} />
-          
-          <EffectsLayer 
-            boardSize={currentBoardSize} 
-            visualCellVisitCounts={derivedState.visualCellVisitCounts} 
-            gameSettings={gameSettingsState.state} 
-          />
-
-          <InteractionLayer 
-            boardSize={currentBoardSize}
-            availableMoves={derivedState.availableMoves}
-            showMoves={showAvailableMoves}
-          />
-
-          <PiecesLayer 
-            row={derivedState.visualPosition.row} 
-            col={derivedState.visualPosition.col} 
-            boardSize={currentBoardSize} 
-            showPiece={gameSettingsState.state.showPiece}
-          />
-
-          <InputLayer 
-            boardSize={currentBoardSize} 
-            oncellRightClick={onCellRightClick}
-          />
-        </div>
+        <GameBoard
+          boardSize={currentBoardSize}
+          visualCellVisitCounts={derivedState.visualCellVisitCounts}
+          gameSettings={gameSettingsState.state}
+          availableMoves={derivedState.availableMoves}
+          showMoves={showAvailableMoves}
+          visualPosition={derivedState.visualPosition}
+          showPiece={gameSettingsState.state.showPiece}
+          oncellRightClick={onCellRightClick}
+        />
       </div>
     {:else if showHiddenInfoWidget}
       <div

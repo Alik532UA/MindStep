@@ -6,8 +6,8 @@
   import { playerState } from "$lib/stores/playerState.svelte";
   import { scoreState } from '$lib/stores/scoreState.svelte';
 
-  import SinglePlayerScoreDisplay from "./parts/SinglePlayerScoreDisplay.svelte";
-  import MultiPlayerScoreDisplay from "./parts/MultiPlayerScoreDisplay.svelte";
+  import SinglePlayerScoreDisplay from "../game-board/parts/SinglePlayerScoreDisplay.svelte";
+  import MultiPlayerScoreDisplay from "../game-board/parts/MultiPlayerScoreDisplay.svelte";
 
   const pState = $derived(playerState.state);
   const currentScore = $derived(scoreState.state);
