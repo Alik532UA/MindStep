@@ -1,28 +1,12 @@
 <script lang="ts">
   import GamePageLayout from "$lib/components/layouts/GamePageLayout.svelte";
-  import { WIDGETS } from "$lib/stores/layoutState.svelte";
-  import { gameModeService } from "$lib/services/gameModeService";
-  import { logService } from "$lib/services/logService";
-  import { boardState } from '$lib/stores/boardState.svelte';
+  import { gameController } from "$lib/controllers/GameController.svelte";
 
   function initTrainingGame() {
-    const bState = boardState.state;
-    if (!bState || bState.moveHistory.length <= 1) {
-      logService.init(
-        '[TrainingPage] onMount: No active game found, initializing "training" mode.',
-      );
-      gameModeService.initializeGameMode("training");
-    } else {
-      logService.init(
-        "[TrainingPage] onMount: Active game found, not re-initializing.",
-      );
-    }
+    gameController.initGame("TrainingPage", "training");
   }
 
-  function filterWidgets(id: string): boolean {
-    // У режимі тренування не показуємо індикатор ходу гравця та таймер
-    return id !== WIDGETS.PLAYER_TURN_INDICATOR && id !== WIDGETS.TIMER;
-  }
+  const widgetFilter = (id: string) => gameController.shouldShowWidget(id);
 </script>
 
-<GamePageLayout initLogic={initTrainingGame} widgetFilter={filterWidgets} />
+<GamePageLayout initLogic={initTrainingGame} {widgetFilter} />
