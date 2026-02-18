@@ -23,26 +23,29 @@
         isIos = false,
         onconfirm,
         onnoMoves,
-        onvoiceCommand
+        onvoiceCommand,
     }: Props = $props();
 
     const voiceState = $derived(voiceControlState.state);
 
     let voiceButtonStyle = $derived(
-        `box-shadow: 0 0 0 ${voiceState.volume * 20}px rgba(229, 57, 53, ${Math.min(voiceState.volume * 2, 1)});`
+        `box-shadow: 0 0 0 ${voiceState.volume * 20}px rgba(229, 57, 53, ${Math.min(voiceState.volume * 2, 1)});`,
     );
     let voiceButtonTooltip = $derived(
         isVoiceSupported
             ? $t("gameControls.voiceCommandTitle")
-            : $t("gameControls.voiceCommandNotSupported")
+            : $t("gameControls.voiceCommandNotSupported"),
     );
 </script>
 
 <div class="action-btns">
+    <!-- FIX no-blink: disabled тільки через confirmDisabled (вже включає isComputerMoveInProgress).
+         Не передаємо disabled={isMoveInProgress} — це спричиняло мигання при зміні черги.
+         Кліки блокуються JS guard-ом у батьківських handlers. -->
     <StyledButton
         variant="primary"
         size="large"
-        disabled={confirmDisabled || disabled}
+        disabled={confirmDisabled}
         onclick={onconfirm}
         tooltip={$t("gameControls.confirm")}
         dataTestId="confirm-move-btn"
@@ -54,10 +57,11 @@
         {$t("gameControls.confirm")}
     </StyledButton>
 
+    <!-- FIX no-blink: не передаємо disabled={isMoveInProgress}, кліки блокуються JS guard-ом -->
     <StyledButton
         variant="warning"
         size="large"
-        {disabled}
+        disabled={false}
         onclick={onnoMoves}
         tooltip={$t("gameControls.noMovesTitle")}
         dataTestId="no-moves-btn"
@@ -70,10 +74,11 @@
     </StyledButton>
 
     {#if !isIos}
+        <!-- FIX no-blink: disabled тільки якщо API не підтримується (стале значення, не мігає) -->
         <StyledButton
             variant="info"
             size="large"
-            disabled={!isVoiceSupported || disabled}
+            disabled={!isVoiceSupported}
             onclick={onvoiceCommand}
             tooltip={voiceButtonTooltip}
             dataTestId="voice-command-btn"

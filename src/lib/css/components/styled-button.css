@@ -4,7 +4,9 @@
   margin: 0;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  /* FIX: transition: none за замовчуванням — уникаємо мигання при disabled ↔ enabled.
+     Анімація включена тільки на hover/active станах нижче. */
+  transition: none;
   font-weight: 700;
   outline: none;
   width: 100%;
@@ -17,6 +19,10 @@
   background: transparent;
   color: inherit;
   font-family: inherit;
+}
+
+.styled-button:not(:disabled):hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 .styled-button:active {
@@ -140,6 +146,9 @@
   transform: none !important;
   box-shadow: none !important;
   filter: grayscale(0.5);
+  /* FIX: Забороняємо будь-яку анімацію при disabled — уникаємо мигання
+     при переході disabled ↔ enabled (наприклад, після підтвердження ходу). */
+  transition: none !important;
 }
 
 /* --- Shapes --- */

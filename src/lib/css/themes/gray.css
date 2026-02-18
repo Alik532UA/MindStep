@@ -69,8 +69,6 @@
 
 /* Gray ефекти */
 [data-style="gray"] .modal-window .modal-content,
-[data-style="gray"] .control-btn,
-
 [data-style="gray"] .board-size-dropdown-btn,
 [data-style="gray"] .board-size-dropdown-option {
     background: var(--bg-secondary);
@@ -81,9 +79,20 @@
     transition: background 0.25s, box-shadow 0.25s, border 0.18s;
 }
 
-[data-style="gray"] .control-btn,
-[data-style="gray"] .dir-btn,
-[data-style="gray"] .dist-btn {
+/* Базові стилі для control-btn без transition (щоб уникнути мигання) */
+[data-style="gray"] .control-btn {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    border: var(--global-border-width) solid var(--border-color);
+    box-shadow: 0 4px 24px var(--shadow-color);
+}
+
+/* FIX: :not(:disabled) — уникаємо мигання при переході disabled ↔ enabled.
+   Transition застосовується тільки до активних кнопок. */
+[data-style="gray"] .control-btn:not(:disabled),
+[data-style="gray"] .dir-btn:not(:disabled),
+[data-style="gray"] .dist-btn:not(:disabled) {
     border: var(--global-border-width) solid var(--border-color);
     border-radius: 14px;
     transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
@@ -107,8 +116,9 @@
     box-shadow: 0 0 16px var(--control-selected);
 }
 
-[data-style="gray"] .confirm-btn,
-[data-style="gray"] .no-moves-btn {
+/* FIX: :not(:disabled) — уникаємо мигання при переході disabled ↔ enabled. */
+[data-style="gray"] .confirm-btn:not(:disabled),
+[data-style="gray"] .no-moves-btn:not(:disabled) {
     border: none;
     color: #232323;
     font-weight: 700;

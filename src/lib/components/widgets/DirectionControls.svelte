@@ -13,6 +13,7 @@
   import DirectionGrid from "./controls/DirectionGrid.svelte";
   import DistanceSelector from "./controls/DistanceSelector.svelte";
   import ActionButtons from "./controls/ActionButtons.svelte";
+  import { fade } from "svelte/transition";
 
   interface Props {
     isMoveInProgress?: boolean;
@@ -43,7 +44,7 @@
     ondistance,
     oncentral,
     onconfirm,
-    onnoMoves
+    onnoMoves,
   }: Props = $props();
 
   export const availableDirections: string[] = [
@@ -61,10 +62,16 @@
   const isVoiceSupported = voiceControlService.isApiSupported;
   let isIos = $state(false);
 
-  let controlsDisabled = $derived(isMoveInProgress || !isPlayerTurn);
-  let confirmButtonBlocked = $derived(
-    isConfirmDisabled || !selectedDirection || !selectedDistance
-  );
+  // FIX no-blink: розділяємо JS-блокування кліку і HTML-атрибут disabled.
+  // controlsDisabled - JS guard для handlers, але НЕ передається як HTML disabled в dir-btn/dist-btn.
+  // Div/dist кнопки завжди виглядають активними - так немає мигання при зміні черги.
+  let controlsDisabled = $derived.by(() => {
+    return isMoveInProgress || !isPlayerTurn;
+  });
+
+  let confirmButtonBlocked = $derived.by(() => {
+    return isConfirmDisabled || !selectedDirection || !selectedDistance;
+  });
 
   onMount(() => {
     isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -85,14 +92,14 @@
   $effect(() => {
     // Створюємо локальну копію актуальних дистанцій для цього запуску ефекту
     const currentDistances = new Set(distanceRows.flat());
-    
+
     currentDistances.forEach((dist) => {
       // @ts-ignore - динамічний тип action
       registerGameAction(`distance-${dist}`, () => handleDistance(dist));
     });
 
     return () => {
-      // Cleanup використовує ту ж саму локальну копію (closure), 
+      // Cleanup використовує ту ж саму локальну копію (closure),
       // тому ми точно видалимо те, що додали в цьому циклі.
       currentDistances.forEach((dist) => {
         // @ts-ignore
@@ -133,7 +140,7 @@
   }
 </script>
 
-<div class="direction-controls-panel">
+<div class="direction-controls-panel" data-testid="direction-controls-widget">
   {#snippet centerSnippet()}
     <!-- FIX: disabled={false} гарантує, що кнопка ніколи не виглядає заблокованою (сірою/прозорою),
            навіть якщо зараз хід суперника. Логіка кліку контролюється в handleCentral. -->
@@ -151,13 +158,17 @@
         : ""}
       data-testid="center-info-btn"
     >
-      {centerInfoProps.content}
+      {#key centerInfoProps.content}
+        <span in:fade={{ duration: 300, delay: 50 }}>
+          {centerInfoProps.content}
+        </span>
+      {/key}
     </button>
   {/snippet}
 
   <DirectionGrid
     {selectedDirection}
-    disabled={controlsDisabled}
+    disabled={false}
     center={centerSnippet}
     ondirection={handleDirection}
   />
@@ -165,7 +176,7 @@
   <DistanceSelector
     {distanceRows}
     {selectedDistance}
-    disabled={controlsDisabled}
+    disabled={false}
     ondistance={handleDistance}
   />
 
@@ -173,7 +184,7 @@
     confirmDisabled={confirmButtonBlocked}
     {blockModeEnabled}
     {isVoiceSupported}
-    disabled={controlsDisabled}
+    disabled={isMoveInProgress}
     {isIos}
     onconfirm={handleConfirm}
     onnoMoves={handleNoMoves}

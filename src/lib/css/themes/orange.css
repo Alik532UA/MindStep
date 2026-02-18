@@ -6,12 +6,12 @@
     --text-secondary: #ff9800;
     --text-accent: #ffa726;
     --border-color: #ffa726;
-    --shadow-color: rgba(255,167,38,0.10);
+    --shadow-color: rgba(255, 167, 38, 0.10);
     --cell-light: #ffb74d;
     --cell-dark: #ff8a26;
     --cell-blocked: #ffcc80;
     --piece-color: #ffa726;
-    --piece-shadow: rgba(255,167,38,0.3);
+    --piece-shadow: rgba(255, 167, 38, 0.3);
     --control-bg: #ffd180;
     --control-hover: #ffa726;
     --control-selected: #ff9800;
@@ -28,7 +28,8 @@
     --warning-action-text: #ffffff;
     --info-action-bg: #03a9f4;
     --info-action-text: #ffffff;
-    --disabled-bg: #ffd180; --disabled-text: #b5651d;
+    --disabled-bg: #ffd180;
+    --disabled-text: #b5651d;
 }
 
 /* Помаранчевий стиль - Темна тема */
@@ -39,12 +40,12 @@
     --text-secondary: #ffd180;
     --text-accent: #ffa726;
     --border-color: #ffa726;
-    --shadow-color: rgba(255,167,38,0.18);
+    --shadow-color: rgba(255, 167, 38, 0.18);
     --cell-light: #ff8a26;
     --cell-dark: #e65100;
     --cell-blocked: #ffa726;
     --piece-color: #ffa726;
-    --piece-shadow: rgba(255,167,38,0.5);
+    --piece-shadow: rgba(255, 167, 38, 0.5);
     --control-bg: #e65100;
     --control-hover: #ffa726;
     --control-selected: #ffd180;
@@ -61,7 +62,8 @@
     --warning-action-text: #222;
     --info-action-bg: #81d4fa;
     --info-action-text: #222;
-    --disabled-bg: #e65100; --disabled-text: #ffd180;
+    --disabled-bg: #e65100;
+    --disabled-text: #ffd180;
 }
 
 /* Загальні стилі для Orange, що визначають "підняття" елементів */
@@ -72,12 +74,13 @@
 
 [data-style="orange"][data-theme="dark"] .game-board,
 [data-style="orange"][data-theme="dark"] .modal-window .modal-content {
-    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.6), 0 1px 3px 1px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
 }
 
-/* Стилізація кнопок у стилі Orange */
-[data-style="orange"] .dir-btn,
-[data-style="orange"] .dist-btn {
+/* FIX: :not(:disabled) — уникаємо мигання при переході disabled ↔ enabled.
+   Transition застосовується тільки до активних кнопок. */
+[data-style="orange"] .dir-btn:not(:disabled),
+[data-style="orange"] .dist-btn:not(:disabled) {
     border: none;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }

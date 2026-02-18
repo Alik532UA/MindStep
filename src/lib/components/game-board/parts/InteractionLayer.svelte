@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fade } from "svelte/transition";
+
   interface Props {
     boardSize: number;
     availableMoves: Array<{ row: number; col: number; isPenalty: boolean }>;
@@ -7,12 +9,17 @@
 
   let { boardSize, availableMoves, showMoves }: Props = $props();
 
-  let movesMap = $derived(showMoves 
-    ? availableMoves.reduce((acc, move) => {
-        acc[`${move.row}-${move.col}`] = move;
-        return acc;
-      }, {} as Record<string, { isPenalty: boolean }>)
-    : {});
+  let movesMap = $derived(
+    showMoves
+      ? availableMoves.reduce(
+          (acc, move) => {
+            acc[`${move.row}-${move.col}`] = move;
+            return acc;
+          },
+          {} as Record<string, { isPenalty: boolean }>,
+        )
+      : {},
+  );
 </script>
 
 <div class="interaction-layer" style="--board-size: {boardSize}">
@@ -21,7 +28,11 @@
       {@const move = movesMap[`${rowIdx}-${colIdx}`]}
       <div class="cell-interaction">
         {#if move}
-          <span class="move-dot" class:is-penalty={move.isPenalty}></span>
+          <span
+            class="move-dot"
+            class:is-penalty={move.isPenalty}
+            transition:fade={{ duration: 250 }}
+          ></span>
         {/if}
       </div>
     {/each}
@@ -60,7 +71,7 @@
     left: 50%;
     opacity: 0.5;
     transform: translate(-50%, -50%) scale(1);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Svelte transition:fade обробляє opacity — CSS transition не потрібен */
   }
 
   .move-dot.is-penalty {
