@@ -11,14 +11,14 @@ import { boardState } from '$lib/stores/boardState.svelte';
 import { gameModeState, initialGameModeState } from '$lib/stores/gameModeState.svelte';
 import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
-import { gameStore } from '$lib/stores/gameStore';
+import { gameState } from '$lib/stores/gameState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
 import { testModeState } from '$lib/stores/testModeState.svelte';
 import { timerState } from '$lib/stores/timerState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
-import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
-import { replayAutoPlayStore } from '$lib/stores/replayAutoPlayStore';
+import { uiEffectsState } from '$lib/stores/uiEffectsState.svelte';
+import { replayAutoPlayState } from '$lib/stores/replayAutoPlayState.svelte';
 import { initialUIState } from '$lib/types/uiState';
 import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';
 
@@ -28,8 +28,8 @@ import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';
  */
 export function resetAllStores() {
   // 1. Скасування активних побічних ефектів (таймери, інтервали)
-  uiEffectsStore.cancelAllEffects();
-  replayAutoPlayStore.cancelAllEffects();
+  uiEffectsState.cancelAllEffects();
+  replayAutoPlayState.cancelAllEffects();
 
   // 2. Скидання стану сторів (через руни)
   animationState.reset();
@@ -39,7 +39,7 @@ export function resetAllStores() {
   gameModeState.state = { ...initialGameModeState };
   gameOverState.resetGameOverState();
   gameSettingsState.state = { ...defaultGameSettings };
-  gameStore.reset();
+  gameState.reset();
   playerState.reset();
   scoreState.reset();
   testModeState.state = { 

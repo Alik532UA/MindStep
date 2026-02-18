@@ -1,5 +1,5 @@
 import { logService } from './logService';
-import { notificationStore } from '$lib/stores/notificationStore';
+import { notificationState } from '$lib/stores/notificationState.svelte';
 
 export interface ErrorOptions {
     context?: string;
@@ -14,7 +14,7 @@ class ErrorHandlerService {
      */
     public handle(error: unknown, options: ErrorOptions = {}): void {
         const { context, showToast = true, userMessageKey = 'common.errorOccurred', userMessageRaw } = options;
-        
+
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
 
@@ -23,7 +23,7 @@ class ErrorHandlerService {
 
         // 2. Сповіщення користувача
         if (showToast) {
-            notificationStore.add({
+            notificationState.add({
                 type: 'error',
                 messageKey: userMessageRaw ? undefined : userMessageKey,
                 messageRaw: userMessageRaw,

@@ -19,7 +19,7 @@ import { notificationService } from '$lib/services/notificationService';
 import type { Room } from '$lib/types/online';
 import { endGameService } from '$lib/services/endGameService';
 import { modalStateRune } from '$lib/stores/modalState.svelte';
-import { networkStatsStore } from '$lib/stores/networkStatsStore';
+import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 
 
 import { GameStateReconciler } from './online/GameStateReconciler';
@@ -60,7 +60,7 @@ export class OnlineGameMode extends BaseGameMode {
 
     // Start tracking network stats for this session
     if (import.meta.env.DEV) {
-      networkStatsStore.startSession();
+      networkStatsState.startSession();
     }
 
     if (!this.initializeSession(options.roomId)) {
@@ -311,7 +311,7 @@ export class OnlineGameMode extends BaseGameMode {
     if (this.stateSync) this.stateSync.cleanup();
 
     if (import.meta.env.DEV) {
-      networkStatsStore.stopSession();
+      networkStatsState.stopSession();
     }
 
     super.cleanup();

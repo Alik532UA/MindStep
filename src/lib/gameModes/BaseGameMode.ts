@@ -3,7 +3,7 @@ import { aiService } from '$lib/services/aiService';
 import type { IGameMode } from './gameMode.interface';
 import type { Player } from '$lib/models/player';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
-import { gameOverStore } from '$lib/stores/gameOverStore';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { sideEffectService, type SideEffect } from '$lib/services/sideEffectService';
 import { Piece, type MoveDirectionType } from '../models/Piece';
@@ -18,7 +18,7 @@ import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
-import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
+import { uiEffectsState } from '$lib/stores/uiEffectsState.svelte';
 import { voiceControlService } from '$lib/services/voiceControlService';
 import { GameEngine } from '$lib/logic/GameEngine';
 
@@ -141,7 +141,7 @@ export abstract class BaseGameMode implements IGameMode {
     }
 
     availableMovesService.updateAvailableMoves();
-    gameOverStore.resetGameOverState();
+    gameOverState.resetGameOverState();
     gameEventBus.dispatch('GAME_RESET');
   }
 
@@ -348,7 +348,7 @@ export abstract class BaseGameMode implements IGameMode {
     timeService.stopGameTimer();
     timeService.stopTurnTimer();
     uiState.reset();
-    uiEffectsStore.destroy();
+    uiEffectsState.destroy();
   }
 
   pauseTimers(): void {

@@ -6,7 +6,7 @@ import { initializeI18n } from "$lib/i18n/init.js";
 import { initializeTestModeSync } from "$lib/services/testModeService.svelte";
 import { rewardsService } from "$lib/services/rewardsService";
 import { logService } from "$lib/services/logService";
-import { appVersion } from "$lib/stores/versionStore";
+import { versionState } from "$lib/stores/versionState.svelte";
 import { get } from "svelte/store";
 import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
@@ -96,12 +96,12 @@ class AppInitializationService {
             
             const localVersion = localStorage.getItem(APP_VERSION_KEY);
             
-            appVersion.setVersion(serverVersion);
-            if (minVersion) appVersion.setMinVersion(minVersion);
+            versionState.setVersion(serverVersion);
+            if (minVersion) versionState.setMinVersion(minVersion);
 
             if (localVersion && localVersion !== serverVersion) {
                 logService.init(`[AppInitializationService] New version available: ${serverVersion}`);
-                appVersion.setUpdateAvailable(true);
+                versionState.setUpdateAvailable(true);
 
                 // Check for critical update
                 if (minVersion && this.isVersionLower(localVersion, minVersion)) {
@@ -156,7 +156,7 @@ class AppInitializationService {
             }
 
             // 3. Update local version to prevent loop
-            const currentVersion = get(appVersion).current;
+            const currentVersion = versionState.state.current;
             if (currentVersion) {
                 localStorage.setItem(APP_VERSION_KEY, currentVersion);
             }

@@ -25,7 +25,7 @@ import type {
 import { getFirestoreDb, isFirebaseConfigured } from '$lib/services/firebaseService';
 import { logService } from '$lib/services/logService';
 import { GameStateSerializer } from './GameStateSerializer';
-import { networkStatsStore } from '$lib/stores/networkStatsStore';
+import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 
 interface FirebaseRoomDocument {
     gameState: any; // Serialized state
@@ -140,7 +140,7 @@ export class FirebaseGameStateSync implements IGameStateSync {
 
             await updateDoc(this._roomRef, firestoreUpdates);
 
-            networkStatsStore.recordWrite('GameStateSync:pushState', serialized);
+            networkStatsState.recordWrite('GameStateSync:pushState', serialized);
             logService.state(`[FirebaseGameStateSync] FULL STATE pushed. Anticipating version > ${this._stateVersion}`);
         } catch (error) {
             logService.error('[FirebaseGameStateSync] Push state error:', error);
@@ -175,7 +175,7 @@ export class FirebaseGameStateSync implements IGameStateSync {
 
             await updateDoc(this._roomRef, firestoreUpdates);
 
-            networkStatsStore.recordWrite('GameStateSync:patchState', updates);
+            networkStatsState.recordWrite('GameStateSync:patchState', updates);
             logService.state(`[FirebaseGameStateSync] PATCH pushed. Fields: ${Object.keys(updates).join(', ')}`);
         } catch (error) {
             logService.error('[FirebaseGameStateSync] Patch state error:', error);

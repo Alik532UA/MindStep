@@ -6,7 +6,7 @@ import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { timeService } from '$lib/services/timeService';
 import ReconnectionModal from '$lib/components/modals/ReconnectionModal.svelte';
 import { get } from 'svelte/store';
-import { reconnectionStore } from '$lib/stores/reconnectionStore';
+import { reconnectionState } from '$lib/stores/reconnectionState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
 
 type DisconnectHandler = (playerId: string, disconnectStartedAt: number) => void;
@@ -43,10 +43,10 @@ export class OnlinePresenceManager {
 
     constructor(private config: PresenceConfig) {
         this.startedAt = Date.now();
-        reconnectionStore.init(config.roomId, config.myPlayerId);
+        reconnectionState.init(config.roomId, config.myPlayerId);
 
-        // Автоматичне керування модалкою на основі стану reconnectionStore
-        this.unsubscribeFromStore = reconnectionStore.subscribe(state => {
+        // Автоматичне керування модалкою на основі стану reconnectionState
+        this.unsubscribeFromStore = reconnectionState.subscribe(state => {
             const currentModal = modalStateRune.state;
             const hasPlayers = state.players.length > 0;
             const isReconnectionModalOpen = currentModal.isOpen && currentModal.dataTestId === 'reconnection-modal';
@@ -107,7 +107,7 @@ export class OnlinePresenceManager {
             this.unsubscribeFromStore();
             this.unsubscribeFromStore = null;
         }
-        reconnectionStore.reset();
+        reconnectionState.reset();
 
         // Встановлюємо офлайн при виході
         presenceService.setOffline(this.config.roomId, this.config.myPlayerId).catch(() => { });
@@ -165,12 +165,12 @@ export class OnlinePresenceManager {
             return;
         }
 
-        logService.presence(`[Presence] Player ${playerName} disconnected. Adding to reconnectionStore.`);
-        reconnectionStore.addPlayer({ id: playerId, name: playerName });
+        logService.presence(`[Presence] Player ${playerName} disconnected. Adding to reconnectionState.`);
+        reconnectionState.addPlayer({ id: playerId, name: playerName });
     }
 
     private triggerReconnect(playerId: string): void {
-        reconnectionStore.removePlayer(playerId);
+        reconnectionState.removePlayer(playerId);
     }
 
     /**
@@ -213,11 +213,11 @@ export class OnlinePresenceManager {
         });
 
         // Перевіряємо чи хтось зник з кімнати
-        const state = get(reconnectionStore);
+        const state = reconnectionState.state;
         state.players.forEach(p => {
             if (!currentPlayerIds.has(p.id)) {
                 logService.presence(`[Presence] Player ${p.name} left the room completely. Removing from store.`);
-                reconnectionStore.removePlayer(p.id);
+                reconnectionState.removePlayer(p.id);
                 delete this.playerNamesCache[p.id];
             }
         });

@@ -3,7 +3,7 @@ import { getFirestoreDb } from '$lib/services/firebaseService';
 import { logService } from '$lib/services/logService';
 import type { OnlinePlayer, Room } from '$lib/types/online';
 import { roomSessionService } from './roomSessionService';
-import { networkStatsStore } from '$lib/stores/networkStatsStore';
+import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { roomFirestoreService } from './roomFirestoreService';
 import { presenceService } from '$lib/services/presenceService';
 
@@ -21,7 +21,7 @@ export class RoomPlayerService {
         }
 
         await updateDoc(roomRef, updates);
-        networkStatsStore.recordWrite('RoomPlayer:updatePlayer', updates);
+        networkStatsState.recordWrite('RoomPlayer:updatePlayer', updates);
     }
 
     async toggleReady(roomId: string, playerId: string, isReady: boolean): Promise<void> {
@@ -31,7 +31,7 @@ export class RoomPlayerService {
             lastActivity: Date.now()
         };
         await updateDoc(roomRef, updates);
-        networkStatsStore.recordWrite('RoomPlayer:toggleReady', updates);
+        networkStatsState.recordWrite('RoomPlayer:toggleReady', updates);
     }
 
     async setWatchingReplay(roomId: string, playerId: string, isWatching: boolean): Promise<void> {
@@ -41,13 +41,13 @@ export class RoomPlayerService {
             lastActivity: Date.now()
         };
         await updateDoc(roomRef, updates);
-        networkStatsStore.recordWrite('RoomPlayer:setWatchingReplay', updates);
+        networkStatsState.recordWrite('RoomPlayer:setWatchingReplay', updates);
     }
 
     async sendHeartbeat(roomId: string, playerId: string): Promise<void> {
         // Fast Heartbeat -> Presence Subcollection
         await roomFirestoreService.updatePresenceDoc(roomId, playerId, { lastSeen: Date.now(), isDisconnected: false });
-        networkStatsStore.recordWrite('RoomPlayer:FastHeartbeat', { lastSeen: Date.now() });
+        networkStatsState.recordWrite('RoomPlayer:FastHeartbeat', { lastSeen: Date.now() });
     }
 
     async updateLobbyPresence(roomId: string, playerId: string): Promise<void> {
@@ -57,7 +57,7 @@ export class RoomPlayerService {
             [`players.${playerId}.lastSeen`]: Date.now()
         };
         await updateDoc(roomRef, updates);
-        networkStatsStore.recordWrite('RoomPlayer:LobbyHeartbeat', updates);
+        networkStatsState.recordWrite('RoomPlayer:LobbyHeartbeat', updates);
     }
 
     async leaveRoom(roomId: string, playerId: string): Promise<void> {

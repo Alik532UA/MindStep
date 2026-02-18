@@ -27,10 +27,14 @@ class ReplayStateRune {
     private _state = $state<ReplayState>({ ...initialReplayState });
 
     get state() { return this._state; }
-    set state(value: ReplayState) { this._state = value; }
+    set state(value: ReplayState) { 
+        this._state = value;
+        this.notifySubscribers();
+    }
 
     update(fn: (s: ReplayState) => ReplayState) {
         this._state = fn(this._state);
+        this.notifySubscribers();
     }
 
     startReplay(moveHistory: MoveHistoryEntry[], boardSize: number) {
@@ -42,6 +46,7 @@ class ReplayStateRune {
             replayCurrentStep: 0,
             autoPlayDirection: 'paused'
         };
+        this.notifySubscribers();
     }
 
     stopReplay() {
@@ -51,7 +56,21 @@ class ReplayStateRune {
             moveHistory: [],
             autoPlayDirection: 'paused'
         };
+        this.notifySubscribers();
+    }
+
+    // --- Bridge Support ---
+    private subscribers: Set<(s: ReplayState) => void> = new Set();
+
+    subscribe(fn: (s: ReplayState) => void): () => void {
+        fn(this._state);
+        this.subscribers.add(fn);
+        return () => this.subscribers.delete(fn);
+    }
+
+    private notifySubscribers() {
+        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 
-export const replayStateRune = new ReplayStateRune();
+export const replayState = new ReplayStateRune();

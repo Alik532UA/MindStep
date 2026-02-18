@@ -1,4 +1,4 @@
-import { debugLogStore } from '../stores/debugLogStore';
+import { debugLogState } from '../stores/debugLogState.svelte';
 
 const isBrowser = typeof window !== 'undefined';
 const isDev = import.meta.env.DEV;
@@ -51,7 +51,7 @@ const defaultConfig: LogConfig = {
     [LOG_GROUPS.LOGIC_BOARD]: false,
     [LOG_GROUPS.LOGIC_WIN]: false,
     [LOG_GROUPS.LOGIC_VIRTUAL_PLAYER]: false,
-    [LOG_GROUPS.LOGIC_AVAILABILITY]: false, 
+    [LOG_GROUPS.LOGIC_AVAILABILITY]: false,
     [LOG_GROUPS.LOGIC_TIME]: false,
     [LOG_GROUPS.SCORE]: false,
     [LOG_GROUPS.UI]: true,
@@ -62,7 +62,7 @@ const defaultConfig: LogConfig = {
     [LOG_GROUPS.GAME_MODE]: true,
     [LOG_GROUPS.SPEECH]: false,
     [LOG_GROUPS.VOICE_CONTROL]: false,
-    [LOG_GROUPS.STATE]: true, 
+    [LOG_GROUPS.STATE]: true,
     [LOG_GROUPS.PIECE]: false,
     [LOG_GROUPS.LOGIC_MOVE]: true,
     [LOG_GROUPS.TEST_MODE]: false,
@@ -103,14 +103,14 @@ function saveLogToSession(logEntry: string): void {
     try {
         const rawLogs = sessionStorage.getItem(SESSION_LOGS_KEY);
         const logs: string[] = rawLogs ? JSON.parse(rawLogs) : [];
-        
+
         logs.push(`${new Date().toISOString()} ${logEntry}`);
-        
+
         // Тримаємо тільки останні MAX_SESSION_LOGS
         if (logs.length > MAX_SESSION_LOGS) {
             logs.shift();
         }
-        
+
         sessionStorage.setItem(SESSION_LOGS_KEY, JSON.stringify(logs));
     } catch (e) {
         // Очищуємо, якщо переповнено або помилка
@@ -173,13 +173,13 @@ function formatDataForDisplay(data: unknown[]): string {
  */
 function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unknown[]): void {
     const isLogEnabled = (isDev || isForceEnabled) && logConfig[group];
-    
+
     // Ми завжди зберігаємо в сесію, навіть якщо консоль вимкнена, 
     // для можливості діагностики помилок "постфактум"
     if (isBrowser) {
         const logText = `[${group.toUpperCase()}] [${level.toUpperCase()}] ${message} ${data.length > 0 ? formatDataForDisplay(data) : ''}`;
         saveLogToSession(logText);
-        
+
         if (isLogEnabled) {
             // ЧОМУ: Використовуємо setTimeout тільки в браузері для UI-логів. 
             // Під час тестів уникаємо асинхронних оновлень стану, щоб не ламати таймінги Playwright.
@@ -189,7 +189,7 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
             }
 
             setTimeout(() => {
-                debugLogStore.add(logText);
+                debugLogState.add(logText);
             }, 0);
         }
     }
@@ -197,7 +197,7 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
     if (isLogEnabled) {
         const style = styles[group] || '';
         const label = `[${group.toUpperCase()}]`;
-        
+
         // Використовуємо console.groupCollapsed, якщо є додаткові дані
         if (data.length > 0) {
             console.groupCollapsed(`%c${label} %c${message}`, style, 'color: inherit; font-weight: normal;');
@@ -250,7 +250,7 @@ const loggerProxy = new Proxy({} as LoggerMethods, {
                 if (!isForceEnabled) {
                     isForceEnabled = true;
                     console.log('%c[LOG_SERVICE]%c Production logging enabled.', 'font-weight: bold; color: #4CAF50;', 'color: inherit;');
-                    if (isBrowser) debugLogStore.add('[INFO] Logging has been force-enabled for this session.');
+                    if (isBrowser) debugLogState.add('[INFO] Logging has been force-enabled for this session.');
                 }
             };
         }
@@ -306,7 +306,7 @@ export const logService = loggerProxy;
 // Глобальний контролер для розробника (тільки в браузері)
 if (isBrowser) {
     const globalWin = window as any;
-    
+
     globalWin.setLogLevels = (newConfig: Partial<LogConfig>) => {
         logConfig = { ...logConfig, ...newConfig };
         saveConfig(logConfig);

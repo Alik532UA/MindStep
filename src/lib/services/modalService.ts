@@ -10,7 +10,7 @@ import { locale } from 'svelte-i18n';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { speakText } from './speechService';
 import type { Player } from '$lib/models/player';
-import type { GameOverPayload, PlayerScoreResult, FinalScoreDetails } from '$lib/stores/gameOverStore';
+import type { GameOverPayload, PlayerScoreResult, FinalScoreDetails } from '$lib/stores/gameOverState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
 import GameOverContent from '$lib/components/modals/GameOverContent.svelte';
 import SimpleModalContent from '$lib/components/modals/SimpleModalContent.svelte';

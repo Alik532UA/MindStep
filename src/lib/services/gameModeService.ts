@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { gameStore } from '$lib/stores/gameStore';
+import { gameState } from '$lib/stores/gameState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameModeState } from '$lib/stores/gameModeState.svelte';
 import { BaseGameMode } from '$lib/gameModes/BaseGameMode';
@@ -87,7 +87,7 @@ class GameModeService {
       // Передаємо options у метод initialize режиму
       mode.initialize(options);
 
-      gameStore.setMode(mode);
+      gameState.setMode(mode);
       gameModeState.setActiveMode(implementationName);
       logService.GAME_MODE(`Game mode initialized: ${implementationName} (from preset: ${name})`, options);
     } else {
@@ -96,7 +96,7 @@ class GameModeService {
   }
 
   public getCurrentMode(): BaseGameMode | null {
-    return get(gameStore).mode;
+    return gameState.state.mode;
   }
 }
 

@@ -1,8 +1,21 @@
 // src/lib/stores/testModeState.svelte.ts
 // SSoT для тестового режиму. Svelte 5 Runes.
 
-import type { TestModeState } from './testModeStore';
 import { logService } from '$lib/services/logService';
+
+export type PositionMode = 'random' | 'predictable' | 'manual';
+export type ComputerMoveMode = 'random' | 'manual';
+
+export interface TestModeState {
+    isEnabled: boolean;
+    startPositionMode: PositionMode;
+    manualStartPosition: { x: number; y: number } | null;
+    computerMoveMode: ComputerMoveMode;
+    manualComputerMove: {
+        direction: string | null;
+        distance: number | null;
+    };
+}
 
 const initialTestState: TestModeState = {
     isEnabled: false,
@@ -19,15 +32,19 @@ class TestModeStateRune {
     private _state = $state<TestModeState>({ ...initialTestState });
 
     get state() { return this._state; }
-    set state(value: TestModeState) { this._state = value; }
+    set state(value: TestModeState) {
+        this._state = value;
+        this.notifySubscribers();
+    }
 
     update(fn: (s: TestModeState) => TestModeState) {
         this._state = fn(this._state);
+        this.notifySubscribers();
     }
 
     toggle() {
         const isEnabled = !this._state.isEnabled;
-        logService.testMode(`Test mode toggled: ${isEnabled ? 'ON' : 'OFF'}`);
+        logService.testMode(`[TestModeState] toggle() called. New state: ${isEnabled ? 'ON' : 'OFF'}`);
 
         if (isEnabled) {
             this._state = {
@@ -48,6 +65,20 @@ class TestModeStateRune {
                 manualComputerMove: { direction: null, distance: null }
             };
         }
+        this.notifySubscribers();
+    }
+
+    // --- Bridge Support ---
+    private subscribers: Set<(s: TestModeState) => void> = new Set();
+
+    subscribe(fn: (s: TestModeState) => void): () => void {
+        fn(this._state);
+        this.subscribers.add(fn);
+        return () => this.subscribers.delete(fn);
+    }
+
+    private notifySubscribers() {
+        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 

@@ -5,7 +5,7 @@ import { roomService } from '$lib/services/roomService';
 import { timeService } from '$lib/services/timeService';
 import { logService } from '$lib/services/logService';
 import { uiState } from '$lib/stores/uiState.svelte';
-import type { GameOverPayload } from '$lib/stores/gameOverStore';
+import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 import type { OnlineMatchController } from './OnlineMatchController';
 
 export interface EventManagerCallbacks {

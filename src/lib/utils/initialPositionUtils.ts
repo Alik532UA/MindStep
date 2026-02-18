@@ -1,5 +1,5 @@
 // src/lib/utils/initialPositionUtils.ts
-import type { TestModeState } from '$lib/stores/testModeStore';
+import type { TestModeState } from '$lib/stores/testModeState.svelte';
 
 /**
  * Генерує випадкову позицію на дошці

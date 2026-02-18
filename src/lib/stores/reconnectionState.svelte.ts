@@ -1,9 +1,14 @@
 // src/lib/stores/reconnectionState.svelte.ts
 // SSoT для реконнекту. Svelte 5 Runes.
 
-import type { DisconnectedPlayer } from './reconnectionStore';
+export interface DisconnectedPlayer {
+    id: string;
+    name: string;
+    disconnectStart: number;
+    deadline: number;
+}
 
-interface ReconnectionState {
+export interface ReconnectionState {
     roomId: string;
     myPlayerId: string;
     players: DisconnectedPlayer[];
@@ -19,14 +24,19 @@ class ReconnectionStateRune {
     private _state = $state<ReconnectionState>({ ...initialReconnectionState });
 
     get state() { return this._state; }
-    set state(value: ReconnectionState) { this._state = value; }
+    set state(value: ReconnectionState) { 
+        this._state = value;
+        this.notifySubscribers();
+    }
 
     update(fn: (s: ReconnectionState) => ReconnectionState) {
         this._state = fn(this._state);
+        this.notifySubscribers();
     }
 
     init(roomId: string, myPlayerId: string) {
         this._state = { roomId, myPlayerId, players: [] };
+        this.notifySubscribers();
     }
 
     addPlayer(player: { id: string; name: string }, timeoutSeconds: number = 15) {
@@ -43,6 +53,7 @@ class ReconnectionStateRune {
                 deadline: now + (timeoutSeconds * 1000)
             }]
         };
+        this.notifySubscribers();
     }
 
     removePlayer(playerId: string) {
@@ -50,6 +61,7 @@ class ReconnectionStateRune {
             ...this._state,
             players: this._state.players.filter(p => p.id !== playerId)
         };
+        this.notifySubscribers();
     }
 
     extendDeadline(playerId: string, seconds: number) {
@@ -61,10 +73,25 @@ class ReconnectionStateRune {
                     : p
             )
         };
+        this.notifySubscribers();
     }
 
     reset() {
         this._state = { ...initialReconnectionState };
+        this.notifySubscribers();
+    }
+
+    // --- Bridge Support ---
+    private subscribers: Set<(s: ReconnectionState) => void> = new Set();
+
+    subscribe(fn: (s: ReconnectionState) => void): () => void {
+        fn(this._state);
+        this.subscribers.add(fn);
+        return () => this.subscribers.delete(fn);
+    }
+
+    private notifySubscribers() {
+        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 

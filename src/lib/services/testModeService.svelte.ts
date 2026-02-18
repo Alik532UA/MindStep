@@ -2,6 +2,7 @@ import { testModeState } from '$lib/stores/testModeState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { logService } from './logService';
 import type { MoveDirectionType } from '$lib/models/Piece';
+import { untrack } from 'svelte';
 
 let isInitialized = false;
 
@@ -10,20 +11,23 @@ export function initializeTestModeSync() {
 
   logService.init('Initializing Test Mode Sync Service...');
 
-  // Використовуємо $effect.root, щоб створити глобальний ефект синхронізації
   $effect.root(() => {
     $effect(() => {
+      // Читаємо ТІЛЬКИ testModeState реактивно.
+      // ВСІ операції з uiState — через untrack, бо uiState.update() читає
+      // this._state ($state) всередині методу, що підписує $effect на uiState._state → цикл!
       const state = testModeState.state;
-      logService.testMode('[testModeService] Reactive sync triggered:', state);
 
       if (!state.isEnabled) {
-        if (uiState.state.testModeOverrides) {
-          logService.testMode('[testModeService] Test mode disabled, clearing overrides.');
-          uiState.update(s => {
-            const { testModeOverrides, ...rest } = s;
-            return rest;
-          });
-        }
+        untrack(() => {
+          if (uiState.state.testModeOverrides) {
+            logService.testMode('[testModeService] Test mode disabled, clearing overrides.');
+            uiState.update(s => {
+              const { testModeOverrides, ...rest } = s;
+              return rest;
+            });
+          }
+        });
         return;
       }
 
@@ -37,11 +41,16 @@ export function initializeTestModeSync() {
           distance: state.manualComputerMove.distance
         };
       }
-      
+
       logService.testMode('[testModeService] Applying overrides:', overrides);
-      uiState.update(s => ({ ...s, testModeOverrides: overrides }));
+      // FIX: untrack обгортає весь виклик update(), бо всередині update()
+      // читається this._state ($state) — без untrack $effect підписується на uiState
+      untrack(() => {
+        uiState.update(s => ({ ...s, testModeOverrides: overrides }));
+      });
     });
   });
 
   isInitialized = true;
 }
+

@@ -17,7 +17,7 @@ import {
 import { getFirestoreDb } from '../firebaseService';
 import type { Room } from '$lib/types/online';
 import { withTimeout } from '$lib/utils/asyncUtils';
-import { networkStatsStore } from '$lib/stores/networkStatsStore';
+import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { RoomSchema } from '$lib/schemas/onlineSchema';
 import { logService } from '$lib/services/logService';
 
@@ -145,7 +145,7 @@ class RoomFirestoreService {
             (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
-                    networkStatsStore.recordRead('RoomSubscription', data);
+                    networkStatsState.recordRead('RoomSubscription', data);
                     callback(this.validateRoom(data, doc.id));
                 } else {
                     callback(null);

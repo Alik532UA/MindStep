@@ -5,7 +5,7 @@ import { modalService } from './modalService';
 import { gameEventBus } from './gameEventBus';
 import { logService } from './logService';
 import type { MoveDirectionType } from '$lib/models/Piece';
-import type { GameOverPayload } from '$lib/stores/gameOverStore';
+import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 import type { ModalState } from '$lib/stores/modalState.svelte';
 
 export type SideEffect =

@@ -5,7 +5,7 @@
  * @description Цей модуль також підтримує систему нагород через спеціалізовані події.
  */
 
-import type { GameOverPayload, PlayerScoreResult } from '$lib/stores/gameOverStore';
+import type { GameOverPayload, PlayerScoreResult } from '$lib/stores/gameOverState.svelte';
 import type { ModalState } from '$lib/stores/modalState.svelte';
 import type { MoveDirectionType } from '$lib/models/Piece';
 

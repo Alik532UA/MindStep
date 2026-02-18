@@ -3,7 +3,7 @@ import type { BoardState } from '$lib/stores/boardState.svelte';
 import type { PlayerState } from '$lib/stores/playerState.svelte';
 import type { ScoreState } from '$lib/stores/scoreState.svelte';
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
-import type { GameOverPayload, PlayerScoreResult } from '$lib/stores/gameOverStore';
+import type { GameOverPayload, PlayerScoreResult } from '$lib/stores/gameOverState.svelte';
 
 /**
  * Дані про заяву "Немає ходів"

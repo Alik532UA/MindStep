@@ -14,7 +14,7 @@ import { DEFAULT_PLAYER_NAMES } from '$lib/config/defaultPlayers';
 import { getRandomUnusedColor } from '$lib/utils/playerUtils';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { initialUIState, type UiState } from '$lib/types/uiState';
-import { uiEffectsStore } from '$lib/stores/uiEffectsStore';
+import { uiEffectsState } from '$lib/stores/uiEffectsState.svelte';
 
 export const gameService = {
   initializeNewGame(config: {
@@ -24,7 +24,7 @@ export const gameService = {
     logService.init('[GameService] initializeNewGame: Створення нового ігрового стану...', config);
 
     // Ініціалізація слухачів подій для UI
-    uiEffectsStore.initEventListeners();
+    uiEffectsState.initEventListeners();
 
     // FIX: Спочатку скидаємо анімацію, щоб очистити черги і таймери.
     animationService.reset();

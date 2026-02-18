@@ -5,7 +5,7 @@ import { gameEventBus } from './gameEventBus';
 import { calculateFinalScore } from './scoreService';
 import { endGameService } from './endGameService';
 import { availableMovesService } from './availableMovesService';
-import { gameStore } from '$lib/stores/gameStore';
+import { gameState } from '$lib/stores/gameState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
@@ -63,7 +63,7 @@ export const noMovesService = {
       playerScores // Передаємо список гравців
     });
 
-    const gameMode = get(gameStore).mode;
+    const gameMode = gameState.state.mode;
     if (gameMode) {
       gameMode.pauseTimers();
     }

@@ -2,7 +2,7 @@ import { gameEventBus, type ShowModalPayload, type SpeakMovePayload, type BoardR
 import { sideEffectService } from './sideEffectService';
 import { logService } from './logService';
 import { userActionService } from './userActionService';
-import type { GameOverPayload } from '$lib/stores/gameOverStore';
+import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 
 class CommandService {
   constructor() {
