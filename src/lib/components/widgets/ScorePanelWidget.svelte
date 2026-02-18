@@ -1,6 +1,6 @@
 <script lang="ts">
   import { userActionService } from "$lib/services/userActionService";
-  import { replayStore } from "$lib/stores/replayStore";
+  import { replayState } from "$lib/stores/replayState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { playerState } from "$lib/stores/playerState.svelte";
@@ -22,7 +22,7 @@
   }
 </script>
 
-{#if !$replayStore.isReplayMode && pState && currentScore}
+{#if !replayState.state.isReplayMode && pState && currentScore}
   <div class="score-panel game-content-block" data-testid="score-panel">
     {#if isMultiplayer}
       <MultiPlayerScoreDisplay {players} scoreStore={currentScore} />

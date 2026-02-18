@@ -1,18 +1,24 @@
 <script lang="ts">
     import MenuButton from "../MenuButton.svelte";
     import type { IMenuItem, MenuPosition } from "../FlexibleMenu.types";
+    import type { Snippet } from "svelte";
 
-    export let isOpen: boolean;
-    export let isVertical: boolean;
-    export let position: MenuPosition;
-    export let items: IMenuItem[];
+    interface Props {
+        isOpen: boolean;
+        isVertical: boolean;
+        position: MenuPosition;
+        items: IMenuItem[];
+        toggle: Snippet;
+    }
 
-    $: displayItems = items.slice(0, 5);
+    let { isOpen, isVertical, position, items, toggle }: Props = $props();
+
+    const displayItems = $derived(items.slice(0, 5));
 </script>
 
 <div class="menu-panel position-{position}" data-testid="{position}-menu-panel">
     <!-- Slot for the toggle button which needs to be positioned relative to this panel -->
-    <slot name="toggle" />
+    {@render toggle()}
 
     <div
         class="menu-grid {isVertical ? 'vertical' : 'horizontal'}"

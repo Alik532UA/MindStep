@@ -1,34 +1,43 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, tick } from "svelte";
-  import { fade } from "svelte/transition";
   import { scale } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import { columnStyleMode } from "$lib/stores/columnStyleStore";
+  import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
   import { t } from "$lib/i18n/typedI18n";
-  import { layoutUpdateStore } from "$lib/stores/layoutUpdateStore";
+  import { layoutUpdateState } from "$lib/stores/layoutUpdateState.svelte";
   import ErrorBoundary from "./ErrorBoundary.svelte";
 
-  export let columns: {
-    id: string;
-    label: string;
-    items: { id: string; label: string; props?: any }[];
-  }[];
-  export let itemContent: (item: any) => any = (item) => item.label;
-  export let class_name = "";
+  interface Props {
+    columns: {
+      id: string;
+      label: string;
+      items: { id: string; label: string; props?: any }[];
+    }[];
+    itemContent?: (item: any) => any;
+    class_name?: string;
+  }
+
+  let { 
+    columns, 
+    itemContent = (item) => item.label, 
+    class_name = "" 
+  }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
-  let dragging: { id: string; label: string } | null = null;
-  let dragSourceCol: string | null = null;
-  let dragX = 0;
-  let dragY = 0;
-  let isDragging = false;
-  let dropTargetCol: string | null = null;
-  let dropIndex: number | null = null;
-  let colRefs: HTMLUListElement[] = [];
-  let isHorizontalLayout = true;
-  let containerRef: HTMLDivElement;
-  let marginTop = "0";
+  let dragging: { id: string; label: string } | null = $state(null);
+  let dragSourceCol: string | null = $state(null);
+  let dragX = $state(0);
+  let dragY = $state(0);
+  let isDragging = $state(false);
+  let dropTargetCol: string | null = $state(null);
+  let dropIndex: number | null = $state(null);
+  let colRefs: HTMLUListElement[] = $state([]);
+  let isHorizontalLayout = $state(true);
+  let containerRef: HTMLDivElement | undefined = $state();
+  let marginTop = $state("0");
+
+  const columnMode = $derived(columnStyleState.state);
 
   function updateLayoutMode() {
     isHorizontalLayout = window.innerWidth > 1270;
@@ -52,7 +61,10 @@
     return () => window.removeEventListener("resize", updateLayoutMode);
   });
 
-  $: $layoutUpdateStore, updateLayoutMode();
+  $effect(() => {
+    layoutUpdateState.state;
+    updateLayoutMode();
+  });
 
   function handlePointerDown(
     e: PointerEvent,
@@ -127,13 +139,13 @@
       bind:this={colRefs[i]}
       class="dnd-column"
       data-testid="dnd-column-{col.id}"
-      class:editing-column={$columnStyleMode === "flexible"}
-      style={$columnStyleMode === "flexible"
+      class:editing-column={columnMode === "flexible"}
+      style={columnMode === "flexible"
         ? "padding: 0; background: none; border-radius: 8px; list-style: none; min-height: 80px;"
         : "padding: 16px; background: #222; border-radius: 8px; list-style: none; min-height: 80px;"}
       transition:scale={{ duration: 300, start: 0.95 }}
     >
-      {#if $columnStyleMode !== "flexible"}
+      {#if columnMode !== "flexible"}
         <b class="dnd-column-header" style="color: #fff;">{col.label}</b>
       {/if}
       {#each col.items as item, j (item.id)}
@@ -141,13 +153,13 @@
           animate:flip={{ duration: 300 }}
           data-testid="widget-{item.id}"
           class="dnd-item"
-          style="padding: 12px; margin: 8px 0; background: none; color: #fff; border-radius: 4px; {$columnStyleMode ===
+          style="padding: 12px; margin: 8px 0; background: none; color: #fff; border-radius: 4px; {columnMode ===
           'flexible'
             ? 'cursor: grab;'
             : 'cursor: default;'} opacity: {dragging && dragging.id === item.id
             ? 0.5
             : 1};"
-          on:pointerdown={$columnStyleMode === "flexible"
+          onpointerdown={columnMode === "flexible"
             ? (e) => handlePointerDown(e, item, col.id)
             : undefined}
           transition:scale={{ duration: 300, start: 0.9 }}
@@ -155,7 +167,8 @@
           <div class="dnd-item-content">
             <ErrorBoundary compact={true}>
               {#if typeof itemContent(item) === "function"}
-                <svelte:component this={itemContent(item)} {...item.props} />
+                {@const DynamicComponent = itemContent(item)}
+                <DynamicComponent {...item.props} />
               {:else}
                 {itemContent(item)}
               {/if}
@@ -167,7 +180,7 @@
   {/each}
 </div>
 
-{#if isDragging && dragging && $columnStyleMode === "flexible"}
+{#if isDragging && dragging && columnMode === "flexible"}
   <div
     class="dnd-edit-instruction"
     style="

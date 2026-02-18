@@ -8,11 +8,11 @@
   import TestComputerMoveControls from "./test-mode/TestComputerMoveControls.svelte";
 
   onMount(() => {
-    logService.testMode("TestModeWidget mounted");
+    logService.testMode("[TestModeWidget] mounted");
   });
 </script>
 
-<div class="test-mode-widget">
+<div class="test-mode-widget" data-testid="test-mode-widget-content">
   <h3 class="test-mode-widget-title">{$t("testMode.title")}</h3>
 
   <TestStartPositionControls />

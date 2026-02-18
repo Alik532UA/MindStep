@@ -2,7 +2,7 @@
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { t } from "$lib/i18n/typedI18n";
-    import { voiceControlStore } from "$lib/stores/voiceControlStore";
+    import { voiceControlState } from "$lib/stores/voiceControlState.svelte";
 
     interface Props {
         confirmDisabled?: boolean;
@@ -26,8 +26,10 @@
         onvoiceCommand
     }: Props = $props();
 
+    const voiceState = $derived(voiceControlState.state);
+
     let voiceButtonStyle = $derived(
-        `box-shadow: 0 0 0 ${$voiceControlStore.volume * 20}px rgba(229, 57, 53, ${Math.min($voiceControlStore.volume * 2, 1)});`
+        `box-shadow: 0 0 0 ${voiceState.volume * 20}px rgba(229, 57, 53, ${Math.min(voiceState.volume * 2, 1)});`
     );
     let voiceButtonTooltip = $derived(
         isVoiceSupported
@@ -77,8 +79,8 @@
             onclick={onvoiceCommand}
             tooltip={voiceButtonTooltip}
             dataTestId="voice-command-btn"
-            class={$voiceControlStore.lastTranscript !== "" ? "active" : ""}
-            style="width: 90%; {$voiceControlStore.lastTranscript !== ''
+            class={voiceState.lastTranscript !== "" ? "active" : ""}
+            style="width: 90%; {voiceState.lastTranscript !== ''
                 ? voiceButtonStyle
                 : ''}"
         >

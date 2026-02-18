@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { columnStyleMode } from "$lib/stores/columnStyleStore";
-    import { layoutStore } from "$lib/stores/layoutStore";
+    import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
+    import { layoutStateRune } from "$lib/stores/layoutState.svelte";
     import { logService } from "$lib/services/logService.js";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";
     import { customTooltip } from "$lib/actions/customTooltip.js";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
+
+    const styleMode = $derived(columnStyleState.state);
 </script>
 
 <!-- FIX: Додано data-testid для контейнера -->
@@ -22,8 +24,8 @@
             data-testid="settings-expander-column-style-fixed-btn"
             class="settings-expander__square-btn"
             aria-label="Fixed mode"
-            on:click={() => columnStyleMode.set("fixed")}
-            class:active={$columnStyleMode === "fixed"}
+            onclick={() => (columnStyleState.state = "fixed")}
+            class:active={styleMode === "fixed"}
         >
             <SvgIcons name="fixed" />
         </button>
@@ -31,8 +33,8 @@
             data-testid="settings-expander-column-style-editing-btn"
             class="settings-expander__square-btn"
             aria-label="Flexible mode"
-            on:click={() => columnStyleMode.set("flexible")}
-            class:active={$columnStyleMode === "flexible"}
+            onclick={() => (columnStyleState.state = "flexible")}
+            class:active={styleMode === "flexible"}
         >
             <SvgIcons name="editing" />
         </button>
@@ -42,7 +44,7 @@
             use:blurOnClick
             aria-label="Скинути положення меню"
             use:customTooltip={$t("ui.resetMenuLayout")}
-            on:click={() => layoutStore.resetLayout()}
+            onclick={() => layoutStateRune.reset()}
         >
             <span
                 style="width:50%;height:50%;display:flex;align-items:center;justify-content:center;"

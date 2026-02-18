@@ -1,27 +1,31 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
+    import { untrack } from "svelte";
     import {
-        testModeStore,
+        testModeState,
         type ComputerMoveMode,
-        type TestModeState,
-    } from "$lib/stores/testModeStore";
+    } from "$lib/stores/testModeState.svelte";
     import { logService } from "$lib/services/logService.js";
 
-    let manualDirection: string | null = null;
-    let manualDistance: number = 1;
+    const tState = $derived(testModeState.state);
+    let manualDirection = $state<string | null>(null);
+    let manualDistance = $state(1);
 
-    // Reactively sync with store
-    $: {
-        if ($testModeStore) {
-            manualDirection = $testModeStore.manualComputerMove.direction;
-            manualDistance = $testModeStore.manualComputerMove.distance ?? 1;
-        }
-    }
+    // FIX: untrack запобігає циклу — читаємо tState реактивно,
+    // але записуємо локальний стан поза реактивним відстеженням
+    $effect(() => {
+        const dir = tState.manualComputerMove.direction;
+        const dist = tState.manualComputerMove.distance ?? 1;
+        untrack(() => {
+            manualDirection = dir;
+            manualDistance = dist;
+        });
+    });
 
     function setComputerMoveMode(mode: ComputerMoveMode) {
         manualDirection = null;
-        testModeStore.update((state) => ({
-            ...state,
+        testModeState.update((s) => ({
+            ...s,
             computerMoveMode: mode,
             manualComputerMove: { direction: null, distance: null },
         }));
@@ -39,12 +43,12 @@
     }
 
     function setManualComputerMove(direction: string, distance: number) {
-        const newState: Partial<TestModeState> = {
-            computerMoveMode: "manual",
-            manualComputerMove: { direction, distance },
-        };
-        testModeStore.update((state) => {
-            const updatedState = { ...state, ...newState };
+        testModeState.update((s) => {
+            const updatedState = {
+                ...s,
+                computerMoveMode: "manual" as const,
+                manualComputerMove: { direction, distance },
+            };
             logService.testMode(
                 "TestModeWidget: updated testModeStore via ComputerMoveControls",
                 updatedState,
@@ -59,8 +63,8 @@
     <div class="test-mode-btn-group">
         <button
             class="test-mode-row-btn"
-            on:click={() => setComputerMoveMode("random")}
-            class:active={$testModeStore.computerMoveMode === "random"}
+            onclick={() => setComputerMoveMode("random")}
+            class:active={tState.computerMoveMode === "random"}
             data-testid="test-mode-computer-move-random-btn"
             >{$t("testMode.random")}</button
         >
@@ -69,50 +73,50 @@
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "up-left"}
-            on:click={() => handleDirection("up-left")}
+            onclick={() => handleDirection("up-left")}
             data-testid="test-mode-dir-btn-up-left">↖</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "up"}
-            on:click={() => handleDirection("up")}
+            onclick={() => handleDirection("up")}
             data-testid="test-mode-dir-btn-up">↑</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "up-right"}
-            on:click={() => handleDirection("up-right")}
+            onclick={() => handleDirection("up-right")}
             data-testid="test-mode-dir-btn-up-right">↗</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "left"}
-            on:click={() => handleDirection("left")}
+            onclick={() => handleDirection("left")}
             data-testid="test-mode-dir-btn-left">←</button
         >
         <div class="placeholder"></div>
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "right"}
-            on:click={() => handleDirection("right")}
+            onclick={() => handleDirection("right")}
             data-testid="test-mode-dir-btn-right">→</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down-left"}
-            on:click={() => handleDirection("down-left")}
+            onclick={() => handleDirection("down-left")}
             data-testid="test-mode-dir-btn-down-left">↙</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down"}
-            on:click={() => handleDirection("down")}
+            onclick={() => handleDirection("down")}
             data-testid="test-mode-dir-btn-down">↓</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down-right"}
-            on:click={() => handleDirection("down-right")}
+            onclick={() => handleDirection("down-right")}
             data-testid="test-mode-dir-btn-down-right">↘</button
         >
     </div>
@@ -131,7 +135,7 @@
         </div>
         <button
             class="test-mode-square-btn"
-            on:click={setManualMoveProperties}
+            onclick={setManualMoveProperties}
             data-testid="test-mode-set-move-dist-btn"
             >{$t("testMode.set")}</button
         >

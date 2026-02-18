@@ -2,17 +2,30 @@
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import type { IMenuItem } from "./FlexibleMenu.types";
+    import { logService } from "$lib/services/logService";
 
-    // Explicitly typing the prop
-    export let item: IMenuItem;
-    export let dataTestId: string = "";
+    interface Props {
+        item: IMenuItem;
+        dataTestId?: string;
+    }
+
+    let { item, dataTestId = "" }: Props = $props();
+
+    function handleClick(e: MouseEvent) {
+        logService.action(`[MenuButton] Clicked: id=${item.id}, dataTestId=${dataTestId}`);
+        if (item.onClick) {
+            item.onClick(e);
+        } else {
+            logService.error(`[MenuButton] No onClick handler for item: ${item.id}`);
+        }
+    }
 </script>
 
 <button
     class="menu-button {item.isActive ? 'active' : ''} {item.primary
         ? 'primary'
         : ''}"
-    on:click={item.onClick}
+    onclick={handleClick}
     aria-label={item.label || item.id}
     type="button"
     data-testid={dataTestId}

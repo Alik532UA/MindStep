@@ -7,7 +7,7 @@
   import type {
     FinalScoreDetails,
     PlayerScoreResult,
-  } from "$lib/stores/gameOverStore";
+  } from "$lib/stores/gameOverState.svelte";
 
   interface Props {
     content: any;

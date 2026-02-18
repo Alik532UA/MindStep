@@ -7,12 +7,10 @@
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { page } from "$app/stores";
   import { onMount } from "svelte";
-  import { get } from "svelte/store";
-  import { columnStyleMode } from "$lib/stores/columnStyleStore";
+  import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
 
-  // hotkeyService більше не потрібен для реєстрації глобальних подій тут
-  // import hotkeyService from "$lib/services/hotkeyService";
+  const columnMode = $derived(columnStyleState.state);
 
   function handleMainMenuClick() {
     const uState = uiState.state;
@@ -38,7 +36,7 @@
   <button
     class="main-menu-btn"
     use:hotkeyTooltip={{ title: $t("gameBoard.mainMenu"), key: "ESC" }}
-    on:click={handleMainMenuClick}
+    onclick={handleMainMenuClick}
     data-testid="top-row-main-menu-btn"
   >
     <SvgIcons name="home" />
@@ -47,7 +45,7 @@
     <button
       class="main-menu-btn"
       use:customTooltip={$t("tooltips.localGameSettings")}
-      on:click={handleLocalSetupClick}
+      onclick={handleLocalSetupClick}
       data-testid="local-game-settings-btn"
     >
       <SvgIcons name="hamburger-menu" />
@@ -56,7 +54,7 @@
   <button
     class="main-menu-btn"
     use:hotkeyTooltip={{ title: $t("faq.title"), key: "I" }}
-    on:click={showGameInfoModal}
+    onclick={showGameInfoModal}
     data-testid="game-info-btn"
   >
     <SvgIcons name="info" />
@@ -64,16 +62,16 @@
   {#if false}
     <button
       class="main-menu-btn"
-      use:customTooltip={$columnStyleMode === "flexible"
+      use:customTooltip={columnMode === "flexible"
         ? "Switch to Fixed"
         : "Switch to Flexible"}
-      on:click={() =>
-        columnStyleMode.update((v) => (v === "fixed" ? "flexible" : "fixed"))}
+      onclick={() =>
+        columnStyleState.update((v) => (v === "fixed" ? "flexible" : "fixed"))}
       style="display: flex; align-items: center; justify-content: center;"
       data-testid="column-style-mode-btn"
     >
       <SvgIcons name="palette" />
-      {#if $columnStyleMode === "flexible"}
+      {#if columnMode === "flexible"}
         <span
           style="display: flex; align-items: center; justify-content: center; margin-left: 4px;"
           ><SvgIcons name="editing" /></span

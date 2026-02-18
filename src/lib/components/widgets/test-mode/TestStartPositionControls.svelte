@@ -1,32 +1,37 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
+    import { untrack } from "svelte";
     import {
-        testModeStore,
+        testModeState,
         type PositionMode,
-    } from "$lib/stores/testModeStore";
+    } from "$lib/stores/testModeState.svelte";
 
-    let manualX: number = 0;
-    let manualY: number = 0;
+    const tState = $derived(testModeState.state);
+    let manualX = $state(0);
+    let manualY = $state(0);
 
-    // Reactively sync with store
-    $: {
-        if ($testModeStore) {
-            manualX = $testModeStore.manualStartPosition?.x ?? 0;
-            manualY = $testModeStore.manualStartPosition?.y ?? 0;
-        }
-    }
+    // FIX: untrack запобігає циклу — читаємо tState реактивно,
+    // але записуємо manualX/manualY поза реактивним відстеженням
+    $effect(() => {
+        const x = tState.manualStartPosition?.x ?? 0;
+        const y = tState.manualStartPosition?.y ?? 0;
+        untrack(() => {
+            manualX = x;
+            manualY = y;
+        });
+    });
 
     function setStartPositionMode(mode: PositionMode) {
-        testModeStore.update((state) => ({
-            ...state,
+        testModeState.update((s) => ({
+            ...s,
             startPositionMode: mode,
             manualStartPosition: null,
         }));
     }
 
     function setManualStartPosition() {
-        testModeStore.update((state) => ({
-            ...state,
+        testModeState.update((s) => ({
+            ...s,
             startPositionMode: "manual",
             manualStartPosition: { x: manualX, y: manualY },
         }));
@@ -38,20 +43,20 @@
     <div class="test-mode-btn-group">
         <button
             class="test-mode-row-btn"
-            on:click={() => setStartPositionMode("random")}
-            class:active={$testModeStore.startPositionMode === "random"}
+            onclick={() => setStartPositionMode("random")}
+            class:active={tState.startPositionMode === "random"}
             data-testid="test-mode-start-pos-random-btn"
             >{$t("testMode.random")}</button
         >
         <button
             class="test-mode-row-btn"
-            on:click={() => setStartPositionMode("manual")}
-            class:active={$testModeStore.startPositionMode === "manual"}
+            onclick={() => setStartPositionMode("manual")}
+            class:active={tState.startPositionMode === "manual"}
             data-testid="test-mode-start-pos-manual-btn"
             >{$t("testMode.manual")}</button
         >
     </div>
-    {#if $testModeStore.startPositionMode === "manual"}
+    {#if tState.startPositionMode === "manual"}
         <div class="test-mode-manual-coords">
             <div class="test-mode-input-group">
                 <label for="manualX">{$t("testMode.x")}</label>
@@ -79,7 +84,7 @@
             </div>
             <button
                 class="test-mode-square-btn"
-                on:click={setManualStartPosition}
+                onclick={setManualStartPosition}
                 data-testid="test-mode-set-start-pos-btn"
                 >{$t("testMode.set")}</button
             >

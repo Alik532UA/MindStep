@@ -3,21 +3,17 @@
     import { onDestroy, onMount } from "svelte";
     import { roomPlayerService } from "$lib/services/room/roomPlayerService";
     import { navigationService } from "$lib/services/navigationService";
-    import { reconnectionStore } from "$lib/stores/reconnectionStore";
-    import type { DisconnectedPlayer } from "$lib/stores/reconnectionStore";
+    import { 
+        reconnectionState, 
+        type DisconnectedPlayer 
+    } from "$lib/stores/reconnectionState.svelte";
 
-    let players: DisconnectedPlayer[] = [];
-    let timeRemaining = 0;
+    const rState = $derived(reconnectionState.state);
+    let players = $derived(rState.players);
+    let timeRemaining = $state(0);
     let interval: ReturnType<typeof setInterval>;
-    let roomId = "";
-    let myPlayerId = "";
-
-    const unsub = reconnectionStore.subscribe((state) => {
-        players = state.players;
-        roomId = state.roomId;
-        myPlayerId = state.myPlayerId;
-        updateTimer();
-    });
+    let roomId = $derived(rState.roomId);
+    let myPlayerId = $derived(rState.myPlayerId);
 
     function updateTimer() {
         if (players.length === 0) {
@@ -36,7 +32,6 @@
 
     onDestroy(() => {
         if (interval) clearInterval(interval);
-        unsub();
     });
 
     async function leaveGame() {
@@ -83,7 +78,7 @@
     <div class="actions-column" data-testid="reconnection-actions">
         <button
             class="action-btn kick-btn"
-            on:click={kickPlayers}
+            onclick={kickPlayers}
             disabled={timeRemaining > 0}
             data-testid="reconnection-kick-btn"
         >
@@ -92,7 +87,7 @@
 
         <button
             class="action-btn leave-btn"
-            on:click={leaveGame}
+            onclick={leaveGame}
             data-testid="reconnection-leave-btn"
         >
             {$t("onlineMenu.leaveRoom")}

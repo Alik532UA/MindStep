@@ -22,6 +22,7 @@ export interface UiState {
   // Нові поля для онлайн режиму
   onlinePlayerIndex: number | null; // 0 (Host) або 1 (Guest)
   amIHost: boolean;
+  shouldShowGameModeModalOnLoad: boolean;
 }
 
 export const initialUIState: UiState = {
@@ -40,5 +41,6 @@ export const initialUIState: UiState = {
   isSettingsExpanderOpen: dev,
   lastMove: null,
   onlinePlayerIndex: null,
-  amIHost: false
+  amIHost: false,
+  shouldShowGameModeModalOnLoad: false
 };

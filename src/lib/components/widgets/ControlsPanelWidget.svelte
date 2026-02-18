@@ -20,13 +20,7 @@
   let selectedDistance = $derived(uiState.state?.selectedDistance);
   let isMoveInProgress = $derived(uiState.state?.isComputerMoveInProgress);
 
-  $effect(() => {
-    logService.ui("[ControlsPanelWidget] Reactive change detected", {
-      selectedDirection,
-      selectedDistance,
-      isConfirmButtonDisabled: derivedState.isConfirmButtonDisabled,
-    });
-  });
+
 
   let centerInfoProps = $derived<CenterInfoState>(getCenterInfoState({
     selectedDirection: selectedDirection,

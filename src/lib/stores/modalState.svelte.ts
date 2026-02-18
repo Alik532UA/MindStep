@@ -65,6 +65,8 @@ class ModalStateRune {
     get state() { return this._state; }
     set state(value: ModalState) { this._state = value; }
 
+    get isOpen() { return this._state.isOpen; }
+
     /**
      * Показує нове модальне вікно. Якщо вже є відкрите — додає його в стек.
      */

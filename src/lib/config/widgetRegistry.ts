@@ -4,7 +4,7 @@
  * Це дозволяє GamePageLayout бути агностичним до конкретних віджетів.
  */
 
-import { WIDGETS } from '$lib/stores/layoutStore';
+import { WIDGETS } from '$lib/stores/layoutState.svelte';
 
 // Імпорт компонентів віджетів
 import TopRowWidget from '$lib/components/widgets/TopRowWidget.svelte';

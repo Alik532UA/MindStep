@@ -3,26 +3,25 @@
     import "$lib/css/components/game-board.css";
     import "$lib/css/components/controls.css";
     import DraggableColumns from "$lib/components/DraggableColumns.svelte";
-    import { layoutStore, type WidgetId } from "$lib/stores/layoutStore";
+    import { layoutStateRune, type WidgetId } from "$lib/stores/layoutState.svelte";
     import { widgetRegistry } from "$lib/config/widgetRegistry"; // <-- Новий імпорт
 
     import { onMount } from "svelte";
     import { animationService } from "$lib/services/animationService.js";
     import { boardState } from '$lib/stores/boardState.svelte';
-    import { replayStateRune } from "$lib/stores/replayStoreState.svelte";
+    import { replayState } from "$lib/stores/replayState.svelte";
     import { i18nReady } from "$lib/i18n/init.js";
     import { logService } from "$lib/services/logService";
 
-    /**
-     * Функція фільтрації віджетів.
-     * Дозволяє кожній сторінці (режиму) вирішувати, які віджети показувати.
-     */
-    export let widgetFilter: (widgetId: string) => boolean = () => true;
+    interface Props {
+        widgetFilter?: (widgetId: string) => boolean;
+        initLogic?: () => void;
+    }
 
-    /**
-     * Кастомна логіка ініціалізації.
-     */
-    export let initLogic: (() => void) | undefined = undefined;
+    let { 
+        widgetFilter = () => true, 
+        initLogic 
+    }: Props = $props();
 
     onMount(() => {
         if (initLogic) {
@@ -39,9 +38,9 @@
         animationService.initialize();
     });
 
-    // Реактивне формування колонок на основі стору та фільтру
-    $: columns = $i18nReady
-        ? $layoutStore.map((col) => ({
+    // Реактивне формування колонок на основі стану та фільтру
+    const columns = $derived($i18nReady
+        ? layoutStateRune.state.map((col) => ({
               id: col.id,
               label: col.id,
               items: col.widgets.filter(widgetFilter).map((id) => ({
@@ -49,7 +48,7 @@
                   label: id,
               })),
           }))
-        : [];
+        : []);
 
     function itemContent(item: { id: string; label: string }) {
         // Використовуємо централізований реєстр
@@ -65,7 +64,7 @@
         }>,
     ) {
         const { dragging, dragSourceCol, dropTargetCol, dropIndex } = e.detail;
-        layoutStore.update((cols) => {
+        layoutStateRune.update((cols) => {
             let newCols = cols.map((col) => ({
                 ...col,
                 widgets: col.widgets.filter((id) => id !== dragging.id),
@@ -82,10 +81,10 @@
     }
 </script>
 
-{#if replayStateRune.state.isReplayMode}
+{#if replayState.state.isReplayMode}
     <ReplayViewer
-        moveHistory={replayStateRune.state.moveHistory}
-        boardSize={replayStateRune.state.boardSize}
+        moveHistory={replayState.state.moveHistory}
+        boardSize={replayState.state.boardSize}
         autoPlayForward={true}
     />
 {:else}

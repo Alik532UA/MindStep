@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { writable } from "svelte/store";
+  import { writable, get } from "svelte/store";
   import SvgIcons from "./SvgIcons.svelte";
   import NotoEmoji from "./NotoEmoji.svelte";
   import ReplayControls from "./ReplayControls.svelte";
@@ -12,7 +12,7 @@
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils.ts";
   import { onMount } from "svelte";
-  import { replayAutoPlayStore } from "$lib/stores/replayAutoPlayStore.js";
+  import { replayAutoPlayState } from "$lib/stores/replayAutoPlayState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
@@ -61,7 +61,13 @@
   }
 
   function toggleAutoPlay(direction: "forward" | "backward") {
-    replayAutoPlayStore.toggleAutoPlay(direction, replayState, goToStep);
+    const currentReplayState = get(replayState);
+    replayAutoPlayState.toggleAutoPlay(
+      direction,
+      currentReplayState,
+      (updates) => replayState.update(s => ({ ...s, ...updates })),
+      goToStep
+    );
   }
 
   function toggleLimitPath() {

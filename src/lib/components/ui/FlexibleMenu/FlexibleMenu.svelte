@@ -4,20 +4,30 @@
     import FlexibleMenuPanel from "./parts/FlexibleMenuPanel.svelte";
     import type { IMenuItem, MenuPosition } from "./FlexibleMenu.types";
 
-    // Props
-    export let items: IMenuItem[] = [];
-    export let position: MenuPosition = "bottom";
-    export let persistenceKey: string = "";
-    export let withSpacer: boolean = true;
-    export let dataTestId: string = "flexible-menu-wrapper";
-    export let startOpen: boolean = true;
+    interface Props {
+        items?: IMenuItem[];
+        position?: MenuPosition;
+        persistenceKey?: string;
+        withSpacer?: boolean;
+        dataTestId?: string;
+        startOpen?: boolean;
+    }
+
+    let {
+        items = [],
+        position = "bottom",
+        persistenceKey = "",
+        withSpacer = true,
+        dataTestId = "flexible-menu-wrapper",
+        startOpen = true,
+    }: Props = $props();
 
     // State
-    let isOpen = startOpen;
-    let isMounted = false;
+    let isOpen = $state(startOpen);
+    let isMounted = $state(false);
 
     // Determine orientation based on position
-    $: isVertical = position === "left" || position === "right";
+    const isVertical = $derived(position === "left" || position === "right");
 
     onMount(() => {
         if (persistenceKey) {
@@ -56,11 +66,11 @@
         : 'is-closed'}"
     data-testid={dataTestId}
 >
-    <FlexibleMenuPanel {isOpen} {isVertical} {position} {items}>
-        <div slot="toggle">
-            <MenuToggleTrigger {isOpen} {position} onToggle={toggle} />
-        </div>
-    </FlexibleMenuPanel>
+    {#snippet toggleSnippet()}
+        <MenuToggleTrigger {isOpen} {position} onToggle={toggle} />
+    {/snippet}
+
+    <FlexibleMenuPanel {isOpen} {isVertical} {position} {items} toggle={toggleSnippet} />
 </div>
 
 <style>

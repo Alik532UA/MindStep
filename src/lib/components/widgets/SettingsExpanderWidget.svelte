@@ -6,7 +6,7 @@
   import { onMount, tick } from "svelte";
   import { logService } from "$lib/services/logService";
   import { boardState } from "$lib/stores/boardState.svelte";
-  import { layoutUpdateStore } from "$lib/stores/layoutUpdateStore";
+  import { layoutUpdateState } from "$lib/stores/layoutUpdateState.svelte";
   import { dev } from "$app/environment";
 
   import SettingsBoardSize from "./settings/SettingsBoardSize.svelte";
@@ -38,7 +38,7 @@
     );
     isOpen = !isOpen;
     syncExpanderStateToStore(isOpen);
-    setTimeout(() => layoutUpdateStore.update((n) => n + 1), 500);
+    setTimeout(() => layoutUpdateState.trigger(), 500);
   }
 
   function updateLayoutMode() {
@@ -53,7 +53,7 @@
     syncExpanderStateToStore(isOpen);
 
     if (isOpen) {
-      setTimeout(() => layoutUpdateStore.update((n) => n + 1), 500);
+      setTimeout(() => layoutUpdateState.trigger(), 500);
     }
 
     return () => {

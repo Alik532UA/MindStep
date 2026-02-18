@@ -1,16 +1,17 @@
 <script lang="ts">
-    import { networkStatsStore } from '$lib/stores/networkStatsStore';
+    import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
     import { fade } from 'svelte/transition';
     import prettyBytes from 'pretty-bytes';
 
-    let expanded = false;
+    let expanded = $state(false);
+    const stats = $derived(networkStatsState.state);
 
     function toggle() {
         expanded = !expanded;
     }
 
     function reset() {
-        networkStatsStore.reset();
+        networkStatsState.reset();
     }
 
     function formatTime(seconds: number): string {
@@ -24,37 +25,37 @@
 <div class="network-monitor" class:expanded>
     <div 
         class="header" 
-        on:click={toggle} 
-        on:keydown={e => (e.key === 'Enter' || e.key === ' ') && toggle()}
+        onclick={toggle} 
+        onkeydown={e => (e.key === 'Enter' || e.key === ' ') && toggle()}
         role="button"
         tabindex="0"
         aria-expanded={expanded}
     >
-        <span class="indicator" class:active={$networkStatsStore.lastActivity && (Date.now() - $networkStatsStore.lastActivity < 1000)}></span>
-        <span class="time">{formatTime($networkStatsStore.elapsedSeconds)}</span>
+        <span class="indicator" class:active={stats.lastActivity && (Date.now() - stats.lastActivity < 1000)}></span>
+        <span class="time">{formatTime(stats.elapsedSeconds)}</span>
         <span class="label">Net:</span>
-        <span class="value">{$networkStatsStore.reads}R / {$networkStatsStore.writes}W</span>
-        <span class="value size">({prettyBytes($networkStatsStore.bytesReceived)})</span>
+        <span class="value">{stats.reads}R / {stats.writes}W</span>
+        <span class="value size">({prettyBytes(stats.bytesReceived)})</span>
     </div>
 
     {#if expanded}
         <div class="details" transition:fade>
             <div class="stats-row">
-                <span>Reads:</span> <strong>{$networkStatsStore.reads}</strong>
+                <span>Reads:</span> <strong>{stats.reads}</strong>
             </div>
             <div class="stats-row">
-                <span>Writes:</span> <strong>{$networkStatsStore.writes}</strong>
+                <span>Writes:</span> <strong>{stats.writes}</strong>
             </div>
             <div class="stats-row">
-                <span>Received:</span> <strong>{prettyBytes($networkStatsStore.bytesReceived)}</strong>
+                <span>Received:</span> <strong>{prettyBytes(stats.bytesReceived)}</strong>
             </div>
             <div class="stats-row">
-                <span>Sent:</span> <strong>{prettyBytes($networkStatsStore.bytesSent)}</strong>
+                <span>Sent:</span> <strong>{prettyBytes(stats.bytesSent)}</strong>
             </div>
-            <button class="reset-btn" on:click={reset}>Reset Stats</button>
+            <button class="reset-btn" onclick={reset}>Reset Stats</button>
             
             <div class="log-list">
-                {#each $networkStatsStore.recentEvents as event}
+                {#each stats.recentEvents as event}
                     <div class="log-item" class:read={event.type === 'read'} class:write={event.type === 'write'}>
                         <span class="type">{event.type === 'read' ? 'R' : 'W'}</span>
                         <span class="source">{event.source}</span>

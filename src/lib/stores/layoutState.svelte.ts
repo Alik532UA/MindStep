@@ -1,7 +1,5 @@
-// src/lib/stores/layoutState.svelte.ts
-// SSoT для лейауту віджетів. Svelte 5 Runes.
-// localStorage-персистенція залишається в bridge-шарі.
-
+import { LayoutSchema } from '$lib/schemas/layoutSchema';
+import { logService } from '$lib/services/logService';
 
 export const WIDGETS = {
     BOARD_HIDDEN_INFO: 'board-hidden-info',
@@ -40,18 +38,70 @@ export const defaultLayout: Layout = [
     },
 ];
 
+const isBrowser = typeof window !== 'undefined';
+
+function loadLayout(): Layout {
+    if (!isBrowser) return [...defaultLayout];
+    try {
+        const savedLayout = localStorage.getItem('gameLayout');
+        if (savedLayout) {
+            const parsed = JSON.parse(savedLayout);
+            const validation = LayoutSchema.safeParse(parsed);
+            
+            if (validation.success) {
+                return validation.data;
+            } else {
+                logService.error('[LayoutState] Invalid layout in localStorage, using defaults.', validation.error.format());
+                return [...defaultLayout];
+            }
+        }
+    } catch (e) {
+        logService.error('Failed to load layout from localStorage', e);
+    }
+    return [...defaultLayout];
+}
+
+function saveLayout(layout: Layout): void {
+    if (isBrowser) {
+        localStorage.setItem('gameLayout', JSON.stringify(layout));
+    }
+}
+
 class LayoutStateRune {
-    private _state = $state<Layout>([...defaultLayout]);
+    private _state = $state<Layout>(loadLayout());
 
     get state() { return this._state; }
-    set state(value: Layout) { this._state = value; }
+    set state(value: Layout) { 
+        this._state = value;
+        this.sync();
+    }
 
     update(fn: (s: Layout) => Layout) {
         this._state = fn(this._state);
+        this.sync();
     }
 
     reset() {
         this._state = [...defaultLayout];
+        this.sync();
+    }
+
+    private sync() {
+        saveLayout(this._state);
+        this.notifySubscribers();
+    }
+
+    // --- Bridge Support ---
+    private subscribers: Set<(s: Layout) => void> = new Set();
+
+    subscribe(fn: (s: Layout) => void): () => void {
+        fn(this._state);
+        this.subscribers.add(fn);
+        return () => this.subscribers.delete(fn);
+    }
+
+    private notifySubscribers() {
+        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 
