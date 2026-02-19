@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startNewGame, makeFirstMove, GameMode } from './utils';
+import { startNewGame, makeFirstMove, GameMode } from '../../utils';
 
 test.describe('Модальне вікно підтвердження зміни розміру дошки', { tag: '@BRM' }, () => {
   test.beforeEach(async ({ page }) => {

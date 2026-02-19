@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startNewGame, setBoardSize, makeMove, expectScoreToBeZeroOrNegative, setBlockMode, BlockModeState } from './utils';
+import { startNewGame, setBoardSize, makeMove, expectScoreToBeZeroOrNegative, setBlockMode, BlockModeState } from '../../utils';
 
 test.describe('Сценарії завершення гри', { tag: '@GOS' }, () => {
   test.beforeEach(async ({ page }) => {

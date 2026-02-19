@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove } from './utils';
+import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove } from '../../utils';
 
 test.describe('Модальне вікно "Блискучий аналіз"', { tag: '@PNMM' }, () => {
 

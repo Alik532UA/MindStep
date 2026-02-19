@@ -12,10 +12,10 @@
 	import Modal from "$lib/components/Modal.svelte";
 	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
-	import { page } from "$app/stores";
-	import { logService } from "$lib/services/logService.js";
-	import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";
-	import { tooltipState } from "$lib/stores/tooltipState.svelte";
+	        import { page } from "$app/stores";
+	        import { logService } from "$lib/services/logService.js";
+	        import { notificationService } from "$lib/services/notificationService";
+	        import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";	import { tooltipState } from "$lib/stores/tooltipState.svelte";
 	import { uiState } from "$lib/stores/uiState.svelte";
 	import Tooltip from "$lib/components/Tooltip.svelte";
 	import ModalManager from "$lib/components/ModalManager.svelte";
@@ -259,25 +259,29 @@
 
 	const devMenuItems = $derived($i18nReady
 		? [
-				{
-					id: "main-menu-link",
-					emoji: "house", // FIX: Changed from 🏠 to house
-					onClick: () => goto(`${base}/`),
-				},
-				{
-					id: "main-menu-v2-link",
-					emoji: "fire", // FIX: Changed from rocket to fire (existing emoji)
-					onClick: () => goto(`${base}/test-main-menu-v2`),
-					dataTestId: "top-menu-slot-1",
-				},
-				{
-					id: "test-mode-btn",
-					emoji: "gear", // FIX: Changed from 🛠️ to gear
-					onClick: () => testModeState.toggle(),
-					primary: true,
-					isActive: testModeState.state.isEnabled,
-				},
-				{
+				                                                                                                                                {
+				                                                                                                                                        id: "main-menu-link",
+				                                                                                                                                        emoji: "house", // FIX: Changed from 🏠 to house
+				                                                                                                                                        onClick: () => goto(`${base}/`),
+				                                                                                                                                        dataTestId: "left-menu-slot-0",
+				                                                                                                                                },
+				                                                                                                                                                                {
+				                                                                                                                                                                        id: "copy-logs-btn",
+				                                                                                                                                                                        emoji: "memo", // memo emoji exists
+				                                                                                                                                                                        onClick: () => {
+				                                                                                                                                                                            const report = logService.getLogReport();
+				                                                                                                                                                                            navigator.clipboard.writeText(report).then(() => {
+				                                                                                                                                                                                notificationService.show({ type: 'info', messageRaw: 'Logs copied to clipboard' });
+				                                                                                                                                                                            });
+				                                                                                                                                                                        },
+				                                                                                                                                                                        dataTestId: "left-menu-slot-1",
+				                                                                                                                                                                },				                                                                {
+				                                                                        id: "test-mode-btn",
+				                                                                        emoji: "gear", // FIX: Changed from 🛠️ to gear
+				                                                                        onClick: () => testModeState.toggle(),
+				                                                                        primary: true,
+				                                                                        isActive: testModeState.state.isEnabled,
+				                                                                },				{
 					id: "dev-menu-modal",
 					emoji: "menu", // FIX: Changed from hamburger-menu icon to menu emoji (mapped to Lucide)
 					onClick: openDevMenuModal,

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove, getScoreByTestId, expectScoreToBeZeroOrNegative } from './utils';
+import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove, getScoreByTestId, expectScoreToBeZeroOrNegative } from '../../utils';
 
 test.describe('хепі флоу', () => {
 

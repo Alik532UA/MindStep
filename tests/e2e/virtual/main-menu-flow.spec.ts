@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove } from './utils';
+import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove } from '../../utils';
 
-test.describe('Кнопка "Грати ще раз"', () => {
+test.describe('Кнопка "Головне меню"', () => {
 
-  test('Повинна починати нову гру після модального вікна "Суперник у пастці"', { tag: ['@done', '@PAG-1'] }, async ({ page }) => {
+  test('Повинна повертати на головне меню після модального вікна "Суперник у пастці"', { tag: ['@done', '@MMF-1'] }, async ({ page }) => {
     await test.step('Налаштування гри та доведення до стану "Суперник у пастці"', async () => {
       await startNewGame(page);
       await setBoardSize(page, 2);
@@ -14,20 +14,20 @@ test.describe('Кнопка "Грати ще раз"', () => {
       await expect(page.getByTestId('opponent-trapped-modal')).toBeVisible();
     });
 
-    await test.step('Завершення гри та натискання кнопки "Грати ще раз"', async () => {
+    await test.step('Завершення гри та перехід до головного меню', async () => {
       await page.getByTestId('finish-game-with-bonus-btn').click();
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
-      await page.getByTestId('play-again-btn').click();
+      await page.getByTestId('game-over-main-menu-btn').click();
     });
 
-    await test.step('Перевірка, що нова гра почалася', async () => {
+    await test.step('Перевірка, що всі модальні вікна закриті і відображається головне меню', async () => {
       await expect(page.getByTestId('opponent-trapped-modal')).not.toBeVisible();
       await expect(page.getByTestId('game-over-modal')).not.toBeVisible();
-      await expect(page.getByTestId('game-board')).toBeVisible();
+      await expect(page.getByTestId('center-container')).toBeVisible();
     });
   });
 
-  test('Повинна починати нову гру після модального вікна "Блискучий аналіз"', { tag: ['@done', '@PAG-2'] }, async ({ page }) => {
+  test('Повинна повертати на головне меню після модального вікна "Блискучий аналіз"', { tag: ['@done', '@MMF-2'] }, async ({ page }) => {
     await test.step('Налаштування гри та доведення до стану "Блискучий аналіз"', async () => {
       await startNewGame(page);
       await setBoardSize(page, 3);
@@ -41,16 +41,16 @@ test.describe('Кнопка "Грати ще раз"', () => {
       await expect(page.getByTestId('player-no-moves-modal')).toBeVisible();
     });
 
-    await test.step('Завершення гри та натискання кнопки "Грати ще раз"', async () => {
+    await test.step('Завершення гри та перехід до головного меню', async () => {
       await page.getByTestId('finish-game-with-bonus-btn').click();
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
-      await page.getByTestId('play-again-btn').click();
+      await page.getByTestId('game-over-main-menu-btn').click();
     });
 
-    await test.step('Перевірка, що нова гра почалася', async () => {
+    await test.step('Перевірка, що всі модальні вікна закриті і відображається головне меню', async () => {
       await expect(page.getByTestId('player-no-moves-modal')).not.toBeVisible();
       await expect(page.getByTestId('game-over-modal')).not.toBeVisible();
-      await expect(page.getByTestId('game-board')).toBeVisible();
+      await expect(page.getByTestId('center-container')).toBeVisible();
     });
   });
 
