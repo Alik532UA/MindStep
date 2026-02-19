@@ -75,6 +75,7 @@ export const lucideMap: Record<string, any> = {
     'brush': Brush,
     'graduation_cap': GraduationCap,
     'help_circle': HelpCircle,
+    'information': HelpCircle,
     'languages': Languages,
     'palette': Palette,
     'menu': Menu
