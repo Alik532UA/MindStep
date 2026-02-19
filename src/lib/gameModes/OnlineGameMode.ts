@@ -262,8 +262,9 @@ export class OnlineGameMode extends BaseGameMode {
         if (this.amIHost) {
           logService.GAME_MODE('[OnlineGameMode] I am Host. Initializing new game state.');
           const playersConfig = this.getPlayersConfiguration();
+          const finalSize = newSize || gameSettingsState.state.boardSize || 4;
           gameService.initializeNewGame({
-            size: newSize,
+            size: finalSize,
             players: playersConfig,
           });
           await this.synchronizer!.syncCurrentState();
@@ -463,11 +464,12 @@ export class OnlineGameMode extends BaseGameMode {
     const scoreVal = ScoreStateSchema.safeParse(remoteState.scoreState);
 
     if (!boardVal.success || !playerVal.success || !scoreVal.success) {
-        logService.error('[OnlineGameMode] Remote state validation failed!', {
-            board: boardVal.success ? 'OK' : boardVal.error,
-            player: playerVal.success ? 'OK' : playerVal.error,
-            score: scoreVal.success ? 'OK' : scoreVal.error
-        });
+        const validationErrors = {
+            board: !boardVal.success ? boardVal.error.format() : null,
+            player: !playerVal.success ? playerVal.error.format() : null,
+            score: !scoreVal.success ? scoreVal.error.format() : null
+        };
+        logService.error('[OnlineGameMode] Remote state validation failed!', validationErrors);
         notificationService.show({ type: 'error', messageRaw: 'Data validation error' });
         return;
     }

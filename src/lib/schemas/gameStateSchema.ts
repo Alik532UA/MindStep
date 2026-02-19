@@ -2,25 +2,26 @@ import { z } from 'zod';
 
 // === Player State ===
 export const PlayerSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   name: z.string(),
   type: z.enum(['human', 'computer', 'ai']),
   color: z.string(), // Hex color regex removed for simplicity unless strict
   isComputer: z.boolean(),
-  score: z.number(),
+  score: z.coerce.number(),
+  roundScore: z.coerce.number().optional().default(0),
 });
 
 export const PlayerStateSchema = z.object({
   players: z.array(PlayerSchema),
-  currentPlayerIndex: z.number().int().min(0),
+  currentPlayerIndex: z.coerce.number().int().min(0),
 });
 
 // === Score State ===
 export const ScoreStateSchema = z.object({
-  penaltyPoints: z.number(),
-  movesInBlockMode: z.number(),
-  jumpedBlockedCells: z.number(),
-  distanceBonus: z.number().default(0).optional(),
+  penaltyPoints: z.coerce.number(),
+  movesInBlockMode: z.coerce.number(),
+  jumpedBlockedCells: z.coerce.number(),
+  distanceBonus: z.coerce.number().default(0).optional(),
 });
 
 // === Board State ===
@@ -55,11 +56,11 @@ const MoveQueueItemSchema = z.object({
 });
 
 export const BoardStateSchema = z.object({
-  boardSize: z.number().int().min(4).max(20),
-  board: z.array(z.array(z.number())), // 0 or 1
-  playerRow: z.number().int().nullable(),
-  playerCol: z.number().int().nullable(),
-  cellVisitCounts: z.record(z.string(), z.number()),
+  boardSize: z.coerce.number().int().min(4).max(20),
+  board: z.array(z.array(z.coerce.number())), // 0 or 1
+  playerRow: z.coerce.number().int().nullable(),
+  playerCol: z.coerce.number().int().nullable(),
+  cellVisitCounts: z.record(z.string(), z.coerce.number()),
   moveHistory: z.array(MoveHistoryItemSchema),
   moveQueue: z.array(MoveQueueItemSchema),
 });
