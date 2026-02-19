@@ -56,7 +56,7 @@ const MoveQueueItemSchema = z.object({
 });
 
 export const BoardStateSchema = z.object({
-  boardSize: z.coerce.number().int().min(4).max(20),
+  boardSize: z.coerce.number().int().min(2).max(20),
   board: z.array(z.array(z.coerce.number())), // 0 or 1
   playerRow: z.coerce.number().int().nullable(),
   playerCol: z.coerce.number().int().nullable(),

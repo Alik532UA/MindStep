@@ -1,6 +1,6 @@
 # Private documentation (separate repository)
 .private/
-.temp/
+# .temp/
 GEMINI-general.md
 
 # Gemini service files
