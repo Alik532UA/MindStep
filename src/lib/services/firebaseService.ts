@@ -4,8 +4,9 @@
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getDatabase, type Database } from 'firebase/database';
+import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/database';
+import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
 import { browser } from '$app/environment';
 import { logService } from './logService';
@@ -24,9 +25,13 @@ const firebaseConfig = {
     databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
+// Check if emulator mode is active (useful for local development and Playwright tests)
+const USE_EMULATOR = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
+
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let rtdb: Database | null = null;
+let auth: Auth | null = null;
 let analytics: Analytics | null = null;
 
 /**
@@ -79,6 +84,12 @@ export function getFirestoreDb(): Firestore {
     if (db) return db;
     const firebaseApp = initializeFirebase();
     db = getFirestore(firebaseApp);
+
+    if (USE_EMULATOR) {
+        connectFirestoreEmulator(db, 'localhost', 8080);
+        logService.init('[FirebaseService] Firestore Emulator connected at localhost:8080');
+    }
+
     return db;
 }
 
@@ -89,7 +100,29 @@ export function getRealtimeDb(): Database {
     if (rtdb) return rtdb;
     const firebaseApp = initializeFirebase();
     rtdb = getDatabase(firebaseApp);
+
+    if (USE_EMULATOR) {
+        connectDatabaseEmulator(rtdb, 'localhost', 9000);
+        logService.init('[FirebaseService] Realtime DB Emulator connected at localhost:9000');
+    }
+
     return rtdb;
+}
+
+/**
+ * Отримує Firebase Auth інстанс
+ */
+export function getFirebaseAuth(): Auth {
+    if (auth) return auth;
+    const firebaseApp = initializeFirebase();
+    auth = getAuth(firebaseApp);
+
+    if (USE_EMULATOR) {
+        connectAuthEmulator(auth, 'http://localhost:9099');
+        logService.init('[FirebaseService] Auth Emulator connected at localhost:9099');
+    }
+
+    return auth;
 }
 
 /**
