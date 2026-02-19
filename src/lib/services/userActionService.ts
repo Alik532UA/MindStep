@@ -77,7 +77,7 @@ export const userActionService = {
     // ВИМИКАЄМО cooldown під час тестів, щоб не флакали E2E тести
     const now = Date.now();
     const isTestMode = typeof window !== 'undefined' && ((window as any).__playwright_test__ || import.meta.env.MODE === 'test');
-    
+
     if (!isTestMode && (now - lastMoveTimestamp < MOVE_COOLDOWN_MS)) {
       logService.error('[userActionService] executeMove blocked: too soon after last move.');
       return;
@@ -89,14 +89,9 @@ export const userActionService = {
     console.trace();
     console.groupEnd();
 
-    // МИТТЄВО очищаємо вибір гравця, щоб UI не "залипав" на старому ході
-    uiState.update(s => ({
-      ...s,
-      selectedDirection: null,
-      selectedDistance: null,
-      isFirstMove: false
-    }));
-
+    // FIX: Скидання вибору прибрано звідси — воно відбувається атомарно
+    // всередині handlePlayerMove. Подвійне скидання викликало зайвий рендер
+    // і мигання кнопок через CSS transition.
     const activeGameMode = gameModeService.getCurrentMode();
     if (activeGameMode) {
       await activeGameMode.handlePlayerMove(direction, distance);

@@ -23,9 +23,9 @@
 
 <div class="distance-select">
     <div class="distance-btns">
-        {#each distanceRows as row}
+        {#each distanceRows as row, rowIndex (rowIndex)}
             <div class="distance-row">
-                {#each row as dist}
+                {#each row as dist (dist)}
                     <button
                         class="dist-btn {selectedDistance === dist
                             ? 'active'

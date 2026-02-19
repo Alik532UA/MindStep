@@ -8,12 +8,10 @@
   background: var(--control-bg, #222);
   color: var(--text-primary, #fff);
   cursor: pointer;
-  transition:
-    background 0.25s,
-    box-shadow 0.25s,
-    color 0.2s,
-    transform 0.15s,
-    border-color 0.25s;
+  /* FIX: transition вимкнений за замовчуванням, щоб уникнути мигання
+     при disabled → enabled (після ходу комп'ютера).
+     Увімкнений тільки для активних станів (hover, active-class). */
+  transition: none;
   box-shadow: 0 2px 16px 0 var(--shadow-color, #0002);
   backdrop-filter: blur(6px);
   outline: none;
@@ -26,6 +24,7 @@
   width: 70px;
   height: 70px;
   font-family: "M PLUS Rounded 1c", sans-serif !important;
+  box-sizing: border-box;
 }
 
 .dir-btn:focus-visible,
@@ -48,9 +47,33 @@
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
+  transition: none !important;
+}
+
+.confirm-btn.disabled,
+.confirm-btn:disabled {
+  background: rgba(85, 85, 85, 0.3);
+  color: #999;
+  cursor: not-allowed;
+  transition: none !important;
+}
+
+.dir-btn:not(:disabled):hover {
+  transition:
+    background 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
+    transform 0.15s ease-in-out;
+  filter: brightness(1.15);
+  transform: scale(1.04);
 }
 
 .dir-btn.active {
+  /* FIX: transition тільки для анімації вибору напрямку (не для disabled) */
+  transition:
+    background 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s ease-in-out;
   background: var(--control-selected, #ff9800);
   color: var(--control-selected-text, #fff);
   border-color: var(--control-selected, #ff9800);
@@ -76,7 +99,7 @@
   background: #43a047 !important;
   color: #fff !important;
   border-color: #43a047 !important;
-  animation: pulse-green 1.5s infinite !important;
+  animation: pulse-green 2s infinite ease-in-out !important;
   cursor: pointer !important;
 }
 
@@ -104,6 +127,7 @@
   font-weight: bold !important;
   border: none !important;
   cursor: default !important;
+  transition: background-color 0.5s ease-in-out !important;
 }
 
 .dist-btn {
@@ -115,13 +139,18 @@
   background: var(--control-bg, #222);
   color: var(--text-primary, #fff);
   cursor: pointer;
-  transition:
-    background 0.25s,
-    color 0.2s,
-    transform 0.15s;
+  /* FIX: transition вимкнений за замовчуванням — увімкнений тільки для active */
+  transition: none;
+}
+
+.dist-btn:not(:disabled):hover {
+  transition: background 0.15s, transform 0.1s;
+  filter: brightness(1.1);
+  transform: scale(1.04);
 }
 
 .dist-btn.active {
+  transition: background 0.2s, transform 0.15s, border-color 0.2s;
   background: var(--control-selected, #ff9800);
   color: var(--control-selected-text, #fff);
   border-color: var(--control-selected, #ff9800);

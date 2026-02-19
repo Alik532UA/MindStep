@@ -51,32 +51,44 @@
     }
 </script>
 
-<div class="directions-3x3">
-    {#each directions as dir}
-        {#if dir}
-            <button
-                class="dir-btn {selectedDirection === dir ? 'active' : ''}"
-                use:hotkeyTooltip={dir}
-                onclick={() => handleDirection(dir)}
-                data-testid={`dir-btn-${dir}`}
-                {disabled}
-                aria-label={$t(`gameControls.${dir}` as any)}
-            >
-                {getArrow(dir)}
-            </button>
-        {:else if center}
-            {@render center()}
-        {/if}
+<div class="directions-3x3" data-testid="direction-grid">
+    {#each directions.filter(d => d !== null) as dir (dir)}
+        <button
+            class="dir-btn {selectedDirection === dir ? 'active' : ''} dir-btn--{dir}"
+            use:hotkeyTooltip={dir}
+            onclick={() => handleDirection(dir)}
+            data-testid={`dir-btn-${dir}`}
+            {disabled}
+            aria-label={$t(`gameControls.${dir}` as any)}
+            style="grid-area: {dir}"
+        >
+            {getArrow(dir)}
+        </button>
     {/each}
+
+    {#if center}
+        <div class="center-cell" style="grid-area: center">
+            {@render center()}
+        </div>
+    {/if}
 </div>
 
 <style>
     .directions-3x3 {
         display: grid;
+        grid-template-areas:
+            "up-left up up-right"
+            "left center right"
+            "down-left down down-right";
         grid-template-columns: repeat(3, 70px);
         grid-template-rows: repeat(3, 70px);
         gap: 14px;
         margin: 18px 0 10px 0;
+        justify-content: center;
+    }
+    .center-cell {
+        display: flex;
+        align-items: center;
         justify-content: center;
     }
 </style>
