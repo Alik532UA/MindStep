@@ -178,12 +178,18 @@
 		clearCache({ keepAppearance: true });
 	}
 
-	afterNavigate(() => {
+	afterNavigate(({ from, to }) => {
 		if (sessionStorage.getItem("isRestoringReplay")) {
 			sessionStorage.removeItem("isRestoringReplay");
 			return;
 		}
-		modalStateRune.closeModal();
+		
+		// FIX: Закриваємо модалку тільки при зміні шляху (pathname), 
+		// а не при зміні параметрів (?mode=... і т.д.)
+		if (from?.url?.pathname !== to?.url?.pathname) {
+			modalStateRune.closeModal();
+		}
+
 		logService.ui("[layout] afterNavigate: hiding tooltip");
 		tooltipState.hide();
 	});

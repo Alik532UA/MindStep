@@ -13,7 +13,7 @@
     function updateBoardSize(increment: number) {
         if (!canEditSettings) return;
         const newSize = room.settings.boardSize + increment;
-        if (newSize >= 3 && newSize <= 9) {
+        if (newSize >= 2 && newSize <= 9) {
             onUpdateSetting("boardSize", newSize);
         }
     }
@@ -43,7 +43,7 @@
             decreaseTestId="board-size-decrease-btn"
             increaseTestId="board-size-increase-btn"
             valueTestId="board-size-value"
-            scrubConfig={{ min: 3, max: 9, step: 1 }}
+            scrubConfig={{ min: 2, max: 9, step: 1 }}
             ondecrement={() => updateBoardSize(-1)}
             onincrement={() => updateBoardSize(1)}
             onchange={(val) => handleScrubChange("boardSize", val)}

@@ -44,6 +44,9 @@
         box-sizing: border-box;
         max-width: 100%;
         min-height: 60px;
+        will-change: transform;
+        transform: translateZ(0) scale(1);
+        backface-visibility: hidden;
     }
 
     .menu-item:hover {

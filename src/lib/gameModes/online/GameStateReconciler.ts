@@ -125,7 +125,11 @@ export class GameStateReconciler {
 
             uiState.update(s => ({ ...s, isGameOver: false }));
             const currentGameOver = gameOverState.state;
-            if (currentGameOver.isGameOver) {
+            const currentModal = modalStateRune.state;
+            
+            // FIX: Не закриваємо модалку автоматично, якщо це вікно результатів.
+            // Воно має закриватися тільки за дією користувача.
+            if (currentGameOver.isGameOver && currentModal.dataTestId !== 'game-over-modal') {
                 logService.GAME_MODE('[Reconciler] Clearing local GameOver state');
                 gameOverState.resetGameOverState();
                 modalService.closeAllModals();

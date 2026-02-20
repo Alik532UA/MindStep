@@ -155,7 +155,7 @@
 
       <ErrorBoundary compact={true}>
         <div
-          class="modal-body"
+          class="modal-content"
           class:is-faq={typeof mState.content === "object" &&
             mState.content &&
             "isFaq" in (mState.content as any) &&
