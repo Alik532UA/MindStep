@@ -86,8 +86,8 @@ export function getFirestoreDb(): Firestore {
     db = getFirestore(firebaseApp);
 
     if (USE_EMULATOR) {
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        logService.init('[FirebaseService] Firestore Emulator connected at localhost:8080');
+        connectFirestoreEmulator(db, '127.0.0.1', 8080);
+        logService.init('[FirebaseService] Firestore Emulator connected at 127.0.0.1:8080');
     }
 
     return db;
@@ -102,8 +102,8 @@ export function getRealtimeDb(): Database {
     rtdb = getDatabase(firebaseApp);
 
     if (USE_EMULATOR) {
-        connectDatabaseEmulator(rtdb, 'localhost', 9000);
-        logService.init('[FirebaseService] Realtime DB Emulator connected at localhost:9000');
+        connectDatabaseEmulator(rtdb, '127.0.0.1', 9000);
+        logService.init('[FirebaseService] Realtime DB Emulator connected at 127.0.0.1:9000');
     }
 
     return rtdb;
@@ -118,8 +118,8 @@ export function getFirebaseAuth(): Auth {
     auth = getAuth(firebaseApp);
 
     if (USE_EMULATOR) {
-        connectAuthEmulator(auth, 'http://localhost:9099');
-        logService.init('[FirebaseService] Auth Emulator connected at localhost:9099');
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099');
+        logService.init('[FirebaseService] Auth Emulator connected at 127.0.0.1:9099');
     }
 
     return auth;

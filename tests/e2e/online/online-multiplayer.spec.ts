@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Онлайн мультиплеєр', () => {
+test.describe('Онлайн мультиплеєр', { tag: '@OM' }, () => {
   
-  test('Створення кімнати та приєднання другого гравця', async ({ browser }) => {
+  test('Створення кімнати та приєднання другого гравця', { tag: ['@done', '@OM-1'] }, async ({ browser }) => {
     // 1. Створюємо контексти для двох гравців
     const context1 = await browser.newContext();
     const context2 = await browser.newContext();
@@ -23,8 +23,9 @@ test.describe('Онлайн мультиплеєр', () => {
         await p1.click('[data-testid="create-room-btn"]');
         
         // Вводимо назву кімнати (також EditableText)
+        const roomName = `TestRoom_${Date.now()}`;
         await p1.click('[data-testid="room-name-input-edit-btn"]');
-        await p1.fill('[data-testid="room-name-input-input"]', 'TestRoom_Auto');
+        await p1.fill('[data-testid="room-name-input-input"]', roomName);
         await p1.click('[data-testid="room-name-input-save-btn"]');
         
         // Створюємо
@@ -37,6 +38,7 @@ test.describe('Онлайн мультиплеєр', () => {
 
     // --- ГРАВЕЦЬ 2: Приєднання ---
     await test.step('Гравець 2 приєднується до кімнати', async () => {
+        const roomName = await p1.locator('[data-testid="room-name-editable-display"]').textContent();
         await p2.goto('/online');
 
         // Вводимо ім'я другого гравця
@@ -48,7 +50,7 @@ test.describe('Онлайн мультиплеєр', () => {
         await p2.click('[data-testid="refresh-rooms-btn"]');
         
         // Шукаємо картку кімнати за назвою
-        const roomCard = p2.locator('div.room-card', { hasText: 'TestRoom_Auto' });
+        const roomCard = p2.locator('div.room-card', { hasText: roomName! });
         await expect(roomCard).toBeVisible({ timeout: 10000 });
         
         // Натискаємо кнопку приєднатися всередині цієї картки
