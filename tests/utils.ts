@@ -213,3 +213,66 @@ export async function clearBrowserStorage(page: Page) {
     sessionStorage.clear();
   });
 }
+
+/**
+ * Створює онлайн кімнату. Повертає назву створеної кімнати.
+ * Використовує toPass для стабільності з'єднання з Firebase емулятором.
+ */
+export async function createOnlineRoom(page: Page, playerName: string = 'HostMaster'): Promise<string> {
+  await expect(async () => {
+    await page.goto('/online');
+    await clearBrowserStorage(page);
+    await page.reload();
+    
+    await expect(page.locator('[data-testid="create-room-btn"]')).toBeVisible({ timeout: 15000 });
+    
+    await page.click('[data-testid="player-name-input-edit-btn"]');
+    await page.fill('[data-testid="player-name-input-input"]', playerName);
+    await page.click('[data-testid="player-name-input-save-btn"]');
+    
+    await page.click('[data-testid="create-room-btn"]');
+    
+    const randomHash = Math.random().toString(36).substring(2, 8);
+    const generatedRoomName = `Room_${randomHash}_${Date.now()}`;
+    
+    await page.click('[data-testid="room-name-input-edit-btn"]');
+    await page.fill('[data-testid="room-name-input-input"]', generatedRoomName);
+    await page.click('[data-testid="room-name-input-save-btn"]');
+    
+    await page.click('[data-testid="create-room-confirm-btn"]');
+    await expect(page.locator('[data-testid="lobby-container"]')).toBeVisible({ timeout: 15000 });
+  }).toPass({ 
+    timeout: 60000, 
+    intervals: [2000, 5000] 
+  });
+  
+  const roomNameDisplay = page.locator('[data-testid="room-name-editable-display"]');
+  await expect(roomNameDisplay).toBeVisible({ timeout: 15000 });
+  return (await roomNameDisplay.textContent()) || '';
+}
+
+/**
+ * Приєднується до існуючої онлайн кімнати за її назвою.
+ * Використовує toPass для стабільності.
+ */
+export async function joinOnlineRoom(page: Page, roomName: string, playerName: string = 'GuestChallenger'): Promise<void> {
+  await expect(async () => {
+    await page.goto('/online');
+    await expect(page.locator('[data-testid="refresh-rooms-btn"]')).toBeVisible({ timeout: 15000 });
+
+    await page.click('[data-testid="player-name-input-edit-btn"]');
+    await page.fill('[data-testid="player-name-input-input"]', playerName);
+    await page.click('[data-testid="player-name-input-save-btn"]');
+
+    await page.click('[data-testid="refresh-rooms-btn"]');
+    const roomCard = page.locator('div.room-card', { hasText: roomName }).first();
+    await expect(roomCard).toBeVisible({ timeout: 5000 });
+    
+    await roomCard.locator('[data-testid^="join-room-btn-"]').click();
+    await expect(page.locator('[data-testid="lobby-container"]')).toBeVisible({ timeout: 15000 });
+  }).toPass({
+    timeout: 60000,
+    intervals: [2000, 5000]
+  });
+}
+

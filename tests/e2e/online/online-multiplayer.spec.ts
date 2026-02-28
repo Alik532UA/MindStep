@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { clearFirestore, clearBrowserStorage } from '../../utils';
+import { clearFirestore, createOnlineRoom, joinOnlineRoom } from '../../utils';
 
 /**
  * ⚠️ ВАЖЛИВО: СТАБІЛІЗАЦІЯ ОНЛАЙН-РЕЖИМУ
@@ -39,62 +39,16 @@ test.describe('Онлайн мультиплеєр', { tag: '@OM' }, () => {
     // Логування консолі для відстеження стану Firebase
     p1.on('console', msg => console.log(`[P1] [${msg.type()}] ${msg.text()}`));
 
+    let roomName = '';
+
     // --- ГРАВЕЦЬ 1: Створення кімнати ---
     await test.step('Гравець 1 створює кімнату', async () => {
-        // Використовуємо toPass для всього процесу. Якщо Firebase зависне,
-        // перезавантаження сторінки (p1.goto) скине з'єднання.
-        await expect(async () => {
-            await p1.goto('/online');
-            await clearBrowserStorage(p1);
-            await p1.reload();
-            
-            await expect(p1.locator('[data-testid="create-room-btn"]')).toBeVisible({ timeout: 15000 });
-            
-            await p1.click('[data-testid="player-name-input-edit-btn"]');
-            await p1.fill('[data-testid="player-name-input-input"]', 'HostMaster');
-            await p1.click('[data-testid="player-name-input-save-btn"]');
-            
-            await p1.click('[data-testid="create-room-btn"]');
-            
-            const randomHash = Math.random().toString(36).substring(2, 8);
-            const roomName = `Room_${randomHash}_${Date.now()}`;
-            
-            await p1.click('[data-testid="room-name-input-edit-btn"]');
-            await p1.fill('[data-testid="room-name-input-input"]', roomName);
-            await p1.click('[data-testid="room-name-input-save-btn"]');
-            
-            await p1.click('[data-testid="create-room-confirm-btn"]');
-            await expect(p1.locator('[data-testid="lobby-container"]')).toBeVisible({ timeout: 15000 });
-        }).toPass({ 
-          timeout: 60000, 
-          intervals: [2000, 5000] 
-        });
+        roomName = await createOnlineRoom(p1, 'HostMaster');
     });
 
     // --- ГРАВЕЦЬ 2: Приєднання ---
     await test.step('Гравець 2 приєднується до кімнати', async () => {
-        const roomNameDisplay = p1.locator('[data-testid="room-name-editable-display"]');
-        await expect(roomNameDisplay).toBeVisible({ timeout: 30000 });
-        const roomName = await roomNameDisplay.textContent();
-        
-        await expect(async () => {
-            await p2.goto('/online');
-            await expect(p2.locator('[data-testid="refresh-rooms-btn"]')).toBeVisible({ timeout: 15000 });
-
-            await p2.click('[data-testid="player-name-input-edit-btn"]');
-            await p2.fill('[data-testid="player-name-input-input"]', 'GuestChallenger');
-            await p2.click('[data-testid="player-name-input-save-btn"]');
-
-            await p2.click('[data-testid="refresh-rooms-btn"]');
-            const roomCard = p2.locator('div.room-card', { hasText: roomName! }).first();
-            await expect(roomCard).toBeVisible({ timeout: 5000 });
-            
-            await roomCard.locator('[data-testid^="join-room-btn-"]').click();
-            await expect(p2.locator('[data-testid="lobby-container"]')).toBeVisible({ timeout: 15000 });
-        }).toPass({
-          timeout: 60000,
-          intervals: [2000, 5000]
-        });
+        await joinOnlineRoom(p2, roomName, 'GuestChallenger');
     });
 
     // --- ПЕРЕВІРКА: Синхронізація ---
@@ -107,3 +61,4 @@ test.describe('Онлайн мультиплеєр', { tag: '@OM' }, () => {
     await context2.close();
   });
 });
+
