@@ -21,7 +21,7 @@ import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { RoomSchema } from '$lib/schemas/onlineSchema';
 import { logService } from '$lib/services/logService';
 
-const OPERATION_TIMEOUT_MS = 20000;
+const OPERATION_TIMEOUT_MS = 30000;
 
 class RoomFirestoreService {
     private get db() {

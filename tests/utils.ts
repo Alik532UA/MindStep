@@ -166,3 +166,50 @@ export async function makeMove(page: Page, direction: string, distance: number, 
     await expect(computerMoveBtn).toHaveClass(/computer-move-display/);
   }
 }
+
+/**
+ * Очищує Firestore в емуляторі
+ */
+export async function clearFirestore() {
+  const projectId = 'mindstep-dev';
+  const url = `http://127.0.0.1:8080/emulator/v1/projects/${projectId}/databases/(default)/documents`;
+  
+  // ПЕРЕВІРКА: Чи доступний емулятор взагалі?
+  try {
+    const ping = await fetch('http://127.0.0.1:8080/', { method: 'GET' });
+    if (!ping.ok && ping.status !== 404) throw new Error('Not reachable');
+  } catch (e) {
+    throw new Error('❌ FIREBASE EMULATOR IS NOT RUNNING! Please start it with: npx firebase emulators:start');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд ліміт
+
+  try {
+    const response = await fetch(url, { 
+      method: 'DELETE',
+      signal: controller.signal 
+    });
+    clearTimeout(timeoutId);
+    if (response.ok) {
+      console.log('✅ Firestore Emulator data cleared');
+      // ПАУЗА: Даємо емулятору 5 секунд на внутрішнє оновлення стану
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    } else {
+      console.error('❌ Failed to clear Firestore Emulator data:', response.statusText);
+    }
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('❌ Error clearing Firestore Emulator (timeout or connection error):', error.message);
+  }
+}
+
+/**
+ * Очищує локальне сховище браузера
+ */
+export async function clearBrowserStorage(page: Page) {
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+}
