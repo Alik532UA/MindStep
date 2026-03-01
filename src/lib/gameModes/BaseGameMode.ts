@@ -210,12 +210,7 @@ export abstract class BaseGameMode implements IGameMode {
         ...s,
         selectedDirection: null,
         selectedDistance: null,
-        isFirstMove: false,
-        lastMove: {
-          direction,
-          distance,
-          player: pState.currentPlayerIndex
-        }
+        isFirstMove: false
       }));
 
       // Event-Driven UI: Повідомляємо про успішний хід

@@ -89,7 +89,7 @@ function _calculateBaseScore(player: Player, settings: GameSettingsState): numbe
  */
 interface MoveScoreState {
   players: Player[];
-  lastMove?: { player: number; direction: string; distance: number } | null;
+  moveQueue?: { player: number; direction: string; distance: number; to: any }[];
   playerRow: number;
   playerCol: number;
   cellVisitCounts: Record<string, number>;
@@ -99,10 +99,13 @@ function _calculateMirrorMovePenalty(currentState: MoveScoreState, direction: st
   let penaltyPoints = 0;
   let penaltyPointsForMove = 0;
   const humanPlayersCount = currentState.players.filter((p: Player) => p.type === 'human').length;
-  const lastComputerMove = currentState.lastMove;
+  
+  const lastMove = currentState.moveQueue && currentState.moveQueue.length > 0 
+    ? currentState.moveQueue[currentState.moveQueue.length - 1] 
+    : null;
 
-  if (direction && lastComputerMove && lastComputerMove.player !== 0 && !settings.blockModeEnabled) {
-    const isMirror = isMirrorMove(direction, distance, lastComputerMove.direction, lastComputerMove.distance);
+  if (direction && lastMove && (lastMove.player - 1) !== 0 && !settings.blockModeEnabled) {
+    const isMirror = isMirrorMove(direction, distance, lastMove.direction, lastMove.distance);
     if (isMirror) {
       if (humanPlayersCount <= 1) {
         penaltyPoints = 2;

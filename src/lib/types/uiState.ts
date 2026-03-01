@@ -18,7 +18,6 @@ export interface UiState {
   testModeOverrides?: {
     nextComputerMove?: { direction: MoveDirectionType; distance: number };
   };
-  lastMove: { direction: MoveDirectionType; distance: number; player: number } | null;
   // Нові поля для онлайн режиму
   onlinePlayerIndex: number | null; // 0 (Host) або 1 (Guest)
   amIHost: boolean;
@@ -40,7 +39,6 @@ export const initialUIState: UiState = {
   intendedGameType: null,
   settingsMode: 'default',
   isSettingsExpanderOpen: dev,
-  lastMove: null,
   onlinePlayerIndex: null,
   amIHost: false,
   shouldShowGameModeModalOnLoad: false,

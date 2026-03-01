@@ -52,23 +52,21 @@ class DerivedState {
         const pState = playerState.state;
         const bState = boardState.state;
 
-        if (!pState) return null;
-
-        if (uState?.lastMove) {
-            const p = pState.players[uState.lastMove.player];
-            if (p?.type === 'ai' || p?.type === 'computer' || p?.isComputer) {
-                return {
-                    direction: uState.lastMove.direction,
-                    distance: uState.lastMove.distance
-                };
-            }
-        }
-
-        if (!bState || bState.moveQueue.length === 0) return null;
+        if (!pState || !bState || bState.moveQueue.length === 0) return null;
+        
         const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
-        const pMod = pState.players[lastMove.player - 1];
-        if (pMod?.type === 'ai' || pMod?.type === 'computer' || pMod?.isComputer) {
-            return { direction: lastMove.direction, distance: lastMove.distance };
+        const movePlayerIndex = lastMove.player - 1;
+        
+        // В онлайн грі хід суперника вважається "computer move" для UI
+        if (uState?.intendedGameType === 'online') {
+            if (movePlayerIndex !== uState.onlinePlayerIndex) {
+                return { direction: lastMove.direction, distance: lastMove.distance };
+            }
+        } else {
+            const pMod = pState.players[movePlayerIndex];
+            if (pMod?.type === 'ai' || pMod?.type === 'computer' || pMod?.isComputer) {
+                return { direction: lastMove.direction, distance: lastMove.distance };
+            }
         }
         return null;
     });
@@ -78,23 +76,21 @@ class DerivedState {
         const pState = playerState.state;
         const bState = boardState.state;
 
-        if (!pState) return null;
-
-        if (uState?.lastMove) {
-            const p = pState.players[uState.lastMove.player];
-            if (p?.type === 'human' && !p?.isComputer) {
-                return {
-                    direction: uState.lastMove.direction,
-                    distance: uState.lastMove.distance
-                };
-            }
-        }
-
-        if (!bState || bState.moveQueue.length === 0) return null;
+        if (!pState || !bState || bState.moveQueue.length === 0) return null;
+        
         const lastMove = bState.moveQueue[bState.moveQueue.length - 1];
-        const pMod = pState.players[lastMove.player - 1];
-        if (pMod?.type === 'human' && !pMod?.isComputer) {
-            return { direction: lastMove.direction, distance: lastMove.distance };
+        const movePlayerIndex = lastMove.player - 1;
+
+        // В онлайн грі НАШ хід вважається "player move"
+        if (uState?.intendedGameType === 'online') {
+            if (movePlayerIndex === uState.onlinePlayerIndex) {
+                return { direction: lastMove.direction, distance: lastMove.distance };
+            }
+        } else {
+            const pMod = pState.players[movePlayerIndex];
+            if (pMod?.type === 'human' && !pMod?.isComputer) {
+                return { direction: lastMove.direction, distance: lastMove.distance };
+            }
         }
         return null;
     });
