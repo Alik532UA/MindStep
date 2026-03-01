@@ -6,6 +6,7 @@
   import type { MoveDirectionType } from "$lib/models/Piece";
   import type { CenterInfoState } from "$lib/utils/centerInfoUtil";
   import hotkeyService from "$lib/services/hotkeyService";
+  import { uiState } from "$lib/stores/uiState.svelte";
 
   // FIX: Import external styles
   import "$lib/css/widgets/direction-controls.css";
@@ -62,6 +63,9 @@
   const isVoiceSupported = voiceControlService.isApiSupported;
   let isIos = $state(false);
 
+  let isOnline = $derived(uiState.state?.intendedGameType === "online");
+  let visuallyDisabled = $derived(isOnline && !isPlayerTurn);
+
   // FIX no-blink: розділяємо JS-блокування кліку і HTML-атрибут disabled.
   // controlsDisabled - JS guard для handlers, але НЕ передається як HTML disabled в dir-btn/dist-btn.
   // Div/dist кнопки завжди виглядають активними - так немає мигання при зміні черги.
@@ -70,7 +74,7 @@
   });
 
   let confirmButtonBlocked = $derived.by(() => {
-    return isConfirmDisabled || !selectedDirection || !selectedDistance;
+    return visuallyDisabled || isConfirmDisabled || !selectedDirection || !selectedDistance;
   });
 
   onMount(() => {
@@ -142,8 +146,7 @@
 
 <div class="direction-controls-panel" data-testid="direction-controls-widget">
   {#snippet centerSnippet()}
-    <!-- FIX: disabled={false} гарантує, що кнопка ніколи не виглядає заблокованою (сірою/прозорою),
-           навіть якщо зараз хід суперника. Логіка кліку контролюється в handleCentral. -->
+    <!-- FIX: disabled={visuallyDisabled} гарантує, що кнопка візуально заблокована для онлайн гри, коли не наш хід. -->
     <button
       id="center-info"
       class="control-btn center-info {centerInfoProps.class}"
@@ -152,7 +155,7 @@
       aria-live="polite"
       onclick={handleCentral}
       tabindex="0"
-      disabled={false}
+      disabled={visuallyDisabled}
       style={centerInfoProps.backgroundColor
         ? `background-color: ${centerInfoProps.backgroundColor} !important`
         : ""}
@@ -168,7 +171,7 @@
 
   <DirectionGrid
     {selectedDirection}
-    disabled={false}
+    disabled={visuallyDisabled}
     center={centerSnippet}
     ondirection={handleDirection}
   />
@@ -176,7 +179,7 @@
   <DistanceSelector
     {distanceRows}
     {selectedDistance}
-    disabled={false}
+    disabled={visuallyDisabled}
     ondistance={handleDistance}
   />
 
@@ -184,7 +187,7 @@
     confirmDisabled={confirmButtonBlocked}
     {blockModeEnabled}
     {isVoiceSupported}
-    disabled={isMoveInProgress}
+    disabled={visuallyDisabled}
     {isIos}
     onconfirm={handleConfirm}
     onnoMoves={handleNoMoves}

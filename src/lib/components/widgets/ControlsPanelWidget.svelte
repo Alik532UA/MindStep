@@ -133,7 +133,9 @@ ${generalLogs}`;
       tabindex="0"
       data-testid="controls-panel-title"
     >
-      {$t("gameControls.selectDirectionAndDistance")}
+      {uiState.state?.intendedGameType === "online" && !derivedState.isPlayerTurn
+        ? $t("gameControls.waitYourTurn")
+        : $t("gameControls.selectDirectionAndDistance")}
     </div>
     <DirectionControls
       distanceRows={derivedState.distanceRows}

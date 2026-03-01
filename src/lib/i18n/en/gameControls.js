@@ -12,6 +12,7 @@ export default {
   confirm: "Confirm",
   noMovesTitle: "No Moves",
   selectDirectionAndDistance: "Select direction and distance",
+  waitYourTurn: "Wait for your turn",
   voiceCommand: "Voice Control (beta)",
   voiceCommandTitle: "Voice Command",
   voiceCommandNotSupported: "Voice command is not supported in your browser",

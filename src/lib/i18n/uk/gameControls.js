@@ -12,6 +12,7 @@ export default {
   confirm: "Підтвердити",
   noMovesTitle: "Ходів немає",
   selectDirectionAndDistance: "Оберіть напрямок та відстань",
+  waitYourTurn: "Очікуйте на вашу чергу",
   voiceCommand: "Керування голосом (beta)",
   voiceCommandTitle: "Голосова команда",
   voiceCommandNotSupported: "Голосове керування не підтримується у вашому браузері",

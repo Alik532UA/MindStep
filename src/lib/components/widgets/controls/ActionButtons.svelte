@@ -61,7 +61,7 @@
     <StyledButton
         variant="warning"
         size="large"
-        disabled={false}
+        disabled={disabled}
         onclick={onnoMoves}
         tooltip={$t("gameControls.noMovesTitle")}
         dataTestId="no-moves-btn"
@@ -74,11 +74,11 @@
     </StyledButton>
 
     {#if !isIos}
-        <!-- FIX no-blink: disabled тільки якщо API не підтримується (стале значення, не мігає) -->
+        <!-- FIX no-blink: disabled тільки якщо API не підтримується або передано disabled (наприклад, для онлайн гри) -->
         <StyledButton
             variant="info"
             size="large"
-            disabled={!isVoiceSupported}
+            disabled={disabled || !isVoiceSupported}
             onclick={onvoiceCommand}
             tooltip={voiceButtonTooltip}
             dataTestId="voice-command-btn"

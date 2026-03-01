@@ -12,6 +12,7 @@ export default {
   confirm: "Bevestig",
   noMovesTitle: "Geen Zetten",
   selectDirectionAndDistance: "Kies richting en afstand",
+  waitYourTurn: "Wacht op je beurt",
   voiceCommand: "Spraakbesturing (beta)",
   voiceCommandTitle: "Spraakopdracht",
   voiceCommandNotSupported: "Spraakopdracht wordt niet ondersteund in uw browser",

@@ -12,6 +12,7 @@ export default {
   confirm: "Tasdiqla",
   noMovesTitle: "Areket yoq",
   selectDirectionAndDistance: "Yön ve mesafe seçin",
+  waitYourTurn: "Nevbetiñizni bekleñiz",
   voiceCommand: "Sesnen idare (beta)",
   voiceCommandTitle: "Sesli komanda",
   voiceCommandNotSupported: "Sesli komanda brauzeriñizde desteklenmey",
