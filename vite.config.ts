@@ -70,8 +70,8 @@ export default defineConfig(({ mode }) => {
 					globPatterns: isDev
 						? [] 
 						: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
-					globIgnores: ['**/index.html', '**/_app/**'], // Ігноруємо внутрішні файли SvelteKit
-					navigateFallback: isDev ? null : (base === '/' ? 'index.html' : `${base}/index.html`),
+					// ПРИБРАНО globIgnores, щоб індекс та код SvelteKit потрапили в прекеш
+					navigateFallback: isDev ? null : 'index.html',
 					navigateFallbackDenylist: [/^\/version\.json$/],
 					dontCacheBustURLsMatching: /-[a-f0-9]{8}\./,
 				},
