@@ -7,9 +7,10 @@ import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase
 import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/database';
 import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
-import { browser } from '$app/environment';
 import { logService } from './logService';
 import { errorHandlerService } from './errorHandlerService';
+
+const isBrowser = typeof window !== 'undefined';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -78,7 +79,7 @@ export function getFirebaseAuth(): Auth {
 }
 
 export async function initializeAnalytics(): Promise<Analytics | null> {
-    if (!browser) return null;
+    if (!isBrowser) return null;
     if (analytics) return analytics;
     try {
         const supported = await isSupported();

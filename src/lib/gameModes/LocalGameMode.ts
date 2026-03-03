@@ -13,12 +13,11 @@ import { boardState } from '$lib/stores/boardState.svelte';
 import { resetPlayerScore, createDefaultLocalPlayers } from '$lib/utils/playerFactory';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 import { BASE_TURN_DURATION, DEV_TIME_MULTIPLIER, COMPUTER_TURN_DELAY } from '$lib/config/timeConstants';
-import { dev } from '$app/environment';
 
 export class LocalGameMode extends BaseGameMode {
   constructor() {
     super();
-    this.turnDuration = dev ? BASE_TURN_DURATION * DEV_TIME_MULTIPLIER : BASE_TURN_DURATION;
+    this.turnDuration = import.meta.env.DEV ? BASE_TURN_DURATION * DEV_TIME_MULTIPLIER : BASE_TURN_DURATION;
   }
 
   initialize(options: { newSize?: number } = {}): void {
@@ -33,7 +32,7 @@ export class LocalGameMode extends BaseGameMode {
       this.turnDuration = 0; // Disable timer
     } else {
       // Restore default turn duration if not observer (in case of mode switch)
-      this.turnDuration = dev ? BASE_TURN_DURATION * DEV_TIME_MULTIPLIER : BASE_TURN_DURATION;
+      this.turnDuration = import.meta.env.DEV ? BASE_TURN_DURATION * DEV_TIME_MULTIPLIER : BASE_TURN_DURATION;
     }
 
     gameSettingsState.updateSettings({

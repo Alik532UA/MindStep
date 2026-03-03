@@ -1,5 +1,4 @@
 import type { MoveDirectionType } from '$lib/models/Piece';
-import { dev } from '$app/environment';
 
 export interface UiState {
   showBoardHiddenInfo: boolean;
@@ -38,7 +37,7 @@ export const initialUIState: UiState = {
   voiceMoveRequested: false,
   intendedGameType: null,
   settingsMode: 'default',
-  isSettingsExpanderOpen: dev,
+  isSettingsExpanderOpen: import.meta.env.DEV,
   onlinePlayerIndex: null,
   amIHost: false,
   shouldShowGameModeModalOnLoad: false,
