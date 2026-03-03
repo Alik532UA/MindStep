@@ -18,14 +18,20 @@ const manifest: Partial<ManifestOptions> = {
 	lang: 'uk',
 	icons: [
 		{
-			src: base === '/' ? '/favicon-32px.ico' : base + '/favicon-32px.ico',
-			sizes: '32x32',
-			type: 'image/x-icon'
+			src: base === '/' ? '/icon-192.png' : base + '/icon-192.png',
+			sizes: '192x192',
+			type: 'image/png'
 		},
 		{
-			src: base === '/' ? '/favicon.svg' : base + '/favicon.svg',
-			sizes: 'any',
-			type: 'image/svg+xml'
+			src: base === '/' ? '/icon-512.png' : base + '/icon-512.png',
+			sizes: '512x512',
+			type: 'image/png'
+		},
+		{
+			src: base === '/' ? '/icon-512.png' : base + '/icon-512.png',
+			sizes: '512x512',
+			type: 'image/png',
+			purpose: 'maskable'
 		}
 	]
 };

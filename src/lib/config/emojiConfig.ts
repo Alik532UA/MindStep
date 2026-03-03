@@ -1,12 +1,10 @@
 export type EmojiStyle = 'color' | 'mono';
 
+/**
+ * @deprecated Проект перейшов на lucide-svelte. 
+ * Ця конфігурація залишена для сумісності з типами, але шляхи до стаціонарних емодзі видалені.
+ */
 export const EMOJI_CONFIG = {
-    // Змінюєте це значення - змінюються всі емодзі в додатку
-    style: 'color' as EmojiStyle,
-
-    // Шляхи до папок (відносно static)
-    paths: {
-        color: '/emojis/color',
-        mono: '/emojis/mono'
-    }
+    // Стиль іконок (впливає на мапінг кольорів у NotoEmoji.svelte)
+    style: 'color' as EmojiStyle
 };
