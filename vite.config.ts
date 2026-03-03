@@ -10,6 +10,7 @@ const manifest: Partial<ManifestOptions> = {
 	name: 'MindStep',
 	short_name: 'MindStep',
 	description: 'Стратегічна гра на витривалість та просторову уяву',
+	id: base, // Унікальний ідентифікатор додатка
 	scope: base,
 	start_url: base,
 	display: 'standalone' as Display,
@@ -18,19 +19,25 @@ const manifest: Partial<ManifestOptions> = {
 	lang: 'uk',
 	icons: [
 		{
-			src: base === '/' ? '/icon-192.png' : base + '/icon-192.png',
+			src: 'icon-192.png', // Відносні шляхи краще працюють з Vite PWA
 			sizes: '192x192',
 			type: 'image/png',
-			purpose: 'any maskable' // <-- ОБОВ'ЯЗКОВО для Android
+			purpose: 'any'
 		},
 		{
-			src: base === '/' ? '/icon-512.png' : base + '/icon-512.png',
+			src: 'icon-192.png',
+			sizes: '192x192',
+			type: 'image/png',
+			purpose: 'maskable'
+		},
+		{
+			src: 'icon-512.png',
 			sizes: '512x512',
 			type: 'image/png',
 			purpose: 'any'
 		},
 		{
-			src: base === '/' ? '/icon-512.png' : base + '/icon-512.png',
+			src: 'icon-512.png',
 			sizes: '512x512',
 			type: 'image/png',
 			purpose: 'maskable'
