@@ -24,6 +24,16 @@
 	<link rel="icon" href="%sveltekit.assets%/favicon-48px.ico" sizes="48x48" />
 	<link rel="icon" href="%sveltekit.assets%/favicon-64px.ico" sizes="64x64" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!-- Посилання на маніфест (Vite PWA генерує його автоматично) -->
+	<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
+
+	<!-- Сигнали для мобільних пристроїв та PWA-режиму -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="MindStep" />
+	<meta name="application-name" content="MindStep" />
+
 	<!-- manifest.json handled by vite-plugin-pwa -->
 	<meta name="theme-color" content="#1a1a1a" />
 	<meta name="color-scheme" content="light dark" />
