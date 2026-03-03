@@ -73,12 +73,6 @@ export default defineConfig(({ mode }) => {
 				}
 			})
 		],
-		resolve: {
-			// Допомагаємо Vite 7 знайти внутрішні аліаси SvelteKit, якщо вони "втікають" у плагіни
-			alias: {
-				'__sveltekit': '/.svelte-kit/runtime'
-			}
-		},
 		build: {
 			sourcemap: true,
 		},
