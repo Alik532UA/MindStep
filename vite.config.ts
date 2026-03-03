@@ -24,13 +24,13 @@ const manifest: Partial<ManifestOptions> = {
 			src: 'icon-192.png',
 			sizes: '192x192',
 			type: 'image/png',
-			purpose: 'any maskable' // Ця іконка буде пріоритетною для робочого столу
+			purpose: 'maskable' // Тільки для іконки на робочому столі (адаптивна)
 		},
 		{
 			src: 'icon-512.png',
 			sizes: '512x512',
 			type: 'image/png',
-			purpose: 'any' // Ця іконка (найбільша) буде використана для Splash Screen
+			purpose: 'any' // Найкращий вибір для Splash Screen
 		}
 	]
 };
