@@ -53,26 +53,32 @@ export default defineConfig(({ mode }) => {
 				filename: 'service-worker.js',
 				registerType: 'prompt',
 				manifest,
+				injectRegister: false, // SvelteKit краще справляється сам або через компонент
 				workbox: {
 					clientsClaim: true,
 					skipWaiting: false,
 					cleanupOutdatedCaches: true,
-					// У dev режимі ми не хочемо прекешувати нічого, бо це створює помилки для віртуальних файлів SvelteKit
 					globPatterns: isDev
 						? [] 
 						: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
-					globIgnores: ['**/index.html'],
+					globIgnores: ['**/index.html', '**/_app/**'], // Ігноруємо внутрішні файли SvelteKit
 					navigateFallback: isDev ? null : (base === '/' ? 'index.html' : `${base}/index.html`),
 					navigateFallbackDenylist: [/^\/version\.json$/],
 					dontCacheBustURLsMatching: /-[a-f0-9]{8}\./,
 				},
 				devOptions: {
-					enabled: false, // Вимикаємо SW у dev за замовчуванням
+					enabled: false,
 					suppressWarnings: true,
 					type: 'module',
 				}
 			})
 		],
+		resolve: {
+			// Допомагаємо Vite 7 знайти внутрішні аліаси SvelteKit, якщо вони "втікають" у плагіни
+			alias: {
+				'__sveltekit': '/.svelte-kit/runtime'
+			}
+		},
 		build: {
 			sourcemap: true,
 		},
