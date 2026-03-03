@@ -7,7 +7,7 @@
   import { animationState } from "$lib/stores/animationState.svelte";
   import { derivedState } from "$lib/stores/derivedState.svelte";
   import { logService } from "$lib/services/logService.js";
-  import { isCellBlocked } from "$lib/utils/boardUtils.ts";
+  import { isCellBlocked } from "$lib/logic/availableMovesLogic";
   import { boardState } from "$lib/stores/boardState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import BoardHiddenInfoWidget from "./BoardHiddenInfoWidget.svelte";

@@ -1,5 +1,5 @@
 import { Piece, type MoveDirectionType } from '../models/Piece';
-import { isCellBlocked } from '$lib/utils/boardUtils';
+import { isCellBlocked } from '../logic/availableMovesLogic';
 import { calculateMoveScore } from '$lib/services/scoreService';
 import type { CombinedGameState, MoveResult } from '$lib/models/gameState';
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { isCellBlocked, getDamageClass } from "$lib/utils/boardUtils";
+  import { getDamageClass } from "$lib/utils/boardUtils";
+  import { isCellBlocked } from "$lib/logic/availableMovesLogic";
   import { createEventDispatcher } from "svelte";
   import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 

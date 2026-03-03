@@ -1,6 +1,7 @@
 // src/lib/services/scoreService.ts
 import type { Player } from '$lib/models/player';
-import { isMirrorMove, getMovePath, isCellBlocked } from '$lib/utils/boardUtils';
+import { getMovePath } from '$lib/utils/boardUtils';
+import { isMirrorMove, isCellBlocked } from '../logic/availableMovesLogic';
 import { logService } from './logService';
 import type { FinalScoreDetails } from '$lib/models/score';
 import type { BoardState } from '$lib/stores/boardState.svelte';

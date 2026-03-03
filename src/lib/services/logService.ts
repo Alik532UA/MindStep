@@ -1,8 +1,18 @@
-import { debugLogState } from '../stores/debugLogState.svelte';
+// src/lib/services/logService.ts
 
 const isBrowser = typeof window !== 'undefined';
+const isWorker = typeof self !== 'undefined' && typeof window === 'undefined';
 const isDev = import.meta.env.DEV;
 let isForceEnabled = false;
+
+// Динамічний імпорт для debugLogState (тільки для головного потоку)
+let debugLogState: any = null;
+
+if (isBrowser) {
+    import('../stores/debugLogState.svelte').then(module => {
+        debugLogState = module.debugLogState;
+    });
+}
 
 // Check localStorage to force logs on production
 if (isBrowser && localStorage.getItem('force-logging') === 'true') {
@@ -183,8 +193,8 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
         if (isLogEnabled) {
             // ЧОМУ: Використовуємо setTimeout тільки в браузері для UI-логів. 
             // Під час тестів уникаємо асинхронних оновлень стану, щоб не ламати таймінги Playwright.
-            if (import.meta.env.MODE === 'test') {
-                // В тестах просто логуємо в консоль, не оновлюючи реактивний стор логів асинхронно
+            if (import.meta.env.MODE === 'test' || isWorker || !debugLogState) {
+                // В тестах або воркері просто логуємо в консоль, не оновлюючи реактивний стор логів асинхронно
                 return;
             }
 

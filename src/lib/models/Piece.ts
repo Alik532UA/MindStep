@@ -1,7 +1,6 @@
 /**
  * Enum для напрямків руху фігури
  */
-import { logService } from '$lib/services/logService.js';
 import type { Position, MoveResult, AvailableMove } from '$lib/types/position';
 export const MoveDirection = {
   UP: 'up',
@@ -114,7 +113,6 @@ export class Piece {
    * Отримати список доступних ходів
    */
   getAvailableMoves(): AvailableMove[] {
-    logService.logicAvailability('Available Moves Calculation Position', { row: this.row, col: this.col });
     const moves: AvailableMove[] = [];
     const directions = Object.values(MoveDirection);
 
