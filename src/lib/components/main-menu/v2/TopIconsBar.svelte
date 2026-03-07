@@ -9,6 +9,7 @@
 
     import ThemeDropdown from "$lib/components/main-menu/ThemeDropdown.svelte";
     import LanguageDropdown from "$lib/components/main-menu/LanguageDropdown.svelte";
+    import { customTooltip } from "$lib/actions/customTooltip";
 
     interface Props {
         onFeedback: () => void;
@@ -53,11 +54,11 @@
     }
 </script>
 
-<div class="top-icons-bar">
+<div class="top-icons-bar" data-testid="top-icons-bar">
     <button
         class="icon-btn"
         onclick={() => navigateTo("/rules")}
-        title={$t("mainMenu.rules")}
+        use:customTooltip={$t("mainMenu.rules")}
         data-testid="top-rules-btn"
     >
         <div class="icon-inner"><NotoEmoji name="memo" size="24px" /></div>
@@ -66,7 +67,7 @@
     <button
         class="icon-btn"
         onclick={() => navigateTo("/rewards")}
-        title={$t("rewards.pageTitle")}
+        use:customTooltip={$t("rewards.pageTitle")}
         data-testid="top-rewards-btn"
     >
         <div class="icon-inner"><NotoEmoji name="trophy" size="24px" /></div>
@@ -75,7 +76,7 @@
     <button
         class="icon-btn"
         onclick={() => navigateTo("/settings")}
-        title={$t("mainMenu.settings")}
+        use:customTooltip={$t("mainMenu.settings")}
         data-testid="top-settings-btn"
     >
         <div class="icon-inner"><NotoEmoji name="gear" size="24px" /></div>
@@ -85,7 +86,7 @@
         <button
             class="icon-btn"
             onclick={toggleLang}
-            title={$t("mainMenu.language")}
+            use:customTooltip={$t("mainMenu.language")}
             data-testid="top-language-btn"
         >
             <div class="icon-inner">
@@ -98,7 +99,7 @@
         <button
             class="icon-btn"
             onclick={toggleTheme}
-            title={$t("mainMenu.theme")}
+            use:customTooltip={$t("mainMenu.theme")}
             data-testid="top-theme-btn"
         >
             <div class="icon-inner">
@@ -110,7 +111,7 @@
     <button
         class="icon-btn desktop-only"
         onclick={() => navigateTo("/settings?tab=hotkeys")}
-        title={$t("mainMenu.controls")}
+        use:customTooltip={$t("mainMenu.controls")}
         data-testid="top-controls-btn"
     >
         <div class="icon-inner"><NotoEmoji name="keyboard" size="24px" /></div>
@@ -119,7 +120,7 @@
     <button
         class="icon-btn"
         onclick={() => navigateTo("/supporters")}
-        title={$t("mainMenu.donate")}
+        use:customTooltip={$t("mainMenu.donate")}
         data-testid="top-donate-btn"
     >
         <div class="icon-inner"><NotoEmoji name="coin" size="24px" /></div>
@@ -128,7 +129,7 @@
     <button
         class="icon-btn"
         onclick={onFeedback}
-        title={$t("ui.feedback.title")}
+        use:customTooltip={$t("ui.feedback.title")}
         data-testid="top-feedback-btn"
     >
         <div class="icon-inner">
@@ -139,7 +140,7 @@
     <button
         class="icon-btn"
         onclick={openAuthModal}
-        title={$t("mainMenu.account")}
+        use:customTooltip={$t("mainMenu.account")}
         data-testid="top-account-btn"
     >
         <div class="icon-inner">
@@ -158,16 +159,17 @@
         onclick={closeAll}
         onkeydown={(e) => (e.key === "Escape" || e.key === "Enter" || e.key === " ") && closeAll()}
         aria-label="Закрити меню"
+        data-testid="dropdown-backdrop"
     ></div>
 
     {#if showThemeDropdown}
-        <div class="centered-dropdown-container">
+        <div class="centered-dropdown-container" data-testid="theme-dropdown-container">
             <ThemeDropdown onClose={() => (showThemeDropdown = false)} />
         </div>
     {/if}
 
     {#if showLangDropdown}
-        <div class="centered-dropdown-container">
+        <div class="centered-dropdown-container" data-testid="language-dropdown-container">
             <LanguageDropdown onClose={() => (showLangDropdown = false)} />
         </div>
     {/if}

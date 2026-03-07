@@ -129,16 +129,16 @@
 </script>
 
 {#if mState.isOpen}
+  {#if mState.variant === "menu" && mState.closeOnOverlayClick}
+    <FloatingBackButton onclick={() => gameEventBus.dispatch("CloseModal")} />
+  {/if}
+
   <BaseModal
     variant={mState.variant === "menu" ? "glass" : "classic"}
     onclose={() => mState.closable && gameEventBus.dispatch("CloseModal")}
     closeOnOverlayClick={mState.closeOnOverlayClick}
     dataTestId={mState.dataTestId}
   >
-    {#if mState.variant === "menu" && mState.closeOnOverlayClick}
-      <FloatingBackButton onclick={() => gameEventBus.dispatch("CloseModal")} />
-    {/if}
-
     <div
       class="modal-window {themeClass} variant-{mState.variant}"
       class:custom={mState.customClass}

@@ -223,28 +223,33 @@
 		{
 			id: "rewards",
 			emoji: "trophy",
+			tooltip: "Нагороди",
 			onClick: () => goto(`${base}/rewards`),
 		},
 		{
 			id: "donate",
 			emoji: "coins",
+			tooltip: "Підтримати",
 			dataTestId: "donate-btn",
 			onClick: () => goto(`${base}/supporters`),
 		},
 		{
 			id: "play",
 			emoji: "crown",
+			tooltip: "Грати",
 			onClick: handlePlayVirtualPlayer,
 			primary: true,
 		},
 		{
 			id: "settings",
 			emoji: "gear",
+			tooltip: "Налаштування",
 			onClick: () => goto(`${base}/settings`),
 		},
 		{
 			id: "feedback",
 			emoji: "speech_balloon",
+			tooltip: "Відгук",
 			onClick: handleFeedback,
 			dataTestId: "feedback-btn",
 		},
@@ -268,12 +273,14 @@
 				                                                                                                                                {
 				                                                                                                                                        id: "main-menu-link",
 				                                                                                                                                        emoji: "house", // FIX: Changed from 🏠 to house
+				                                                                                                                                        tooltip: "На головну",
 				                                                                                                                                        onClick: () => goto(`${base}/`),
 				                                                                                                                                        dataTestId: "left-menu-slot-0",
 				                                                                                                                                },
 				                                                                                                                                                                {
 				                                                                                                                                                                        id: "copy-logs-btn",
 				                                                                                                                                                                        emoji: "memo", // memo emoji exists
+				                                                                                                                                                                        tooltip: "Копіювати логи",
 				                                                                                                                                                                        onClick: () => {
 				                                                                                                                                                                            const report = logService.getLogReport();
 				                                                                                                                                                                            navigator.clipboard.writeText(report).then(() => {
@@ -284,17 +291,20 @@
 				                                                                                                                                                                },				                                                                {
 				                                                                        id: "test-mode-btn",
 				                                                                        emoji: "gear", // FIX: Changed from 🛠️ to gear
+				                                                                        tooltip: "Тестовий режим",
 				                                                                        onClick: () => testModeState.toggle(),
 				                                                                        primary: true,
 				                                                                        isActive: testModeState.state.isEnabled,
 				                                                                },				{
 					id: "dev-menu-modal",
 					emoji: "menu", // FIX: Changed from hamburger-menu icon to menu emoji (mapped to Lucide)
+					tooltip: "Dev Меню",
 					onClick: openDevMenuModal,
 				},
 				{
 					id: "dev-clear-cache-btn",
 					emoji: "broom", // FIX: Changed from clear-cache icon to broom emoji (mapped to Lucide Eraser)
+					tooltip: "Очистити кеш",
 					onClick: () => clearCache({ keepAppearance: false }),
 				},
 			]

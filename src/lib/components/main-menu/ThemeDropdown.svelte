@@ -68,8 +68,8 @@
         background: transparent;
         padding: 16px;
         border-radius: 18px;
-        width: 100%;
-        min-width: 280px;
+        width: var(--responsive-max-width, 360px);
+        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         gap: 8px;

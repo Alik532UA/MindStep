@@ -129,7 +129,7 @@
         display: flex;
         flex-direction: column;
         gap: 24px;
-        width: 100%;
+        width: var(--responsive-max-width, 360px);
         box-sizing: border-box;
         max-width: 100%;
         margin: 0 auto;

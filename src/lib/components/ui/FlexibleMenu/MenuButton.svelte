@@ -3,6 +3,7 @@
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import type { IMenuItem } from "./FlexibleMenu.types";
     import { logService } from "$lib/services/logService";
+    import { customTooltip } from "$lib/actions/customTooltip";
 
     interface Props {
         item: IMenuItem;
@@ -29,6 +30,7 @@
     aria-label={item.label || item.id}
     type="button"
     data-testid={dataTestId}
+    use:customTooltip={item.tooltip || item.label}
 >
     <div class="icon-wrapper">
         {#if item.snippet}

@@ -3,6 +3,8 @@
   import { t } from "$lib/i18n/typedI18n";
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { logService } from "$lib/services/logService.js";
+  import { fly } from "svelte/transition";
+  import { quintOut } from "svelte/easing";
 
   interface Props {
     onclick?: () => void;
@@ -27,6 +29,8 @@
   aria-label={$t("ui.goBack") || "Повернутися назад"}
   use:customTooltip={$t("ui.goBack") || "Повернутися назад"}
   onclick={handleClick}
+  in:fly={{ x: -100, duration: 600, delay: 100, easing: quintOut }}
+  out:fly={{ x: -50, duration: 300 }}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -58,15 +62,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    /* FIX: Прибрано transform з transition, щоб не конфліктувати зі Svelte transition:fly */
     transition:
       background-color 0.2s,
-      transform 0.2s,
       box-shadow 0.2s;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0;
   }
+  
+  /* FIX: Запобігаємо стрибкам при знаходженні всередині контейнерів з transform (напр. модалки) */
+  :global(.base-modal-container) .floating-back-btn {
+    position: absolute;
+  }
+
   .floating-back-btn:hover {
     background: rgba(0, 0, 0, 0.4);
     transform: scale(1.05);

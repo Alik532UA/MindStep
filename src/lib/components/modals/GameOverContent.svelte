@@ -253,7 +253,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    width: 100%;
+    width: var(--responsive-max-width, 360px);
     box-sizing: border-box;
   }
 

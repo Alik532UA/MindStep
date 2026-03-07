@@ -78,7 +78,8 @@
   }
 
   .base-modal-container {
-    max-width: 90vw;
+    width: var(--responsive-max-width, 400px);
+    max-width: 95vw;
     max-height: 90vh;
     display: flex;
     flex-direction: column;

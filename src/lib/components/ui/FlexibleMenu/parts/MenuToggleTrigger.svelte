@@ -1,5 +1,6 @@
 <script lang="ts">
     import SvgIcons from "$lib/components/SvgIcons.svelte";
+    import { customTooltip } from "$lib/actions/customTooltip";
     import type { MenuPosition } from "../FlexibleMenu.types";
 
     export let isOpen: boolean;
@@ -27,8 +28,8 @@
     class="toggle-trigger position-{position}"
     on:click={onToggle}
     aria-label={isOpen ? "Згорнути меню" : "Розгорнути меню"}
-    title={isOpen ? "Згорнути" : "Розгорнути"}
     data-testid="{position}-menu-toggle-trigger"
+    use:customTooltip={isOpen ? "Згорнути" : "Розгорнути"}
 >
     <div class="toggle-visual">
         <div class="toggle-icon {isOpen ? 'open' : 'closed'}">
