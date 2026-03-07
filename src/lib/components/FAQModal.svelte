@@ -6,14 +6,22 @@
   import { logService } from "$lib/services/logService";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
+  import { goto } from "$app/navigation";
+  import { base } from "$app/paths";
+  import { userActionService } from "$lib/services/userActionService";
+
   interface Props {
     onOk?: () => void;
     onRules?: (() => void) | null;
   }
 
   let { 
-    onOk = () => modalStateRune.closeAllModals(), 
-    onRules = null 
+    onOk = () => {
+      userActionService.navigateToGame();
+    }, 
+    onRules = () => {
+      goto(`${base}/rules`);
+    } 
   }: Props = $props();
 
   onMount(() => {

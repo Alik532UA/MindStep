@@ -184,10 +184,11 @@
 			return;
 		}
 		
-		// FIX: Закриваємо модалку тільки при зміні шляху (pathname), 
-		// а не при зміні параметрів (?mode=... і т.д.)
+		// FIX: Закриваємо ВСІ модалки тільки при зміні шляху (pathname), 
+		// а не при зміні параметрів (?mode=... і т.д.).
+		// Використовуємо closeAllModals замість closeModal, щоб очистити стек.
 		if (from?.url?.pathname !== to?.url?.pathname) {
-			modalStateRune.closeModal();
+			modalStateRune.closeAllModals();
 		}
 
 		logService.ui("[layout] afterNavigate: hiding tooltip");
@@ -267,7 +268,10 @@
 				                                                                                                                                                                        tooltip: "Копіювати логи",
 				                                                                                                                                                                        onClick: () => {
 				                                                                                                                                                                            const report = logService.getLogReport();
-				                                                                                                                                                                            navigator.clipboard.writeText(report).then(() => {
+				                                                                                                                                                                            const timestamp = new Date().toLocaleString();
+				                                                                                                                                                                            const header = `--- MindStep DEBUG LOG (MANUAL COPY VIA BUTTON) ---\nGenerated: ${timestamp}\n-----------------------------------------------\n\n`;
+				                                                                                                                                                                            
+				                                                                                                                                                                            navigator.clipboard.writeText(header + report).then(() => {
 				                                                                                                                                                                                notificationService.show({ type: 'info', messageRaw: 'Logs copied to clipboard' });
 				                                                                                                                                                                            });
 				                                                                                                                                                                        },

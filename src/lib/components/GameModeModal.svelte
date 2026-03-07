@@ -65,7 +65,6 @@
         showFaqModal();
       } else {
         userActionService.navigateToGame();
-        modalStateRune.closeModal();
       }
       return;
     }
@@ -73,7 +72,6 @@
     if (mode === "beginner") {
       showFaqModal();
     } else {
-      modalStateRune.closeModal();
       userActionService.navigateToGame();
     }
   }
@@ -88,16 +86,7 @@
       component: FAQModal,
       variant: "menu",
       buttons: [],
-      props: {
-        onOk: () => {
-          modalStateRune.closeModal();
-          userActionService.navigateToGame();
-        },
-        onRules: () => {
-          goto(`${base}/rules`);
-          modalStateRune.closeModal();
-        },
-      },
+      props: {},
     });
   }
 </script>
