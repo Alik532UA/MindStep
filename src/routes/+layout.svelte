@@ -194,29 +194,22 @@
 		tooltipState.hide();
 	});
 
+	// --- URL as State Sync ---
+	$effect(() => {
+		const url = $page.url;
+		untrack(() => {
+			modalStateRune.syncWithUrl(url);
+		});
+	});
+
 	// --- Menu Logic ---
 	function handlePlayVirtualPlayer() {
-		modalStateRune.showModal({
-			titleKey: "mainMenu.gameModeModal.title",
-			dataTestId: "game-mode-modal",
-			component: GameModeModal,
-			props: { extended: true },
-			variant: "menu", // <--- FIX: Додано variant="menu"
-			buttons: [], // <--- FIX: Прибрано кнопки
-			closeOnOverlayClick: true, // <--- FIX: Додано закриття по кліку
-		});
+		modalStateRune.open("game-mode-modal");
 	}
 
 	function handleFeedback() {
 		logService.action('Click: "Feedback" (Layout)');
-		modalStateRune.showModal({
-			titleKey: "ui.feedback.title",
-			dataTestId: "feedback-modal",
-			component: FeedbackModal,
-			variant: "menu", // <--- FIX: Додано variant="menu"
-			buttons: [], // <--- FIX: Прибрано кнопки
-			closeOnOverlayClick: true, // <--- FIX: Додано закриття по кліку
-		});
+		modalStateRune.open("feedback-modal");
 	}
 
 	const menuItems: IMenuItem[] = [
@@ -256,16 +249,7 @@
 	];
 
 	function openDevMenuModal() {
-		modalStateRune.showModal({
-			component: DevMenu,
-			variant: "menu",
-			dataTestId: "dev-menu-modal",
-			props: {
-				onClose: () => modalStateRune.closeModal(),
-				versionNumber: versionState.state.current,
-			},
-			closeOnOverlayClick: true,
-		});
+		modalStateRune.open("dev-menu-modal");
 	}
 
 	const devMenuItems = $derived($i18nReady

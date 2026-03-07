@@ -3,7 +3,11 @@
     import { logService } from "$lib/services/logService.js";
     import { languages } from "$lib/constants";
 
-    export let onClose: () => void;
+    interface Props {
+        onClose: () => void;
+    }
+
+    let { onClose }: Props = $props();
 
     function selectLang(lang: "uk" | "en" | "crh" | "nl") {
         logService.action(`Click: "Мова: ${lang}" (LanguageDropdown)`);
@@ -17,20 +21,21 @@
     data-testid="lang-dropdown"
     role="menu"
     tabindex="0"
-    on:click={(e) => {
+    onclick={(e) => {
         e.stopPropagation();
     }}
-    on:keydown={(e) => e.key === "Escape" && onClose()}
+    onkeydown={(e) => e.key === "Escape" && onClose()}
 >
     {#each languages as lang}
+        {@const Flag = lang.component}
         <button
             class="lang-option"
-            on:click={() => selectLang(lang.code)}
+            onclick={() => selectLang(lang.code)}
             aria-label={lang.code}
             data-testid={`lang-option-${lang.code}`}
         >
             <div class="flag-icon-wrapper">
-                <svelte:component this={lang.component} />
+                <Flag />
             </div>
         </button>
     {/each}

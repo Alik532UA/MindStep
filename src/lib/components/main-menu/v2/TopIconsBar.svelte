@@ -17,40 +17,24 @@
 
     let { onFeedback }: Props = $props();
 
-    let showThemeDropdown = $state(false);
-    let showLangDropdown = $state(false);
-
-    function closeAll() {
-        showThemeDropdown = false;
-        showLangDropdown = false;
-    }
-
     function navigateTo(route: string) {
         logService.action(`Click: "Навігація: ${route}" (TopIconsBar)`);
-        closeAll();
         goto(`${base}${route}`);
     }
 
     function toggleTheme() {
-        showThemeDropdown = !showThemeDropdown;
-        showLangDropdown = false;
+        logService.action('Click: "Theme" (TopIconsBar)');
+        modalStateRune.open("theme-modal");
     }
 
     function toggleLang() {
-        showLangDropdown = !showLangDropdown;
-        showThemeDropdown = false;
+        logService.action('Click: "Language" (TopIconsBar)');
+        modalStateRune.open("language-modal");
     }
 
     function openAuthModal() {
         logService.action('Click: "Account" (TopIconsBar)');
-        modalStateRune.showModal({
-            title: "",
-            component: AuthModal,
-            dataTestId: "auth-modal",
-            buttons: [],
-            variant: "menu",
-            closeOnOverlayClick: true,
-        });
+        modalStateRune.open("auth-modal");
     }
 </script>
 
@@ -149,32 +133,6 @@
     </button>
 </div>
 
-{#if showThemeDropdown || showLangDropdown}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div 
-        role="button" 
-        tabindex="0" 
-        class="dropdown-backdrop" 
-        onclick={closeAll}
-        onkeydown={(e) => (e.key === "Escape" || e.key === "Enter" || e.key === " ") && closeAll()}
-        aria-label="Закрити меню"
-        data-testid="dropdown-backdrop"
-    ></div>
-
-    {#if showThemeDropdown}
-        <div class="centered-dropdown-container" data-testid="theme-dropdown-container">
-            <ThemeDropdown onClose={() => (showThemeDropdown = false)} />
-        </div>
-    {/if}
-
-    {#if showLangDropdown}
-        <div class="centered-dropdown-container" data-testid="language-dropdown-container">
-            <LanguageDropdown onClose={() => (showLangDropdown = false)} />
-        </div>
-    {/if}
-{/if}
-
 <style>
     .top-icons-bar {
         position: absolute;
@@ -241,23 +199,5 @@
         .top-icons-bar {
             gap: 24px;
         }
-    }
-
-    .centered-dropdown-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 10002;
-        width: auto;
-        max-width: 90vw;
-    }
-
-    .dropdown-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 10001;
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(4px);
     }
 </style>

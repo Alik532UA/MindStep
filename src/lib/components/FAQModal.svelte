@@ -6,9 +6,15 @@
   import { logService } from "$lib/services/logService";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
-  // Props для навігації, які передаються з GameModeModal
-  export let onOk = () => modalStateRune.closeModal();
-  export let onRules: (() => void) | null = null;
+  interface Props {
+    onOk?: () => void;
+    onRules?: (() => void) | null;
+  }
+
+  let { 
+    onOk = () => modalStateRune.closeAllModals(), 
+    onRules = null 
+  }: Props = $props();
 
   onMount(() => {
     logService.modal("[FAQModal] Component has been mounted.");
@@ -93,7 +99,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    width: var(--responsive-max-width, 360px);
+    width: 100%;
     box-sizing: border-box;
     /* FIX: Обмежуємо висоту та ховаємо зовнішній скрол */
     height: 100%;

@@ -8,8 +8,8 @@
     import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-    export let onPlay: () => void;
-    export let onFeedback: () => void;
+    export let onPlay: (() => void) | undefined = undefined;
+    export let onFeedback: (() => void) | undefined = undefined;
 
     function closeMenu() {
         modalStateRune.closeModal();
@@ -23,21 +23,17 @@
 
     function openAuthModal() {
         logService.action('Click: "Account" (HamburgerMenuModal)');
-        modalStateRune.showModalAsReplacement({
-            component: AuthModal,
-            dataTestId: "auth-modal",
-            buttons: [],
-            variant: "menu",
-            closeOnOverlayClick: true,
-        });
+        modalStateRune.open("auth-modal");
     }
 
     function handlePlay() {
         if (onPlay) onPlay();
+        else modalStateRune.open("game-mode-modal");
     }
 
     function handleFeedback() {
         if (onFeedback) onFeedback();
+        else modalStateRune.open("feedback-modal");
     }
 </script>
 

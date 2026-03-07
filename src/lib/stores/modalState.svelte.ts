@@ -1,4 +1,6 @@
 import { logService } from '$lib/services/logService';
+import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
 
 /**
  * Тип варіанту відображення модального вікна.
@@ -63,24 +65,24 @@ class ModalStateRune {
     private modalStack: ModalState[] = [];
 
     get state() { return this._state; }
-    set state(value: ModalState) { this._state = value; }
-
     get isOpen() { return this._state.isOpen; }
 
     /**
-     * Показує нове модальне вікно. Якщо вже є відкрите — додає його в стек.
+     * Відкриває модальне вікно через URL.
+     * Це рекомендований спосіб для системних меню (Single Source of Truth).
+     */
+    open(modalId: string): void {
+        logService.modal(`[ModalState] open requested for '${modalId}'. Updating URL.`);
+        this.updateUrl(modalId);
+    }
+
+    /**
+     * Показує нове модальне вікно вручну. 
+     * Використовуйте для динамічних вікон (напр. GameOver), які не потребують Deep Linking.
      */
     showModal({ dataTestId, variant = 'standard', ...modalDetails }: Partial<ModalState> & { dataTestId: string }): void {
-        if (this._state.isOpen) {
-            const sameIdentity =
-                (dataTestId && this._state.dataTestId === dataTestId) ||
-                (!dataTestId && modalDetails?.titleKey && this._state.titleKey === modalDetails.titleKey);
-            
-            if (!sameIdentity) {
-                this.modalStack.push({ ...this._state });
-            } else {
-                logService.modal(`[ModalState] showModal: Prevented stacking identical modal '${dataTestId || modalDetails.titleKey}'.`);
-            }
+        if (this._state.isOpen && this._state.dataTestId !== dataTestId) {
+            this.modalStack.push({ ...this._state });
         }
 
         this._state = {
@@ -91,8 +93,38 @@ class ModalStateRune {
             isOpen: true,
         };
 
-        logService.modal(`[ModalState] showModal called. New modal: '${this._state.dataTestId || this._state.titleKey}' (${this._state.variant}). Stack size: ${this.modalStack.length}`);
+        logService.modal(`[ModalState] showModal: '${dataTestId}'. Stack: ${this.modalStack.length}`);
+        
+        // Оновлюємо URL лише якщо це системна модалка (є в реєстрі)
+        this.trySyncUrl(dataTestId);
         this.notifySubscribers();
+    }
+
+    /**
+     * Спроба оновити URL, якщо модалка системна.
+     */
+    private async trySyncUrl(modalId: string) {
+        const { MODAL_REGISTRY } = await import('$lib/config/modalRegistry');
+        if (MODAL_REGISTRY[modalId]) {
+            this.updateUrl(modalId);
+        }
+    }
+
+    private updateUrl(modalId: string | undefined): void {
+        if (!browser) return;
+        
+        const url = new URL(window.location.href);
+        const currentModal = url.searchParams.get('modal');
+
+        if (modalId && currentModal !== modalId) {
+            url.searchParams.set('modal', modalId);
+            logService.modal(`[ModalState] Navigating to ?modal=${modalId}`);
+            goto(url.toString(), { replaceState: false, keepFocus: true, noScroll: true });
+        } else if (!modalId && currentModal) {
+            url.searchParams.delete('modal');
+            logService.modal(`[ModalState] Removing modal from URL`);
+            goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
+        }
     }
 
     /**
@@ -106,67 +138,89 @@ class ModalStateRune {
             ...modalDetails,
             isOpen: true,
         };
+        
+        if (modalDetails.dataTestId) {
+            this.trySyncUrl(modalDetails.dataTestId);
+        }
+        
         this.notifySubscribers();
     }
 
     /**
-     * Закриває поточне модальне вікно та відновлює попереднє зі стека (якщо є).
+     * Відновлює стан модальних вікон з реєстру на основі URL.
      */
-    closeModal(): void {
-        logService.modal(`[ModalState] closeModal called. Stack size before action: ${this.modalStack.length}`);
+    async syncWithUrl(url: URL): Promise<void> {
+        const modalId = url.searchParams.get('modal');
         
-        if (this._state.isOpen && this._state.onClose) {
-            logService.modal('[ModalState] Calling onClose callback.');
-            this._state.onClose();
+        if (!modalId) {
+            if (this._state.isOpen) {
+                // Перевіряємо, чи поточна модалка була з реєстру
+                const { MODAL_REGISTRY } = await import('$lib/config/modalRegistry');
+                if (this._state.dataTestId && MODAL_REGISTRY[this._state.dataTestId]) {
+                    logService.modal(`[ModalState] URL sync: Closing system modal '${this._state.dataTestId}'`);
+                    this.reset();
+                    this.notifySubscribers();
+                }
+            }
+            return;
         }
+
+        if (this._state.dataTestId === modalId) return;
+
+        const { MODAL_REGISTRY } = await import('$lib/config/modalRegistry');
+        const modalConfig = MODAL_REGISTRY[modalId];
+
+        if (modalConfig) {
+            logService.modal(`[ModalState] URL sync: Restoring '${modalId}' from registry.`);
+            this._state = {
+                ...initialState,
+                ...modalConfig,
+                dataTestId: modalId,
+                isOpen: true,
+            };
+            this.notifySubscribers();
+        }
+    }
+
+    closeModal(): void {
+        if (this._state.onClose) this._state.onClose();
 
         if (this.modalStack.length > 0) {
-            const previousState = this.modalStack.pop();
-            if (previousState) {
-                logService.modal(`[ModalState] Popped '${previousState.dataTestId || previousState.titleKey}' from stack. Restoring previous state.`);
-                this._state = previousState;
-            }
+            this._state = this.modalStack.pop()!;
         } else {
-            logService.modal('[ModalState] Stack is empty. Resetting to initial state.');
             this.reset();
         }
+
+        this.updateUrl(undefined);
+        this.notifySubscribers();
+    }
+
+    closeAllModals(): void {
+        if (this._state.onClose) this._state.onClose();
+        this.modalStack = [];
+        this.reset();
+        this.updateUrl(undefined);
         this.notifySubscribers();
     }
 
     /**
-     * Закриває всі модальні вікна та очищає стек.
+     * Оновлює стан модального вікна за допомогою функції трансформації.
      */
-    closeAllModals(): void {
-        logService.modal(`[ModalState] closeAllModals called. Clearing stack of size ${this.modalStack.length}.`);
-        
-        if (this._state.isOpen && this._state.onClose) {
-            this._state.onClose();
-        }
-
-        this.modalStack = [];
-        this.reset();
-        this.notifySubscribers();
-    }
-
-    update(fn: (s: ModalState) => ModalState) {
+    update(fn: (s: ModalState) => ModalState): void {
         this._state = fn(this._state);
         this.notifySubscribers();
     }
 
     reset() {
         this._state = { ...initialState };
-        this.notifySubscribers();
     }
 
-    // --- Bridge Support ---
     private subscribers: Set<(s: ModalState) => void> = new Set();
-
     subscribe(fn: (s: ModalState) => void): () => void {
         fn(this._state);
         this.subscribers.add(fn);
         return () => this.subscribers.delete(fn);
     }
-
     private notifySubscribers() {
         this.subscribers.forEach(fn => fn(this._state));
     }

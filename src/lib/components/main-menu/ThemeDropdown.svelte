@@ -5,7 +5,11 @@
     import type { TranslationKey } from "$lib/types/i18n";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-    export let onClose: () => void;
+    interface Props {
+        onClose: () => void;
+    }
+
+    let { onClose }: Props = $props();
 
     function selectTheme(
         style: "purple" | "green" | "blue" | "gray" | "orange" | "wood",
@@ -32,17 +36,17 @@
     tabindex="0"
     aria-modal="true"
     aria-label={$t("mainMenu.themeDropdown")}
-    on:click={(e) => {
+    onclick={(e) => {
         e.stopPropagation();
     }}
-    on:keydown={(e) => e.key === "Escape" && onClose()}
+    onkeydown={(e) => e.key === "Escape" && onClose()}
 >
     {#each styles as style}
         <div class="theme-style-row" data-style={style}>
             <button
                 class="theme-btn"
                 data-theme="light"
-                on:click={() => selectTheme(style, "light")}
+                onclick={() => selectTheme(style, "light")}
                 data-testid={`theme-${style}-light-btn`}
             >
                 <NotoEmoji name="sun" size="20px" />
@@ -53,7 +57,7 @@
             <button
                 class="theme-btn"
                 data-theme="dark"
-                on:click={() => selectTheme(style, "dark")}
+                onclick={() => selectTheme(style, "dark")}
                 data-testid={`theme-${style}-dark-btn`}
             >
                 <NotoEmoji name="crescent_moon" size="20px" />
@@ -68,7 +72,7 @@
         background: transparent;
         padding: 16px;
         border-radius: 18px;
-        width: var(--responsive-max-width, 360px);
+        width: 100%;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;

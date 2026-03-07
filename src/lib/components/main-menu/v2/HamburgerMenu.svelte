@@ -13,17 +13,7 @@
 
     function openMenu() {
         logService.action('Click: "Open Hamburger Menu"');
-        modalStateRune.showModal({
-            component: HamburgerMenuModal,
-            dataTestId: "hamburger-menu-modal",
-            props: {
-                onPlay,
-                onFeedback,
-            },
-            variant: "menu",
-            buttons: [],
-            closeOnOverlayClick: true,
-        });
+        modalStateRune.open("hamburger-menu-modal");
     }
 </script>
 
