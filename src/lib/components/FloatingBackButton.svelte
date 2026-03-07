@@ -5,12 +5,18 @@
   import { logService } from "$lib/services/logService.js";
   import { fly } from "svelte/transition";
   import { quintOut } from "svelte/easing";
+  import { onMount } from "svelte";
 
   interface Props {
     onclick?: () => void;
   }
 
   let { onclick }: Props = $props();
+  let mounted = $state(false);
+
+  onMount(() => {
+    mounted = true;
+  });
 
   function handleClick() {
     if (onclick) {
@@ -23,6 +29,7 @@
   }
 </script>
 
+{#if mounted}
 <button
   data-testid="floating-back-btn"
   class="floating-back-btn"
@@ -30,7 +37,7 @@
   use:customTooltip={$t("ui.goBack") || "Повернутися назад"}
   onclick={handleClick}
   in:fly={{ x: -100, duration: 600, delay: 100, easing: quintOut }}
-  out:fly={{ x: -50, duration: 300 }}
+  out:fly={{ x: -100, duration: 300, easing: quintOut }}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -45,6 +52,7 @@
     <polyline points="12 19 5 12 12 5"></polyline>
   </svg>
 </button>
+{/if}
 
 <style>
   .floating-back-btn {
@@ -70,11 +78,6 @@
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0;
-  }
-  
-  /* FIX: Запобігаємо стрибкам при знаходженні всередині контейнерів з transform (напр. модалки) */
-  :global(.base-modal-container) .floating-back-btn {
-    position: absolute;
   }
 
   .floating-back-btn:hover {

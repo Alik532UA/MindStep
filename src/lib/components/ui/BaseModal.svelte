@@ -6,6 +6,7 @@
 
   interface Props {
     children: Snippet;
+    extra?: Snippet;
     onclose?: () => void;
     closeOnOverlayClick?: boolean;
     variant?: 'glass' | 'classic';
@@ -14,6 +15,7 @@
 
   let { 
     children, 
+    extra,
     onclose, 
     closeOnOverlayClick = true, 
     variant = 'glass',
@@ -42,6 +44,7 @@
   tabindex="-1"
   data-testid="{dataTestId}-overlay"
 >
+  {@render extra?.()}
   <div 
     class="base-modal-container {variant}"
     use:trapFocus
@@ -63,7 +66,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 20px;
+    padding: 0;
     box-sizing: border-box;
   }
 
@@ -80,7 +83,7 @@
   .base-modal-container {
     width: var(--responsive-max-width, 400px);
     max-width: 95vw;
-    max-height: 90vh;
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
