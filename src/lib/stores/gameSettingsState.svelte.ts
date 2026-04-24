@@ -14,20 +14,29 @@ import { settingsPersistenceService } from '$lib/services/SettingsPersistenceSer
 import { debounce } from '$lib/utils/debounce';
 
 const debouncedSave = debounce((s: GameSettingsState) => settingsPersistenceService.save(s), 300);
+const isBrowser = typeof window !== 'undefined';
 
 class GameSettingsStateRune {
     private _state = $state<GameSettingsState>({ ...defaultGameSettings });
 
+    constructor() {
+        if (isBrowser) {
+            $effect.root(() => {
+                $effect(() => {
+                    debouncedSave(this._state);
+                });
+            });
+        }
+    }
+
     get state() { return this._state; }
     set state(value: GameSettingsState) { 
         this._state = value;
-        debouncedSave(value);
         this.notifySubscribers();
     }
 
     update(fn: (s: GameSettingsState) => GameSettingsState) {
         this._state = fn(this._state);
-        debouncedSave(this._state);
         this.notifySubscribers();
     }
 
@@ -38,7 +47,6 @@ class GameSettingsStateRune {
         logService.state('[GameSettingsState] updateSettings called with:', newSettings);
         this._state = { ...this._state, ...newSettings };
         this._state = syncGameModeLogic(this._state, uiState.state);
-        debouncedSave(this._state);
         this.notifySubscribers();
     }
 

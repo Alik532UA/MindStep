@@ -1,24 +1,17 @@
 <script lang="ts">
-  import { currentPlayerColor } from '$lib/stores/derivedState';
-  import { onMount } from 'svelte';
-
-  let rootElement: HTMLElement;
-
-  onMount(() => {
-    // Знаходимо кореневий елемент (html або body)
-    rootElement = document.documentElement;
-  });
-
-  // Реактивно оновлюємо CSS змінну при зміні кольору поточного гравця
   /**
-   * Converts a hex color to an rgba color with a given opacity.
-   * @param {string} hex - The hex color string (e.g., "#RRGGBB").
-   * @param {number} alpha - The alpha transparency (0 to 1).
-   * @returns {string} The rgba color string.
+   * PlayerColorProvider
+   * Оновлює глобальну CSS змінну --current-player-shadow-color на основі кольору поточного гравця.
+   * Використовує Svelte 5 Runes.
+   */
+  import { derivedState } from '$lib/stores/derivedState.svelte';
+
+  /**
+   * Конвертує hex у rgba
    */
   function hexToRgba(hex: string, alpha: number): string {
     if (!hex || !/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-      return 'rgba(0,0,0,0)'; // Return transparent if hex is invalid
+      return 'rgba(0,0,0,0)';
     }
     let c = hex.substring(1).split('');
     if (c.length === 3) {
@@ -31,13 +24,15 @@
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  $: if (rootElement && $currentPlayerColor) {
-    const shadowColorRgba = hexToRgba($currentPlayerColor, 0.5);
-    rootElement.style.setProperty('--current-player-shadow-color', hexToRgba($currentPlayerColor, 0.5));
-  } $: if (rootElement && !$currentPlayerColor) {
-    // Якщо немає кольору (не локальна гра), використовуємо стандартний колір тіні
-    rootElement.style.removeProperty('--current-player-shadow-color');
-  }
+  // Використовуємо $effect для синхронізації з DOM
+  $effect(() => {
+    const color = derivedState.currentPlayerColor;
+    if (color) {
+      document.documentElement.style.setProperty('--current-player-shadow-color', hexToRgba(color, 0.5));
+    } else {
+      document.documentElement.style.removeProperty('--current-player-shadow-color');
+    }
+  });
 </script>
 
-<!-- Цей компонент не рендерить нічого, він тільки оновлює CSS змінну --> 
+<!-- Цей компонент не рендерить власної розмітки -->

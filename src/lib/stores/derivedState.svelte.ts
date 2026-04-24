@@ -202,6 +202,7 @@ class DerivedState {
     });
 
     remainingTime = $derived(timerState.state.remainingTime ?? 0);
+    turnTimeLeft = $derived(timerState.state.turnTimeLeft ?? 0);
     isGameOver = $derived(uiState.state?.isGameOver ?? false);
 
     currentLanguageFlagComponent = $derived.by(() => {

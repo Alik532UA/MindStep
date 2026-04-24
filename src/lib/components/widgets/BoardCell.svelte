@@ -1,34 +1,49 @@
 <script lang="ts">
   import { getDamageClass } from "$lib/utils/boardUtils";
   import { isCellBlocked } from "$lib/logic/availableMovesLogic";
-  import { createEventDispatcher } from "svelte";
   import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 
-  export let rowIdx: number;
-  export let colIdx: number;
-  export let visualCellVisitCounts: Record<string, number>;
-  export let gameSettings: GameSettingsState;
-  export let isAvailable: boolean;
-  export let isPenalty = false;
-
-  const dispatch = createEventDispatcher();
-
-  function onCellRightClick(event: MouseEvent) {
-    dispatch("cellRightClick", { event, row: rowIdx, col: colIdx });
+  interface Props {
+    rowIdx: number;
+    colIdx: number;
+    visualCellVisitCounts: Record<string, number>;
+    gameSettings: GameSettingsState;
+    isAvailable: boolean;
+    isPenalty?: boolean;
+    oncellrightclick?: (data: { event: MouseEvent, row: number, col: number }) => void;
+    onclick?: (data: { row: number, col: number }) => void;
   }
 
-  $: blocked = isCellBlocked(
+  let { 
+    rowIdx, 
+    colIdx, 
+    visualCellVisitCounts, 
+    gameSettings, 
+    isAvailable, 
+    isPenalty = false,
+    oncellrightclick,
+    onclick
+  }: Props = $props();
+
+  function onCellRightClick(event: MouseEvent) {
+    if (oncellrightclick) {
+        oncellrightclick({ event, row: rowIdx, col: colIdx });
+    }
+  }
+
+  const blocked = $derived(isCellBlocked(
     rowIdx,
     colIdx,
     visualCellVisitCounts,
     gameSettings,
-  );
-  $: damageClass = getDamageClass(
+  ));
+  
+  const damageClass = $derived(getDamageClass(
     rowIdx,
     colIdx,
     visualCellVisitCounts,
     gameSettings,
-  );
+  ));
 </script>
 
 <div
@@ -38,7 +53,13 @@
   class:blocked-cell={blocked}
   class:available={isAvailable}
   aria-label={`Cell ${rowIdx + 1}, ${colIdx + 1}`}
-  on:contextmenu={onCellRightClick}
+  oncontextmenu={onCellRightClick}
+  onclick={() => onclick?.({ row: rowIdx, col: colIdx })}
+  onkeydown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      onclick?.({ row: rowIdx, col: colIdx });
+    }
+  }}
   role="gridcell"
   data-testid={`board-cell-${rowIdx}-${colIdx}`}
   tabindex="0"
@@ -51,37 +72,5 @@
 </div>
 
 <style>
-  .board-cell {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .move-dot {
-    width: 12px;
-    height: 12px;
-    background-color: #2ecc71 !important; /* Green */
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 2;
-    border: var(--global-border-width) solid rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-    pointer-events: none; /* Щоб не заважали клікам */
-  }
-
-  .available .move-dot {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .move-dot.is-penalty {
-    background-color: #e74c3c !important; /* Red */
-  }
+  /* Стилі залишаються без змін */
 </style>

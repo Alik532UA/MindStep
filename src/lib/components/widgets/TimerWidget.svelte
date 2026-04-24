@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { remainingTime, turnTimeLimit } from '$lib/stores/derivedState';
+  import { derivedState } from "$lib/stores/derivedState.svelte";
   import { gameState } from '$lib/stores/gameState.svelte';
 
   const mode = $derived(gameState.state.mode);
@@ -13,12 +13,12 @@
   {#if mode}
     {#if mode.gameDuration > 0}
       <div class="info-item">
-        <span class="value" data-testid="game-time-value">{formatTime($remainingTime)}</span>
+        <span class="value" data-testid="game-time-value">{formatTime(derivedState.remainingTime)}</span>
       </div>
     {/if}
     {#if mode.turnDuration > 0}
       <div class="info-item">
-        <span class="value" data-testid="turn-time-value">{formatTime($turnTimeLimit)}</span>
+        <span class="value" data-testid="turn-time-value">{formatTime(derivedState.turnTimeLeft)}</span>
       </div>
     {/if}
   {/if}
