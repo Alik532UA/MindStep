@@ -18,12 +18,11 @@
         ondirection
     }: Props = $props();
 
-    const directions: (MoveDirectionType | null)[] = [
+    const directions: MoveDirectionType[] = [
         "up-left",
         "up",
         "up-right",
         "left",
-        null,
         "right",
         "down-left",
         "down",

@@ -73,7 +73,7 @@
             {#if displayMessage.type === "COMPACT_COMPUTER_MOVE"}
               <CompactComputerMove message={displayMessage as any} />
             {:else if displayMessage.type === "STRUCTURED"}
-              <StructuredMessage lines={displayMessage.lines} />
+              <StructuredMessage lines={displayMessage.lines || []} />
             {:else}
               {displayMessage.content}
             {/if}

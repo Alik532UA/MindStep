@@ -91,8 +91,8 @@ function _calculateBaseScore(player: Player, settings: GameSettingsState): numbe
 interface MoveScoreState {
   players: Player[];
   moveQueue?: { player: number; direction: string; distance: number; to: any }[];
-  playerRow: number;
-  playerCol: number;
+  playerRow: number | null;
+  playerCol: number | null;
   cellVisitCounts: Record<string, number>;
 }
 
@@ -159,7 +159,10 @@ export function calculateMoveScore(
     penaltyResult = _calculateMirrorMovePenalty(currentState, direction, distance, settings);
   }
 
-  const startPosition = { row: currentState.playerRow, col: currentState.playerCol };
+  const startPosition = { 
+    row: currentState.playerRow ?? 0, 
+    col: currentState.playerCol ?? 0 
+  };
   const movePath = getMovePath(startPosition, newPosition);
   const jumpedCount = movePath.reduce((count, cell) => {
     if (isCellBlocked(cell.row, cell.col, currentState.cellVisitCounts, settings)) {

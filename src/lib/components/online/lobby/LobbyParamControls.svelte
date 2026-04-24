@@ -2,10 +2,12 @@
     import type { Room } from "$lib/types/online";
     import Stepper from "$lib/components/ui/Stepper.svelte";
 
+    import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
+
     interface Props {
         room: Room;
         canEditSettings: boolean;
-        onUpdateSetting: (key: string, value: any) => void;
+        onUpdateSetting: (key: keyof GameSettingsState, value: any) => void;
     }
 
     let { room, canEditSettings, onUpdateSetting }: Props = $props();
@@ -26,7 +28,7 @@
     }
 
     // Обробник зміни через scrubbable (перетягування)
-    function handleScrubChange(key: string, val: number) {
+    function handleScrubChange(key: keyof GameSettingsState, val: number) {
         if (!canEditSettings) return;
         onUpdateSetting(key, val);
     }

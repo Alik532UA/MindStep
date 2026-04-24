@@ -86,6 +86,8 @@ export abstract class BaseGameMode implements IGameMode {
     // МИТТЄВО оновлюємо індекс гравця
     playerState.setCurrentPlayer(nextPlayerIndex);
 
+    if (!playerState.state) return;
+
     const nextPlayer = playerState.state.players[nextPlayerIndex];
     logService.GAME_MODE(`advanceToNextPlayer: Наступний гравець: ${nextPlayer?.name}, Тип: ${nextPlayer?.type}, isComputer: ${nextPlayer?.isComputer}`);
 
@@ -278,7 +280,8 @@ export abstract class BaseGameMode implements IGameMode {
 
   protected async onPlayerMoveSuccess(): Promise<void> {
     const pState = playerState.state;
-    const currentPlayer = pState!.players[pState!.currentPlayerIndex];
+    if (!pState) return;
+    const currentPlayer = pState.players[pState.currentPlayerIndex];
 
     if (currentPlayer.type === 'human') {
       const settings = gameSettingsState.state;

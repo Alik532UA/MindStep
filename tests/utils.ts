@@ -174,7 +174,8 @@ export async function clearFirestore() {
     console.log('✅ Firestore Emulator data cleared');
     await new Promise(resolve => setTimeout(resolve, 1000));
   } catch (error) {
-    console.error('❌ Error clearing Firestore Emulator:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Error clearing Firestore Emulator:', errorMessage);
   }
 }
 

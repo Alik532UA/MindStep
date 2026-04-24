@@ -41,7 +41,11 @@ export class GameEngine {
     logService.logicMove(`[GameEngine] performMove: ${direction} ${distance} (player ${playerIndex})`);
     logService.logicMove(`[GameEngine] Current Pos BEFORE move: [${currentState.playerRow}, ${currentState.playerCol}]`);
 
-    const piece = new Piece(currentState.playerRow!, currentState.playerCol!, currentState.boardSize);
+    if (currentState.playerRow === null || currentState.playerCol === null) {
+      return { success: false, reason: 'invalid_position' };
+    }
+
+    const piece = new Piece(currentState.playerRow, currentState.playerCol, currentState.boardSize);
     const newPosition = piece.calculateNewPosition(direction, distance);
 
     // 1. Валідація меж

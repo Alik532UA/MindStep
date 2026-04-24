@@ -133,7 +133,7 @@ class VoiceControlService {
       logService.voiceControl('[VoiceControlService] Audio analysis initialized.');
     } catch (err) {
       logService.voiceControl('[VoiceControlService] Error initializing audio analysis:', err);
-      voiceControlState.setError(err);
+      voiceControlState.setError(err instanceof Error ? err : new Error(String(err)));
       voiceControlState.setVolume(0);
     }
   }
@@ -173,6 +173,7 @@ class VoiceControlService {
   }
 
   private processTranscript(transcript: string) {
+    if (!this.recognition) return;
     const lang = this.recognition.lang.split('-')[0] || 'uk';
     logService.voiceControl(`[VoiceControlService] Parsing command with lang: ${lang}`);
 

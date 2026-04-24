@@ -73,13 +73,13 @@
         <DontShowAgainCheckbox
             modalType="gameMode"
             tid={`${modalState.dataTestId}-dont-show-again-switch`}
-            scope={currentModalContext}
+            scope={currentModalContext || ""}
         />
     {:else if modalState.titleKey === "modal.expertModeTitle"}
         <DontShowAgainCheckbox
             modalType="expertMode"
             tid={`${modalState.dataTestId}-dont-show-again-switch`}
-            scope={currentModalContext}
+            scope={currentModalContext || ""}
         />
     {/if}
 

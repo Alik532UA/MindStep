@@ -5,11 +5,13 @@
     import type { Room } from "$lib/types/online";
     import { slide } from "svelte/transition";
 
+    import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
+
     interface Props {
         room: Room;
         canEditSettings: boolean;
         amIHost: boolean;
-        onUpdateSetting: (key: string, value: any) => void;
+        onUpdateSetting: (key: keyof GameSettingsState, value: any) => void;
         onUpdateRoomSetting: (key: string, value: any) => void;
     }
 

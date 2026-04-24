@@ -52,7 +52,7 @@
     "up",
     "up-right",
     "left",
-    null,
+    "center",
     "right",
     "down-left",
     "down",

@@ -15,33 +15,34 @@ export const initialPlayerState: PlayerState = {
 };
 
 class PlayerStateRune {
-    private _state = $state<PlayerState>({
-        players: [],
-        currentPlayerIndex: 0
-    });
+    private _state = $state<PlayerState | null>(null);
 
     get state() {
         return this._state;
     }
 
-    set state(value: PlayerState) {
+    set state(value: PlayerState | null) {
         this._state = value;
     }
 
-    set(value: PlayerState) {
+    set(value: PlayerState | null) {
         this._state = value;
     }
 
-    update(fn: (s: PlayerState) => PlayerState) {
-        this._state = fn(this._state);
+    update(fn: (s: PlayerState) => PlayerState | null) {
+        if (this._state) {
+            this._state = fn(this._state);
+        }
     }
 
     setCurrentPlayer(index: number) {
-        this._state = { ...this._state, currentPlayerIndex: index };
+        if (this._state) {
+            this._state = { ...this._state, currentPlayerIndex: index };
+        }
     }
 
     addPlayer() {
-        if (this._state.players.length >= 8) return;
+        if (!this._state || this._state.players.length >= 8) return;
         
         const usedColors = this._state.players.map((p) => p.color);
         const usedNames = this._state.players.map((p) => p.name);

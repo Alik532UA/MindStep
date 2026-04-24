@@ -5,4 +5,4 @@
     $: roomId = $page.params.roomId;
 </script>
 
-<Lobby {roomId} />
+<Lobby roomId={roomId || ""} />

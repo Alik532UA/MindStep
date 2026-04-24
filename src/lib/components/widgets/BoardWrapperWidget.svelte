@@ -132,7 +132,10 @@
           gameSettings={gameSettingsState.state}
           availableMoves={derivedState.availableMoves}
           showMoves={showAvailableMoves}
-          visualPosition={derivedState.visualPosition}
+          visualPosition={{ 
+            row: derivedState.visualPosition.row ?? 0, 
+            col: derivedState.visualPosition.col ?? 0 
+          }}
           showPiece={gameSettingsState.state.showPiece}
           oncellRightClick={onCellRightClick}
         />
