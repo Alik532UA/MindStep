@@ -2,17 +2,12 @@
     import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
     import { logService } from "$lib/services/logService.svelte";
     import { languages } from "$lib/config/constants";
-
-    interface Props {
-        onClose: () => void;
-    }
-
-    let { onClose }: Props = $props();
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     function selectLang(lang: "uk" | "en" | "crh" | "nl") {
         logService.action(`Click: "Мова: ${lang}" (LanguageDropdown)`);
         appSettingsState.updateSettings({ language: lang });
-        onClose();
+        modalStateRune.closeModal();
     }
 </script>
 
@@ -24,7 +19,7 @@
     onclick={(e) => {
         e.stopPropagation();
     }}
-    onkeydown={(e) => e.key === "Escape" && onClose()}
+    onkeydown={(e) => e.key === "Escape" && modalStateRune.closeModal()}
 >
     {#each languages as lang}
         {@const Flag = lang.component}

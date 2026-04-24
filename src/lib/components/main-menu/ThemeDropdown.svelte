@@ -4,12 +4,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import type { TranslationKey } from "$lib/types/i18n";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
-
-    interface Props {
-        onClose: () => void;
-    }
-
-    let { onClose }: Props = $props();
+    import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     function selectTheme(
         style: "purple" | "green" | "blue" | "gray" | "orange" | "wood",
@@ -17,7 +12,7 @@
     ) {
         logService.action(`Click: "Тема: ${style} ${theme}" (ThemeDropdown)`);
         appSettingsState.updateSettings({ style, theme });
-        onClose();
+        modalStateRune.closeModal();
     }
 
     const styles = [
@@ -39,7 +34,7 @@
     onclick={(e) => {
         e.stopPropagation();
     }}
-    onkeydown={(e) => e.key === "Escape" && onClose()}
+    onkeydown={(e) => e.key === "Escape" && modalStateRune.closeModal()}
 >
     {#each styles as style}
         <div class="theme-style-row" data-style={style}>
