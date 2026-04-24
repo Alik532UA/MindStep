@@ -2,23 +2,24 @@
     import { EMOJI_CONFIG } from "$lib/config/emojiConfig";
     import { lucideMap } from "$lib/icons/lucideMapping";
 
-    // Назва іконки (наприклад, "trophy")
-    export let name: string;
-    // Розмір
-    export let size: string = "1.2em";
-    // Додаткові класи
-    let className: string = "";
-    export { className as class };
+    interface Props {
+        name: string;
+        size?: string;
+        class?: string;
+    }
 
-    // Обчислюємо Lucide компонент
-    $: LucideComponent = lucideMap[name];
+    let { name, size = "1.2em", class: className = "" }: Props = $props();
+
+    // Обчислюємо Lucide компонент через $derived
+    const LucideComponent = $derived(lucideMap[name]);
 
     // Поточний стиль (впливає на кольори)
-    $: currentStyle = EMOJI_CONFIG.style;
+    const currentStyle = $derived(EMOJI_CONFIG.style);
 
     // Колір для Lucide іконок
-    $: iconColor =
-        currentStyle === "mono" ? "currentColor" : "var(--text-primary)";
+    const iconColor = $derived(
+        currentStyle === "mono" ? "currentColor" : "var(--text-primary)"
+    );
 </script>
 
 {#if name}
@@ -29,15 +30,14 @@
         aria-label={name}
     >
         {#if LucideComponent}
-            <svelte:component
-                this={LucideComponent}
+            <LucideComponent
                 {size}
                 color={iconColor}
                 strokeWidth={2}
             />
         {:else}
             <!-- Фолбек, якщо іконка не знайдена в мапі -->
-            <span style="font-size: var(--emoji-size);">❓</span>
+            <span style="font-size: var(--emoji-size);">❔</span>
         {/if}
     </div>
 {/if}

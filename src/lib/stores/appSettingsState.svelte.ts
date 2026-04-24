@@ -57,7 +57,21 @@ class AppSettingsStateRune {
 
     constructor() {
         if (isBrowser) {
-            this.applyDomAttributes(this._state);
+            $effect.root(() => {
+                $effect(() => {
+                    this.applyDomAttributes(this._state);
+                    debouncedSave(this._state);
+                });
+
+                // Автоматична зміна теми при зміні налаштувань ОС (тільки якщо користувач ще не вибрав вручну)
+                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+                    if (!storageService.get('theme')) {
+                        this.updateSettings({ theme: e.matches ? 'dark' : 'light' });
+                    }
+                };
+                mediaQuery.addEventListener('change', handleSystemThemeChange);
+            });
         }
     }
 
@@ -84,8 +98,7 @@ class AppSettingsStateRune {
 
     private sync(settings: AppSettingsState) {
         if (isBrowser) {
-            this.applyDomAttributes(settings);
-            debouncedSave(settings);
+            // Тепер синхронізація відбувається автоматично через $effect у конструкторі
         }
         this.notifySubscribers();
     }
