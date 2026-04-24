@@ -9,6 +9,8 @@
     import ChatWidget from "./ChatWidget.svelte";
     import { beforeNavigate } from "$app/navigation";
     import { fly, fade } from "svelte/transition";
+    import type { Room, OnlinePlayer } from "$lib/types/online";
+    import type { TranslationKey } from "$lib/types/i18n";
 
     interface Props {
         roomId: string;
@@ -33,21 +35,21 @@
     <FloatingBackButton onclick={() => lobbyController.leave()} />
 
     {#if lobbyController.room && lobbyController.myPlayerId}
+        {@const room = lobbyController.room as Room}
         <div class="lobby-content" in:fade={{ duration: 300 }}>
             <div class="lobby-grid">
-                <!-- Ліва колонка: Хедер та Налаштування -->
                 <div
                     class="column left-column"
                     in:fly={{ y: 20, duration: 400, delay: 100 }}
                 >
                     <LobbyHeader
-                        room={lobbyController.room}
+                        {room}
                         {roomId}
                         amIHost={lobbyController.amIHost}
                     />
 
                     <LobbySettings
-                        room={lobbyController.room}
+                        {room}
                         canEditSettings={lobbyController.canEditSettings}
                         amIHost={lobbyController.amIHost}
                         onUpdateSetting={(k, v) =>
@@ -57,17 +59,16 @@
                     />
                 </div>
 
-                <!-- Права колонка: Гравці -->
                 <div
                     class="column right-column"
                     in:fly={{ y: 20, duration: 400, delay: 200 }}
                 >
                     <LobbyPlayerList
-                        players={lobbyController.playersList}
+                        players={lobbyController.playersList as OnlinePlayer[]}
                         myPlayerId={lobbyController.myPlayerId}
-                        hostId={lobbyController.room.hostId}
+                        hostId={room.hostId}
                         amIHost={lobbyController.amIHost}
-                        roomStatus={lobbyController.room.status}
+                        roomStatus={room.status}
                         onUpdatePlayer={(d) => lobbyController.updatePlayer(d)}
                         onToggleReady={() => lobbyController.toggleReady()}
                         onStartGame={() => lobbyController.startGame()}
@@ -75,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- Floating Chat Widget -->
             <ChatWidget
                 {roomId}
                 playerId={lobbyController.myPlayerId}
@@ -86,7 +86,7 @@
     {:else}
         <div class="loading-state" data-testid="lobby-loading">
             <div class="spinner"></div>
-            <p>{$t("common.loading")}</p>
+            <p>{$t("common.loading" as TranslationKey)}</p>
         </div>
     {/if}
 </div>
@@ -111,10 +111,10 @@
 
     .lobby-grid {
         display: grid;
-        grid-template-columns: 0.8fr 1.2fr; /* Sidebar Left, Main Right */
+        grid-template-columns: 0.8fr 1.2fr;
         gap: 24px;
         width: 100%;
-        align-items: start; /* Align to top */
+        align-items: start;
     }
 
     .column {
@@ -123,8 +123,6 @@
         gap: 24px;
         min-width: 0;
     }
-
-    /* Removed chat-wrapper styles since chat is now floating */
 
     .loading-state {
         flex: 1;
@@ -155,13 +153,11 @@
         .lobby-grid {
             grid-template-columns: 1fr;
         }
-
         .lobby-page {
             padding: 16px;
         }
-
         .lobby-content {
-            margin-top: 60px; /* Space for fixed back button */
+            margin-top: 60px;
         }
     }
 </style>

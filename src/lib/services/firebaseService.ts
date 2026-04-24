@@ -1,5 +1,6 @@
 /**
  * Firebase Service
+ * Централізована ініціалізація та налаштування емуляторів.
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
@@ -8,7 +9,6 @@ import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/da
 import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
 import { logService } from "./logService.svelte";
-import { errorHandlerService } from './errorHandlerService';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -23,7 +23,8 @@ const firebaseConfig = {
     databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
-const USE_EMULATOR = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
+// Примусово вмикаємо емулятор у тестах
+const USE_EMULATOR = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' || (isBrowser && (window as any).__playwright_test__);
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
@@ -40,40 +41,51 @@ function initializeFirebase(): FirebaseApp {
     const existingApps = getApps();
     if (existingApps.length > 0) {
         app = existingApps[0];
-        return app;
+    } else {
+        app = initializeApp(firebaseConfig);
     }
-    app = initializeApp(firebaseConfig);
     return app;
 }
 
+/**
+ * Отримати інстанс Firestore з автоматичним підключенням емулятора
+ */
 export function getFirestoreDb(): Firestore {
     if (db) return db;
     const firebaseApp = initializeFirebase();
     db = getFirestore(firebaseApp);
 
     if (USE_EMULATOR) {
+        logService.init('[FirebaseService] Connecting to Firestore Emulator (127.0.0.1:8080)');
         connectFirestoreEmulator(db, '127.0.0.1', 8080);
-        logService.init('[FirebaseService] Firestore Emulator connected at 127.0.0.1:8080');
     }
     return db;
 }
 
+/**
+ * Отримати інстанс Realtime Database з автоматичним підключенням емулятора
+ */
 export function getRealtimeDb(): Database {
     if (rtdb) return rtdb;
     const firebaseApp = initializeFirebase();
     rtdb = getDatabase(firebaseApp);
     if (USE_EMULATOR) {
+        logService.init('[FirebaseService] Connecting to Realtime DB Emulator (127.0.0.1:9000)');
         connectDatabaseEmulator(rtdb, '127.0.0.1', 9000);
     }
     return rtdb;
 }
 
+/**
+ * Отримати інстанс Auth з автоматичним підключенням емулятора
+ */
 export function getFirebaseAuth(): Auth {
     if (auth) return auth;
     const firebaseApp = initializeFirebase();
     auth = getAuth(firebaseApp);
     if (USE_EMULATOR) {
-        connectAuthEmulator(auth, 'http://127.0.0.1:9099');
+        logService.init('[FirebaseService] Connecting to Auth Emulator (127.0.0.1:9099)');
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     }
     return auth;
 }

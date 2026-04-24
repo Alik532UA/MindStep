@@ -1,179 +1,140 @@
 <script lang="ts">
-    import { t } from "$lib/i18n/typedI18n";
-    import { roomService } from "$lib/services/roomService";
+    import { storageService } from "$lib/services/storage";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
-    import { goto } from "$app/navigation";
-    import { base } from "$app/paths";
-    import { logService } from "$lib/services/logService.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import EditableText from "$lib/components/ui/EditableText.svelte";
-    import {
-        generateRandomRoomName,
-        generateRandomPlayerName,
-    } from "$lib/utils/nameGenerator";
+    import { t } from "$lib/i18n/typedI18n";
+    import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
+    import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+    import { getFirestoreDb } from "$lib/services/firebaseService";
+    import { authService } from "$lib/services/authService";
+    import { goto } from "$app/navigation";
+    import { logService } from "$lib/services/logService.svelte";
+    import { v4 as uuidv4 } from 'uuid';
+    import type { TranslationKey } from "$lib/types/i18n";
 
-    let roomName = generateRandomRoomName();
-    let isPrivate = false;
-    let isCreating = false;
+    let roomName = $state("");
+    let isCreating = $state(false);
 
-    function handleRoomNameChange(newName: string) {
-        roomName = newName;
+    /**
+     * Генерує випадкову назву для кімнати
+     */
+    function handleRandomRoomName() {
+        const adjectives = ["Cool", "Epic", "Fast", "Smart", "Dark", "Neon"];
+        const nouns = ["Room", "Battle", "Maze", "Arena", "Step", "Game"];
+        const randomName = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]} ${Math.floor(Math.random() * 100)}`;
+        roomName = randomName;
+        return randomName;
     }
 
     async function handleCreate() {
-        logService.action("[CreateRoomModal] Create button clicked");
-
-        if (isCreating) return;
+        if (!roomName.trim()) return;
+        
         isCreating = true;
+        const db = getFirestoreDb();
+        
+        let currentUser = authService.getCurrentUser();
+        
+        if (!currentUser) {
+            logService.init("[CreateRoomModal] Not authenticated. Attempting quick anonymous sign-in...");
+            try {
+                currentUser = await authService.signInAnonymously();
+            } catch (e) {
+                logService.error("[CreateRoomModal] Failed to sign in anonymously:", e);
+                isCreating = false;
+                return;
+            }
+        }
+
+        const roomId = uuidv4();
+        const playerName = storageService.get("online_playerName") || generateRandomPlayerName();
+
+        const roomData = {
+            id: roomId,
+            name: roomName,
+            hostId: currentUser.uid,
+            status: "waiting",
+            maxPlayers: 2,
+            players: {
+                [currentUser.uid]: {
+                    id: currentUser.uid,
+                    name: playerName,
+                    color: "#4A90E2",
+                    isHost: true,
+                    isReady: true,
+                    joinedAt: Date.now(),
+                    isOnline: true
+                }
+            },
+            createdAt: serverTimestamp(),
+            lastActivity: serverTimestamp(),
+            isPrivate: false,
+            settingsLocked: false,
+            allowGuestSettings: true,
+            gameState: null as any,
+            settings: {
+                boardSize: 4,
+                blockModeEnabled: false,
+                gameMode: 'experienced'
+            }
+        };
 
         try {
-            let playerName = localStorage.getItem("online_playerName");
-            if (!playerName) {
-                playerName = generateRandomPlayerName();
-                localStorage.setItem("online_playerName", playerName);
-            }
-
-            const finalRoomName = roomName.trim() || generateRandomRoomName();
-            const roomId = await roomService.createRoom(
-                playerName,
-                isPrivate,
-                finalRoomName,
-            );
-
+            await setDoc(doc(db, "rooms", roomId), roomData);
             modalStateRune.closeModal();
-            await goto(`${base}/online/lobby/${roomId}`);
-        } catch (e: any) {
-            logService.error("[CreateRoomModal] Failed to create room", e);
-            const msg = e.message?.includes("Timeout")
-                ? "Не вдалося з'єднатися з сервером."
-                : $t("onlineMenu.errors.createFailed");
-            alert(msg);
+            goto(`/game/online?roomId=${roomId}`);
+        } catch (e) {
+            logService.error("[CreateRoomModal] Failed to create room:", e);
         } finally {
             isCreating = false;
         }
     }
 </script>
 
-<!-- FIX: Додано data-testid та структуру меню -->
-<div class="create-room-content" data-testid="create-room-content">
-    <h2 class="modal-title-menu">{$t("onlineMenu.createRoomTitle")}</h2>
-
-    <div class="form-group">
-        <span class="label" data-testid="room-name-label"
-            >{$t("onlineMenu.roomName")}</span
-        >
-        <div class="name-editor-wrapper">
-            <EditableText
-                value={roomName}
-                canEdit={true}
-                onRandom={generateRandomRoomName}
-                onchange={handleRoomNameChange}
-                placeholder={$t("onlineMenu.roomNamePlaceholder")}
-                dataTestId="room-name-input"
-            />
-        </div>
+<div class="create-room-form">
+    <h2>{$t("onlineMenu.createRoom" as TranslationKey)}</h2>
+    
+    <div class="field">
+        <label for="room-name">{$t("onlineMenu.roomName" as TranslationKey)}</label>
+        <EditableText 
+            bind:value={roomName} 
+            onRandom={handleRandomRoomName}
+            onchange={(v) => roomName = v}
+            placeholder={$t("onlineMenu.enterRoomNamePlaceholder" as TranslationKey)}
+            dataTestId="room-name-input"
+        />
     </div>
 
-    <div class="form-group checkbox-group">
-        <label class="checkbox-label" data-testid="private-room-label">
-            <input
-                type="checkbox"
-                bind:checked={isPrivate}
-                data-testid="private-room-checkbox"
-            />
-            <span>{$t("onlineMenu.privateRoom")}</span>
-        </label>
-    </div>
-
-    <div class="actions-column">
-        <StyledButton
-            variant="primary"
-            size="large"
-            onclick={handleCreate}
-            disabled={isCreating}
+    <div class="actions">
+        <StyledButton 
+            variant="primary" 
+            onclick={handleCreate} 
+            disabled={isCreating || !roomName}
             dataTestId="create-room-confirm-btn"
         >
-            {isCreating ? $t("common.loading") : $t("onlineMenu.create")}
-        </StyledButton>
-
-        <StyledButton
-            variant="default"
-            onclick={() => modalStateRune.closeModal()}
-            dataTestId="create-room-cancel-btn"
-        >
-            {$t("onlineMenu.cancel")}
+            {isCreating ? $t("ui.creating" as TranslationKey) : $t("ui.create" as TranslationKey)}
         </StyledButton>
     </div>
 </div>
 
 <style>
-    .create-room-content {
+    .create-room-form {
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
-        width: 100%;
-        max-width: 400px;
-        margin: 0 auto;
+        gap: 20px;
     }
-
-    .modal-title-menu {
-        text-align: center;
-        font-size: 1.8em;
-        font-weight: 800;
-        color: #fff;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .form-group {
+    .field {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        align-items: center;
     }
-
-    .label {
+    label {
         font-weight: bold;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.9em;
+        color: var(--text-secondary);
     }
-
-    .name-editor-wrapper {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 8px 16px;
-        width: 100%;
+    .actions {
         display: flex;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-    }
-
-    .checkbox-group {
-        flex-direction: row;
-        justify-content: center;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-        color: #fff;
-        font-weight: 600;
-    }
-
-    input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        accent-color: var(--control-selected);
-    }
-
-    .actions-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 10px;
+        justify-content: flex-end;
     }
 </style>

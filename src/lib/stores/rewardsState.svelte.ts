@@ -1,19 +1,19 @@
 // src/lib/stores/rewardsState.svelte.ts
 import { storageService } from '$lib/services/storage';
 import { logService } from '$lib/services/logService.svelte';
-import { RewardsStateSchema, type RewardsStateData } from '$lib/schemas/rewardsSchema';
-import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
-import { getFirebaseApp } from '$lib/services/firebaseService';
+import { RewardsStateSchema, type RewardsState as RewardsData } from '$lib/schemas/rewardsSchema';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestoreDb } from '$lib/services/firebaseService';
 
 const STORAGE_KEY = 'rewards';
-const defaultState: RewardsStateData = {
-    unlockedItems: [],
+const defaultState: RewardsData = {
+    unlockedRewards: {},
     hasUnseenRewards: false
 };
 
-class RewardsState {
-    private _state = $state<RewardsStateData>(defaultState);
-    private subscribers: Set<(s: RewardsStateData) => void> = new Set();
+class RewardsStore {
+    private _state = $state<RewardsData>(defaultState);
+    private subscribers: Set<(s: RewardsData) => void> = new Set();
 
     constructor() {
         this.loadLocal();
@@ -21,23 +21,30 @@ class RewardsState {
 
     get state() { return this._state; }
 
+    /**
+     * Ініціалізація стору. Викликається ззовні для сумісності.
+     */
+    init() {
+        this.loadLocal();
+    }
+
     private loadLocal() {
         if (typeof window === 'undefined') return;
 
         try {
-            const stored = storageService.getJSON<RewardsStateData>(STORAGE_KEY);
+            const stored = storageService.getJSON<RewardsData>(STORAGE_KEY);
             if (stored) {
                 const validation = RewardsStateSchema.safeParse(stored);
                 if (validation.success) {
                     this._state = validation.data;
-                    logService.info('[RewardsState] Loaded validated state from storageService');
+                    logService.info('[RewardsStore] Loaded validated state from storageService');
                 } else {
-                    logService.error('[RewardsState] Invalid state in storageService, resetting to defaults.', validation.error.format());
+                    logService.error('[RewardsStore] Invalid state in storageService, resetting to defaults.', validation.error.format());
                     this.reset();
                 }
             }
         } catch (e) {
-            logService.error('[RewardsState] Failed to load from storageService', e);
+            logService.error('[RewardsStore] Failed to load from storageService', e);
         }
         this.notifySubscribers();
     }
@@ -48,60 +55,64 @@ class RewardsState {
         }
     }
 
-    unlock(itemId: string) {
-        if (!this._state.unlockedItems.includes(itemId)) {
-            this._state.unlockedItems.push(itemId);
+    unlock(rewardId: string) {
+        if (!this._state.unlockedRewards[rewardId]) {
+            this._state.unlockedRewards[rewardId] = {
+                id: rewardId,
+                unlockedAt: Date.now()
+            };
             this._state.hasUnseenRewards = true;
             this.saveLocal();
             this.notifySubscribers();
+            logService.info(`[RewardsStore] Unlocked reward: ${rewardId}`);
         }
     }
 
-    markAllSeen() {
+    markAllAsSeen() {
         this._state.hasUnseenRewards = false;
         this.saveLocal();
         this.notifySubscribers();
     }
 
     async syncWithCloud(uid: string) {
-        const db = getFirestore(getFirebaseApp());
+        const db = getFirestoreDb();
         const docRef = doc(db, 'rewards', uid);
         
         try {
             const snap = await getDoc(docRef);
             if (snap.exists()) {
-                const cloudData = snap.data() as RewardsStateData;
-                // Merge local and cloud items
-                const localItems = this._state.unlockedItems;
-                const cloudItems = cloudData.unlockedItems || [];
-                const mergedItems = Array.from(new Set([...localItems, ...cloudItems]));
+                const cloudData = snap.data() as RewardsData;
+                const cloudRewards = cloudData.unlockedRewards || {};
                 
-                this._state.unlockedItems = mergedItems;
+                // Merge local and cloud
+                const mergedRewards = { ...this._state.unlockedRewards, ...cloudRewards };
+                
+                this._state.unlockedRewards = mergedRewards;
                 this.saveLocal();
                 
-                // If local had more items, sync back to cloud
-                if (localItems.some(i => !cloudItems.includes(i))) {
-                    await setDoc(docRef, { unlockedItems: mergedItems }, { merge: true });
-                }
+                // Sync back if needed
+                await setDoc(docRef, { unlockedRewards: mergedRewards }, { merge: true });
             } else {
-                // Upload local data to cloud
                 await setDoc(docRef, this._state);
             }
         } catch (e) {
-            logService.error('[RewardsState] Sync error', e);
+            logService.error('[RewardsStore] Sync error', e);
         }
         this.notifySubscribers();
     }
 
     reset() {
-        this._state = { ...defaultState };
+        this._state = { 
+            unlockedRewards: {},
+            hasUnseenRewards: false
+        };
         if (typeof window !== 'undefined') {
             storageService.remove(STORAGE_KEY);
         }
         this.notifySubscribers();
     }
 
-    subscribe(fn: (s: RewardsStateData) => void): () => void {
+    subscribe(fn: (s: RewardsData) => void): () => void {
         fn(this._state);
         this.subscribers.add(fn);
         return () => this.subscribers.delete(fn);
@@ -112,4 +123,4 @@ class RewardsState {
     }
 }
 
-export const rewardsState = new RewardsState();
+export const rewardsState = new RewardsStore();

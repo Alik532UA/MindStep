@@ -1,153 +1,156 @@
-import { roomService } from "$lib/services/roomService";
-import type { Room, OnlinePlayer } from "$lib/types/online";
-import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
-import { goto } from "$app/navigation";
-import { base } from "$app/paths";
-import type { Unsubscribe } from "firebase/firestore";
-import { logService } from "$lib/services/logService.svelte";
+import { doc, onSnapshot, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestoreDb } from '../services/firebaseService';
+import { logService } from "../services/logService.svelte";
+import { type OnlineRoom, OnlineRoomSchema, type OnlinePlayer } from '../schemas/onlineSchema';
+import { authService } from '../services/authService';
+import { storageService } from '../services/storage';
+import { goto } from '$app/navigation';
+import { base } from '$app/paths';
 
-/**
- * Headless контролер для Лобі.
- * Ізолює логіку Firebase та управління станом від UI.
- */
-class LobbyController {
-    // --- Reactive State ---
-    private _room = $state<Room | null>(null);
-    private _myPlayerId = $state<string | null>(null);
-    private _isLeaving = $state(false);
-    private _roomId = $state<string | null>(null);
-    private _unsubscribe: Unsubscribe | null = null;
+export class LobbyController {
+    private db = getFirestoreDb();
+    private roomUnsubscribe: (() => void) | null = null;
 
-    // --- Getters ---
-    get room() { return this._room; }
-    get myPlayerId() { return this._myPlayerId; }
-    get isLeaving() { return this._isLeaving; }
-    get roomId() { return this._roomId; }
+    room = $state<OnlineRoom | null>(null);
+    error = $state<string | null>(null);
+    isLoading = $state(true);
+    myPlayerId = $state<string | null>(null);
 
-    // --- Derived ---
-    get playersList() {
-        return this._room
-            ? Object.values(this._room.players).sort((a, b) => a.joinedAt - b.joinedAt)
-            : [];
-    }
+    get amIHost() { return this.room?.hostId === this.myPlayerId; }
+    get myName() { return this.room?.players[this.myPlayerId || '']?.name || ''; }
+    get myPlayer() { return this.room?.players[this.myPlayerId || '']; }
+    get playersList() { return Object.values(this.room?.players || {}); }
+    get canEditSettings() { return this.amIHost && this.room?.status === 'waiting'; }
 
-    get myPlayer() {
-        return this._room && this._myPlayerId ? this._room.players[this._myPlayerId] : null;
-    }
+    async initialize(roomId: string) {
+        logService.init(`[LobbyController] Initializing lobby for room: ${roomId}`);
+        this.isLoading = true;
+        this.myPlayerId = authService.getCurrentUser()?.uid || null;
 
-    get amIHost() {
-        return this._room && this._myPlayerId ? this._room.hostId === this._myPlayerId : false;
-    }
-
-    get canEditSettings() {
-        return this.amIHost || (this._room && this._room.allowGuestSettings);
-    }
-
-    get myName() {
-        return this.myPlayer ? this.myPlayer.name : "Player";
-    }
-
-    // --- Public Actions ---
-
-    /**
-     * Ініціалізує контролер, підписується на оновлення кімнати.
-     */
-    public initialize(roomId: string) {
-        this._roomId = roomId;
-        const session = roomService.getSession();
-        this._myPlayerId = session.playerId;
-
-        logService.init(`[LobbyController] Initializing for room: ${roomId}, player: ${this._myPlayerId}`);
-
-        if (!this._myPlayerId) {
-            logService.error("[LobbyController] No player ID in session.");
-            roomService.clearSession();
-            goto(`${base}/online`);
-            return;
+        if (!this.myPlayerId) {
+            logService.error("[LobbyController] No authenticated user found during init");
+            // Тут можна додати спробу входу, але для лобі зазвичай ми вже залогінені
         }
 
-        this._unsubscribe = roomService.subscribeToRoom(roomId, (updatedRoom) => {
-            if (!updatedRoom) {
-                logService.GAME_MODE("[LobbyController] Room does not exist anymore.");
-                roomService.clearSession();
-                goto(`${base}/online`);
+        await this.joinRoom(roomId);
+    }
+
+    async joinRoom(roomId: string) {
+        const roomRef = doc(this.db, 'rooms', roomId);
+
+        try {
+            const snap = await getDoc(roomRef);
+            if (!snap.exists()) {
+                this.error = 'Room not found';
+                this.isLoading = false;
                 return;
             }
-            this._room = updatedRoom;
 
-            if (this._room.status === "playing") {
-                logService.GAME_MODE("[LobbyController] Game started! Navigating to game board.");
-                goto(`${base}/game/online?from=lobby`);
+            const data = snap.data();
+            const validation = OnlineRoomSchema.safeParse(data);
+            if (!validation.success) {
+                this.error = 'Invalid room data';
+                this.isLoading = false;
+                return;
             }
+
+            const roomData = validation.data;
+            const currentUser = authService.getCurrentUser();
+            
+            if (!currentUser) {
+                this.error = 'Not authenticated';
+                this.isLoading = false;
+                return;
+            }
+
+            this.myPlayerId = currentUser.uid;
+
+            const isAlreadyIn = roomData.players[currentUser.uid] !== undefined;
+
+            if (!isAlreadyIn) {
+                if (Object.keys(roomData.players).length >= 2) {
+                    this.error = 'Room is full';
+                    this.isLoading = false;
+                    return;
+                }
+
+                const newPlayer: OnlinePlayer = {
+                    id: currentUser.uid,
+                    name: currentUser.displayName || storageService.get("online_playerName") || 'Player',
+                    color: '#E94A3F',
+                    isReady: false,
+                    joinedAt: Date.now(),
+                    isOnline: true
+                };
+
+                await updateDoc(roomRef, {
+                    [`players.${currentUser.uid}`]: newPlayer
+                });
+            }
+
+            this.roomUnsubscribe = onSnapshot(roomRef, (s) => {
+                if (s.exists()) {
+                    this.room = s.data() as OnlineRoom;
+                }
+            });
+
+            this.isLoading = false;
+        } catch (e: any) {
+            this.error = e.message;
+            this.isLoading = false;
+        }
+    }
+
+    async toggleReady() {
+        if (!this.room || !this.myPlayerId) return;
+        const roomRef = doc(this.db, 'rooms', this.room.id);
+        const currentReady = this.room.players[this.myPlayerId]?.isReady || false;
+
+        await updateDoc(roomRef, {
+            [`players.${this.myPlayerId}.isReady`]: !currentReady
         });
     }
 
-    public cleanup() {
-        logService.init("[LobbyController] Cleaning up.");
-        if (this._unsubscribe) {
-            this._unsubscribe();
-            this._unsubscribe = null;
-        }
+    async startGame() {
+        if (!this.room || !this.amIHost) return;
+        const roomRef = doc(this.db, 'rooms', this.room.id);
+        await updateDoc(roomRef, { status: 'playing' });
+        // Навігація до гри відбудеться через onSnapshot або вручну
+        goto(`${base}/game/online?roomId=${this.room.id}&from=lobby`);
     }
 
-    public async toggleReady() {
-        if (!this._room || !this._myPlayerId || !this._roomId) return;
-        const me = this._room.players[this._myPlayerId];
-        logService.action(`[LobbyController] Toggling ready to: ${!me.isReady}`);
-        await roomService.toggleReady(this._roomId, this._myPlayerId, !me.isReady);
+    async updateSetting(key: string, value: any) {
+        if (!this.room || !this.amIHost) return;
+        const roomRef = doc(this.db, 'rooms', this.room.id);
+        await updateDoc(roomRef, { [`settings.${key}`]: value });
     }
 
-    public async startGame() {
-        if (!this._roomId) return;
-        logService.action("[LobbyController] Starting game.");
-        await roomService.startGame(this._roomId);
+    async updateRoomSetting(key: string, value: any) {
+        if (!this.room || !this.amIHost) return;
+        const roomRef = doc(this.db, 'rooms', this.room.id);
+        await updateDoc(roomRef, { [key]: value });
     }
 
-    public async leave() {
-        if (!this._myPlayerId || !this._roomId) return;
-        logService.action("[LobbyController] Leaving lobby manually.");
-        this._isLeaving = true;
-        await roomService.leaveRoom(this._roomId, this._myPlayerId);
+    async updatePlayer(data: Partial<OnlinePlayer>) {
+        if (!this.room || !this.myPlayerId) return;
+        const roomRef = doc(this.db, 'rooms', this.room.id);
+        await updateDoc(roomRef, { [`players.${this.myPlayerId}`]: { ...this.myPlayer, ...data } });
+    }
+
+    handleNavigation(to: any) {
+        // Логіка обробки навігації
+    }
+
+    leave() {
+        this.cleanup();
         goto(`${base}/online`);
     }
 
-    public updatePlayer(data: Partial<OnlinePlayer>) {
-        if (!this._roomId || !this._myPlayerId) return;
-        logService.action("[LobbyController] Updating player data:", data);
-        roomService.updatePlayer(this._roomId, this._myPlayerId, data);
-        if (data.name) {
-            localStorage.setItem("online_playerName", data.name);
+    cleanup() {
+        if (this.roomUnsubscribe) {
+            this.roomUnsubscribe();
+            this.roomUnsubscribe = null;
         }
-    }
-
-    public updateSetting(key: keyof GameSettingsState, value: any) {
-        if (!this._roomId) return;
-        logService.action(`[LobbyController] Updating setting: ${key}=${value}`);
-        roomService.updateRoomSettings(this._roomId, { [key]: value } as any);
-    }
-
-    public updateRoomSetting(key: string, value: any) {
-        if (!this._roomId) return;
-        logService.action(`[LobbyController] Updating room setting: ${key}=${value}`);
-        roomService.updateRoomSettings(this._roomId, { [key]: value } as any);
-    }
-
-    /**
-     * Обробляє навігацію з лобі.
-     */
-    public handleNavigation(to: any) {
-        if (!this._roomId || !this._myPlayerId || this._isLeaving) return;
-
-        const isGameRoute = to?.route.id === "/game/online" || to?.url?.pathname?.includes("/game/online");
-
-        if (isGameRoute) {
-            logService.ui("[LobbyController] Navigating to game. Keeping room connection.");
-            return;
-        }
-
-        logService.ui("[LobbyController] Navigating away from lobby. Leaving room.");
-        this._isLeaving = true;
-        roomService.leaveRoom(this._roomId, this._myPlayerId);
     }
 }
 

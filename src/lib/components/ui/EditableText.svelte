@@ -2,12 +2,13 @@
     import { tick } from "svelte";
     import { customTooltip } from "$lib/actions/customTooltip";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+    import { logService } from "$lib/services/logService.svelte";
 
     interface Props {
         value: string;
         placeholder?: string;
         canEdit?: boolean;
-        onRandom: () => string; // Функція для генерації випадкового значення
+        onRandom?: () => string; 
         minLength?: number;
         maxLength?: number;
         dataTestId?: string;
@@ -38,8 +39,9 @@
     }
 
     function save() {
-        if (tempValue.trim().length < minLength) return;
-        value = tempValue.trim();
+        const trimmed = tempValue?.trim() || "";
+        if (trimmed.length < minLength) return;
+        value = trimmed;
         isEditing = false;
         onchange?.(value);
     }
@@ -51,9 +53,16 @@
 
     function handleRandom() {
         if (!canEdit) return;
-        const randomValue = onRandom();
-        value = randomValue;
-        onchange?.(value);
+        
+        if (typeof onRandom === 'function') {
+            const randomValue = onRandom();
+            value = randomValue;
+            tempValue = randomValue;
+            onchange?.(value);
+            logService.ui(`[EditableText] Random value generated: ${value}`);
+        } else {
+            logService.error("[EditableText] handleRandom called but onRandom is not a function");
+        }
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -65,7 +74,6 @@
 <div class="editable-text-container" data-testid={dataTestId}>
     {#if isEditing}
         <div class="edit-mode">
-            <!-- FIX: Додано data-testid для інпуту та кнопок редагування -->
             <input
                 bind:this={inputRef}
                 type="text"
@@ -99,7 +107,7 @@
             <span
                 class="text-value"
                 title={value}
-                data-testid="{dataTestId}-display">{value}</span
+                data-testid="{dataTestId}-display">{value || placeholder}</span
             >
             {#if canEdit}
                 <div class="actions">
@@ -111,10 +119,11 @@
                     >
                         <NotoEmoji name="pencil" size="1.1em" />
                     </button>
+                    <!-- Кнопка рандому ЗАВЖДИ видима, якщо є функція або якщо ми в режимі редагування імен -->
                     <button
                         class="icon-btn random"
                         onclick={handleRandom}
-                        use:customTooltip={"Випадкове ім'я"}
+                        use:customTooltip={"Згенерувати випадково"}
                         data-testid="{dataTestId}-random-btn"
                     >
                         <NotoEmoji name="game_die" size="1.1em" />

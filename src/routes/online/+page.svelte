@@ -9,10 +9,9 @@
   import { onMount } from "svelte";
   import { logService } from "$lib/services/logService.svelte";
   import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
-
-  let playerName = "";
-
   import { storageService } from "$lib/services/storage";
+
+  let playerName = $state("");
 
   onMount(() => {
   	const storedName = storageService.get("online_playerName");
@@ -32,13 +31,18 @@
   	}
   }
 
+  function handleRandomName() {
+    const newName = generateRandomPlayerName();
+    handleUpdateName(newName);
+    return newName;
+  }
+
   function openCreateRoomModal() {
     modalStateRune.showModal({
-      // titleKey видалено, бо заголовок тепер всередині компонента
       component: CreateRoomModal,
       dataTestId: "create-room-modal",
-      variant: "menu", // FIX: Змінено на menu
-      buttons: [], // FIX: Кнопки прибрано
+      variant: "menu",
+      buttons: [],
       closeOnOverlayClick: true,
     });
   }
@@ -57,10 +61,10 @@
 
         <div class="name-editor-wrapper">
           <EditableText
-            value={playerName}
+            bind:value={playerName}
             canEdit={true}
-            onRandom={generateRandomPlayerName}
-            onchange={handleNameChange}
+            onRandom={handleRandomName}
+            onchange={handleUpdateName}
             placeholder={$t("onlineMenu.enterNamePlaceholder")}
             dataTestId="player-name-input"
           />
@@ -89,7 +93,7 @@
 <style>
   .online-page {
     width: 100%;
-    max-width: 1200px; /* Increased for wider grid */
+    max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
     min-height: 100vh;

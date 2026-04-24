@@ -1,4 +1,5 @@
 import { OnlineSessionSchema } from '$lib/schemas/onlineSessionSchema';
+import { storageService } from '../storage';
 
 const STORAGE_KEYS = {
     ROOM_ID: 'online_roomId',
@@ -6,33 +7,37 @@ const STORAGE_KEYS = {
 };
 
 export class RoomSessionService {
+    /**
+     * Зберігає сесію онлайн-гри з префіксом проекту.
+     */
     saveSession(roomId: string, playerId: string) {
-        if (typeof localStorage !== 'undefined') {
-            localStorage.setItem(STORAGE_KEYS.ROOM_ID, roomId);
-            localStorage.setItem(STORAGE_KEYS.PLAYER_ID, playerId);
-        }
+        storageService.set(STORAGE_KEYS.ROOM_ID, roomId);
+        storageService.set(STORAGE_KEYS.PLAYER_ID, playerId);
     }
 
+    /**
+     * Отримує сесію.
+     */
     getSession(): { roomId: string | null, playerId: string | null } {
-        if (typeof localStorage !== 'undefined') {
-            const data = {
-                roomId: localStorage.getItem(STORAGE_KEYS.ROOM_ID),
-                playerId: localStorage.getItem(STORAGE_KEYS.PLAYER_ID)
-            };
-            
-            const result = OnlineSessionSchema.safeParse(data);
-            if (result.success) {
-                return result.data as { roomId: string | null, playerId: string | null };
-            }
+        const data = {
+            roomId: storageService.get(STORAGE_KEYS.ROOM_ID),
+            playerId: storageService.get(STORAGE_KEYS.PLAYER_ID)
+        };
+        
+        const result = OnlineSessionSchema.safeParse(data);
+        if (result.success) {
+            return result.data as { roomId: string | null, playerId: string | null };
         }
+        
         return { roomId: null, playerId: null };
     }
 
+    /**
+     * Очищує сесію.
+     */
     clearSession() {
-        if (typeof localStorage !== 'undefined') {
-            localStorage.removeItem(STORAGE_KEYS.ROOM_ID);
-            localStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
-        }
+        storageService.remove(STORAGE_KEYS.ROOM_ID);
+        storageService.remove(STORAGE_KEYS.PLAYER_ID);
     }
 }
 

@@ -9,7 +9,7 @@ const FirestoreTimestampSchema = z.object({
 const TimestampOrNumber = z.union([z.number(), FirestoreTimestampSchema]);
 
 export const OnlinePlayerSchema = z.object({
-    id: z.string().uuid().or(z.string()), // Firebase IDs might not be UUIDs sometimes, but here we use uuidv4
+    id: z.string(),
     name: z.string().min(1).max(50),
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
     isReady: z.boolean(),
@@ -33,9 +33,10 @@ export const RoomSchema = z.object({
     isPrivate: z.boolean(),
     settingsLocked: z.boolean(),
     allowGuestSettings: z.boolean(),
-    gameState: z.any().nullable(), // SyncableGameState is complex, using any for now or I can define it later
+    gameState: z.any().nullable(),
     players: z.record(z.string(), OnlinePlayerSchema),
-    settings: GameSettingsSchema
+    settings: GameSettingsSchema,
+    maxPlayers: z.number().default(2) // FIX: Додано maxPlayers
 });
 
 export const RoomSummarySchema = z.object({
@@ -50,3 +51,9 @@ export const RoomSummarySchema = z.object({
 export type OnlinePlayer = z.infer<typeof OnlinePlayerSchema>;
 export type Room = z.infer<typeof RoomSchema>;
 export type RoomSummary = z.infer<typeof RoomSummarySchema>;
+
+// Aliases for compatibility
+export const OnlineRoomSchema = RoomSchema;
+export type OnlineRoom = Room;
+export type PlayerData = OnlinePlayer;
+export type GameStateData = any;

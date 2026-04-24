@@ -1,7 +1,7 @@
 import { writable, get } from 'svelte/store';
-import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
-import { getFirebaseApp } from '../firebaseService';
+import { getFirestoreDb } from '../firebaseService';
 import { logService } from "../logService.svelte";
 import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
@@ -32,11 +32,10 @@ const getInitialProfile = (): UserProfile => {
 export const userProfileStore = writable<UserProfile | null>(getInitialProfile());
 
 class UserProfileService {
-    private db;
+    private db: Firestore;
 
     constructor() {
-        const app = getFirebaseApp();
-        this.db = getFirestore(app);
+        this.db = getFirestoreDb();
     }
 
     async syncUserProfile(user: User) {

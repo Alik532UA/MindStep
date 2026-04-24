@@ -12,6 +12,7 @@ import { roomFirestoreService } from './room/roomFirestoreService';
 import type { Unsubscribe } from 'firebase/firestore';
 import { errorHandlerService } from './errorHandlerService';
 import { RoomError, AuthError } from '$lib/models/errors';
+import { ensureNumber } from '$lib/utils/timeUtils';
 
 const ROOM_TIMEOUT_MS = 600000;
 const MAX_PLAYERS = 8;
@@ -72,7 +73,6 @@ class RoomService {
             await roomFirestoreService.createRoomDoc(roomId, roomData);
 
             if (!isPrivate) {
-                // FIX: Виправлення TS7011 через catch у самому сервісі або тут
                 roomFirestoreService.updateStatsDoc({ lastRoomCreatedAt: Date.now() })
                     .catch((e: any) => console.warn('Failed to update global stats', e));
             }
@@ -111,12 +111,14 @@ class RoomService {
 
         querySnapshot.forEach((doc: any) => {
             const data = doc.data() as Room;
+            const createdAtNum = ensureNumber(data.createdAt);
+            const lastActivityNum = ensureNumber(data.lastActivity);
 
-            if (data.createdAt > activeRoomsLatestCreated) {
-                activeRoomsLatestCreated = data.createdAt;
+            if (createdAtNum > activeRoomsLatestCreated) {
+                activeRoomsLatestCreated = createdAtNum;
             }
 
-            if (now - data.lastActivity > ROOM_TIMEOUT_MS) {
+            if (now - lastActivityNum > ROOM_TIMEOUT_MS) {
                 cleanupPromises.push(roomFirestoreService.deleteRoomDoc(doc.ref));
                 return;
             }
@@ -124,13 +126,12 @@ class RoomService {
             const allPlayers = Object.values(data.players || {});
             
             const activePlayers = allPlayers.filter(p => {
-                const lastSeen = p.lastSeen || p.joinedAt;
+                const lastSeen = ensureNumber(p.lastSeen || p.joinedAt);
                 const isNotStale = (now - lastSeen) < 120000; 
                 return !p.isDisconnected && isNotStale;
             });
             
             if (data.status === 'playing' && activePlayers.length === 0) {
-                 // logService.init(`[RoomService] Hiding zombie room ${data.name} (playing, 0 active players).`);
                  return;
             }
 
@@ -140,7 +141,7 @@ class RoomService {
                     name: data.name,
                     status: data.status,
                     playerCount: allPlayers.length,
-                    maxPlayers: MAX_PLAYERS,
+                    maxPlayers: data.maxPlayers || MAX_PLAYERS,
                     isPrivate: data.isPrivate
                 });
             }
@@ -199,14 +200,11 @@ class RoomService {
             const existingSession = roomSessionService.getSession();
 
             if (existingSession.roomId === roomId && existingSession.playerId && roomData.players[existingSession.playerId]) {
-                // Перевірка: чи є сенс повертатися?
                 const otherPlayers = Object.values(roomData.players).filter(p => p.id !== existingSession.playerId);
                 
-                // Якщо гра йде/завершена, але я єдиний в списку гравців - значить всі інші вийшли остаточно.
                 if (roomData.status !== 'waiting' && otherPlayers.length === 0) {
                      logService.init(`[RoomService] Reconnect aborted: Room is empty (only me left) and game started/finished.`);
                      roomSessionService.clearSession();
-                     // Можна також викликати leaveRoom, щоб почистити за собою, але це не обов'язково
                      await roomPlayerService.leaveRoom(roomId, existingSession.playerId);
                      throw new AuthError('Game ended because all opponents left.', 'RECONNECT_ABORTED');
                 }
@@ -240,7 +238,7 @@ class RoomService {
             await roomFirestoreService.updateRoomDoc(roomId, {
                 [`players.${playerId}`]: newPlayer,
                 lastActivity: Date.now()
-            }, true); // use timeout
+            }, true);
 
             roomSessionService.saveSession(roomId, playerId);
             return playerId;

@@ -1,279 +1,121 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { roomService } from "$lib/services/roomService";
-    import type { RoomSummary } from "$lib/types/online";
-    import { t } from "$lib/i18n/typedI18n";
-    import { locale } from "svelte-i18n";
-    import SvgIcons from "$lib/components/SvgIcons.svelte";
+    import { collection, query, where, getDocs, limit, orderBy } from "firebase/firestore";
+    import { getFirestoreDb } from "$lib/services/firebaseService";
+    import { type OnlineRoom, OnlineRoomSchema } from "$lib/schemas/onlineSchema";
+    import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { goto } from "$app/navigation";
-    import { base } from "$app/paths";
+    import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.svelte";
-    import { fade, fly } from "svelte/transition";
-    import { flip } from "svelte/animate";
-    import RoomCard from "./RoomCard.svelte";
-    import { formatDateTime } from "$lib/utils/dateUtils";
+    import { storageService } from "$lib/services/storage";
+    import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
+    import type { TranslationKey } from "$lib/types/i18n";
 
-    let rooms: RoomSummary[] = [];
-    let latestCreatedAt: number | undefined;
-    let isLoading = false;
-    let joiningRoomId: string | null = null;
-    let error: string | null = null;
-    let unsubscribe: (() => void) | undefined;
+    let rooms = $state<OnlineRoom[]>([]);
+    let isLoading = $state(true);
 
-    function subscribe() {
-        if (unsubscribe) unsubscribe();
-
+    async function fetchRooms() {
         isLoading = true;
-        error = null;
+        const db = getFirestoreDb();
+        const q = query(
+            collection(db, "rooms"),
+            where("status", "==", "waiting"),
+            orderBy("createdAt", "desc"),
+            limit(20)
+        );
 
         try {
-            unsubscribe = roomService.subscribeToPublicRooms((data) => {
-                rooms = data.rooms;
-                latestCreatedAt = data.latestCreatedAt;
-                isLoading = false;
-            });
+            const snap = await getDocs(q);
+            rooms = snap.docs.map(doc => {
+                const data = doc.data();
+                const validation = OnlineRoomSchema.safeParse(data);
+                return validation.success ? validation.data : null;
+            }).filter(r => r !== null) as OnlineRoom[];
         } catch (e) {
-            console.error(e);
-            error = $t("onlineMenu.errors.fetchFailed");
+            logService.error("[RoomList] Failed to fetch rooms:", e);
+        } finally {
             isLoading = false;
         }
     }
 
-    // Зберігаємо для сумісності з кнопкою, хоча оновлення автоматичне
-    function loadRooms() {
-        subscribe();
-    }
-
-    async function handleJoin(roomId: string) {
-        logService.action(`[RoomList] Clicked Join for room: ${roomId}`);
-
-        if (joiningRoomId) return;
-        joiningRoomId = roomId;
-
-        const playerName = localStorage.getItem("online_playerName");
+    function handleJoin(roomId: string) {
+        const playerName = storageService.get("online_playerName");
         if (!playerName) {
-            localStorage.setItem(
-                "online_playerName",
-                `Player ${Math.floor(Math.random() * 1000)}`,
-            );
-            logService.init(`[RoomList] Generated new player name`);
+            const newName = generateRandomPlayerName();
+            storageService.set("online_playerName", newName);
         }
-
-        try {
-            const myName = localStorage.getItem("online_playerName")!;
-            logService.init(`[RoomList] Calling roomService.joinRoom...`);
-
-            await roomService.joinRoom(roomId, myName);
-
-            logService.init(
-                `[RoomList] Joined successfully. Navigating to lobby...`,
-            );
-            goto(`${base}/online/lobby/${roomId}`);
-        } catch (e) {
-            logService.error("[RoomList] Failed to join room", e);
-            alert($t("onlineMenu.errors.joinFailed"));
-            // loadRooms(); // Не потрібно, бо підписка сама оновить список
-        } finally {
-            joiningRoomId = null;
-        }
+        goto(`/game/online?roomId=${roomId}`);
     }
 
     onMount(() => {
-        subscribe();
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
+        fetchRooms();
     });
 </script>
 
-<div class="room-list-container" data-testid="room-list-container">
+<div class="room-list-container">
     <div class="list-header">
-        <div class="title-group">
-            <h3 data-testid="room-list-title">{$t("onlineMenu.title")}</h3>
-            <span class="room-count">
-                {rooms.length}
-                {rooms.length === 1 ? "room" : "rooms"}
-            </span>
-        </div>
-
-        <button
-            class="refresh-btn"
-            class:loading={isLoading}
-            on:click={loadRooms}
-            disabled={isLoading}
-            aria-label={$t("onlineMenu.refresh")}
-            data-testid="refresh-rooms-btn"
-        >
-            <div class="icon-wrapper">
-                <SvgIcons name="clear-cache" width="20" height="20" />
-            </div>
-            <span class="btn-text">{$t("onlineMenu.refresh")}</span>
-        </button>
+        <h2>{$t("onlineMenu.activeRooms" as TranslationKey)}</h2>
+        <StyledButton variant="info" size="small" onclick={fetchRooms} dataTestId="refresh-rooms-btn">
+            {$t("ui.refresh" as TranslationKey)}
+        </StyledButton>
     </div>
 
-    {#if error}
-        <div
-            class="error-message"
-            transition:fade
-            data-testid="room-list-error"
-        >
-            <div class="error-icon">!</div>
-            {error}
-        </div>
-    {/if}
-
-    <div class="rooms-grid" data-testid="rooms-table">
-        {#if rooms.length === 0 && !isLoading}
-            <div class="empty-state" in:fade>
-                <div class="empty-icon-wrapper">
-                    <SvgIcons name="no-moves" />
-                </div>
-                <p
-                    data-testid="no-rooms-message"
-                    style="white-space: pre-line;"
-                >
-                    {$t("onlineMenu.noRooms", {
-                        lastInfo: latestCreatedAt
-                            ? "\n" +
-                              $t("onlineMenu.lastRoomTime", {
-                                  time: formatDateTime(
-                                      latestCreatedAt,
-                                      $locale,
-                                  ),
-                              })
-                            : $t("onlineMenu.createFirst"),
-                    })}
-                </p>
-            </div>
-        {:else}
-            {#each rooms as room (room.id)}
-                <div
-                    animate:flip={{ duration: 400 }}
-                    in:fly={{ y: 20, duration: 400 }}
-                >
-                    <RoomCard
-                        {room}
-                        {joiningRoomId}
-                        on:join={(e) => handleJoin(e.detail)}
-                    />
+    {#if isLoading}
+        <div class="loading">{$t("ui.loading" as TranslationKey)}...</div>
+    {:else if rooms.length === 0}
+        <div class="empty-state">{$t("onlineMenu.noRoomsFound" as TranslationKey)}</div>
+    {:else}
+        <div class="rooms-grid">
+            {#each rooms as room}
+                <div class="room-card">
+                    <div class="room-info">
+                        <span class="room-name">{room.name}</span>
+                        <span class="room-players">{Object.keys(room.players).length}/{room.maxPlayers}</span>
+                    </div>
+                    <StyledButton 
+                        variant="primary" 
+                        size="small" 
+                        onclick={() => handleJoin(room.id)}
+                        dataTestId="join-room-btn-{room.id}"
+                    >
+                        {$t("onlineMenu.join" as TranslationKey)}
+                    </StyledButton>
                 </div>
             {/each}
-        {/if}
-    </div>
+        </div>
+    {/if}
 </div>
 
 <style>
     .room-list-container {
-        width: 100%;
-        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
-
     .list-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        padding: 0 4px;
     }
-
-    .title-group {
-        display: flex;
-        align-items: baseline;
-        gap: 12px;
-    }
-
-    .list-header h3 {
-        margin: 0;
-        font-size: 1.5rem;
-        color: var(--text-primary);
-        font-weight: 800;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .room-count {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-
-    .refresh-btn {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-        cursor: pointer;
-        padding: 8px 16px;
-        border-radius: 12px;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        height: 40px;
-    }
-
-    .refresh-btn:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: var(--text-accent);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .refresh-btn:active:not(:disabled) {
-        transform: translateY(0);
-    }
-
-    .refresh-btn:disabled {
-        opacity: 0.6;
-        cursor: wait;
-    }
-
-    .refresh-btn .icon-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.5s ease;
-    }
-
-    .refresh-btn.loading .icon-wrapper {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
     .rooms-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 16px;
-        width: 100%;
     }
-
-    .error-message {
-        background: rgba(244, 67, 54, 0.15);
-        border: 1px solid rgba(244, 67, 54, 0.3);
-        color: #ef9a9a;
-        padding: 12px;
+    .room-card {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 16px;
         border-radius: 12px;
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
     }
-
-    .empty-state {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 48px;
+    .room-name {
+        font-weight: bold;
+        display: block;
+    }
+    .room-players {
+        font-size: 0.9em;
         color: var(--text-secondary);
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 16px;
-        border: 2px dashed rgba(255, 255, 255, 0.1);
     }
 </style>

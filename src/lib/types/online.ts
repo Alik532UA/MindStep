@@ -1,33 +1,35 @@
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
-import type { SyncableGameState } from '$lib/sync/gameStateSync.interface';
+
+export type FirestoreTimestamp = { seconds: number; nanoseconds: number };
+export type TimestampOrNumber = number | FirestoreTimestamp;
 
 export interface OnlinePlayer {
     id: string;
     name: string;
     color: string;
     isReady: boolean;
-    joinedAt: number;
+    joinedAt: TimestampOrNumber;
     isOnline: boolean;
     isWatchingReplay?: boolean;
-    lastSeen?: number;
+    lastSeen?: TimestampOrNumber;
     isDisconnected?: boolean;
-    disconnectStartedAt?: number;
-} // <--- FIX: Додано закриваючу дужку
+    disconnectStartedAt?: TimestampOrNumber;
+}
 
 export interface Room {
     id: string;
     name: string;
     hostId: string;
     status: 'waiting' | 'playing' | 'finished';
-    createdAt: number;
-    lastActivity: number;
+    createdAt: TimestampOrNumber;
+    lastActivity: TimestampOrNumber;
     isPrivate: boolean;
     settingsLocked: boolean;
     allowGuestSettings: boolean;
-
-    gameState: SyncableGameState | null;
+    gameState: any | null;
     players: Record<string, OnlinePlayer>;
     settings: GameSettingsState;
+    maxPlayers?: number;
 }
 
 export interface RoomSummary {

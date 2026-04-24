@@ -5,7 +5,6 @@
   import { voiceControlService } from "$lib/services/voiceControlService.js";
   import type { MoveDirectionType } from "$lib/models/Piece";
   import type { CenterInfoState } from "$lib/utils/centerInfoUtil";
-  import hotkeyService from "$lib/services/hotkeyService";
   import { uiState } from "$lib/stores/uiState.svelte";
 
   // FIX: Import external styles
@@ -66,9 +65,6 @@
   let isOnline = $derived(uiState.state?.intendedGameType === "online");
   let visuallyDisabled = $derived(isOnline && !isPlayerTurn);
 
-  // FIX no-blink: розділяємо JS-блокування кліку і HTML-атрибут disabled.
-  // controlsDisabled - JS guard для handlers, але НЕ передається як HTML disabled в dir-btn/dist-btn.
-  // Div/dist кнопки завжди виглядають активними - так немає мигання при зміні черги.
   let controlsDisabled = $derived.by(() => {
     return isMoveInProgress || !isPlayerTurn;
   });
@@ -80,6 +76,7 @@
   onMount(() => {
     isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    // Реєструємо напрямки
     availableDirections.forEach((dir) => {
       if (dir) {
         registerGameAction(
@@ -89,27 +86,15 @@
       }
     });
 
+    // Реєструємо кнопки дій
     registerGameAction("confirm", handleConfirm);
     registerGameAction("no-moves", handleNoMoves);
-  });
 
-  $effect(() => {
-    // Створюємо локальну копію актуальних дистанцій для цього запуску ефекту
-    const currentDistances = new Set(distanceRows.flat());
-
-    currentDistances.forEach((dist) => {
-      // @ts-ignore - динамічний тип action
+    // Реєструємо дистанції заздалегідь (до 5, для запасу)
+    [1, 2, 3, 4, 5].forEach(dist => {
+      // @ts-ignore
       registerGameAction(`distance-${dist}`, () => handleDistance(dist));
     });
-
-    return () => {
-      // Cleanup використовує ту ж саму локальну копію (closure),
-      // тому ми точно видалимо те, що додали в цьому циклі.
-      currentDistances.forEach((dist) => {
-        // @ts-ignore
-        hotkeyService.unregister(`game.distance-${dist}`);
-      });
-    };
   });
 
   function handleDirection(dir: MoveDirectionType) {
@@ -146,7 +131,6 @@
 
 <div class="direction-controls-panel" data-testid="direction-controls-widget">
   {#snippet centerSnippet()}
-    <!-- FIX: disabled={visuallyDisabled} гарантує, що кнопка візуально заблокована для онлайн гри, коли не наш хід. -->
     <button
       id="center-info"
       class="control-btn center-info {centerInfoProps.class}"

@@ -4,32 +4,19 @@ import fs from 'fs';
 import path from 'path';
 
 const TEMP_REPORT = 'test-results-robust.json';
-const POINTS_TO_WIN = 3; // Хто перший набере 3 бали (успіх чи провал), той і переміг
-
-/**
- * Запускає Playwright і повертає JSON результат
- */
-function runPlaywrightJson(args) {
-    const result = spawnSync('npx', ['playwright', 'test', ...args, '--reporter=json'], { 
-        shell: true,
-        encoding: 'utf-8'
-    });
-    
-    try {
-        return JSON.parse(result.stdout);
-    } catch (e) {
-        console.error('Помилка парсингу JSON репорту:', e.message);
-        return null;
-    }
-}
+const POINTS_TO_WIN = 3; 
+const INDIVIDUAL_TEST_TIMEOUT = 45000; 
 
 /**
  * Основна функція
  */
 async function main() {
-    const userArgs = process.argv.slice(2);
+    // Відфільтровуємо --reporter, щоб не було дублів
+    const userArgs = process.argv.slice(2).filter(arg => !arg.startsWith('--reporter'));
+    
     console.log('\x1b[35m=== ЗАПУСК ТЕСТІВ (ПЕРШИЙ ПРОГІН) ===\x1b[0m');
     
+    const startTime = Date.now();
     const firstRun = spawnSync('npx', [
         'playwright', 'test', 
         ...userArgs,
@@ -40,24 +27,31 @@ async function main() {
     });
 
     if (!fs.existsSync(TEMP_REPORT)) {
-        if (firstRun.status !== 0) {
-            console.error('\x1b[31mПомилка: Playwright не зміг згенерувати звіт. Перевірте конфігурацію.\x1b[0m');
-            process.exit(1);
+        console.error('\x1b[31mПомилка: Playwright не зміг згенерувати звіт. Можливо, є помилка в коді тестів.\x1b[0m');
+        if (firstRun.stdout || firstRun.stderr) {
+            console.log('\x1b[90m' + (firstRun.stdout || firstRun.stderr).toString() + '\x1b[0m');
         }
-        console.log('\x1b[32mУсі тести пройшли успішно!\x1b[0m');
-        process.exit(0);
+        process.exit(1);
     }
 
     const report = JSON.parse(fs.readFileSync(TEMP_REPORT, 'utf-8'));
-    const failedTests = [];
+    
+    // Перевірка на глобальні помилки (наприклад, SyntaxError)
+    if (report.errors && report.errors.length > 0) {
+        console.error('\x1b[31mКритична помилка під час завантаження тестів:\x1b[0m');
+        report.errors.forEach(err => console.log(`  - ${err.message}`));
+        cleanup();
+        process.exit(1);
+    }
 
-    // Збираємо впавші тести
+    const failedTests = [];
     for (const suite of report.suites) {
         findFailedTests(suite, failedTests);
     }
 
     if (failedTests.length === 0) {
-        console.log('\x1b[32mУсі тести пройшли успішно!\x1b[0m');
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`\x1b[32mУсі тести пройшли успішно за ${duration}с!\x1b[0m`);
         cleanup();
         process.exit(0);
     }
@@ -67,9 +61,11 @@ async function main() {
     const finalResults = [];
 
     for (const test of failedTests) {
-        // Перевірка на помилку Firebase
+        console.log(`\n\x1b[31m[!] Початкова помилка у "${test.title}":\x1b[0m`);
+        console.log(`    ${test.error.split('\n')[0]}`);
+
         if (test.error && test.error.includes('FIREBASE EMULATOR IS NOT RUNNING')) {
-            console.log(`\x1b[31m[-] Тест "${test.title}" впав через відсутність емулятора Firebase. Перезапуск неможливий.\x1b[0m`);
+            console.log(`\x1b[31m[-] Перезапуск неможливий: Firebase Emulator вимкнений.\x1b[0m`);
             finalResults.push({ ...test, status: 'FAILED (FIREBASE)', passedCount: 0, failedCount: 1 });
             continue;
         }
@@ -79,21 +75,36 @@ async function main() {
         let failedCount = 0;
         let attempt = 1;
 
-        // Цикл триває, поки хтось не набере POINTS_TO_WIN балів
         while (passedCount < POINTS_TO_WIN && failedCount < POINTS_TO_WIN) {
+            const attemptStart = Date.now();
+            
             const retryResult = spawnSync('npx', [
                 'playwright', 'test', 
                 test.file, 
                 '-g', `^${escapeRegExp(test.title)}$`,
                 '--reporter=line'
-            ], { shell: true });
+            ], { 
+                shell: true,
+                encoding: 'utf-8',
+                timeout: INDIVIDUAL_TEST_TIMEOUT
+            });
 
-            if (retryResult.status === 0) {
+            const duration = ((Date.now() - attemptStart) / 1000).toFixed(1);
+
+            if (retryResult.error && retryResult.error.code === 'ETIMEDOUT') {
+                failedCount++;
+                console.log(`  Спроба ${attempt}: \x1b[31mТАЙМАУТ\x1b[0m (${duration}с, рахунок ${passedCount}:${failedCount})`);
+            } else if (retryResult.status === 0) {
                 passedCount++;
-                console.log(`  Спроба ${attempt}: \x1b[32mУСПІХ\x1b[0m (рахунок ${passedCount}:${failedCount})`);
+                console.log(`  Спроба ${attempt}: \x1b[32mУСПІХ\x1b[0m (${duration}с, рахунок ${passedCount}:${failedCount})`);
             } else {
                 failedCount++;
-                console.log(`  Спроба ${attempt}: \x1b[31mПАДІННЯ\x1b[0m (рахунок ${passedCount}:${failedCount})`);
+                console.log(`  Спроба ${attempt}: \x1b[31mПАДІННЯ\x1b[0m (${duration}с, рахунок ${passedCount}:${failedCount})`);
+                const output = retryResult.stdout || retryResult.stderr || '';
+                const errorMatch = output.match(/Error:([\s\S]*?)\n\n/);
+                if (errorMatch) {
+                    console.log(`    \x1b[90mПричина: ${errorMatch[1].trim().split('\n')[0]}\x1b[0m`);
+                }
             }
             attempt++;
         }
@@ -102,12 +113,11 @@ async function main() {
         const status = isSuccess ? 'PASSED (FLAKY)' : 'FAILED';
         const color = isSuccess ? '\x1b[32m' : '\x1b[31m';
 
-        console.log(`${color}[${status}] ${test.title} (Фінальний рахунок ${passedCount}:${failedCount})\x1b[0m\n`);
+        console.log(`${color}[${status}] ${test.title} (Фінальний рахунок ${passedCount}:${failedCount})\x1b[0m`);
         finalResults.push({ ...test, status, passedCount, failedCount });
     }
 
-    // Підсумкова таблиця
-    console.log('\x1b[35m=== ПІДСУМКОВИЙ ЗВІТ ===\x1b[0m');
+    console.log('\n\x1b[35m=== ПІДСУМКОВИЙ ЗВІТ ===\x1b[0m');
     let overallSuccess = true;
     finalResults.forEach(res => {
         const color = res.status.includes('PASSED') ? '\x1b[32m' : '\x1b[31m';
@@ -119,12 +129,8 @@ async function main() {
     process.exit(overallSuccess ? 0 : 1);
 }
 
-/**
- * Рекурсивний пошук впавших тестів у JSON репорті
- */
 function findFailedTests(suite, failedTests, currentFile = '') {
     const file = suite.file || currentFile;
-    
     if (suite.specs) {
         for (const spec of suite.specs) {
             for (const test of spec.tests) {
@@ -133,13 +139,12 @@ function findFailedTests(suite, failedTests, currentFile = '') {
                     failedTests.push({
                         title: spec.title,
                         file: file,
-                        error: lastResult?.error?.message || ''
+                        error: lastResult?.error?.message || lastResult?.error?.stack || 'Unknown error'
                     });
                 }
             }
         }
     }
-
     if (suite.suites) {
         for (const subSuite of suite.suites) {
             findFailedTests(subSuite, failedTests, file);
