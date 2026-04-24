@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { clearFirestore, createOnlineRoom, joinOnlineRoom } from '../../utils';
+import { clearFirestore, createOnlineRoom, joinOnlineRoom, setupTestEnvironment } from '../../utils';
 
 test.describe('Онлайн мультиплеєр: Вихід за межі (OOB)', { tag: '@OM' }, () => {
   
-  test.beforeEach(async () => {
+  test.beforeEach(async ({ page }) => {
     await clearFirestore();
   });
 
@@ -14,11 +14,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     const p1 = await context1.newPage();
     const p2 = await context2.newPage();
 
-    p1.on('console', msg => console.log(`P1 [${msg.type()}] ${msg.text()}`));
-    p1.on('dialog', dialog => {
-        console.log(`P1 DIALOG: ${dialog.message()}`);
-        dialog.dismiss();
-    });
+    await setupTestEnvironment(p1);
+    await setupTestEnvironment(p2);
 
     let roomName = '';
 
@@ -33,21 +30,23 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
 
     // --- ГРА ---
     await test.step('Початок гри', async () => {
-        // Увімкнення тестового режиму (щоб прибрати зайві анімації/туторіали)
+        // Увімкнення тестового режиму
         await p1.click('[data-testid="menu-button-test-mode-btn"]');
         await p2.click('[data-testid="menu-button-test-mode-btn"]');
 
         // І хост, і гість тиснуть "Готовий"
-        // Використовуємо toPass, бо Firebase може затримати статус
         await expect(async () => {
-            if (await p1.locator('[data-testid="toggle-ready-btn"]').textContent() !== 'Не готовий') {
+            const p1ReadyText = await p1.locator('[data-testid="toggle-ready-btn"]').textContent();
+            if (!p1ReadyText?.includes('Не готовий')) {
                 await p1.click('[data-testid="toggle-ready-btn"]');
             }
-            if (await p2.locator('[data-testid="toggle-ready-btn"]').textContent() !== 'Не готовий') {
+            const p2ReadyText = await p2.locator('[data-testid="toggle-ready-btn"]').textContent();
+            if (!p2ReadyText?.includes('Не готовий')) {
                 await p2.click('[data-testid="toggle-ready-btn"]');
             }
-            // Хост чекає, поки кнопка "Почати гру" стане активною
-            await expect(p1.locator('[data-testid="start-game-btn"]')).toBeEnabled({ timeout: 5000 });
+            
+            // Чекаємо, поки лобі підтвердить готовність всіх гравців через атрибут
+            await expect(p1.locator('[data-testid="lobby-container"]')).toHaveAttribute('data-all-ready', 'true', { timeout: 5000 });
         }).toPass({ timeout: 15000, intervals: [1000] });
         
         await p1.click('[data-testid="start-game-btn"]');
@@ -58,26 +57,16 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     });
 
     await test.step('Хост робить хід за межі дошки', async () => {
-        // Хост вибирає "Вгору" (це хід за межі з (0,0))
         await p1.click('[data-testid="dir-btn-up"]');
-        // Вибирає дистанцію 1
         await p1.click('[data-testid="dist-btn-1"]');
-        // Підтверджує
         await p1.click('[data-testid="confirm-move-btn"]');
     });
 
     await test.step('Перевірка результатів', async () => {
-        // Обидва мають бачити модалку завершення
-        await expect(p1.locator('[data-testid="game-over-content"]')).toBeVisible({ timeout: 10000 });
-        await expect(p2.locator('[data-testid="game-over-content"]')).toBeVisible({ timeout: 10000 });
+        await expect(p1.locator('[data-testid="game-over-content"]'), 'Хост має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
+        await expect(p2.locator('[data-testid="game-over-content"]'), 'Гість має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
 
-        // Перевірка статусів
-        // У Хоста має бути текст поразки
-        const p1Result = await p1.locator('[data-testid="game-over-modal-title"]').textContent();
-        // В залежності від перекладу, але ми можемо шукати за структурою або класом
         await expect(p1.locator('.player-score-row.loser')).toContainText('Host_OOB');
-        
-        // У Гостя має бути текст перемоги
         await expect(p2.locator('.player-score-row.winner')).toContainText('Guest_Survivor');
     });
 
@@ -92,6 +81,9 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     const p1 = await context1.newPage();
     const p2 = await context2.newPage();
 
+    await setupTestEnvironment(p1);
+    await setupTestEnvironment(p2);
+
     let roomName = '';
 
     await test.step('Створення та вхід', async () => {
@@ -100,23 +92,21 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     });
 
     await test.step('Початок гри', async () => {
-        // Увімкнення тестового режиму
         await p1.click('[data-testid="menu-button-test-mode-btn"]');
         await p2.click('[data-testid="menu-button-test-mode-btn"]');
 
-        // І хост, і гість тиснуть "Готовий"
-        // Використовуємо toPass, бо Firebase може затримати статус
         await expect(async () => {
-            if (await p1.locator('[data-testid="toggle-ready-btn"]').textContent() !== 'Не готовий') {
+            const p1ReadyText = await p1.locator('[data-testid="toggle-ready-btn"]').textContent();
+            if (!p1ReadyText?.includes('Не готовий')) {
                 await p1.click('[data-testid="toggle-ready-btn"]');
             }
-            if (await p2.locator('[data-testid="toggle-ready-btn"]').textContent() !== 'Не готовий') {
+            const p2ReadyText = await p2.locator('[data-testid="toggle-ready-btn"]').textContent();
+            if (!p2ReadyText?.includes('Не готовий')) {
                 await p2.click('[data-testid="toggle-ready-btn"]');
             }
-            // Хост чекає, поки кнопка "Почати гру" стане активною
-            await expect(p1.locator('[data-testid="start-game-btn"]')).toBeEnabled({ timeout: 5000 });
+            await expect(p1.locator('[data-testid="lobby-container"]')).toHaveAttribute('data-all-ready', 'true', { timeout: 5000 });
         }).toPass({ timeout: 15000, intervals: [1000] });
-
+        
         await p1.click('[data-testid="start-game-btn"]');
 
         await expect(p1.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 15000 });
@@ -127,8 +117,7 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
         await p1.click('[data-testid="dir-btn-right"]');
         await p1.click('[data-testid="dist-btn-1"]');
         await p1.click('[data-testid="confirm-move-btn"]');
-        // Чекаємо, поки хід синхронізується (наприклад, по індикатору черги)
-        await expect(p2.locator('[data-testid="direction-controls-widget"]')).toBeVisible();
+        await expect(p2.locator('[data-testid="direction-controls-widget"]')).toBeVisible({ timeout: 10000 });
     });
 
     await test.step('Гість робить хід за межі', async () => {

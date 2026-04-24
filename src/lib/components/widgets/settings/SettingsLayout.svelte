@@ -1,6 +1,6 @@
 <script lang="ts">
     import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
-    import { layoutStateRune } from "$lib/stores/layoutState.svelte";
+    import { layoutState } from "$lib/stores/layoutState.svelte";
     import { logService } from "$lib/services/logService.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";
@@ -44,7 +44,7 @@
             use:blurOnClick
             aria-label="Скинути положення меню"
             use:customTooltip={$t("ui.resetMenuLayout")}
-            onclick={() => layoutStateRune.reset()}
+            onclick={() => layoutState.reset()}
         >
             <span
                 style="width:50%;height:50%;display:flex;align-items:center;justify-content:center;"

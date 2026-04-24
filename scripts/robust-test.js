@@ -101,9 +101,27 @@ async function main() {
                 failedCount++;
                 console.log(`  Спроба ${attempt}: \x1b[31mПАДІННЯ\x1b[0m (${duration}с, рахунок ${passedCount}:${failedCount})`);
                 const output = retryResult.stdout || retryResult.stderr || '';
+                
+                // --- ІНФОРМАТИВНІСТЬ: Витягуємо причину помилки ---
                 const errorMatch = output.match(/Error:([\s\S]*?)\n\n/);
                 if (errorMatch) {
-                    console.log(`    \x1b[90mПричина: ${errorMatch[1].trim().split('\n')[0]}\x1b[0m`);
+                    const cleanError = errorMatch[1].trim().split('\n')[0];
+                    console.log(`    \x1b[33m[!] Причина:\x1b[0m \x1b[90m${cleanError}\x1b[0m`);
+                }
+
+                // --- ІНФОРМАТИВНІСТЬ: Витягуємо останні логі P1/P2 (якщо вони є в output) ---
+                const logs = output.split('\n').filter(line => 
+                    line.includes('[ERROR]') || 
+                    line.includes('[BROWSER ERROR]') || 
+                    line.includes('[BROWSER EXCEPTION]')
+                );
+                
+                if (logs.length > 0) {
+                    console.log(`    \x1b[35m[!] Виявлені помилки в консолі браузера:\x1b[0m`);
+                    logs.slice(-5).forEach(line => {
+                        const cleanLine = line.trim().replace(/^P\d\s\[\w+\]\s/, ''); // Прибираємо префікси Playwright
+                        console.log(`      \x1b[91m→ ${cleanLine}\x1b[0m`);
+                    });
                 }
             }
             attempt++;

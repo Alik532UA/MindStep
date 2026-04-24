@@ -41,7 +41,7 @@ export const maintenanceService = {
                     );
                     logService.info('[Maintenance] Project-specific caches cleared.');
                 } catch (e) {
-                    console.error('Failed to clear caches', e);
+                    logService.error('[Maintenance] Failed to clear caches', e);
                 }
             }
 

@@ -2,9 +2,26 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
 /**
- * Встановлює глобальні прапорці тестування, які зберігаються навіть після перезавантаження.
+ * Встановлює глобальні прапорці тестування та налаштовує перехоплення логів.
  */
 export async function setupTestEnvironment(page: Page) {
+  // Перехоплення помилок консолі
+  page.on('console', msg => {
+    const type = msg.type();
+    const text = msg.text();
+    if (type === 'error' || text.includes('[ERROR]')) {
+      console.log(`\x1b[31m[BROWSER ERROR]\x1b[0m ${text}`);
+    } else if (text.includes('[INIT]') || text.includes('[STATE]')) {
+      // Можна розкоментувати для дебагу локально, але в CI краще тільки помилки
+      // console.log(`\x1b[34m[BROWSER LOG]\x1b[0m ${text}`);
+    }
+  });
+
+  // Перехоплення несподіваних помилок JS на сторінці
+  page.on('pageerror', exception => {
+    console.log(`\x1b[31m[BROWSER EXCEPTION]\x1b[0m ${exception.message}`);
+  });
+
   await page.addInitScript(() => {
     (window as any).__playwright_test__ = true;
     (window as any).updateNoticeDisabled = true;
@@ -172,7 +189,9 @@ export async function createOnlineRoom(page: Page, playerName: string = 'HostMas
   
   await expect(async () => {
     const createBtn = page.locator('[data-testid="create-room-btn"]');
-    await expect(createBtn).toBeVisible({ timeout: 10000 });
+    const currentUrl = page.url();
+    
+    await expect(createBtn, `Кнопка "Створити кімнату" має бути видима на сторінці ${currentUrl}`).toBeVisible({ timeout: 10000 });
     
     await page.click('[data-testid="player-name-input-edit-btn"]');
     await page.fill('[data-testid="player-name-input-input"]', playerName);
@@ -187,7 +206,9 @@ export async function createOnlineRoom(page: Page, playerName: string = 'HostMas
     await page.click('[data-testid="room-name-input-save-btn"]');
     
     await page.click('[data-testid="create-room-confirm-btn"]');
-    await expect(page.locator('[data-testid="lobby-container"]')).toBeVisible({ timeout: 15000 });
+    
+    const lobbyContainer = page.locator('[data-testid="lobby-container"]');
+    await expect(lobbyContainer, `Після створення кімнати має з'явитися контейнер лобі. Поточна URL: ${page.url()}`).toBeVisible({ timeout: 15000 });
   }).toPass({ timeout: 40000 });
   
   const roomNameDisplay = page.locator('[data-testid="room-name-editable-display"]');

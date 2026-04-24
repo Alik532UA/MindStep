@@ -106,5 +106,4 @@ class LayoutStateRune {
     }
 }
 
-export const layoutStateRune = new LayoutStateRune();
-export const layoutState = layoutStateRune; // Alias for modern naming
+export const layoutState = new LayoutStateRune();

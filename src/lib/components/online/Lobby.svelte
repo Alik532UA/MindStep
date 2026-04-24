@@ -7,6 +7,7 @@
     import LobbyPlayerList from "./lobby/LobbyPlayerList.svelte";
     import LobbySettings from "./lobby/LobbySettings.svelte";
     import ChatWidget from "./ChatWidget.svelte";
+    import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { beforeNavigate } from "$app/navigation";
     import { fly, fade } from "svelte/transition";
     import type { Room, OnlinePlayer } from "$lib/types/online";
@@ -31,7 +32,13 @@
     });
 </script>
 
-<div class="lobby-page" data-testid="lobby-container">
+<div class="lobby-page" 
+    data-testid="lobby-container"
+    data-players-count={lobbyController.playersList.length}
+    data-all-ready={lobbyController.playersList.length >= 2 && lobbyController.playersList.every(p => p.isReady)}
+    data-am-i-host={lobbyController.amIHost}
+>
+
     <FloatingBackButton onclick={() => lobbyController.leave()} />
 
     {#if lobbyController.room && lobbyController.myPlayerId}
@@ -83,6 +90,14 @@
                 playerColor={lobbyController.myPlayer?.color || "#ffd700"}
             />
         </div>
+    {:else if lobbyController.error}
+        <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <p>{lobbyController.error}</p>
+            <StyledButton variant="primary" onclick={() => lobbyController.leave()}>
+                {$t("common.back" as TranslationKey)}
+            </StyledButton>
+        </div>
     {:else}
         <div class="loading-state" data-testid="lobby-loading">
             <div class="spinner"></div>
@@ -102,6 +117,20 @@
         width: 100%;
         display: flex;
         flex-direction: column;
+    }
+
+    .error-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .error-icon {
+        font-size: 48px;
     }
 
     .lobby-content {

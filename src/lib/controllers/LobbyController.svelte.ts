@@ -4,6 +4,7 @@ import { logService } from "../services/logService.svelte";
 import { type OnlineRoom, OnlineRoomSchema, type OnlinePlayer } from '../schemas/onlineSchema';
 import { authService } from '../services/authService';
 import { storageService } from '../services/storage';
+import { roomService } from '../services/roomService';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
 
@@ -25,77 +26,52 @@ export class LobbyController {
     async initialize(roomId: string) {
         logService.init(`[LobbyController] Initializing lobby for room: ${roomId}`);
         this.isLoading = true;
-        this.myPlayerId = authService.getCurrentUser()?.uid || null;
-
-        if (!this.myPlayerId) {
-            logService.error("[LobbyController] No authenticated user found during init");
-            // Тут можна додати спробу входу, але для лобі зазвичай ми вже залогінені
+        this.error = null;
+        
+        let currentUser = authService.getCurrentUser();
+        
+        // FIX: Якщо користувача ще немає, виконуємо вхід і відразу використовуємо результат
+        if (!currentUser) {
+            logService.init("[LobbyController] No user found, performing anonymous sign-in...");
+            try {
+                currentUser = await authService.signInAnonymously();
+            } catch (e: any) {
+                logService.error("[LobbyController] Auth failed:", e);
+                this.error = `Authentication failed: ${e.message}`;
+                this.isLoading = false;
+                return;
+            }
         }
 
+        this.myPlayerId = currentUser.uid;
         await this.joinRoom(roomId);
     }
 
     async joinRoom(roomId: string) {
-        const roomRef = doc(this.db, 'rooms', roomId);
-
         try {
-            const snap = await getDoc(roomRef);
-            if (!snap.exists()) {
-                this.error = 'Room not found';
-                this.isLoading = false;
-                return;
-            }
+            // Використовуємо RoomService для логіки приєднання (це забезпечить SSoT)
+            const playerName = storageService.get("online_playerName") || 'Player';
+            await roomService.joinRoom(roomId, playerName);
 
-            const data = snap.data();
-            const validation = OnlineRoomSchema.safeParse(data);
-            if (!validation.success) {
-                this.error = 'Invalid room data';
-                this.isLoading = false;
-                return;
-            }
-
-            const roomData = validation.data;
-            const currentUser = authService.getCurrentUser();
-            
-            if (!currentUser) {
-                this.error = 'Not authenticated';
-                this.isLoading = false;
-                return;
-            }
-
-            this.myPlayerId = currentUser.uid;
-
-            const isAlreadyIn = roomData.players[currentUser.uid] !== undefined;
-
-            if (!isAlreadyIn) {
-                if (Object.keys(roomData.players).length >= 2) {
-                    this.error = 'Room is full';
-                    this.isLoading = false;
-                    return;
-                }
-
-                const newPlayer: OnlinePlayer = {
-                    id: currentUser.uid,
-                    name: currentUser.displayName || storageService.get("online_playerName") || 'Player',
-                    color: '#E94A3F',
-                    isReady: false,
-                    joinedAt: Date.now(),
-                    isOnline: true
-                };
-
-                await updateDoc(roomRef, {
-                    [`players.${currentUser.uid}`]: newPlayer
-                });
-            }
-
-            this.roomUnsubscribe = onSnapshot(roomRef, (s) => {
-                if (s.exists()) {
-                    this.room = s.data() as OnlineRoom;
+            // Підписуємося на оновлення кімнати через RoomService
+            this.roomUnsubscribe = roomService.subscribeToRoom(roomId, (room) => {
+                if (room) {
+                    const oldStatus = this.room?.status;
+                    this.room = { ...room, id: roomId };
+                    
+                    // АВТОМАТИЧНИЙ ПЕРЕХІД: Якщо статус змінився на 'playing', йдемо в гру
+                    if (room.status === 'playing' && oldStatus !== 'playing') {
+                        logService.init(`[LobbyController] Game started! Redirecting...`);
+                        goto(`${base}/game/online?roomId=${roomId}&from=lobby`);
+                    }
+                } else {
+                    this.error = 'Room not found or deleted';
                 }
             });
 
             this.isLoading = false;
         } catch (e: any) {
+            logService.error("[LobbyController] Failed to join room:", e);
             this.error = e.message;
             this.isLoading = false;
         }

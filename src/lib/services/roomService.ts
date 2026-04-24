@@ -9,6 +9,7 @@ import { roomPlayerService } from './room/roomPlayerService';
 import { generateRandomRoomName } from '$lib/utils/nameGenerator';
 import { getRandomUnusedColor } from '$lib/utils/playerUtils';
 import { roomFirestoreService } from './room/roomFirestoreService';
+import { authService } from './authService';
 import type { Unsubscribe } from 'firebase/firestore';
 import { errorHandlerService } from './errorHandlerService';
 import { RoomError, AuthError } from '$lib/models/errors';
@@ -26,14 +27,20 @@ class RoomService {
     async createRoom(hostName: string, isPrivate: boolean = false, customRoomName?: string): Promise<string> {
         logService.init(`[RoomService] createRoom START. Host: ${hostName}`);
 
-        const hostId = uuidv4();
+        let currentUser = authService.getCurrentUser();
+        if (!currentUser) {
+            logService.init("[RoomService] Not authenticated. Performing quick sign-in...");
+            currentUser = await authService.signInAnonymously();
+        }
+
+        const hostId = currentUser.uid;
         const hostColor = getRandomUnusedColor([]);
 
         const initialPlayer: OnlinePlayer = {
             id: hostId,
             name: hostName,
             color: hostColor,
-            isReady: false,
+            isReady: true,
             joinedAt: Date.now(),
             isOnline: true,
             isWatchingReplay: false
@@ -64,7 +71,8 @@ class RoomService {
             allowGuestSettings: true,
             gameState: null,
             players: { [hostId]: initialPlayer },
-            settings: onlineDefaultSettings
+            settings: onlineDefaultSettings,
+            maxPlayers: MAX_PLAYERS
         };
 
         try {
@@ -190,7 +198,14 @@ class RoomService {
 
     async joinRoom(roomId: string, playerName: string): Promise<string> {
         logService.init(`[RoomService] joinRoom START. Room: ${roomId}`);
-        const playerId = uuidv4();
+        
+        let currentUser = authService.getCurrentUser();
+        if (!currentUser) {
+            logService.init("[RoomService] joinRoom: Not authenticated. Performing quick sign-in...");
+            currentUser = await authService.signInAnonymously();
+        }
+        
+        const playerId = currentUser.uid;
 
         try {
             const roomData = await roomFirestoreService.getRoomDoc(roomId);

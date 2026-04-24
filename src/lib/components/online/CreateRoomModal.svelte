@@ -13,6 +13,8 @@
     import { v4 as uuidv4 } from 'uuid';
     import type { TranslationKey } from "$lib/types/i18n";
 
+    import { roomService } from "$lib/services/roomService";
+
     let roomName = $state("");
     let isCreating = $state(false);
 
@@ -31,58 +33,13 @@
         if (!roomName.trim()) return;
         
         isCreating = true;
-        const db = getFirestoreDb();
         
-        let currentUser = authService.getCurrentUser();
-        
-        if (!currentUser) {
-            logService.init("[CreateRoomModal] Not authenticated. Attempting quick anonymous sign-in...");
-            try {
-                currentUser = await authService.signInAnonymously();
-            } catch (e) {
-                logService.error("[CreateRoomModal] Failed to sign in anonymously:", e);
-                isCreating = false;
-                return;
-            }
-        }
-
-        const roomId = uuidv4();
         const playerName = storageService.get("online_playerName") || generateRandomPlayerName();
 
-        const roomData = {
-            id: roomId,
-            name: roomName,
-            hostId: currentUser.uid,
-            status: "waiting",
-            maxPlayers: 2,
-            players: {
-                [currentUser.uid]: {
-                    id: currentUser.uid,
-                    name: playerName,
-                    color: "#4A90E2",
-                    isHost: true,
-                    isReady: true,
-                    joinedAt: Date.now(),
-                    isOnline: true
-                }
-            },
-            createdAt: serverTimestamp(),
-            lastActivity: serverTimestamp(),
-            isPrivate: false,
-            settingsLocked: false,
-            allowGuestSettings: true,
-            gameState: null as any,
-            settings: {
-                boardSize: 4,
-                blockModeEnabled: false,
-                gameMode: 'experienced'
-            }
-        };
-
         try {
-            await setDoc(doc(db, "rooms", roomId), roomData);
+            const roomId = await roomService.createRoom(playerName, false, roomName);
             modalStateRune.closeModal();
-            goto(`/game/online?roomId=${roomId}`);
+            goto(`/online/lobby/${roomId}`);
         } catch (e) {
             logService.error("[CreateRoomModal] Failed to create room:", e);
         } finally {

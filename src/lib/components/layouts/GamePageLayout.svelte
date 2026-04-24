@@ -2,7 +2,7 @@
     import "$lib/css/components/game-board.css";
     import "$lib/css/components/controls.css";
     import DraggableColumns from "$lib/components/DraggableColumns.svelte";
-    import { layoutStateRune, type WidgetId } from "$lib/stores/layoutState.svelte";
+    import { layoutState, type WidgetId } from "$lib/stores/layoutState.svelte";
     import { widgetRegistry } from "$lib/config/widgetRegistry"; // <-- Новий імпорт
     import URLSyncManager from "$lib/components/utils/URLSyncManager.svelte"; // <-- Новий імпорт
 
@@ -52,7 +52,7 @@
 
     // Реактивне формування колонок на основі стану та фільтру
     const columns = $derived($i18nReady
-        ? layoutStateRune.state.map((col) => ({
+        ? layoutState.state.map((col) => ({
               id: col.id,
               label: col.id,
               items: col.widgets.filter(widgetFilter).map((id) => ({
@@ -76,7 +76,7 @@
         }>,
     ) {
         const { dragging, dragSourceCol, dropTargetCol, dropIndex } = e.detail;
-        layoutStateRune.update((cols) => {
+        layoutState.update((cols) => {
             let newCols = cols.map((col) => ({
                 ...col,
                 widgets: col.widgets.filter((id) => id !== dragging.id),

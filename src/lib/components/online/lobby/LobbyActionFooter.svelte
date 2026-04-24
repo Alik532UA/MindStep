@@ -46,10 +46,16 @@
         <StyledButton
             variant="primary"
             size="large"
-            disabled={!allReady}
-            onclick={onstartGame}
+            onclick={() => {
+                if (allReady) {
+                    onstartGame?.();
+                } else {
+                    // Можна додати сповіщення "Не всі готові"
+                }
+            }}
             dataTestId="start-game-btn"
             class="action-btn start-btn"
+            style={!allReady ? "opacity: 0.5; cursor: not-allowed;" : ""}
         >
             <span class="btn-content">
                 <SvgIcons

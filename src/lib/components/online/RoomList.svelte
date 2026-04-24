@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { collection, query, where, getDocs, limit, orderBy } from "firebase/firestore";
     import { getFirestoreDb } from "$lib/services/firebaseService";
-    import { type OnlineRoom, OnlineRoomSchema } from "$lib/schemas/onlineSchema";
+    import { type RoomSummary, RoomSummarySchema } from "$lib/schemas/onlineSchema";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { goto } from "$app/navigation";
     import { t } from "$lib/i18n/typedI18n";
@@ -11,8 +11,11 @@
     import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
     import type { TranslationKey } from "$lib/types/i18n";
 
-    let rooms = $state<OnlineRoom[]>([]);
+    import { roomService } from "$lib/services/roomService";
+
+    let rooms = $state<RoomSummary[]>([]);
     let isLoading = $state(true);
+    let isJoining = $state<string | null>(null);
 
     async function fetchRooms() {
         isLoading = true;
@@ -28,9 +31,25 @@
             const snap = await getDocs(q);
             rooms = snap.docs.map(doc => {
                 const data = doc.data();
-                const validation = OnlineRoomSchema.safeParse(data);
-                return validation.success ? validation.data : null;
-            }).filter(r => r !== null) as OnlineRoom[];
+                if (!data) return null;
+
+                // Валідуємо лише те, що потрібно для списку
+                const summaryData = {
+                    id: doc.id,
+                    name: data.name || 'Unnamed Room',
+                    status: data.status || 'waiting',
+                    playerCount: data.players ? Object.keys(data.players).length : 0,
+                    maxPlayers: data.maxPlayers || 2,
+                    isPrivate: !!data.isPrivate
+                };
+
+                const validation = RoomSummarySchema.safeParse(summaryData);
+                if (!validation.success) {
+                    logService.error(`[RoomList] Validation failed for room ${doc.id}:`, validation.error.format());
+                    return null;
+                }
+                return validation.data;
+            }).filter(r => r !== null) as RoomSummary[];
         } catch (e) {
             logService.error("[RoomList] Failed to fetch rooms:", e);
         } finally {
@@ -38,13 +57,23 @@
         }
     }
 
-    function handleJoin(roomId: string) {
-        const playerName = storageService.get("online_playerName");
+    async function handleJoin(roomId: string) {
+        let playerName = storageService.get("online_playerName");
         if (!playerName) {
-            const newName = generateRandomPlayerName();
-            storageService.set("online_playerName", newName);
+            playerName = generateRandomPlayerName();
+            storageService.set("online_playerName", playerName);
         }
-        goto(`/game/online?roomId=${roomId}`);
+        
+        isJoining = roomId;
+        try {
+            await roomService.joinRoom(roomId, playerName);
+            goto(`/online/lobby/${roomId}`);
+        } catch (e) {
+            logService.error("[RoomList] Failed to join room:", e);
+            // Можна додати сповіщення користувачу
+        } finally {
+            isJoining = null;
+        }
     }
 
     onMount(() => {
@@ -70,15 +99,16 @@
                 <div class="room-card">
                     <div class="room-info">
                         <span class="room-name">{room.name}</span>
-                        <span class="room-players">{Object.keys(room.players).length}/{room.maxPlayers}</span>
+                        <span class="room-players">{room.playerCount}/{room.maxPlayers}</span>
                     </div>
                     <StyledButton 
                         variant="primary" 
                         size="small" 
                         onclick={() => handleJoin(room.id)}
+                        disabled={isJoining !== null}
                         dataTestId="join-room-btn-{room.id}"
                     >
-                        {$t("onlineMenu.join" as TranslationKey)}
+                        {isJoining === room.id ? $t("ui.loading" as TranslationKey) : $t("onlineMenu.join" as TranslationKey)}
                     </StyledButton>
                 </div>
             {/each}
