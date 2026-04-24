@@ -6,6 +6,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import { layoutUpdateState } from "$lib/stores/layoutUpdateState.svelte";
   import ErrorBoundary from "./ErrorBoundary.svelte";
+  import { throttle } from "$lib/utils/throttle";
 
   interface Props {
     columns: {
@@ -56,9 +57,11 @@
     });
   }
 
+  const throttledUpdateLayoutMode = throttle(updateLayoutMode, 200);
+
   onMount(() => {
-    window.addEventListener("resize", updateLayoutMode);
-    return () => window.removeEventListener("resize", updateLayoutMode);
+    window.addEventListener("resize", throttledUpdateLayoutMode);
+    return () => window.removeEventListener("resize", throttledUpdateLayoutMode);
   });
 
   $effect(() => {

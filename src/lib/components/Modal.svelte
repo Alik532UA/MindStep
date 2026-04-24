@@ -15,6 +15,7 @@
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
   import BaseModal from "$lib/components/ui/BaseModal.svelte";
   import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
+  import { throttle } from "$lib/utils/throttle";
 
   import ExpertModeVolumeControl from "./modals/parts/ExpertModeVolumeControl.svelte";
   import ModalHeader from "./modals/parts/ModalHeader.svelte";
@@ -37,11 +38,13 @@
   let expertVolume = $state(0.3);
   let currentModalContext = $state<string | null>(null);
 
+  const updateHeight = () => (windowHeight = window.innerHeight);
+  const throttledUpdateHeight = throttle(updateHeight, 150);
+
   onMount(() => {
     windowHeight = window.innerHeight;
-    const updateHeight = () => (windowHeight = window.innerHeight);
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
+    window.addEventListener("resize", throttledUpdateHeight);
+    return () => window.removeEventListener("resize", throttledUpdateHeight);
   });
 
   const themeClass = $derived(

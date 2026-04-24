@@ -9,7 +9,7 @@
 <header>
 	<div class="corner">
 		<a href="https://svelte.dev/docs/kit">
-			<img src={logo} alt="SvelteKit" />
+			<img src={logo} alt="SvelteKit" width="40" height="40" />
 		</a>
 	</div>
 
@@ -40,7 +40,7 @@
 
 	<div class="corner">
 		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
+			<img src={github} alt="GitHub" width="40" height="40" />
 		</a>
 	</div>
 

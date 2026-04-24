@@ -52,6 +52,9 @@
         src="{base}/svg/qrcode-monobank.svg"
         alt="Monobank QR Code"
         class="qr-code-image"
+        loading="lazy"
+        width="250"
+        height="250"
       />
     </a>
   </div>
