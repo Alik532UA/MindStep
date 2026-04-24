@@ -8,9 +8,11 @@ const FirestoreTimestampSchema = z.object({
 
 const TimestampOrNumber = z.union([z.number(), FirestoreTimestampSchema]);
 
+export const PlayerNameSchema = z.string().min(2).max(20).trim();
+
 export const OnlinePlayerSchema = z.object({
     id: z.string(),
-    name: z.string().min(1).max(50),
+    name: PlayerNameSchema,
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#4A90E2'),
     isReady: z.boolean().default(false),
     joinedAt: z.any(),

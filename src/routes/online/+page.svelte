@@ -10,9 +10,7 @@
   import { logService } from "$lib/services/logService.svelte";
   import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
   import { storageService } from "$lib/services/storage";
-  import { z } from "zod";
-
-  const PlayerNameSchema = z.string().min(2).max(20).trim();
+  import { PlayerNameSchema } from "$lib/schemas/onlineSchema";
 
   let playerName = $state("");
   let nameError = $state(false);
