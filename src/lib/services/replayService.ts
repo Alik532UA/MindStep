@@ -1,5 +1,5 @@
 // src/lib/services/replayService.ts
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 interface ReplayData {
   moveHistory: any[];

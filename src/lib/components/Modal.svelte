@@ -7,7 +7,7 @@
   import { onMount, tick, onDestroy } from "svelte";
   import { audioService } from "$lib/services/audioService.js";
   import { focusManager } from "$lib/stores/focusManager.js";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import hotkeyService from "$lib/services/hotkeyService";
   import { trapFocus } from "$lib/actions/trapFocus.js";
   import { uiState } from "$lib/stores/uiState.svelte";

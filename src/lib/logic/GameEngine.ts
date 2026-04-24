@@ -4,7 +4,7 @@ import { calculateMoveScore } from '$lib/services/scoreService';
 import type { CombinedGameState, MoveResult } from '$lib/models/gameState';
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import type { MoveHistoryEntry } from '$lib/models/moveHistory';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * Headless ігровий рушій.

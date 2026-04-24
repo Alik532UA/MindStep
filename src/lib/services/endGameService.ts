@@ -1,7 +1,7 @@
 import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { calculateFinalScore, determineWinner } from './scoreService';
 import { gameEventBus } from './gameEventBus';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { timeService } from './timeService';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';

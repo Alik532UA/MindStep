@@ -1,7 +1,7 @@
 <script lang="ts">
     import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { userActionService } from "$lib/services/userActionService";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";

@@ -1,6 +1,6 @@
 import { gameEventBus, type ShowModalPayload, type SpeakMovePayload, type BoardResizePayload } from './gameEventBus';
 import { sideEffectService } from './sideEffectService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { userActionService } from './userActionService';
 import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 

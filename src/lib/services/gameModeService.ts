@@ -8,7 +8,7 @@ import { LocalGameMode } from '$lib/game-modes/LocalGameMode';
 import { TimedGameMode } from '$lib/game-modes/TimedGameMode';
 import { VirtualPlayerGameMode } from '$lib/game-modes/VirtualPlayerGameMode';
 import { OnlineGameMode } from '$lib/game-modes/OnlineGameMode'; // Import OnlineGameMode
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { timerState } from '$lib/stores/timerState.svelte';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';
 

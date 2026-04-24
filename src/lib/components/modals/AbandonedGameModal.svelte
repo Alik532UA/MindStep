@@ -5,7 +5,7 @@
     import { navigationService } from "$lib/services/navigationService";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
 
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
 
     export let roomId: string;
     export let playerId: string;

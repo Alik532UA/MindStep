@@ -1,5 +1,5 @@
 // src/lib/services/SettingsPersistenceService.ts
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { defaultGameSettings } from '../stores/gameSettingsDefaults';
 import type { GameSettingsState } from '../stores/gameSettingsTypes';
 import { GameSettingsSchema } from '../schemas/gameSettingsSchema';

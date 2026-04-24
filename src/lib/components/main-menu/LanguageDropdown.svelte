@@ -1,6 +1,6 @@
 <script lang="ts">
     import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import { languages } from "$lib/config/constants";
 
     interface Props {

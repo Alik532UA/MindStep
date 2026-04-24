@@ -3,7 +3,7 @@
     import { base } from "$app/paths";
     import { t } from "$lib/i18n/typedI18n";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
 

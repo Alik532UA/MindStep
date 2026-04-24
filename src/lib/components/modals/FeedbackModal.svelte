@@ -5,7 +5,7 @@
         type FeedbackType,
     } from "$lib/services/feedbackService";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { onMount } from "svelte";
 
     import { userStore } from "$lib/services/authService";

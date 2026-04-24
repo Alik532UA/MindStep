@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { getFirebaseApp } from './firebaseService';
 import { writable } from 'svelte/store';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { doc, getFirestore, deleteDoc } from 'firebase/firestore';
 import { notificationService } from './notificationService';
 import { rewardsState } from '$lib/stores/rewardsState.svelte';

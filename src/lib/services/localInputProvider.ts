@@ -1,7 +1,7 @@
 // src/lib/services/localInputProvider.ts
 import { uiState } from '$lib/stores/uiState.svelte';
 import { userActionService } from './userActionService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 export const localInputProvider = {
   confirmMove(): void {

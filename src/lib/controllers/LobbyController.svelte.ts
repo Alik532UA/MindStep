@@ -4,7 +4,7 @@ import type { GameSettingsState } from "$lib/stores/gameSettingsTypes";
 import { goto } from "$app/navigation";
 import { base } from "$app/paths";
 import type { Unsubscribe } from "firebase/firestore";
-import { logService } from "$lib/services/logService";
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * Headless контролер для Лобі.

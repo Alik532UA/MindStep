@@ -5,7 +5,7 @@
  */
 
 import { gameModeService } from "$lib/services/gameModeService";
-import { logService } from "$lib/services/logService";
+import { logService } from "$lib/services/logService.svelte";
 import { boardState } from '$lib/stores/boardState.svelte';
 import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 import { WIDGETS } from "$lib/stores/layoutState.svelte";

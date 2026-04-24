@@ -1,6 +1,6 @@
 // src/lib/utils/boardUtils.ts
 
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { Direction, Move } from '$lib/utils/gameUtils';
 
 /**

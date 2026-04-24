@@ -1,4 +1,4 @@
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 

@@ -3,7 +3,7 @@
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { gameModeService } from "$lib/services/gameModeService";
   import { userActionService } from "$lib/services/userActionService";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { onMount, onDestroy, type Snippet } from "svelte";
   import PlayerColorProvider from "$lib/components/PlayerColorProvider.svelte";
   import hotkeyService from "$lib/services/hotkeyService";

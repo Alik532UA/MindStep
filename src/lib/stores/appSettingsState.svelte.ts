@@ -3,7 +3,7 @@
 // localStorage-персистенція залишається в bridge-шарі.
 
 import { AppSettingsSchema, type AppSettings } from '$lib/schemas/appSettingsSchema';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { debounce } from '$lib/utils/debounce';
 
 export type AppSettingsState = AppSettings;

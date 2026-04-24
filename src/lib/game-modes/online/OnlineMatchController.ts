@@ -2,7 +2,7 @@ import { roomService } from '$lib/services/roomService';
 import { modalService } from '$lib/services/modalService';
 import { navigationService } from '$lib/services/navigationService';
 import { gameEventBus } from '$lib/services/gameEventBus';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { IGameStateSync, SyncableGameState, VoteType } from '$lib/sync/gameStateSync.interface';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';

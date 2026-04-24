@@ -8,7 +8,7 @@ import {
     type Database
 } from 'firebase/database';
 import { getRealtimeDb } from './firebaseService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 class PresenceService {
     private get rtdb(): Database {

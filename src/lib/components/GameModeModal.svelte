@@ -7,7 +7,7 @@
   import { base } from "$app/paths";
   import DontShowAgainCheckbox from "./DontShowAgainCheckbox.svelte";
   import { userActionService } from "$lib/services/userActionService";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import type { GameModePreset } from "$lib/stores/gameSettingsTypes";
   import WipNotice from "./main-menu/WipNotice.svelte";

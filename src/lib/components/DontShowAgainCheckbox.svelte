@@ -2,7 +2,7 @@
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { onMount } from "svelte";
   import hotkeyService from "$lib/services/hotkeyService";
 

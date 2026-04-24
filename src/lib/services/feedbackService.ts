@@ -4,7 +4,7 @@ import { get } from 'svelte/store';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { notificationService } from './notificationService';
 
 // Додано 'reward_suggestion'

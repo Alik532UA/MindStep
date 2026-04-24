@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 // Типи для голосів
 type SupportedLanguage = 'uk' | 'en' | 'crh' | 'nl';

@@ -10,7 +10,7 @@ import { modalService } from '$lib/services/modalService';
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { speakMove } from '$lib/services/speechService';
 import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { SyncableGameState } from '$lib/sync/gameStateSync.interface';
 import { t as tStore } from '$lib/i18n/typedI18n';
 import { timeService } from '$lib/services/timeService';

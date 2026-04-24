@@ -1,6 +1,6 @@
 import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { gameService } from '$lib/services/gameService';
 import { createOnlinePlayers } from '$lib/utils/playerFactory';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';

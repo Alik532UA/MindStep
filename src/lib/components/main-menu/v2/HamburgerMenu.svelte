@@ -1,6 +1,6 @@
 <script lang="ts">
     import SvgIcons from "$lib/components/SvgIcons.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import HamburgerMenuModal from "$lib/components/modals/HamburgerMenuModal.svelte";
 

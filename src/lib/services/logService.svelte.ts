@@ -14,6 +14,11 @@ if (isBrowser) {
     });
 }
 
+class LogState {
+    errorCount = $state(0);
+}
+const logState = new LogState();
+
 // Check localStorage to force logs on production
 if (isBrowser && localStorage.getItem('force-logging') === 'true') {
     isForceEnabled = true;
@@ -190,6 +195,10 @@ function baseLog(group: LogGroup, level: LogLevel, message: string, ...data: unk
         const logText = `[${group.toUpperCase()}] [${level.toUpperCase()}] ${message} ${data.length > 0 ? formatDataForDisplay(data) : ''}`;
         saveLogToSession(logText);
 
+        if (level === 'error') {
+            logState.errorCount++;
+        }
+
         if (isLogEnabled) {
             // ЧОМУ: Використовуємо setTimeout тільки в браузері для UI-логів. 
             // Під час тестів уникаємо асинхронних оновлень стану, щоб не ламати таймінги Playwright.
@@ -311,7 +320,7 @@ const loggerProxy = new Proxy({} as LoggerMethods, {
     }
 });
 
-export const logService = loggerProxy;
+export const logService = loggerProxy as LoggerMethods & { errorCount: number };
 
 // Глобальний контролер для розробника (тільки в браузері)
 if (isBrowser) {

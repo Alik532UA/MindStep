@@ -2,7 +2,7 @@
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import type { IMenuItem } from "./FlexibleMenu.types";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { customTooltip } from "$lib/actions/customTooltip";
 
     interface Props {

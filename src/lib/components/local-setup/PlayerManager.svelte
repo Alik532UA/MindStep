@@ -2,7 +2,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import { navigationService } from "$lib/services/navigationService.js";
   import ColorPicker from "./ColorPicker.svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { playerState } from "$lib/stores/playerState.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";

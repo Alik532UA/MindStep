@@ -1,6 +1,6 @@
 // src/lib/services/animationService.ts
 import { animationState } from '$lib/stores/animationState.svelte';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { gameModeState } from '$lib/stores/gameModeState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';

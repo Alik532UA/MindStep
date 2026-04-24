@@ -1,5 +1,5 @@
 import { tooltipState } from '$lib/stores/tooltipState.svelte';
-import { logService } from '$lib/services/logService.js';
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * A Svelte action to show a custom tooltip.

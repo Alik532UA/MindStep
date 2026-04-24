@@ -1,5 +1,5 @@
 // src/lib/services/serverSyncService.ts
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { boardState } from '$lib/stores/boardState.svelte';
 
 class ServerSyncService {

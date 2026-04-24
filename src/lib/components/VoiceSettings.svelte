@@ -6,7 +6,7 @@
   import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import { speakTestPhrase } from "$lib/services/speechService";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
 
   // Визначаємо, чи ми в онлайн режимі
   let isOnlineMode = $derived(uiState.state.intendedGameType === "online");

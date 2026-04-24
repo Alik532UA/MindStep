@@ -4,7 +4,7 @@
     import type { Room } from "$lib/types/online";
     import EditableText from "$lib/components/ui/EditableText.svelte";
     import { roomService } from "$lib/services/roomService";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { generateRandomRoomName } from "$lib/utils/nameGenerator";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { fade } from "svelte/transition";

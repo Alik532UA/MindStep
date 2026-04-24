@@ -1,4 +1,4 @@
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { SyncableGameState } from './gameStateSync.interface';
 
 export class GameStateSerializer {

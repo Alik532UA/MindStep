@@ -23,7 +23,7 @@ import type {
 } from './gameStateSync.interface';
 
 import { getFirestoreDb, isFirebaseConfigured } from '$lib/services/firebaseService';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { GameStateSerializer } from './GameStateSerializer';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modalStateRune } from "$lib/stores/modalState.svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { APP_CONFIG } from "$lib/config/appConfig";
 
   // Sub-components

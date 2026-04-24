@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";

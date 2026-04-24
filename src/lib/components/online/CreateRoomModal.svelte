@@ -4,7 +4,7 @@
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import EditableText from "$lib/components/ui/EditableText.svelte";
     import {

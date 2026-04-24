@@ -1,6 +1,6 @@
 // speechService.ts: централізований сервіс для озвучення ходів, повідомлень тощо.
 import { writable } from 'svelte/store';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import type { MoveDirectionType } from '$lib/models/Piece';

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { boardState } from "$lib/stores/boardState.svelte";
     import { userActionService } from "$lib/services/userActionService";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import Stepper from "$lib/components/ui/Stepper.svelte";
 

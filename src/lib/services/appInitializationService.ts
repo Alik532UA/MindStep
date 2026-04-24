@@ -6,7 +6,7 @@ import { debounce } from "$lib/utils/debounce";
 import { initializeI18n } from "$lib/i18n/init.js";
 import { initializeTestModeSync } from "$lib/services/testModeService.svelte";
 import { rewardsService } from "$lib/services/rewardsService";
-import { logService } from "$lib/services/logService";
+import { logService } from "$lib/services/logService.svelte";
 import { versionState } from "$lib/stores/versionState.svelte";
 import { get } from "svelte/store";
 import { base } from "$app/paths";

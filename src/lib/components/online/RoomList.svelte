@@ -7,7 +7,7 @@
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { fade, fly } from "svelte/transition";
     import { flip } from "svelte/animate";
     import RoomCard from "./RoomCard.svelte";

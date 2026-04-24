@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { registerGameAction } from "$lib/services/gameHotkeyService";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { voiceControlService } from "$lib/services/voiceControlService.js";
   import type { MoveDirectionType } from "$lib/models/Piece";
   import type { CenterInfoState } from "$lib/utils/centerInfoUtil";

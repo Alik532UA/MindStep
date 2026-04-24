@@ -3,7 +3,7 @@
   import type { TranslationKey } from "$lib/types/i18n";
   import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { onMount, onDestroy } from "svelte";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 
   import { goto } from "$app/navigation";

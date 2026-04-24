@@ -5,7 +5,7 @@
         testModeState,
         type ComputerMoveMode,
     } from "$lib/stores/testModeState.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
 
     const tState = $derived(testModeState.state);
     let manualDirection = $state<string | null>(null);

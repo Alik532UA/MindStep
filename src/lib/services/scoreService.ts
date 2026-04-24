@@ -2,7 +2,7 @@
 import type { Player } from '$lib/models/player';
 import { getMovePath } from '$lib/utils/boardUtils';
 import { isMirrorMove, isCellBlocked } from '../logic/availableMovesLogic';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { FinalScoreDetails } from '$lib/models/score';
 import type { BoardState } from '$lib/stores/boardState.svelte';
 import type { PlayerState } from '$lib/stores/playerState.svelte';

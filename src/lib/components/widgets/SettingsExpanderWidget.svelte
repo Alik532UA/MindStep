@@ -4,7 +4,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import { uiState } from "$lib/stores/uiState.svelte";
   import { onMount, tick } from "svelte";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import { boardState } from "$lib/stores/boardState.svelte";
   import { layoutUpdateState } from "$lib/stores/layoutUpdateState.svelte";
   import { dev } from "$app/environment";

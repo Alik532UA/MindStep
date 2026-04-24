@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { gameModeService } from './gameModeService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { Direction } from '$lib/utils/gameUtils';
 import { navigationService } from './navigationService';
 import type { GameModePreset } from '$lib/stores/gameSettingsTypes';

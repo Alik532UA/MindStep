@@ -1,6 +1,6 @@
 import { uiState } from '$lib/stores/uiState.svelte';
 import { userActionService } from './userActionService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { voiceControlState } from '$lib/stores/voiceControlState.svelte';
 import { voiceCommandParser, type VoiceCommandResult } from './voice/VoiceCommandParser';
 

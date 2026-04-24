@@ -1,4 +1,4 @@
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { Room, RoomSummary, OnlinePlayer } from '$lib/types/online';
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import { defaultGameSettings } from '$lib/stores/gameSettingsDefaults';

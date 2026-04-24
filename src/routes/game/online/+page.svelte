@@ -3,7 +3,7 @@
     import { WIDGETS } from "$lib/stores/layoutState.svelte";
     import { gameModeService } from "$lib/services/gameModeService";
     import { roomService } from "$lib/services/roomService";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { goto, beforeNavigate } from "$app/navigation";
     import { base } from "$app/paths";
     import { onMount } from "svelte";

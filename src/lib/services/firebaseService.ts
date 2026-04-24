@@ -7,7 +7,7 @@ import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase
 import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/database';
 import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { errorHandlerService } from './errorHandlerService';
 
 const isBrowser = typeof window !== 'undefined';

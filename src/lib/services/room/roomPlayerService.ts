@@ -1,6 +1,6 @@
 import { doc, updateDoc, getDoc, deleteDoc, deleteField } from 'firebase/firestore';
 import { getFirestoreDb } from '$lib/services/firebaseService';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { OnlinePlayer, Room } from '$lib/types/online';
 import { roomSessionService } from './roomSessionService';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';

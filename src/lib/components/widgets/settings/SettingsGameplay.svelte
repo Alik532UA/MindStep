@@ -5,7 +5,7 @@
     import { userActionService } from "$lib/services/userActionService";
     import { gameModeService } from "$lib/services/gameModeService";
     import { uiState } from "$lib/stores/uiState.svelte";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import ToggleButton from "$lib/components/ToggleButton.svelte";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";

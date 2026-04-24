@@ -4,7 +4,7 @@ import { scoreState } from '$lib/stores/scoreState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import type { IGameStateSync, SyncableGameState } from '$lib/sync/gameStateSync.interface';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 export class OnlineStateSynchronizer {
     constructor(private stateSync: IGameStateSync) { }

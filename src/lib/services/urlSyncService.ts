@@ -1,5 +1,5 @@
 import { goto } from '$app/navigation';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';
 import { debounce } from '$lib/utils/debounce';

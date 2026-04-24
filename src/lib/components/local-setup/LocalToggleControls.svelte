@@ -1,7 +1,7 @@
 <script lang="ts">
     import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { t } from "$lib/i18n/typedI18n";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import ToggleButton from "$lib/components/ToggleButton.svelte";
 
     const settings = $derived(gameSettingsState.state);

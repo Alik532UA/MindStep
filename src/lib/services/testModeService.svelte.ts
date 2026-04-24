@@ -1,6 +1,6 @@
 import { testModeState } from '$lib/stores/testModeState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { MoveDirectionType } from '$lib/models/Piece';
 import { untrack } from 'svelte';
 

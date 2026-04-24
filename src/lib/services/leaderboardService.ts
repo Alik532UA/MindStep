@@ -12,7 +12,7 @@ import {
 import { getFirebaseApp } from './firebaseService';
 import { authService } from './authService';
 import { userProfileStore } from './auth/userProfileService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { ScoreDocument, UserDocument } from '$lib/types/firebaseSchema';
 
 export interface LeaderboardEntry {

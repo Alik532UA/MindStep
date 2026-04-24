@@ -2,7 +2,7 @@
 import { boardState } from '$lib/stores/boardState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { availableMovesState } from '$lib/stores/availableMovesState.svelte';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { playerState } from '$lib/stores/playerState.svelte';
 import { calculateAvailableMoves as calculateMovesLogic } from '../logic/availableMovesLogic';
 

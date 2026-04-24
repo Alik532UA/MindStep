@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from "$lib/i18n/typedI18n";
   import { onMount } from "svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
 
   // FIX: Import decomposed components
   import TestStartPositionControls from "./test-mode/TestStartPositionControls.svelte";

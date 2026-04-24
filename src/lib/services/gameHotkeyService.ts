@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import { gameSettingsState } from '../stores/gameSettingsState.svelte';
 import type { KeybindingAction } from '../stores/gameSettingsTypes';
 import hotkeyService from './hotkeyService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { showArrowKeyHintModal } from './arrowKeyHintService';
 import { modalStateRune } from '../stores/modalState.svelte';
 import { t as tStore } from '$lib/i18n/typedI18n';

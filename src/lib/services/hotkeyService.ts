@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { get } from 'svelte/store';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { maintenanceService } from './maintenanceService';
 
 type HotkeyAction = {

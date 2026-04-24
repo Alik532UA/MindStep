@@ -1,7 +1,7 @@
 // src/lib/stores/testModeState.svelte.ts
 // SSoT для тестового режиму. Svelte 5 Runes.
 
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 export type PositionMode = 'random' | 'predictable' | 'manual';
 export type ComputerMoveMode = 'random' | 'manual';

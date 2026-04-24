@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   export let row: number;
   export let col: number;
   export let boardSize: number;

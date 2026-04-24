@@ -3,7 +3,7 @@ import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { roomService } from '$lib/services/roomService';
 import { timeService } from '$lib/services/timeService';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { uiState } from '$lib/stores/uiState.svelte';
 import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 import type { OnlineMatchController } from './OnlineMatchController';

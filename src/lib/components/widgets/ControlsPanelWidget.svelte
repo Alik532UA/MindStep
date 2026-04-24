@@ -7,7 +7,7 @@
   import DirectionControls from "./DirectionControls.svelte";
   import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
   import { getCenterInfoState, type CenterInfoState } from "$lib/utils/centerInfoUtil";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
   import { voiceControlState } from "$lib/stores/voiceControlState.svelte";
   import { debugLogState } from "$lib/stores/debugLogState.svelte";

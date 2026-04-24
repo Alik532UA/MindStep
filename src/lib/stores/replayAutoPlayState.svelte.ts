@@ -1,5 +1,5 @@
 // src/lib/stores/replayAutoPlayState.svelte.ts
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 export type AutoPlayDirection = 'paused' | 'forward' | 'backward';
 

@@ -1,6 +1,6 @@
 import { roomPlayerService } from "$lib/services/room/roomPlayerService";
 import { presenceService } from "$lib/services/presenceService";
-import { logService } from "$lib/services/logService";
+import { logService } from "$lib/services/logService.svelte";
 import type { OnlinePlayer, Room } from "$lib/types/online";
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { timeService } from '$lib/services/timeService';

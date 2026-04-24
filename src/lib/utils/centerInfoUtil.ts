@@ -1,4 +1,4 @@
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { MoveDirectionType } from '$lib/models/Piece';
 
 const directionArrows: Record<MoveDirectionType, string> = {

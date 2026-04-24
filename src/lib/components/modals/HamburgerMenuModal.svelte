@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { t } from "$lib/i18n/typedI18n";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
     import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";

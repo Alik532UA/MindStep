@@ -8,7 +8,7 @@
  * беруться з останнього запису в moveHistory.
  */
 
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import type { MoveHistoryEntry } from '$lib/models/moveHistory';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { Resettable } from '$lib/types/utils';

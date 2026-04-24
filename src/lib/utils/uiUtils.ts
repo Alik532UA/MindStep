@@ -1,6 +1,6 @@
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import type { GameSettingsState } from '$lib/stores/gameSettingsTypes';
-import { logService } from '$lib/services/logService.js';
+import { logService } from "$lib/services/logService.svelte";
 
 // НАВІЩО: Гарантуємо, що всі візуальні опції (showBoard, showPiece, showMoves) будуть активовані для коректного UX при старті нової гри.
 export function enableAllGameCheckboxesIfNeeded() {

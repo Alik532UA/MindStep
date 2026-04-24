@@ -5,7 +5,7 @@
 // ВАЖЛИВО: Анімації — це ВИКЛЮЧНО візуальний шар.
 // Вони НЕ впливають на ігрову логіку та center-info.
 
-import { logService } from '../services/logService';
+import { logService } from "../services/logService.svelte";
 import type { MoveDirectionType } from '$lib/models/Piece';
 
 /**

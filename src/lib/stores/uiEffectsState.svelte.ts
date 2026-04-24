@@ -1,6 +1,6 @@
 // src/lib/stores/uiEffectsState.svelte.ts
 import { gameSettingsState } from './gameSettingsState.svelte';
-import { logService } from '$lib/services/logService.js';
+import { logService } from "$lib/services/logService.svelte";
 import { uiState } from './uiState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 

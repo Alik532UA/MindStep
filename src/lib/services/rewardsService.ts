@@ -1,6 +1,6 @@
 import type { Achievement, RewardConditionContext } from '$lib/types/rewards';
 import { rewardsState } from '$lib/stores/rewardsState.svelte';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { notificationService } from './notificationService';
 
 // Базові нагороди

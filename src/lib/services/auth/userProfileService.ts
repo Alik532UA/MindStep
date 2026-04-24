@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { getFirebaseApp } from '../firebaseService';
-import { logService } from '../logService';
+import { logService } from "../logService.svelte";
 import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
 

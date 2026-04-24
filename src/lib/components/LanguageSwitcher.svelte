@@ -1,7 +1,7 @@
 <script lang="ts">
   import { locale } from "svelte-i18n";
   import { appSettingsState } from "../stores/appSettingsState.svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
 
   let showDropdown = $state(false);
 

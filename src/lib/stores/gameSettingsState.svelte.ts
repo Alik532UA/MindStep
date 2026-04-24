@@ -9,7 +9,7 @@ import { syncGameModeLogic } from '$lib/logic/settingsLogic';
 import { uiState } from './uiState.svelte';
 import { boardState } from './boardState.svelte';
 import { availableMovesService } from '$lib/services/availableMovesService';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { settingsPersistenceService } from '$lib/services/SettingsPersistenceService';
 import { debounce } from '$lib/utils/debounce';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
     import { layoutStateRune } from "$lib/stores/layoutState.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { blurOnClick } from "$lib/utils/actions";
     import { customTooltip } from "$lib/actions/customTooltip.js";

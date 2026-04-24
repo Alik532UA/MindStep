@@ -9,7 +9,7 @@ import { createEmptyBoard } from '$lib/utils/boardUtils';
 import type { Player, BonusHistoryItem } from '$lib/models/player';
 import { availableMovesService } from './availableMovesService';
 import { animationService } from './animationService';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { DEFAULT_PLAYER_NAMES } from '$lib/config/defaultPlayers';
 import { getRandomUnusedColor } from '$lib/utils/playerUtils';
 import { uiState } from '$lib/stores/uiState.svelte';

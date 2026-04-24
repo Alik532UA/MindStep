@@ -1,5 +1,5 @@
 import { LayoutSchema } from '$lib/schemas/layoutSchema';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 export const WIDGETS = {
     BOARD_HIDDEN_INFO: 'board-hidden-info',

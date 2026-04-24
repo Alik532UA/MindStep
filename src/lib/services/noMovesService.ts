@@ -1,5 +1,5 @@
 // src/lib/services/noMovesService.ts
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { get } from 'svelte/store';
 import { gameEventBus } from './gameEventBus';
 import { calculateFinalScore } from './scoreService';

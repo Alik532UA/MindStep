@@ -11,7 +11,7 @@ import type {
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * Локальна реалізація синхронізації стану гри.

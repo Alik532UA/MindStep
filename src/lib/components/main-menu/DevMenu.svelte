@@ -3,7 +3,7 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { uiState } from "$lib/stores/uiState.svelte";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
 

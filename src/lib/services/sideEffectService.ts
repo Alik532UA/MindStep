@@ -3,7 +3,7 @@ import { navigationService } from './navigationService';
 import { speakText, speakMove } from './speechService';
 import { modalService } from './modalService';
 import { gameEventBus } from './gameEventBus';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 import type { ModalState } from '$lib/stores/modalState.svelte';

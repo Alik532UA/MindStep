@@ -1,6 +1,6 @@
 <script lang="ts">
   import SvgIcons from "$lib/components/SvgIcons.svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { customTooltip } from "$lib/actions/customTooltip.js";
 
   interface Props {

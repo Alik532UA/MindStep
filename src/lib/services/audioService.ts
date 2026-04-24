@@ -3,7 +3,7 @@
  */
 
 import { base } from '$app/paths';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 // --- Конфігурація ---
 const POOL_MAX_SIZE = 5; // Максимальна кількість однакових звуків, що можуть звучати одночасно

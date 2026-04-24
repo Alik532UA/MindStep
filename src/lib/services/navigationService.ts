@@ -5,7 +5,7 @@
 
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 
 export const navigationService = {

@@ -7,7 +7,7 @@
   import { quintOut } from "svelte/easing";
   import { playerState } from '$lib/stores/playerState.svelte';
   import { uiState } from "$lib/stores/uiState.svelte";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import CompactComputerMove from "$lib/components/widgets/game-info/CompactComputerMove.svelte";
   import StructuredMessage from "$lib/components/widgets/game-info/StructuredMessage.svelte";
 

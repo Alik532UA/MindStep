@@ -1,4 +1,4 @@
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 /**
  * Сервіс для технічного обслуговування додатку.

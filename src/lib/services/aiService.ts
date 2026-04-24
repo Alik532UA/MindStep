@@ -1,5 +1,5 @@
 // src/lib/services/aiService.ts
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 import type { MoveDirectionType } from '../models/Piece';
 import type { BoardState } from '$lib/stores/boardState.svelte';
 import type { PlayerState } from '$lib/stores/playerState.svelte';

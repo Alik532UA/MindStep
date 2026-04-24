@@ -1,5 +1,5 @@
 import { modalStateRune } from '$lib/stores/modalState.svelte';
-import { logService } from '$lib/services/logService.js';
+import { logService } from "$lib/services/logService.svelte";
 import { clearCache } from '$lib/utils/cacheManager.js';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';

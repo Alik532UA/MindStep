@@ -2,7 +2,7 @@
   import { navigationService } from "$lib/services/navigationService.js";
   import { t } from "$lib/i18n/typedI18n";
   import { customTooltip } from "$lib/actions/customTooltip.js";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { fly } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { onMount } from "svelte";

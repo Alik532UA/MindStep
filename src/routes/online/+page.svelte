@@ -7,7 +7,7 @@
   import { modalStateRune } from "$lib/stores/modalState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { onMount } from "svelte";
-  import { logService } from "$lib/services/logService";
+  import { logService } from "$lib/services/logService.svelte";
   import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
 
   let playerName = "";

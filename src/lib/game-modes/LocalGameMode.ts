@@ -3,7 +3,7 @@ import type { Player } from '$lib/models/player';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameOverState } from '$lib/stores/gameOverState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { timeService } from '$lib/services/timeService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';

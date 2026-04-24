@@ -13,7 +13,7 @@
 	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
 	        import { page } from "$app/stores";
-	        import { logService } from "$lib/services/logService.js";
+	        import { logService } from "$lib/services/logService.svelte";
 	        import { notificationService } from "$lib/services/notificationService";
 	        import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";	import { tooltipState } from "$lib/stores/tooltipState.svelte";
 	import { uiState } from "$lib/stores/uiState.svelte";
@@ -37,6 +37,7 @@
 	import { roomService } from "$lib/services/roomService";
 	import "$lib/services/commandService";
 	import ToastContainer from "$lib/components/ui/ToastContainer.svelte";
+	import LogCopyButton from "$lib/components/widgets/LogCopyButton.svelte";
 	import { errorHandlerService } from "$lib/services/errorHandlerService";
 	import { audioService } from "$lib/services/audioService";
 

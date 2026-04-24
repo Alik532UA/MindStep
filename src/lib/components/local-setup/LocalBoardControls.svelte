@@ -1,7 +1,7 @@
 <script lang="ts">
     import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
     import { t } from "$lib/i18n/typedI18n";
-    import { logService } from "$lib/services/logService.js";
+    import { logService } from "$lib/services/logService.svelte";
     import Stepper from "$lib/components/ui/Stepper.svelte";
     import ButtonGroup from "$lib/components/ui/ButtonGroup.svelte";
 

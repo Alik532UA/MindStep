@@ -1,6 +1,6 @@
 // file: src/lib/services/timeService.ts
 import { timerState } from '$lib/stores/timerState.svelte';
-import { logService } from './logService';
+import { logService } from "./logService.svelte";
 
 class TimeService {
   private gameTimerInterval: NodeJS.Timeout | null = null;

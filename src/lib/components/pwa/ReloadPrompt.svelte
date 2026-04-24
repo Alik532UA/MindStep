@@ -1,7 +1,7 @@
 <script lang="ts">
   import { useRegisterSW } from 'virtual:pwa-register/svelte';
   import { onMount, createEventDispatcher } from 'svelte';
-  import { logService } from '$lib/services/logService';
+  import { logService } from "$lib/services/logService.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
 

@@ -5,7 +5,7 @@
 
 import { loadAndGetVoices, filterVoicesByLang } from '$lib/services/speechService';
 import { locale } from 'svelte-i18n';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { gameSettingsState } from './gameSettingsState.svelte';
 import { get } from 'svelte/store';
 

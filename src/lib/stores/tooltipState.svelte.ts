@@ -1,4 +1,4 @@
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 export interface HotkeyData {
     text: string;

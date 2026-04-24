@@ -11,7 +11,7 @@
     import { boardState } from '$lib/stores/boardState.svelte';
     import { replayState } from "$lib/stores/replayState.svelte";
     import { i18nReady } from "$lib/i18n/init.js";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
     interface Props {

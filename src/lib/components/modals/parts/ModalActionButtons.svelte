@@ -3,7 +3,7 @@
     import type { TranslationKey } from "$lib/types/i18n";
     import { i18nReady } from "$lib/i18n/init.js";
     import { gameEventBus } from "$lib/services/gameEventBus";
-    import { logService } from "$lib/services/logService";
+    import { logService } from "$lib/services/logService.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import DontShowAgainCheckbox from "../../DontShowAgainCheckbox.svelte";
     import type { ModalState } from "$lib/stores/modalState.svelte";

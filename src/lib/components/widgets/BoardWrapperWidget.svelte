@@ -6,7 +6,7 @@
   import { quintOut } from "svelte/easing";
   import { animationState } from "$lib/stores/animationState.svelte";
   import { derivedState } from "$lib/stores/derivedState.svelte";
-  import { logService } from "$lib/services/logService.js";
+  import { logService } from "$lib/services/logService.svelte";
   import { isCellBlocked } from "$lib/logic/availableMovesLogic";
   import { boardState } from "$lib/stores/boardState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";

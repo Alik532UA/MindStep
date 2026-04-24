@@ -1,6 +1,6 @@
 import { tooltipState } from '$lib/stores/tooltipState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
-import { logService } from '$lib/services/logService.js';
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * @typedef {Object} HotkeyData

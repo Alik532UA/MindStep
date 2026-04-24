@@ -1,5 +1,5 @@
 import type { RewardsState, UnlockedReward } from '$lib/types/rewards';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { getFirestore, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFirebaseApp } from '$lib/services/firebaseService';

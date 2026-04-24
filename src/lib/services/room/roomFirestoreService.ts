@@ -19,7 +19,7 @@ import type { Room } from '$lib/types/online';
 import { withTimeout } from '$lib/utils/asyncUtils';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { RoomSchema } from '$lib/schemas/onlineSchema';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 
 const OPERATION_TIMEOUT_MS = 30000;
 

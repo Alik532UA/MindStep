@@ -8,7 +8,7 @@ import { gameEventBus } from '$lib/services/gameEventBus';
 import { sideEffectService, type SideEffect } from '$lib/services/sideEffectService';
 import { Piece, type MoveDirectionType } from '../models/Piece';
 import type { GameMoveResult, SuccessfulMoveResult, ScoreChangesData, MoveQueueItem } from '$lib/types/gameMove';
-import { logService } from '$lib/services/logService';
+import { logService } from "$lib/services/logService.svelte";
 import { endGameService } from '$lib/services/endGameService';
 import { noMovesService } from '$lib/services/noMovesService';
 import { availableMovesService } from '$lib/services/availableMovesService';
