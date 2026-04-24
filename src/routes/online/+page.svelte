@@ -10,27 +10,36 @@
   import { logService } from "$lib/services/logService.svelte";
   import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
   import { storageService } from "$lib/services/storage";
+  import { z } from "zod";
+
+  const PlayerNameSchema = z.string().min(2).max(20).trim();
 
   let playerName = $state("");
+  let nameError = $state(false);
 
   onMount(() => {
-  	const storedName = storageService.get("online_playerName");
-  	if (storedName) {
-  		playerName = storedName;
-  	} else {
-  		playerName = generateRandomPlayerName();
-  		storageService.set("online_playerName", playerName);
-  	}
+        const storedName = storageService.get("online_playerName");
+        if (storedName) {
+                playerName = storedName;
+        } else {
+                playerName = generateRandomPlayerName();
+                storageService.set("online_playerName", playerName);
+        }
   });
 
   function handleUpdateName(newName: string) {
-  	playerName = newName;
-  	if (playerName) {
-  		storageService.set("online_playerName", playerName);
-  		logService.ui(`[OnlinePage] Player name updated to: ${playerName}`);
-  	}
-  }
+        const result = PlayerNameSchema.safeParse(newName);
 
+        if (result.success) {
+                playerName = result.data;
+                nameError = false;
+                storageService.set("online_playerName", playerName);
+                logService.ui(`[OnlinePage] Player name updated to: ${playerName}`);
+        } else {
+                nameError = true;
+                logService.error(`[OnlinePage] Invalid player name: ${newName}`);
+        }
+  }
   function handleRandomName() {
     const newName = generateRandomPlayerName();
     handleUpdateName(newName);

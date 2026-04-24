@@ -58,6 +58,20 @@ const config = {
 		},
 		paths: {
 			base
+		},
+		csp: {
+			mode: 'hash',
+			directives: {
+				'default-src': ['self'],
+				'script-src': ['self', 'unsafe-inline', 'https://*.googleapis.com', 'https://apis.google.com', 'https://*.firebaseapp.com', 'https://www.googletagmanager.com'],
+				'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
+				'font-src': ['self', 'https://fonts.gstatic.com'],
+				'connect-src': ['self', 'http://localhost:*', 'ws://localhost:*', 'http://127.0.0.1:*', 'ws://127.0.0.1:*', 'https://*.googleapis.com', 'https://*.firebaseio.com', 'https://*.firebasedatabase.app', 'wss://*.firebasedatabase.app', 'https://*.google-analytics.com', 'https://stats.g.doubleclick.net'],
+				'img-src': ['self', 'data:', 'http://localhost:*', 'http://127.0.0.1:*', 'https://*.google-analytics.com', 'https://www.google-analytics.com', 'https://www.google.com'],
+				'object-src': ['none'],
+				'base-uri': ['self'],
+				'form-action': ['self']
+			}
 		}
 	}
 };
