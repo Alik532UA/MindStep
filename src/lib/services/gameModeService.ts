@@ -2,12 +2,12 @@ import { get } from 'svelte/store';
 import { gameState } from '$lib/stores/gameState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { gameModeState } from '$lib/stores/gameModeState.svelte';
-import { BaseGameMode } from '$lib/gameModes/BaseGameMode';
-import { TrainingGameMode } from '$lib/gameModes/TrainingGameMode';
-import { LocalGameMode } from '$lib/gameModes/LocalGameMode';
-import { TimedGameMode } from '$lib/gameModes/TimedGameMode';
-import { VirtualPlayerGameMode } from '$lib/gameModes/VirtualPlayerGameMode';
-import { OnlineGameMode } from '$lib/gameModes/OnlineGameMode'; // Import OnlineGameMode
+import { BaseGameMode } from '$lib/game-modes/BaseGameMode';
+import { TrainingGameMode } from '$lib/game-modes/TrainingGameMode';
+import { LocalGameMode } from '$lib/game-modes/LocalGameMode';
+import { TimedGameMode } from '$lib/game-modes/TimedGameMode';
+import { VirtualPlayerGameMode } from '$lib/game-modes/VirtualPlayerGameMode';
+import { OnlineGameMode } from '$lib/game-modes/OnlineGameMode'; // Import OnlineGameMode
 import { logService } from './logService';
 import { timerState } from '$lib/stores/timerState.svelte';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';

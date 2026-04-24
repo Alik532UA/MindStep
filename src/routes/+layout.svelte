@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Header from "./Header.svelte";
+	import Header from "$lib/components/layouts/Header.svelte";
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
 	import { versionState } from "$lib/stores/versionState.svelte";

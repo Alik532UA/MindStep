@@ -49,7 +49,7 @@
       class="qr-code-link"
     >
       <img
-        src="{base}/qrcode-monobank.svg"
+        src="{base}/svg/qrcode-monobank.svg"
         alt="Monobank QR Code"
         class="qr-code-image"
       />

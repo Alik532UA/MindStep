@@ -1,7 +1,7 @@
 <script lang="ts">
     import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
     import { logService } from "$lib/services/logService.js";
-    import { languages } from "$lib/constants";
+    import { languages } from "$lib/config/constants";
 
     interface Props {
         onClose: () => void;

@@ -1,7 +1,7 @@
 // src/lib/stores/gameState.svelte.ts
 // SSoT для стану гри (зберігає активний GameMode). Використовує Svelte 5 Runes.
 
-import type { BaseGameMode } from '$lib/gameModes/BaseGameMode';
+import type { BaseGameMode } from '$lib/game-modes/BaseGameMode';
 
 export interface GameStoreState {
     mode: BaseGameMode | null;

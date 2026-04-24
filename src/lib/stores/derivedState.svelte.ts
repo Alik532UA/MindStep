@@ -8,7 +8,7 @@ import { timerState } from './timerState.svelte';
 import { animationState } from './animationState.svelte';
 import { availableMovesState } from './availableMovesState.svelte';
 import { appSettingsState } from './appSettingsState.svelte';
-import { languages } from '$lib/constants';
+import { languages } from '$lib/config/constants';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { Move } from '$lib/utils/gameUtils';
 import { logService } from '$lib/services/logService';

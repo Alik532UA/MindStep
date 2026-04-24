@@ -18,7 +18,7 @@ const sfxPools: Record<string, HTMLAudioElement[]> = {};
 const getMusic = (): HTMLAudioElement | null => {
     if (typeof window === 'undefined') return null;
     if (!musicInstance) {
-        musicInstance = new Audio(`${base}/dont-push-the-horses.weba`);
+        musicInstance = new Audio(`${base}/audio/dont-push-the-horses.weba`);
         musicInstance.loop = true;
     }
     return musicInstance;

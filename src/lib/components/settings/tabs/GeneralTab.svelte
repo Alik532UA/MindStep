@@ -6,7 +6,7 @@
   import { t } from "$lib/i18n/typedI18n";
   import type { TranslationKey } from "$lib/types/i18n";
   import { locale } from "svelte-i18n";
-  import { languages } from "$lib/constants";
+  import { languages } from "$lib/config/constants";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import ToggleButton from "$lib/components/ToggleButton.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";
