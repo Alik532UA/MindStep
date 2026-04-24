@@ -5,6 +5,7 @@ import { getFirebaseApp } from '../firebaseService';
 import { logService } from "../logService.svelte";
 import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
+import { storageService } from '../storage';
 
 export interface UserProfile {
     uid: string;
@@ -14,16 +15,16 @@ export interface UserProfile {
 }
 
 const getInitialProfile = (): UserProfile => {
-    if (typeof localStorage === 'undefined') {
+    if (typeof window === 'undefined') {
         return { uid: 'local', displayName: null, bestTimeScore: 0, isAnonymous: true };
     }
-    const localName = localStorage.getItem('online_playerName');
+    const localName = storageService.get('online_playerName');
     const displayName = (localName === 'Player' || !localName) ? null : localName;
 
     return {
         uid: 'local',
         displayName: displayName,
-        bestTimeScore: parseInt(localStorage.getItem('local_best_time_score') || '0'),
+        bestTimeScore: parseInt(storageService.get('local_best_time_score') || '0'),
         isAnonymous: true
     };
 };
@@ -46,8 +47,8 @@ class UserProfileService {
         try {
             const snap = await getDoc(userRef);
 
-            const localBest = typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem('local_best_time_score') || '0') : 0;
-            const localNameRaw = typeof localStorage !== 'undefined' ? localStorage.getItem('online_playerName') : null;
+            const localBest = parseInt(storageService.get('local_best_time_score') || '0');
+            const localNameRaw = storageService.get('online_playerName');
             const localName = (localNameRaw === 'Player') ? null : localNameRaw;
 
             if (snap.exists()) {
@@ -64,11 +65,11 @@ class UserProfileService {
 
                 await setDoc(userRef, updates, { merge: true });
 
-                if (cloudBest > localBest && typeof localStorage !== 'undefined') {
-                    localStorage.setItem('local_best_time_score', cloudBest.toString());
+                if (cloudBest > localBest) {
+                    storageService.set('local_best_time_score', cloudBest.toString());
                 }
-                if (cloudName && typeof localStorage !== 'undefined') {
-                    localStorage.setItem('online_playerName', cloudName);
+                if (cloudName) {
+                    storageService.set('online_playerName', cloudName);
                 }
 
                 userProfileStore.set({
@@ -97,8 +98,8 @@ class UserProfileService {
             }
         } catch (e) {
             logService.error('[UserProfileService] Sync profile failed', e);
-            const localBest = typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem('local_best_time_score') || '0') : 0;
-            const localName = typeof localStorage !== 'undefined' ? localStorage.getItem('online_playerName') : null;
+            const localBest = parseInt(storageService.get('local_best_time_score') || '0');
+            const localName = storageService.get('online_playerName');
 
             userProfileStore.set({
                 uid: user.uid,
@@ -114,22 +115,15 @@ class UserProfileService {
 
         userProfileStore.update(s => s ? { ...s, displayName: nameToSave } : null);
 
-        if (typeof localStorage !== 'undefined') {
-            if (nameToSave) {
-                localStorage.setItem('online_playerName', nameToSave);
-            } else {
-                localStorage.removeItem('online_playerName');
-            }
+        if (nameToSave) {
+            storageService.set('online_playerName', nameToSave);
+        } else {
+            storageService.remove('online_playerName');
         }
 
         if (!currentUser) return;
 
         try {
-            // Note: updateProfile is an Auth function, so we might need to pass it or handle it in authService?
-            // Actually, updateProfile is from firebase/auth. It updates the Auth object.
-            // But we also update Firestore here. 
-            // Better design: separate Auth profile update from Firestore profile update.
-            // For now, let's keep it here but we need to import updateProfile.
             const { updateProfile } = await import('firebase/auth');
             await updateProfile(currentUser, { displayName: nameToSave });
 
@@ -147,11 +141,10 @@ class UserProfileService {
     }
 
     public clearLocalUserData() {
-        if (typeof localStorage === 'undefined') return;
         logService.init('[UserProfileService] Clearing local user data...');
-        localStorage.removeItem('local_best_time_score');
-        localStorage.removeItem('sotb_rewards');
-        localStorage.removeItem('online_playerName');
+        storageService.remove('local_best_time_score');
+        storageService.remove('sotb_rewards');
+        storageService.remove('online_playerName');
     }
 
     public resetLocalProfile() {

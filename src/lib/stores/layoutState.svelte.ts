@@ -1,53 +1,24 @@
-import { LayoutSchema } from '$lib/schemas/layoutSchema';
-import { logService } from "$lib/services/logService.svelte";
-
-export const WIDGETS = {
-    BOARD_HIDDEN_INFO: 'board-hidden-info',
-    TOP_ROW: 'game-board-top-row',
-    SCORE_PANEL: 'score-panel',
-    BOARD_WRAPPER: 'board-bg-wrapper',
-    CONTROLS_PANEL: 'game-controls-panel',
-    SETTINGS_EXPANDER: 'settings-expander',
-    GAME_INFO: 'game-info-widget',
-    PLAYER_TURN_INDICATOR: 'player-turn-indicator',
-    TIMER: 'timer-widget',
-    GAME_MODE: 'game-mode-widget',
-} as const;
-
-export type WidgetId = typeof WIDGETS[keyof typeof WIDGETS];
-
-export interface LayoutColumn {
-    id: string;
-    widgets: WidgetId[];
-}
-
-export type Layout = LayoutColumn[];
-
-export const defaultLayout: Layout = [
-    {
-        id: 'column-1',
-        widgets: [WIDGETS.TOP_ROW, WIDGETS.GAME_INFO, WIDGETS.PLAYER_TURN_INDICATOR, WIDGETS.BOARD_WRAPPER, WIDGETS.SCORE_PANEL],
-    },
-    {
-        id: 'column-2',
-        widgets: [WIDGETS.CONTROLS_PANEL],
-    },
-    {
-        id: 'column-3',
-        widgets: [WIDGETS.TIMER, WIDGETS.GAME_MODE, WIDGETS.SETTINGS_EXPANDER],
-    },
-];
+// src/lib/stores/layoutState.svelte.ts
+import { LayoutSchema, type Layout } from '$lib/schemas/layoutSchema';
+import { logService } from '$lib/services/logService.svelte';
+import { storageService } from '$lib/services/storage';
 
 const isBrowser = typeof window !== 'undefined';
+
+const defaultLayout: Layout = [
+    { id: 'left-menu', position: { x: 0, y: 0 }, isVisible: true },
+    { id: 'right-menu', position: { x: 0, y: 0 }, isVisible: true },
+    { id: 'center-info', position: { x: 0, y: 0 }, isVisible: true },
+    { id: 'game-board', position: { x: 0, y: 0 }, isVisible: true },
+];
 
 function loadLayout(): Layout {
     if (!isBrowser) return [...defaultLayout];
     try {
-        const savedLayout = localStorage.getItem('gameLayout');
+        const savedLayout = storageService.get('gameLayout');
         if (savedLayout) {
             const parsed = JSON.parse(savedLayout);
             const validation = LayoutSchema.safeParse(parsed);
-            
             if (validation.success) {
                 return validation.data;
             } else {
@@ -63,7 +34,7 @@ function loadLayout(): Layout {
 
 function saveLayout(layout: Layout): void {
     if (isBrowser) {
-        localStorage.setItem('gameLayout', JSON.stringify(layout));
+        storageService.set('gameLayout', JSON.stringify(layout));
     }
 }
 
@@ -71,38 +42,18 @@ class LayoutStateRune {
     private _state = $state<Layout>(loadLayout());
 
     get state() { return this._state; }
-    set state(value: Layout) { 
-        this._state = value;
-        this.sync();
-    }
 
-    update(fn: (s: Layout) => Layout) {
-        this._state = fn(this._state);
-        this.sync();
+    updateWidget(id: string, updates: Partial<Layout[0]>) {
+        this._state = this._state.map(w => 
+            w.id === id ? { ...w, ...updates } : w
+        );
+        saveLayout(this._state);
     }
 
     reset() {
         this._state = [...defaultLayout];
-        this.sync();
-    }
-
-    private sync() {
         saveLayout(this._state);
-        this.notifySubscribers();
-    }
-
-    // --- Bridge Support ---
-    private subscribers: Set<(s: Layout) => void> = new Set();
-
-    subscribe(fn: (s: Layout) => void): () => void {
-        fn(this._state);
-        this.subscribers.add(fn);
-        return () => this.subscribers.delete(fn);
-    }
-
-    private notifySubscribers() {
-        this.subscribers.forEach(fn => fn(this._state));
     }
 }
 
-export const layoutStateRune = new LayoutStateRune();
+export const layoutState = new LayoutStateRune();

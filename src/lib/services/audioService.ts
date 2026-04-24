@@ -4,6 +4,7 @@
 
 import { base } from '$app/paths';
 import { logService } from "./logService.svelte";
+import { storageService } from './storage';
 
 // --- Конфігурація ---
 const POOL_MAX_SIZE = 5; // Максимальна кількість однакових звуків, що можуть звучати одночасно
@@ -128,7 +129,7 @@ export const audioService = {
     // --- Налаштування ---
     loadVolume(): number {
         if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('expertModeVolume');
+            const saved = storageService.get('expertModeVolume');
             return saved !== null ? parseFloat(saved) : 0.3;
         }
         return 0.3;
@@ -136,7 +137,7 @@ export const audioService = {
 
     saveVolume(volume: number): void {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('expertModeVolume', String(volume));
+            storageService.set('expertModeVolume', String(volume));
         }
     },
 

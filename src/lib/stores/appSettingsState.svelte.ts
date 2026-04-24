@@ -1,10 +1,11 @@
 // src/lib/stores/appSettingsState.svelte.ts
 // SSoT для налаштувань додатку. Svelte 5 Runes.
-// localStorage-персистенція залишається в bridge-шарі.
+// localStorage-персистенція залишається в bridge-шарі (storageService).
 
 import { AppSettingsSchema, type AppSettings } from '$lib/schemas/appSettingsSchema';
 import { logService } from "$lib/services/logService.svelte";
 import { debounce } from '$lib/utils/debounce';
+import { storageService } from '$lib/services/storage';
 
 export type AppSettingsState = AppSettings;
 
@@ -20,9 +21,9 @@ function loadAppSettings(): AppSettingsState {
     if (!isBrowser) return defaultAppSettings;
     try {
         const rawSettings: Record<string, string | null> = {
-            theme: localStorage.getItem('theme'),
-            style: localStorage.getItem('style'),
-            language: localStorage.getItem('language'),
+            theme: storageService.get('theme'),
+            style: storageService.get('style'),
+            language: storageService.get('language'),
         };
 
         const filteredSettings = Object.fromEntries(
@@ -44,9 +45,9 @@ function loadAppSettings(): AppSettingsState {
 
 function saveAppSettings(settings: AppSettingsState) {
     if (!isBrowser) return;
-    localStorage.setItem('theme', settings.theme);
-    localStorage.setItem('style', settings.style);
-    localStorage.setItem('language', settings.language);
+    storageService.set('theme', settings.theme);
+    storageService.set('style', settings.style);
+    storageService.set('language', settings.language);
 }
 
 const debouncedSave = debounce(saveAppSettings, 300);

@@ -43,6 +43,9 @@
 
 	import { untrack } from "svelte";
 
+	import { storageService } from "$lib/services/storage.ts";
+	import { migrateStorage } from "$lib/services/storageMigration";
+
 	interface Props {
 		children?: import("svelte").Snippet;
 	}
@@ -56,6 +59,9 @@
 	let unsubscribeTestMode: () => void;
 
 	onMount(() => {
+		// Міграція старого сховища до нової системи з префіксами
+		migrateStorage();
+
 		// Centralized initialization
 		appInitializationService.initialize();
 		errorHandlerService.initGlobalHandlers();
@@ -75,7 +81,7 @@
 
 		// Subscribe to version changes to show update notice
 		const unsubscribeVersion = versionState.subscribe((versionInfo) => {
-			const localVersion = localStorage.getItem(APP_VERSION_KEY);
+			const localVersion = storageService.get(APP_VERSION_KEY);
 			if (
 				versionInfo.current &&
 				localVersion &&

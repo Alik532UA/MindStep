@@ -12,22 +12,24 @@
 
   let playerName = "";
 
+  import { storageService } from "$lib/services/storage";
+
   onMount(() => {
-    const storedName = localStorage.getItem("online_playerName");
-    if (storedName) {
-      playerName = storedName;
-    } else {
-      playerName = generateRandomPlayerName();
-      localStorage.setItem("online_playerName", playerName);
-    }
+  	const storedName = storageService.get("online_playerName");
+  	if (storedName) {
+  		playerName = storedName;
+  	} else {
+  		playerName = generateRandomPlayerName();
+  		storageService.set("online_playerName", playerName);
+  	}
   });
 
-  function handleNameChange(newName: string) {
-    playerName = newName;
-    if (playerName) {
-      localStorage.setItem("online_playerName", playerName);
-      logService.ui(`[OnlinePage] Player name updated to: ${playerName}`);
-    }
+  function handleUpdateName(newName: string) {
+  	playerName = newName;
+  	if (playerName) {
+  		storageService.set("online_playerName", playerName);
+  		logService.ui(`[OnlinePage] Player name updated to: ${playerName}`);
+  	}
   }
 
   function openCreateRoomModal() {

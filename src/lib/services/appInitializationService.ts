@@ -12,6 +12,7 @@ import { get } from "svelte/store";
 import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
 import { uiState } from "$lib/stores/uiState.svelte";
+import { storageService } from "$lib/services/storage";
 
 import { urlSyncService } from "$lib/services/urlSyncService";
 
@@ -116,7 +117,7 @@ class AppInitializationService {
             const serverVersion = serverVersionData.version;
             const minVersion = serverVersionData.minVersion;
             
-            const localVersion = localStorage.getItem(APP_VERSION_KEY);
+            const localVersion = storageService.get(APP_VERSION_KEY);
             
             versionState.setVersion(serverVersion);
             if (minVersion) versionState.setMinVersion(minVersion);
@@ -131,7 +132,7 @@ class AppInitializationService {
                     await this.performHardReload();
                 }
             } else if (!localVersion) {
-                localStorage.setItem(APP_VERSION_KEY, serverVersion);
+                storageService.set(APP_VERSION_KEY, serverVersion);
             }
         } catch (error) {
             logService.error("Failed to check for app update:", error);
@@ -180,7 +181,7 @@ class AppInitializationService {
             // 3. Update local version to prevent loop
             const currentVersion = versionState.state.current;
             if (currentVersion) {
-                localStorage.setItem(APP_VERSION_KEY, currentVersion);
+                storageService.set(APP_VERSION_KEY, currentVersion);
             }
 
             // 4. Force reload with cache-buster
