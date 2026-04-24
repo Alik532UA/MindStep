@@ -2,6 +2,7 @@
 import { register, init, getLocaleFromNavigator, locale } from 'svelte-i18n';
 import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
 import { get, writable } from 'svelte/store';
+import { logService } from '$lib/services/logService.svelte';
 
 export const i18nReady = writable(false);
 
@@ -28,9 +29,9 @@ export function initializeI18n() {
     });
 
     i18nReady.set(true);
-    console.log('✅ i18n initialized successfully');
+    logService.init('✅ i18n initialized successfully');
   } catch (error) {
-    console.error('❌ Error initializing i18n:', error);
+    logService.error('❌ Error initializing i18n:', error);
     // Even on error, set ready to avoid UI freeze
     i18nReady.set(true);
   }

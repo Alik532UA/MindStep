@@ -20,10 +20,11 @@ export class LobbyController {
     get amIHost() { return this.room?.hostId === this.myPlayerId; }
     get myName() { return this.room?.players[this.myPlayerId || '']?.name || ''; }
     get myPlayer() { return this.room?.players[this.myPlayerId || '']; }
-    get playersList() { return Object.values(this.room?.players || {}); }
+    get playersList(): OnlinePlayer[] { return Object.values(this.room?.players || {}); }
     get canEditSettings() { return this.amIHost && this.room?.status === 'waiting'; }
 
     async initialize(roomId: string) {
+        this.cleanup(); // Гарантоване очищення перед новим стартом
         logService.init(`[LobbyController] Initializing lobby for room: ${roomId}`);
         this.isLoading = true;
         this.error = null;

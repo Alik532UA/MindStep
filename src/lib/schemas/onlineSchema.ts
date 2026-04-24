@@ -46,7 +46,7 @@ export const RoomSchema = z.object({
     gameState: z.any().nullable(),
     players: z.any(), // Радикально!
     settings: z.any(), // Радикально!
-    maxPlayers: z.any()
+    maxPlayers: z.any().optional()
 }).passthrough();
 
 export const RoomSummarySchema = z.object({

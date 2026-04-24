@@ -110,7 +110,7 @@
 						registration.active &&
 						registration.active.scriptURL.endsWith("/sw.js")
 					) {
-						console.log(
+						logService.init(
 							"[Layout] Unregistering old sw.js service worker",
 						);
 						registration.unregister().then(() => {

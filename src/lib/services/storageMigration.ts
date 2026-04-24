@@ -3,6 +3,7 @@
  * Переносить старі дані (без префікса) у нову систему з префіксом mindstep_.
  */
 import { storageService } from './storage';
+import { logService } from './logService.svelte';
 
 const PREFIX = 'mindstep_';
 const MIGRATION_KEY = 'migrated_to_v5';
@@ -13,7 +14,7 @@ export function migrateStorage(): void {
     // Якщо міграція вже була проведена, нічого не робимо
     if (storageService.get(MIGRATION_KEY)) return;
 
-    console.log('[StorageMigration] Starting migration to prefixed storage...');
+    logService.init('[StorageMigration] Starting migration to prefixed storage...');
 
     // Карта старих ключів та їх нових назв
     const mapping: Record<string, string> = {
@@ -36,10 +37,10 @@ export function migrateStorage(): void {
             storageService.set(newKey, value);
             // Видаляємо старий ключ, щоб очистити глобальний простір
             localStorage.removeItem(oldKey);
-            console.log(`[StorageMigration] Migrated: ${oldKey} -> ${PREFIX}${newKey}`);
+            logService.init(`[StorageMigration] Migrated: ${oldKey} -> ${PREFIX}${newKey}`);
         }
     }
 
     storageService.set(MIGRATION_KEY, 'true');
-    console.log('[StorageMigration] Migration completed successfully.');
+    logService.init('[StorageMigration] Migration completed successfully.');
 }
