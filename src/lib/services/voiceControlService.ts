@@ -18,19 +18,23 @@ class VoiceControlService {
   private animationFrameId: number | null = null;
 
   constructor() {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (typeof window === 'undefined') return;
+    
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognitionAPI) {
       this.isSupported = true;
-      this.recognition = new SpeechRecognitionAPI();
-      this.recognition.continuous = false;
-      this.recognition.lang = 'uk-UA'; // Default language
-      this.recognition.interimResults = false;
-      this.recognition.maxAlternatives = 1;
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.lang = 'uk-UA'; // Default language
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-      this.recognition.onresult = this.handleResult.bind(this);
-      this.recognition.onerror = this.handleError.bind(this);
-      this.recognition.onend = this.handleEnd.bind(this);
-      this.recognition.onstart = this.handleStart.bind(this);
+      recognition.onresult = this.handleResult.bind(this);
+      recognition.onerror = this.handleError.bind(this);
+      recognition.onend = this.handleEnd.bind(this);
+      recognition.onstart = this.handleStart.bind(this);
+
+      this.recognition = recognition;
     } else {
       logService.voiceControl('[VoiceControlService] SpeechRecognition API not supported.');
     }

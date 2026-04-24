@@ -14,11 +14,12 @@ export default {
   info: "Instructies",
   details: "Details",
   infoModalTitle: "Over het spel en het doel",
-  infoModalContent: `Je doel is om beurten het gedeelde stuk te verplaatsen zonder van het bord te gaan.\n\n<b>Pro-modus: Train je verbeelding</b>\nHet echte plezier begint wanneer je het bord in je hoofd verplaatst. Probeer het bord in de instellingen uit te schakelen, voice-over aan te zetten en geblinddoekt te spelen met sneltoetsen. Dit maakt van het spel een <a href='https://youtube.com/shorts/_4n1F84wORI' target='_blank' rel='noopener noreferrer' style='color:inherit;text-decoration:none;'>krachtige</a> trainer voor geheugen en ruimtelijk inzicht. Begin met een 3x3 bord en maak het steeds moeilijker!`,
+  infoModalContent: `Je doel is om beurten het gedeelde stuk te verplaatsen zonder van het bord te gaan.\n\n<b>Pro-modus: Train je verbeelding</b>\nHet echte plezier begint wanneer je het bord in je hoofd verplaatst. Probeer het bord in de instellingen uit te schakelen, voice-over aan te zetten en geblinddoekt te spelen met sneltoetsen. Dit maakt van het spel een <a href='https://youtube.com/shorts/_4n1F84wORI' target='_blank' rel='noopener noreferrer' style='color:inherit;text-decoration:none;'>krachtige</a> trainer voor geheugen and ruimtelijk inzicht. Begin met een 3x3 bord en maak het steeds moeilijker!`, 
   clearCache: "Cache wissen (DEV)",
   gameInfo: {
     gameStarted: "Spel gestart!\nDoe je zet",
     firstMove: "Spel gestart!\nJouw beurt om een zet te doen",
+    yourTurnToMakeAMove: "Jouw beurt om een zet te doen",
     opponentTurn: "Beurt van tegenstander",
     rememberPieceLocation: "Onthoud waar het stuk is!",
     gameResumed: "Spel hervat, het stuk staat op dezelfde positie als voor de pauze.\nJouw beurt om te zetten",

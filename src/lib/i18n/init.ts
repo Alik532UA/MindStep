@@ -1,4 +1,4 @@
-// svelte-app/src/lib/i18n/init.js
+// src/lib/i18n/init.ts
 import { register, init, getLocaleFromNavigator, locale } from 'svelte-i18n';
 import { appSettingsState } from '$lib/stores/appSettingsState.svelte';
 import { get, writable } from 'svelte/store';
@@ -7,13 +7,16 @@ import { logService } from '$lib/services/logService.svelte';
 export const i18nReady = writable(false);
 
 // Register all languages
-register('en', () => import('./en.js'));
-register('uk', () => import('./uk.js'));
-register('crh', () => import('./crh.js'));
-register('nl', () => import('./nl.js'));
+register('en', () => import('./en.ts'));
+register('uk', () => import('./uk.ts'));
+register('crh', () => import('./crh.ts'));
+register('nl', () => import('./nl.ts'));
 
-// This function will be called on the client side
-export function initializeI18n() {
+/**
+ * Initializes the i18n system.
+ * This function should be called on the client side.
+ */
+export function initializeI18n(): void {
   try {
     const initialLocale = appSettingsState.state.language || getLocaleFromNavigator() || 'uk';
 

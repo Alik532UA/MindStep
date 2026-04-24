@@ -1,8 +1,11 @@
 export default {
   title: "Online Lobby",
+  activeRooms: "Active Rooms",
   createRoom: "Create Room",
   refresh: "Refresh",
   roomName: "Room Name",
+  boardSize: "Board Size",
+  turnDuration: "Turn Duration",
   status: "Status",
   players: "Players",
   action: "Action",
@@ -62,6 +65,7 @@ export default {
   reconnecting: "Player is attempting to reconnect. If they don't return, the game will end or they will be removed.",
   leaveRoom: "Leave Game",
   playerDisconnected: "{name} has been removed from the game.",
+  globalChat: "Global Chat",
   abandonedGame: {
     title: "Abandoned Online Game",
     message: "You have left an active game. Do you want to return or leave it permanently?",

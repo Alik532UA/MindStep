@@ -25,11 +25,11 @@ export function syncGameModeLogic(currentSettings: GameSettingsState, uiState: U
     const isOnlineContext = intendedGameType === 'online';
 
     // Блокуємо синхронізацію, якщо пресет не відповідає контексту
-    if (currentSettings.gameMode) {
+    if (currentSettings.gameMode && intendedGameType) {
         const isVp = intendedGameType === 'virtual-player';
         const expectedPrefix = isVp ? 'virtual-player' : intendedGameType;
         
-        if (!currentSettings.gameMode.startsWith(expectedPrefix)) {
+        if (expectedPrefix && !currentSettings.gameMode.startsWith(expectedPrefix)) {
              // Перевіряємо лише якщо це один з основних типів
              const knownPrefixes = ['local', 'virtual-player', 'online'];
              if (knownPrefixes.some(p => currentSettings.gameMode?.startsWith(p))) {

@@ -1,8 +1,11 @@
 export default {
   title: "Online Lobby",
+  activeRooms: "Actieve Kamers",
   createRoom: "Kamer Maken",
   refresh: "Verversen",
   roomName: "Kamernaam",
+  boardSize: "Bordgrootte",
+  turnDuration: "Beurttijd",
   status: "Status",
   players: "Spelers",
   action: "Actie",
@@ -10,9 +13,7 @@ export default {
   waiting: "Wachten",
   playing: "Spelen",
   finished: "Voltooid",
-  // FIX
   noRooms: "Geen kamers gevonden.{lastInfo}",
-  // FIX
   createFirst: " Maak de eerste!",
   lastRoomTime: "De laatste kamer was {time}",
   timeUnits: {
@@ -62,6 +63,7 @@ export default {
   reconnecting: "Speler probeert opnieuw verbinding te maken. Als ze niet terugkeren, wordt het spel beëindigd of worden ze verwijderd.",
   leaveRoom: "Spel verlaten",
   playerDisconnected: "{name} is uit het spel verwijderd.",
+  globalChat: "Globale chat",
   abandonedGame: {
     title: "Verlaten Online Spel",
     message: "Je hebt een actief spel verlaten. Wil je terugkeren of het definitief verlaten?",

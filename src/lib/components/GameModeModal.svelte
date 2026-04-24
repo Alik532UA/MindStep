@@ -10,6 +10,10 @@
   import GameModeButton from "./game-modes/GameModeButton.svelte";
   import NotoEmoji from "./NotoEmoji.svelte";
 
+  import { showGameInfoModal } from "$lib/utils/uiHelpers";
+
+  import { uiState } from "$lib/stores/uiState.svelte";
+
   interface Props {
     extended?: boolean;
   }
@@ -20,6 +24,7 @@
 
   async function handleOnlineGame() {
     logService.ui("Online Game selected from modal");
+    uiState.update(s => ({ ...s, intendedGameType: 'online' }));
     modalStateRune.closeModal();
     await goto(`${base}/online`);
   }
@@ -27,12 +32,25 @@
   function selectMode(mode: string) {
     logService.ui(`Mode selected: ${mode}`);
     gameSettingsState.applyPreset(mode as any);
-    modalStateRune.closeModal();
-    goto(`${base}/game/virtual-player`);
+    
+    // Встановлюємо тип гри для правильної маршрутизації в uiService
+    const gameType = (mode === 'timed' || mode === 'virtual-player-timed') 
+      ? 'timed' 
+      : 'virtual-player';
+      
+    uiState.update(s => ({ ...s, intendedGameType: gameType }));
+
+    if (mode === 'beginner') {
+      showGameInfoModal();
+    } else {
+      modalStateRune.closeModal();
+      goto(`${base}/game/virtual-player`);
+    }
   }
 
   function handleLocalGame() {
     logService.ui("Local Game selected");
+    uiState.update(s => ({ ...s, intendedGameType: 'local' }));
     localGameController.init("GameModeModal");
     modalStateRune.closeModal();
     goto(`${base}/local`);

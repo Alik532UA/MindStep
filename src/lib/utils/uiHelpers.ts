@@ -1,14 +1,13 @@
 import { modalStateRune } from '$lib/stores/modalState.svelte';
 import { logService } from "$lib/services/logService.svelte";
-import { clearCache } from '$lib/utils/cacheManager.js';
+import { clearCache } from '$lib/utils/cacheManager';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
 import GameModeModal from '$lib/components/GameModeModal.svelte';
 import FAQModal from '$lib/components/FAQModal.svelte';
 import SimpleModalContent from '$lib/components/modals/SimpleModalContent.svelte';
 
-
-export function showGameModeSelector() {
+export function showGameModeSelector(): void {
   modalStateRune.showModal({
     dataTestId: 'game-mode-modal',
     component: GameModeModal,
@@ -18,24 +17,18 @@ export function showGameModeSelector() {
   });
 }
 
-export function showGameInfoModal() {
+export function showGameInfoModal(): void {
   modalStateRune.showModal({
     dataTestId: 'faq-modal',
     component: FAQModal,
     variant: 'menu',
     buttons: [],
     closeOnOverlayClick: true,
-    props: {
-      onOk: () => modalStateRune.closeModal(),
-      onRules: () => {
-        goto(`${base}/rules`);
-        modalStateRune.closeModal();
-      }
-    }
+    props: {} // Дозволяємо FAQModal використовувати його нативні onOk та onRules
   });
 }
 
-export function showClearCacheModal() {
+export function showClearCacheModal(): void {
   modalStateRune.showModal({
     component: SimpleModalContent,
     variant: 'menu',
@@ -73,4 +66,3 @@ export function showClearCacheModal() {
     }
   });
 }
-

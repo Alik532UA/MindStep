@@ -1,4 +1,4 @@
-// src/lib/i18n/crh/rewards.js
+// src/lib/i18n/crh/rewards.ts
 export default {
     pageTitle: "Mukâfatlar",
     unlockedOn: "Açıldı: {date}",
@@ -11,6 +11,14 @@ export default {
     score11Timed: {
         title: "Sprinter",
         description: "'Vaqıtlı' rejimde 11 puan toplamaq."
+    },
+    score111Timed: {
+        title: "111 балл",
+        description: "Vaqıtlı oyunda 111 балл topladıñız"
+    },
+    score532Timed: {
+        title: "532 балл",
+        description: "Vaqıtlı oyunda 532 балл topladıñız"
     },
     score5Local: {
         title: "Dostluq oyunı",

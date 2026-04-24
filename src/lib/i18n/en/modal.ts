@@ -17,6 +17,7 @@ export default {
   playAgain: "Play Again",
   continueGame: "Continue",
   playerScores: "Player scores",
+  waitingForPlayers: "Waiting for other players...",
   leaveLobby: "Leave Lobby",
   finishGameWithBonus: "Finish (+{bonus} points)",
   keyConflictTitle: "Key Choice",

@@ -1,36 +1,33 @@
-import { derived } from 'svelte/store';
+import { derived, type Readable } from 'svelte/store';
 
-/**
- * @param {import('svelte/store').Readable<any>} replayState
- */
-export const replayPosition = (replayState) => derived(
+export interface ReplayState {
+  isReplayMode: boolean;
+  replayCurrentStep: number;
+  moveHistory: Array<{
+    pos: { row: number; col: number };
+    visits: Record<string, number>;
+    blockModeEnabled: boolean;
+  }>;
+  boardSize: number;
+  limitReplayPath: boolean;
+}
+
+export const replayPosition = (replayState: Readable<ReplayState>) => derived(
   replayState,
-  /** @param {any} $replayState */
   ($replayState) => {
     if (!$replayState.isReplayMode) return null;
     
-    // Використовуємо Math.min, щоб replayCurrentStep ніколи не виходив
-    // за межі масиву moveHistory. Це гарантує, що ми завжди
-    // отримуємо валідний запис, навіть на останньому кроці анімації.
     const historyIndex = Math.min($replayState.replayCurrentStep, $replayState.moveHistory.length - 1);
-    
     return $replayState.moveHistory[historyIndex]?.pos;
   }
 );
 
-/**
- * @param {import('svelte/store').Readable<any>} replayState
- */
-export const replayCellVisitCounts = (replayState) => derived(
+export const replayCellVisitCounts = (replayState: Readable<ReplayState>) => derived(
   replayState,
-  /** @param {any} $replayState */
   ($replayState) => {
     if (!$replayState.isReplayMode) return {};
     
-    // Визначаємо індекс запису в історії, який потрібно відобразити.
-    // Якщо поточний крок виходить за межі, використовуємо останній доступний запис.
     const historyIndex = Math.min($replayState.replayCurrentStep, $replayState.moveHistory.length - 1);
-    
     const currentHistoryEntry = $replayState.moveHistory[historyIndex];
     
     if (currentHistoryEntry && currentHistoryEntry.blockModeEnabled === false) {
@@ -41,18 +38,23 @@ export const replayCellVisitCounts = (replayState) => derived(
   }
 );
 
-/**
- * @param {import('svelte/store').Readable<any>} replayState
- */
-export const replaySegments = (replayState) => derived(
+export interface ReplaySegment {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  color: string;
+  opacity: number;
+}
+
+export const replaySegments = (replayState: Readable<ReplayState>) => derived(
   replayState,
-  /** @param {any} $replayState */
   ($replayState) => {
     if (!$replayState.isReplayMode || $replayState.moveHistory.length < 2) {
       return [];
     }
 
-    const segments = [];
+    const segments: ReplaySegment[] = [];
     const history = $replayState.moveHistory;
     const totalSteps = history.length - 1;
     const cellSize = 100 / $replayState.boardSize;
@@ -94,22 +96,13 @@ export const replaySegments = (replayState) => derived(
   }
 );
 
-/**
- * @param {import('svelte/store').Readable<any>} replayState
- */
-export const replayBlockModeEnabled = (replayState) => derived(
+export const replayBlockModeEnabled = (replayState: Readable<ReplayState>) => derived(
   replayState,
-  /** @param {any} $replayState */
   ($replayState) => {
     if (!$replayState.isReplayMode) return false;
     
-    // Визначаємо індекс запису в історії, який потрібно відобразити.
-    // Якщо поточний крок виходить за межі, використовуємо останній доступний запис.
     const historyIndex = Math.min($replayState.replayCurrentStep, $replayState.moveHistory.length - 1);
-    
     const currentEntry = $replayState.moveHistory[historyIndex];
-    // Повертаємо збережений стан режиму блокування для поточного кроку,
-    // або false за замовчуванням.
     return currentEntry?.blockModeEnabled ?? false;
   }
 ); 

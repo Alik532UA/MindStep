@@ -1,8 +1,11 @@
 export default {
   title: "Онлайн Лобі",
+  activeRooms: "Активні кімнати",
   createRoom: "Створити кімнату",
   refresh: "Оновити",
   roomName: "Назва кімнати",
+  boardSize: "Розмір дошки",
+  turnDuration: "Час на хід",
   status: "Статус",
   players: "Гравці",
   action: "Дія",

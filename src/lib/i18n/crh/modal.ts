@@ -17,6 +17,7 @@ export default {
   playAgain: "Kene oyna",
   continueGame: "Devam et",
   playerScores: "Oyuncılarnıñ esapları",
+  waitingForPlayers: "Digeryer oyunçılar beklenile...",
   leaveLobby: "Lobbi Terva Etmek",
   finishGameWithBonus: "Bitir (+{bonus} bal)",
   keyConflictTitle: "Düğme seçimi",

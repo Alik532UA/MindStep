@@ -9,6 +9,7 @@
     import { getFirestoreDb } from "$lib/services/firebaseService";
     import { authService } from "$lib/services/authService";
     import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
     import { logService } from "$lib/services/logService.svelte";
     import { v4 as uuidv4 } from 'uuid';
     import type { TranslationKey } from "$lib/types/i18n";
@@ -39,7 +40,7 @@
         try {
             const roomId = await roomService.createRoom(playerName, false, roomName);
             modalStateRune.closeModal();
-            goto(`/online/lobby/${roomId}`);
+            goto(`${base}/online/lobby/${roomId}`);
         } catch (e) {
             logService.error("[CreateRoomModal] Failed to create room:", e);
         } finally {
@@ -49,15 +50,15 @@
 </script>
 
 <div class="create-room-form">
-    <h2>{$t("onlineMenu.createRoom" as TranslationKey)}</h2>
+    <h2>{$t("onlineMenu.createRoomTitle")}</h2>
     
     <div class="field">
-        <label for="room-name">{$t("onlineMenu.roomName" as TranslationKey)}</label>
+        <label for="room-name">{$t("onlineMenu.roomName")}</label>
         <EditableText 
             bind:value={roomName} 
             onRandom={handleRandomRoomName}
             onchange={(v) => roomName = v}
-            placeholder={$t("onlineMenu.enterRoomNamePlaceholder" as TranslationKey)}
+            placeholder={$t("onlineMenu.roomNamePlaceholder")}
             dataTestId="room-name-input"
         />
     </div>
@@ -69,7 +70,7 @@
             disabled={isCreating || !roomName}
             dataTestId="create-room-confirm-btn"
         >
-            {isCreating ? $t("ui.creating" as TranslationKey) : $t("ui.create" as TranslationKey)}
+            {isCreating ? $t("common.loading") : $t("onlineMenu.create")}
         </StyledButton>
     </div>
 </div>

@@ -1,5 +1,5 @@
 // src/lib/types/i18n.ts
-import en from '../i18n/en.js';
+import type { TranslationSchema } from '../i18n/translationSchema';
 
 type Join<K, P> = K extends string | number ?
     P extends string | number ?
@@ -14,7 +14,7 @@ export type Paths<T, D extends number = 10> = [D] extends [never] ? never : T ex
         : never
     }[keyof T] : ""
 
-export type TranslationKey = Paths<typeof en>;
+export type TranslationKey = Paths<TranslationSchema>;
 
 /**
  * Приклад використання:

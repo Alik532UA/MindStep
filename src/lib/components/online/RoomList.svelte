@@ -1,17 +1,18 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { collection, query, where, getDocs, limit, orderBy } from "firebase/firestore";
-    import { getFirestoreDb } from "$lib/services/firebaseService";
-    import { type RoomSummary, RoomSummarySchema } from "$lib/schemas/onlineSchema";
-    import StyledButton from "$lib/components/ui/StyledButton.svelte";
-    import { goto } from "$app/navigation";
     import { t } from "$lib/i18n/typedI18n";
-    import { logService } from "$lib/services/logService.svelte";
-    import { storageService } from "$lib/services/storage";
-    import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
-    import type { TranslationKey } from "$lib/types/i18n";
-
     import { roomService } from "$lib/services/roomService";
+    import StyledButton from "$lib/components/ui/StyledButton.svelte";
+    import { logService } from "$lib/services/logService.svelte";
+    import type { RoomSummary } from "$lib/types/online";
+    import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
+
+    interface Props {
+        playerName: string;
+    }
+
+    let { playerName }: Props = $props();
 
     let rooms = $state<RoomSummary[]>([]);
     let isLoading = $state(true);
@@ -19,58 +20,23 @@
 
     async function fetchRooms() {
         isLoading = true;
-        const db = getFirestoreDb();
-        const q = query(
-            collection(db, "rooms"),
-            where("status", "==", "waiting"),
-            orderBy("createdAt", "desc"),
-            limit(20)
-        );
-
         try {
-            const snap = await getDocs(q);
-            rooms = snap.docs.map(doc => {
-                const data = doc.data();
-                if (!data) return null;
-
-                // Валідуємо лише те, що потрібно для списку
-                const summaryData = {
-                    id: doc.id,
-                    name: data.name || 'Unnamed Room',
-                    status: data.status || 'waiting',
-                    playerCount: data.players ? Object.keys(data.players).length : 0,
-                    maxPlayers: data.maxPlayers || 2,
-                    isPrivate: !!data.isPrivate
-                };
-
-                const validation = RoomSummarySchema.safeParse(summaryData);
-                if (!validation.success) {
-                    logService.error(`[RoomList] Validation failed for room ${doc.id}:`, validation.error.format());
-                    return null;
-                }
-                return validation.data;
-            }).filter(r => r !== null) as RoomSummary[];
-        } catch (e) {
-            logService.error("[RoomList] Failed to fetch rooms:", e);
+            const result = await roomService.getPublicRooms();
+            rooms = result.rooms;
+        } catch (error) {
+            logService.error("Failed to fetch rooms:", error);
         } finally {
             isLoading = false;
         }
     }
 
     async function handleJoin(roomId: string) {
-        let playerName = storageService.get("online_playerName");
-        if (!playerName) {
-            playerName = generateRandomPlayerName();
-            storageService.set("online_playerName", playerName);
-        }
-        
         isJoining = roomId;
         try {
             await roomService.joinRoom(roomId, playerName);
-            goto(`/online/lobby/${roomId}`);
-        } catch (e) {
-            logService.error("[RoomList] Failed to join room:", e);
-            // Можна додати сповіщення користувачу
+            await goto(`${base}/online/lobby/${roomId}`);
+        } catch (error) {
+            logService.error("Failed to join room:", error);
         } finally {
             isJoining = null;
         }
@@ -83,16 +49,16 @@
 
 <div class="room-list-container">
     <div class="list-header">
-        <h2>{$t("onlineMenu.activeRooms" as TranslationKey)}</h2>
+        <h2>{$t("onlineMenu.activeRooms")}</h2>
         <StyledButton variant="info" size="small" onclick={fetchRooms} dataTestId="refresh-rooms-btn">
-            {$t("ui.refresh" as TranslationKey)}
+            {$t("onlineMenu.refresh")}
         </StyledButton>
     </div>
 
     {#if isLoading}
-        <div class="loading">{$t("ui.loading" as TranslationKey)}...</div>
+        <div class="loading">{$t("common.loading")}...</div>
     {:else if rooms.length === 0}
-        <div class="empty-state">{$t("onlineMenu.noRoomsFound" as TranslationKey)}</div>
+        <div class="empty-state">{$t("onlineMenu.noRooms", { lastInfo: "" })}</div>
     {:else}
         <div class="rooms-grid">
             {#each rooms as room}
@@ -108,7 +74,7 @@
                         disabled={isJoining !== null}
                         dataTestId="join-room-btn-{room.id}"
                     >
-                        {isJoining === room.id ? $t("ui.loading" as TranslationKey) : $t("onlineMenu.join" as TranslationKey)}
+                        {isJoining === room.id ? $t("common.loading") : $t("onlineMenu.join")}
                     </StyledButton>
                 </div>
             {/each}

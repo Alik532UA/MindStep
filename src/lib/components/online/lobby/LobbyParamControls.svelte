@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { t } from "$lib/i18n/typedI18n";
     import type { Room } from "$lib/types/online";
     import Stepper from "$lib/components/ui/Stepper.svelte";
 
@@ -36,7 +37,7 @@
 
 <div class="group-box">
     <div class="setting-row">
-        <span class="label">Розмір</span>
+        <span class="label">{$t("onlineMenu.boardSize")}</span>
         <!-- FIX: Використовуємо Stepper замість ручної розмітки -->
         <Stepper
             value={room.settings.boardSize}
@@ -53,7 +54,7 @@
     </div>
 
     <div class="setting-row">
-        <span class="label">Час (сек)</span>
+        <span class="label">{$t("onlineMenu.turnDuration")}</span>
         <Stepper
             value={room.settings.turnDuration || 30}
             disabled={!canEditSettings}

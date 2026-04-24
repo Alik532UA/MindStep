@@ -12,6 +12,14 @@ export default {
         title: "Sprinter",
         description: "Score 11 points in 'Timed' mode."
     },
+    score111Timed: {
+        title: "Sprinter",
+        description: "Score 111 points in 'Timed' mode."
+    },
+    score532Timed: {
+        title: "Alik",
+        description: "Score 532 points in 'Timed' mode."
+    },
     score5Local: {
         title: "Friendly Game",
         description: "Score 5 points in a local game."

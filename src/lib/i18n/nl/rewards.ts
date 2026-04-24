@@ -1,4 +1,4 @@
-// src/lib/i18n/nl/rewards.js
+// src/lib/i18n/nl/rewards.ts
 export default {
     pageTitle: "Beloningen",
     unlockedOn: "Ontgrendeld: {date}",
@@ -11,6 +11,14 @@ export default {
     score11Timed: {
         title: "Sprinter",
         description: "Scoor 11 punten in 'Tijd'-modus."
+    },
+    score111Timed: {
+        title: "111 punten",
+        description: "Je hebt 111 punten behaald in de tijdmodus"
+    },
+    score532Timed: {
+        title: "532 punten",
+        description: "Je hebt 532 punten behaald in de tijdmodus"
     },
     score5Local: {
         title: "Vriendschappelijk Spel",

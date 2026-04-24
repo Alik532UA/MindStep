@@ -93,7 +93,7 @@
       </div>
     </div>
 
-    <RoomList />
+    <RoomList {playerName} />
   </div>
 </div>
 

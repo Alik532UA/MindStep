@@ -1,8 +1,11 @@
 export default {
   title: "Onlayn Menyu",
+  activeRooms: "Faal Odalar",
   createRoom: "Oda Yaratmaq",
   refresh: "Yañılamak",
   roomName: "Oda Adı",
+  boardSize: "Tahta ölçüsi",
+  turnDuration: "Nevbet vaqtı",
   status: "Status",
   players: "Oyunçılar",
   action: "Areket",
@@ -62,6 +65,7 @@ export default {
   reconnecting: "Oyunçı kene bağlanmağa tırışa. Eger o qaytmasa, oyun bitirilecek ya da o çıqarılacaq.",
   leaveRoom: "Oyundan çıqmaq",
   playerDisconnected: "{name} oyundan çıqarıldı.",
+  globalChat: "Umumiy sohbet",
   abandonedGame: {
     title: "Qaldırılğan Onlayn Oyun",
     message: "Faal oyunnı terk ettiñiz. Keri qaytmağa isteysiñizmi ya da onı temelli terk etesizmi?",
