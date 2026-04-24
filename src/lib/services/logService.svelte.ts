@@ -84,6 +84,7 @@ function safeStringify(args: any[]): string {
 class LogState {
     config = $state<LogConfig>(loadConfig());
     logs = $state<string[]>([]);
+    version = __APP_VERSION__;
 
     constructor() {
         if (isBrowser) {
@@ -132,6 +133,7 @@ const logState = new LogState();
 
 const loggerProxy = new Proxy({
     get config() { return logState.config; },
+    get version() { return logState.version; },
     getLogReport: () => logState.getReport()
 } as any, {
     get(target, prop: string) {

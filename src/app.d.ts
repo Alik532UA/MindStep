@@ -6,6 +6,9 @@
  * @description SSoT для типів App namespace.
  */
 declare global {
+	/** Вбудована версія додатка з package.json */
+	const __APP_VERSION__: string;
+
 	namespace App {
 		/**
 		 * Розширений інтерфейс помилки.

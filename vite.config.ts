@@ -2,6 +2,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA, type ManifestOptions, type Display } from 'vite-plugin-pwa';
+import { readFileSync } from 'fs';
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 // ВАЖЛИВО: у vite.config.ts треба використовувати process.env
 // Синхронізуємо з svelte.config.js: для prod використовуємо /MindStep
@@ -40,6 +43,9 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		base,
+		define: {
+			__APP_VERSION__: JSON.stringify(pkg.version),
+		},
 		plugins: [
 			sveltekit(),
 			visualizer({
