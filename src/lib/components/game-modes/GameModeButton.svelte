@@ -1,24 +1,49 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    /**
+     * GameModeButton component
+     * Використовується в модальному вікні вибору режимів.
+     * Використовує Svelte 5 Runes та Snippets.
+     */
+    import type { HTMLButtonAttributes } from 'svelte/elements';
+    import type { Snippet } from "svelte";
 
-    // icon prop залишаємо для зворотної сумісності, але пріоритет буде у слота
-    export let icon: string = "";
-    export let text: string = "";
-    export let dataTestId: string = "";
+    interface Props extends HTMLButtonAttributes {
+        text?: string;
+        icon?: string;
+        dataTestId?: string;
+        children?: Snippet;
+        iconSnippet?: Snippet;
+    }
 
-    const dispatch = createEventDispatcher();
+    let { 
+        text = "", 
+        icon = "", 
+        dataTestId = "", 
+        children, 
+        iconSnippet,
+        ...restProps 
+    }: Props = $props();
 </script>
 
 <button
     class="menu-item"
-    on:click={() => dispatch("click")}
     data-testid={dataTestId}
+    {...restProps}
 >
     <span class="menu-icon">
-        <!-- Використовуємо слот, якщо він є, інакше виводимо icon prop -->
-        <slot name="icon">{icon}</slot>
+        {#if iconSnippet}
+            {@render iconSnippet()}
+        {:else}
+            {icon}
+        {/if}
     </span>
-    <span class="menu-text">{text}</span>
+    <span class="menu-text">
+        {#if children}
+            {@render children()}
+        {:else}
+            {text}
+        {/if}
+    </span>
 </button>
 
 <style>
@@ -57,7 +82,7 @@
     .menu-icon {
         font-size: 1.5rem;
         width: 32px;
-        height: 32px; /* Фіксуємо висоту для центрування SVG */
+        height: 32px;
         text-align: center;
         display: flex;
         align-items: center;

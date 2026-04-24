@@ -1,15 +1,23 @@
 <script lang="ts">
+    /**
+     * HamburgerMenuModal component
+     * Головне навігаційне меню (мобільна версія).
+     * Використовує Svelte 5 Runes та Snippets.
+     */
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
-    import AuthModal from "$lib/components/modals/AuthModal.svelte";
     import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
 
-    export let onPlay: (() => void) | undefined = undefined;
-    export let onFeedback: (() => void) | undefined = undefined;
+    interface Props {
+        onPlay?: () => void;
+        onFeedback?: () => void;
+    }
+
+    let { onPlay, onFeedback }: Props = $props();
 
     function closeMenu() {
         modalStateRune.closeModal();
@@ -37,72 +45,71 @@
     }
 </script>
 
+{#snippet crownIcon()} <NotoEmoji name="crown" size="100%" /> {/snippet}
+{#snippet trophyIcon()} <NotoEmoji name="trophy" size="100%" /> {/snippet}
+{#snippet memoIcon()} <NotoEmoji name="memo" size="100%" /> {/snippet}
+{#snippet gearIcon()} <NotoEmoji name="gear" size="100%" /> {/snippet}
+{#snippet keyboardIcon()} <NotoEmoji name="keyboard" size="100%" /> {/snippet}
+{#snippet coinIcon()} <NotoEmoji name="coin" size="100%" /> {/snippet}
+{#snippet chatIcon()} <NotoEmoji name="speech_balloon" size="100%" /> {/snippet}
+{#snippet userIcon()} <NotoEmoji name="bust_in_silhouette" size="100%" /> {/snippet}
+
 <div class="menu-list-centered" data-testid="menu-list">
     <GameModeButton
         text={$t("mainMenu.virtualPlayer")}
         dataTestId="menu-item-play"
-        on:click={handlePlay}
-    >
-        <div slot="icon"><NotoEmoji name="crown" size="100%" /></div>
-    </GameModeButton>
+        onclick={handlePlay}
+        iconSnippet={crownIcon}
+    />
 
     <GameModeButton
         text={$t("rewards.pageTitle")}
         dataTestId="menu-item-rewards"
-        on:click={() => navigateTo("/rewards")}
-    >
-        <div slot="icon"><NotoEmoji name="trophy" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => navigateTo("/rewards")}
+        iconSnippet={trophyIcon}
+    />
 
     <GameModeButton
         text={$t("mainMenu.rules")}
         dataTestId="menu-item-rules"
-        on:click={() => navigateTo("/rules")}
-    >
-        <div slot="icon"><NotoEmoji name="memo" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => navigateTo("/rules")}
+        iconSnippet={memoIcon}
+    />
 
     <GameModeButton
         text={$t("mainMenu.settings")}
         dataTestId="menu-item-settings"
-        on:click={() => navigateTo("/settings")}
-    >
-        <div slot="icon"><NotoEmoji name="gear" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => navigateTo("/settings")}
+        iconSnippet={gearIcon}
+    />
 
     <GameModeButton
         text={$t("mainMenu.controls")}
         dataTestId="menu-item-controls"
-        on:click={() => navigateTo("/settings?tab=hotkeys")}
-    >
-        <div slot="icon"><NotoEmoji name="keyboard" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => navigateTo("/settings?tab=hotkeys")}
+        iconSnippet={keyboardIcon}
+    />
 
     <GameModeButton
         text={$t("mainMenu.supporters")}
         dataTestId="menu-item-supporters"
-        on:click={() => navigateTo("/supporters")}
-    >
-        <div slot="icon"><NotoEmoji name="coin" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => navigateTo("/supporters")}
+        iconSnippet={coinIcon}
+    />
 
     <GameModeButton
         text={$t("ui.feedback.title")}
         dataTestId="menu-item-feedback"
-        on:click={handleFeedback}
-    >
-        <div slot="icon"><NotoEmoji name="speech_balloon" size="100%" /></div>
-    </GameModeButton>
+        onclick={handleFeedback}
+        iconSnippet={chatIcon}
+    />
 
     <GameModeButton
         text={$t("mainMenu.account")}
         dataTestId="menu-item-account"
-        on:click={openAuthModal}
-    >
-        <div slot="icon">
-            <NotoEmoji name="bust_in_silhouette" size="100%" />
-        </div>
-    </GameModeButton>
+        onclick={openAuthModal}
+        iconSnippet={userIcon}
+    />
 </div>
 
 <style>

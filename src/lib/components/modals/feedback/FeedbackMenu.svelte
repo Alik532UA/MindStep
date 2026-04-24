@@ -1,75 +1,87 @@
 <script lang="ts">
+    /**
+     * FeedbackMenu component
+     * Вибір типу фідбеку.
+     * Використовує Svelte 5 Runes та Snippets.
+     */
     import { t } from "$lib/i18n/typedI18n";
     import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import type { FeedbackType } from "$lib/services/feedbackService";
-    import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher();
+    interface Props {
+        onselect?: (type: FeedbackType) => void;
+        onglobalChat?: () => void;
+    }
+
+    let { onselect, onglobalChat }: Props = $props();
 
     function selectType(type: FeedbackType) {
-        dispatch("select", type);
+        onselect?.(type);
     }
 
     function handleGlobalChat() {
-        dispatch("globalChat");
+        onglobalChat?.();
     }
 </script>
 
+{#snippet bulbIcon()}
+    <NotoEmoji name="light_bulb" size="100%" />
+{/snippet}
+
+{#snippet bugIcon()}
+    <NotoEmoji name="bug" size="100%" />
+{/snippet}
+
+{#snippet trophyIcon()}
+    <NotoEmoji name="trophy" size="100%" />
+{/snippet}
+
+{#snippet thoughtIcon()}
+    <NotoEmoji name="thought_balloon" size="100%" />
+{/snippet}
+
+{#snippet speechIcon()}
+    <NotoEmoji name="speech_balloon" size="100%" />
+{/snippet}
+
 <div class="menu-list">
-    <!-- 1. Запропонувати покращення -->
     <GameModeButton
         text={$t("ui.feedback.typeImprovement")}
         dataTestId="fb-type-improvement"
-        on:click={() => selectType("improvement")}
-    >
-        <div slot="icon">
-            <NotoEmoji name="light_bulb" size="100%" />
-        </div>
-    </GameModeButton>
+        onclick={() => selectType("improvement")}
+        iconSnippet={bulbIcon}
+    />
 
-    <!-- 2. Повідомити про проблему -->
     <GameModeButton
         text={$t("ui.feedback.typeBug")}
         dataTestId="fb-type-bug"
-        on:click={() => selectType("bug")}
-    >
-        <div slot="icon"><NotoEmoji name="bug" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => selectType("bug")}
+        iconSnippet={bugIcon}
+    />
 
-    <!-- 3. Запропонувати нагороду -->
     <GameModeButton
         text={$t("ui.feedback.typeReward")}
         dataTestId="fb-type-reward"
-        on:click={() => selectType("reward_suggestion")}
-    >
-        <div slot="icon"><NotoEmoji name="trophy" size="100%" /></div>
-    </GameModeButton>
+        onclick={() => selectType("reward_suggestion")}
+        iconSnippet={trophyIcon}
+    />
 
-    <!-- 4. Інше -->
     <GameModeButton
         text={$t("ui.feedback.typeOther")}
         dataTestId="fb-type-other"
-        on:click={() => selectType("other")}
-    >
-        <div slot="icon">
-            <NotoEmoji name="thought_balloon" size="100%" />
-        </div>
-    </GameModeButton>
+        onclick={() => selectType("other")}
+        iconSnippet={thoughtIcon}
+    />
 
-    <!-- Розділювач -->
     <div class="divider"></div>
 
-    <!-- 5. Спільний чат -->
     <GameModeButton
         text={$t("ui.feedback.typeGlobalChat")}
         dataTestId="fb-type-global-chat"
-        on:click={handleGlobalChat}
-    >
-        <div slot="icon">
-            <NotoEmoji name="speech_balloon" size="100%" />
-        </div>
-    </GameModeButton>
+        onclick={handleGlobalChat}
+        iconSnippet={speechIcon}
+    />
 </div>
 
 <style>

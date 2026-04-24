@@ -1,199 +1,138 @@
 <script lang="ts">
-  import { t } from "$lib/i18n/typedI18n";
-  import { onMount } from "svelte";
-  import hotkeyService from "$lib/services/hotkeyService";
-  import { modalStateRune } from "$lib/stores/modalState.svelte";
-  import { goto } from "$app/navigation";
   import { base } from "$app/paths";
-  import DontShowAgainCheckbox from "./DontShowAgainCheckbox.svelte";
-  import { userActionService } from "$lib/services/userActionService";
+  import { goto } from "$app/navigation";
+  import { t } from "$lib/i18n/typedI18n";
+  import { modalStateRune } from "$lib/stores/modalState.svelte";
+  import { onMount } from "svelte";
   import { logService } from "$lib/services/logService.svelte";
-  import { uiState } from "$lib/stores/uiState.svelte";
-  import type { GameModePreset } from "$lib/stores/gameSettingsTypes";
-  import WipNotice from "./main-menu/WipNotice.svelte";
-  import GameModeButton from "$lib/components/game-modes/GameModeButton.svelte";
-  import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
+  import { localGameController } from "$lib/controllers/LocalGameController.svelte";
+  import GameModeButton from "./game-modes/GameModeButton.svelte";
+  import NotoEmoji from "./NotoEmoji.svelte";
 
-  let showWipNotice = false;
+  interface Props {
+    extended?: boolean;
+  }
 
-  function openWipNotice() {
-    logService.action('Click: "Play Online (WIP)" (GameModeModal)');
-    showWipNotice = true;
+  let { extended = true }: Props = $props();
+
+  let buttonsNode: HTMLElement;
+
+  async function handleOnlineGame() {
+    logService.ui("Online Game selected from modal");
+    modalStateRune.closeModal();
+    await goto(`${base}/online`);
+  }
+
+  function selectMode(mode: string) {
+    logService.ui(`Mode selected: ${mode}`);
+    gameSettingsState.applyPreset(mode as any);
+    modalStateRune.closeModal();
+    goto(`${base}/game/virtual-player`);
   }
 
   function handleLocalGame() {
-    logService.action('Click: "Локальна гра" (GameModeModal)');
-    uiState.update((s) => ({ ...s, intendedGameType: "local" }));
+    logService.ui("Local Game selected");
+    localGameController.init("GameModeModal");
     modalStateRune.closeModal();
-    goto(`${base}/local-setup`);
+    goto(`${base}/local`);
   }
-
-  function handleOnlineGame() {
-    logService.action('Click: "Онлайн гра" (GameModeModal)');
-    uiState.update((s) => ({ ...s, intendedGameType: "online" }));
-    modalStateRune.closeModal();
-    goto(`${base}/online`);
-  }
-
-  export let scope: string;
-  export let extended = false;
-  let buttonsNode: HTMLElement;
 
   onMount(() => {
-    if (buttonsNode) {
-      const buttons = Array.from(buttonsNode.querySelectorAll("button"));
-      buttons.forEach((btn, index) => {
-        const key = `Digit${index + 1}`;
-        hotkeyService.register(scope, key, () => btn.click());
-      });
-    }
+    const firstButton = buttonsNode?.querySelector("button");
+    if (firstButton) (firstButton as HTMLElement).focus();
   });
-
-  function selectMode(mode: GameModePreset) {
-    logService.modal(`[GameModeModal] selectMode called with: ${mode}`);
-    userActionService.setGameModePreset(mode);
-
-    // НАВІЩО: Завжди встановлюємо тип гри перед навігацією, щоб uiService
-    // вибрав правильний шлях (наприклад, /game/virtual-player).
-    uiState.update((s) => ({
-      ...s,
-      intendedGameType: "virtual-player",
-    }));
-
-    if (extended) {
-      if (mode === "beginner") {
-        showFaqModal();
-      } else {
-        userActionService.navigateToGame();
-      }
-      return;
-    }
-
-    if (mode === "beginner") {
-      showFaqModal();
-    } else {
-      userActionService.navigateToGame();
-    }
-  }
-
-  // FIX: Додано ключове слово async, щоб дозволити використання await всередині
-  async function showFaqModal() {
-    // Для чистоти коду виносимо імпорт в змінну
-    const FAQModal = (await import("./FAQModal.svelte")).default;
-
-    modalStateRune.showModal({
-      dataTestId: "faq-modal",
-      component: FAQModal,
-      variant: "menu",
-      buttons: [],
-      props: {},
-    });
-  }
 </script>
+
+{#snippet globeIcon()}
+  <NotoEmoji name="globe_showing_europe_africa" size="100%" />
+{/snippet}
+
+{#snippet chickIcon()}
+  <NotoEmoji name="hatching_chick" size="100%" />
+{/snippet}
+
+{#snippet brainIcon()}
+  <NotoEmoji name="brain" size="100%" />
+{/snippet}
+
+{#snippet fireIcon()}
+  <NotoEmoji name="fire" size="100%" />
+{/snippet}
+
+{#snippet stopwatchIcon()}
+  <NotoEmoji name="stopwatch" size="100%" />
+{/snippet}
+
+{#snippet swordsIcon()}
+  <NotoEmoji name="crossed_swords" size="100%" />
+{/snippet}
 
 <div class="game-mode-buttons" bind:this={buttonsNode}>
   {#if extended}
-    <!-- 1. Online Game -->
     <GameModeButton
       text={$t("mainMenu.playOnline")}
       dataTestId="online-game-btn"
-      on:click={handleOnlineGame}
-    >
-      <div slot="icon">
-        <NotoEmoji name="globe_showing_europe_africa" size="100%" />
-      </div>
-    </GameModeButton>
-
+      onclick={handleOnlineGame}
+      iconSnippet={globeIcon}
+    />
     <div class="divider"></div>
   {/if}
 
-  <!-- 2. Single Player Modes -->
   <GameModeButton
     text={$t("gameModes.beginner")}
     dataTestId="beginner-mode-btn"
-    on:click={() => selectMode("beginner")}
-  >
-    <div slot="icon"><NotoEmoji name="hatching_chick" size="100%" /></div>
-  </GameModeButton>
+    onclick={() => selectMode("beginner")}
+    iconSnippet={chickIcon}
+  />
 
   <GameModeButton
     text={$t("gameModes.experienced")}
     dataTestId="experienced-mode-btn"
-    on:click={() => selectMode("experienced")}
-  >
-    <div slot="icon"><NotoEmoji name="brain" size="100%" /></div>
-  </GameModeButton>
+    onclick={() => selectMode("experienced")}
+    iconSnippet={brainIcon}
+  />
 
   <GameModeButton
     text={$t("gameModes.pro")}
     dataTestId="pro-mode-btn"
-    on:click={() => selectMode("pro")}
-  >
-    <div slot="icon"><NotoEmoji name="fire" size="100%" /></div>
-  </GameModeButton>
+    onclick={() => selectMode("pro")}
+    iconSnippet={fireIcon}
+  />
 
   {#if extended}
     <GameModeButton
       text={$t("mainMenu.timedGame")}
       dataTestId="timed-game-btn"
-      on:click={() => selectMode("timed")}
-    >
-      <div slot="icon"><NotoEmoji name="stopwatch" size="100%" /></div>
-    </GameModeButton>
+      onclick={() => selectMode("timed")}
+      iconSnippet={stopwatchIcon}
+    />
 
     <div class="divider"></div>
 
-    <!-- 3. Local Game -->
     <GameModeButton
       text={$t("mainMenu.localGame")}
       dataTestId="local-game-btn"
-      on:click={handleLocalGame}
-    >
-      <div slot="icon">
-        <NotoEmoji name="busts_in_silhouette" size="100%" />
-      </div>
-    </GameModeButton>
+      onclick={handleLocalGame}
+      iconSnippet={swordsIcon}
+    />
   {/if}
 </div>
-
-{#if showWipNotice}
-  <WipNotice onClose={() => (showWipNotice = false)} />
-{/if}
-
-{#if !extended}
-  <div class="checkbox-wrapper">
-    <DontShowAgainCheckbox
-      modalType="gameMode"
-      tid={`${modalStateRune.state.dataTestId}-dont-show-again-switch`}
-      {scope}
-    />
-  </div>
-{/if}
 
 <style>
   .game-mode-buttons {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: var(--responsive-max-width, 360px);
-    box-sizing: border-box;
-    max-width: 100%;
+    width: 100%;
+    max-width: 400px;
     margin: 0 auto;
-    padding: 8px; /* Room for button scaling */
+    padding: 10px;
   }
 
   .divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     margin: 8px 0;
-    width: 100%;
-  }
-
-  .checkbox-wrapper {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    box-sizing: border-box;
   }
 </style>

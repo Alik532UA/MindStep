@@ -32,8 +32,7 @@
         }
     });
 
-    function selectType(e: CustomEvent<FeedbackType>) {
-        const type = e.detail;
+    function selectType(type: FeedbackType) {
         logService.ui(`[FeedbackModal] Selected type: ${type}`);
         selectedType = type;
     }
@@ -109,7 +108,7 @@
     <h2 class="modal-title-menu">{$t("ui.feedback.title")}</h2>
 
     {#if !selectedType}
-        <FeedbackMenu on:select={selectType} on:globalChat={handleGlobalChat} />
+        <FeedbackMenu onselect={selectType} onglobalChat={handleGlobalChat} />
     {:else}
         <FeedbackForm
             {selectedType}
