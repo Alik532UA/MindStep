@@ -52,11 +52,11 @@ class VoiceControlService {
     try {
       logService.voiceControl('[VoiceControlService] Calling recognition.start()');
       this.processingResult = false; // Reset flag on start
-      this.recognition.start();
+      this.recognition?.start();
       // isListening is set to true in handleStart
     } catch (error) {
       logService.voiceControl('[VoiceControlService] Error calling recognition.start():', error);
-      voiceControlState.setError(error);
+      voiceControlState.setError(error instanceof Error ? error : new Error(String(error)));
       uiState.update(s => ({ ...s, isListening: false }));
     }
   }
@@ -65,7 +65,7 @@ class VoiceControlService {
     if (!this.isSupported || !uiState.state.isListening) return;
     logService.voiceControl('[VoiceControlService] Calling recognition.stop()');
     this.processingResult = true; // Prevent restart on manual stop
-    this.recognition.stop();
+    this.recognition?.stop();
     // isListening is set to false in handleEnd
   }
 

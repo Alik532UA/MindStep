@@ -36,8 +36,8 @@ jobs:
       - name: Check types
         run: npm run check
 
-      - name: Run tests
-        run: npm run test:report || echo "No unit tests found or some failed but continuing"
+      - name: Run unit tests
+        run: npm run test:report
 
       - name: Build
         run: npm run build
