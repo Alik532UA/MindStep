@@ -1,1 +1,1 @@
-npx playwright test
+node scripts/robust-test.js
