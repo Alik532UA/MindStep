@@ -26,11 +26,15 @@ export function syncGameModeLogic(currentSettings: GameSettingsState, uiState: U
 
     // Блокуємо синхронізацію, якщо пресет не відповідає контексту
     if (currentSettings.gameMode) {
-        const currentPrefix = currentSettings.gameMode.split('-')[0];
-        const expectedPrefix = intendedGameType;
-        // Перевіряємо тільки якщо префікс є одним з відомих типів
-        if (currentPrefix !== expectedPrefix && ['local', 'virtual', 'online'].includes(currentPrefix)) {
-            return currentSettings;
+        const isVp = intendedGameType === 'virtual-player';
+        const expectedPrefix = isVp ? 'virtual-player' : intendedGameType;
+        
+        if (!currentSettings.gameMode.startsWith(expectedPrefix)) {
+             // Перевіряємо лише якщо це один з основних типів
+             const knownPrefixes = ['local', 'virtual-player', 'online'];
+             if (knownPrefixes.some(p => currentSettings.gameMode?.startsWith(p))) {
+                return currentSettings;
+             }
         }
     }
 

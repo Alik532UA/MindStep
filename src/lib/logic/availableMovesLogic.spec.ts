@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateAvailableMoves, isMirrorMove, isCellBlocked } from '../../src/lib/logic/availableMovesLogic';
+import { calculateAvailableMoves, isMirrorMove, isCellBlocked } from './availableMovesLogic';
 
 describe('availableMovesLogic', () => {
     describe('isMirrorMove', () => {

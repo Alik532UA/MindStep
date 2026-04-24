@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
 			sourcemap: true,
 		},
 		test: {
-			include: ['tests/**/*.test.ts']
+			include: ['src/**/*.spec.ts']
 		}
 	};
 });
