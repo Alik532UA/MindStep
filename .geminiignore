@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+.svelte-kit/
+.private/
+*.lock
+package-lock.json
+playwright-report/
+test-results/
+.temp/
+.vscode/
+dev-dist/
