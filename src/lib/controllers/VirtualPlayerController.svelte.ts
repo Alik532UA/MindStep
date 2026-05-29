@@ -11,8 +11,24 @@ export class VirtualPlayerController extends BaseGameController {
    * @param context Назва сторінки.
    */
   init(context: string = "VirtualPlayerPage") {
-    const mode = this.settings.gameMode || "virtual-player";
-    
+    let mode = this.settings.gameMode || "virtual-player";
+
+    // Захист від "stale gameMode": якщо в налаштуваннях залишився режим
+    // іншого типу гри (напр. "timed", "local-*", "online-*"), примусово
+    // використовуємо "virtual-player", щоб не ініціалізувати чужий режим.
+    const validModes = [
+      "virtual-player",
+      "virtual-player-beginner",
+      "virtual-player-experienced",
+      "virtual-player-pro",
+      "beginner",
+      "experienced",
+      "pro",
+    ];
+    if (!validModes.includes(mode)) {
+      mode = "virtual-player";
+    }
+
     this.baseInit(context, mode, true);
   }
 
