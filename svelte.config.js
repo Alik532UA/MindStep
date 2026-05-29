@@ -1,8 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-const dev = process.argv.includes('dev');
-const base = dev ? '' : '/MindStep'; // Use /MindStep only for production build
+const basePath = process.env.BASE_PATH || (process.argv.includes('dev') ? '' : '/MindStep');
 
 // /**
 //  * Кастомний препроцесор для автоматичного додавання data-testid
@@ -57,7 +56,7 @@ const config = {
 			entries: ['*']
 		},
 		paths: {
-			base
+			base: basePath
 		},
 		csp: {
 			mode: 'hash',

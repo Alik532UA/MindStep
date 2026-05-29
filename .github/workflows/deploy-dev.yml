@@ -1,18 +1,18 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deploy-dev.yml
 
-name: Deploy to GitHub Pages
+name: Deploy Dev to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - dev
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: "pages-main"
+  group: "pages-dev"
   cancel-in-progress: true
 
 jobs:
@@ -31,16 +31,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Check types
-        run: npm run check
-
-      - name: Run unit tests
-        run: npm run test:report
-
       - name: Build
         run: npm run build
         env:
-          BASE_PATH: "/MindStep"
+          BASE_PATH: "/MindStep/dev"
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
@@ -49,16 +43,9 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      # Preserve dev/ from current gh-pages
-      - name: Preserve dev folder
-        run: |
-          git fetch origin gh-pages:gh-pages || true
-          if git show gh-pages:dev/ >/dev/null 2>&1; then
-            git archive gh-pages -- dev/ | tar -x -C build/
-          fi
-
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages (dev subfolder)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
+          destination_dir: dev
