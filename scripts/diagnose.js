@@ -65,10 +65,11 @@ const criticalFiles = [
   ['tsconfig.json', 'TypeScript конфігурація'],
   ['src/app.html', 'Основний HTML файл'],
   ['src/routes/+page.svelte', 'Головна сторінка'],
-  ['src/lib/stores/gameState.ts', 'Game State'],
-  ['src/lib/stores/animationStore.js', 'Animation Store'],
-  ['src/lib/services/gameLogicService.ts', 'Game Logic Service'],
-  ['src/lib/gameOrchestrator.js', 'Game Orchestrator']
+  ['src/lib/stores/gameState.svelte.ts', 'Game State (Runes)'],
+  ['src/lib/stores/animationState.svelte.ts', 'Animation State (Runes)'],
+  ['src/lib/services/gameService.ts', 'Game Service'],
+  ['src/lib/controllers/BaseGameController.svelte.ts', 'Base Game Controller'],
+  ['src/lib/services/logService.svelte.ts', 'Log Service']
 ];
 
 let fileErrors = 0;

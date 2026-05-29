@@ -13,8 +13,8 @@ import type { Resettable } from "$lib/types/utils";
 
 export abstract class BaseGameController implements Resettable {
   // --- State ---
-  protected settings = $derived(gameSettingsState.state);
-  protected bState = $derived(boardState.state);
+  protected get settings() { return gameSettingsState.state; }
+  protected get bState() { return boardState.state; }
 
   // --- Logic ---
 
