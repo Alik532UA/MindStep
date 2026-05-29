@@ -81,7 +81,7 @@ export const endGameService = {
           lastPlayed: lastPlayedInfo
         });
 
-        logService.score('[endGameService] Checking achievements with final score...');
+        logService.score(`[endGameService] Checking achievements: totalScore=${finalScoreDetails.totalScore}, cleanMode=${cleanMode}, boardSize=${bState.boardSize}`);
         rewardsService.checkAchievements({
           score: finalScoreDetails.totalScore,
           gameMode: cleanMode,

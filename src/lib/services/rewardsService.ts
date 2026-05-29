@@ -88,11 +88,18 @@ class RewardsService {
 
   checkAchievements(context: { score: number; gameMode: string; boardSize: number }) {
     const state = rewardsState.state;
+    logService.info(`[RewardsService] checkAchievements called with: score=${context.score}, gameMode=${context.gameMode}, boardSize=${context.boardSize}`);
+    logService.info(`[RewardsService] Already unlocked rewards: ${Object.keys(state.unlockedRewards).join(', ') || 'none'}`);
 
     ACHIEVEMENTS.forEach(achievement => {
-      if (state.unlockedRewards[achievement.id]) return;
+      if (state.unlockedRewards[achievement.id]) {
+        logService.info(`[RewardsService] Skipping '${achievement.id}' — already unlocked`);
+        return;
+      }
 
-      if (achievement.condition(context)) {
+      const conditionMet = achievement.condition(context);
+      if (conditionMet) {
+        logService.info(`[RewardsService] ✅ Condition MET for '${achievement.id}'. Unlocking!`);
         this.unlockAchievement(achievement);
       }
     });

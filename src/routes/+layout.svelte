@@ -6,7 +6,6 @@
 	import { onMount, onDestroy } from "svelte";
 	import { get } from "svelte/store";
 	import { base } from "$app/paths";
-	import UpdateNotification from "$lib/components/UpdateNotification.svelte";
 	import ReloadPrompt from "$lib/components/pwa/ReloadPrompt.svelte";
 	import { clearCache } from "$lib/utils/cacheManager.js";
 	import Modal from "$lib/components/Modal.svelte";
@@ -23,7 +22,6 @@
 	import { resetAllStores } from "$lib/services/testingService";
 	import hotkeyService from "$lib/services/hotkeyService";
 	import { i18nReady } from "$lib/i18n/init.js";
-	import RewardNotification from "$lib/components/rewards/RewardNotification.svelte";
 	import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
 	// Imports for Menus
@@ -52,7 +50,6 @@
 
 	let { children }: Props = $props();
 
-	let showUpdateNotice = $state(false);
 	const APP_VERSION_KEY = "app_version";
 
 	let testModeEnabled = false;
@@ -79,15 +76,10 @@
 			testModeEnabled = state.isEnabled;
 		});
 
-		// Subscribe to version changes to show update notice
+		// Subscribe to version changes to update stored version
 		const unsubscribeVersion = versionState.subscribe((versionInfo) => {
-			const localVersion = storageService.get(APP_VERSION_KEY);
-			if (
-				versionInfo.current &&
-				localVersion &&
-				localVersion !== versionInfo.current
-			) {
-				showUpdateNotice = true;
+			if (versionInfo.current) {
+				storageService.set(APP_VERSION_KEY, versionInfo.current);
 			}
 		});
 
@@ -181,9 +173,7 @@
 		}
 	}
 
-	function handleReload() {
-		clearCache({ keepAppearance: true });
-	}
+
 
 	afterNavigate(({ from, to }) => {
 		if (sessionStorage.getItem("isRestoringReplay")) {
@@ -306,11 +296,7 @@
 		: []);
 </script>
 
-{#if showUpdateNotice}
-	<UpdateNotification on:reload={handleReload} />
-{/if}
 
-<RewardNotification />
 
 <ErrorBoundary>
 	<div class="app">
