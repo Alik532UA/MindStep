@@ -9,7 +9,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 // ВАЖЛИВО: у vite.config.ts треба використовувати process.env
 // Синхронізуємо з svelte.config.js: для prod використовуємо /MindStep
 const isProd = process.env.NODE_ENV === 'production';
-const base = isProd ? '/MindStep' : '/';
+const base = process.env.BASE_PATH || (isProd ? '/MindStep' : '/');
 
 const manifest: Partial<ManifestOptions> = {
 	name: 'MindStep',

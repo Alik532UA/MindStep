@@ -3,9 +3,6 @@
 name: Deploy Dev to GitHub Pages
 
 on:
-  push:
-    branches:
-      - dev
   workflow_dispatch:
 
 permissions:
