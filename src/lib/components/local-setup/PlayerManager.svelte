@@ -6,12 +6,14 @@
   import { customTooltip } from "$lib/actions/customTooltip.js";
   import { playerState } from "$lib/stores/playerState.svelte";
   import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+  import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 
   // SSoT: Використовуємо стан з Runes
   const state = $derived(playerState.state);
 
   function startGame() {
     logService.action('Click: "Почати гру" (PlayerManager)');
+    gameSettingsState.updateSettings({ gameMode: "local" });
     navigationService.goTo("/game/local");
   }
 

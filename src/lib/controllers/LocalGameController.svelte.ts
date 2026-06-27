@@ -13,8 +13,9 @@ export class LocalGameController extends BaseGameController {
   init(context: string = "LocalGamePage") {
     const mode = this.settings.gameMode || "local";
     
-    // Для локального режиму іноді не треба скидати налаштування пресетів
-    const shouldApplyPreset = !["observer", "beginner", "experienced", "pro"].includes(mode);
+    // Для локального режиму не треба застосовувати пресет, 
+    // бо користувач вже налаштував гру в /local-setup.
+    const shouldApplyPreset = false;
     
     this.baseInit(context, mode, shouldApplyPreset);
   }
