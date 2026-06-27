@@ -1,48 +1,98 @@
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="/Stay_on_the_board/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="manifest" href="/Stay_on_the_board/manifest.json" />
-		<meta name="theme-color" content="#1a202c" />
-		<link rel="apple-touch-icon" href="/Stay_on_the_board/logo-circle.png" sizes="192x192" />
+<html lang="uk">
+
+<head>
+	<meta charset="utf-8" />
+	<title>MindStep</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap&text=0123456789↖↑↗←→↙↓↘"
+		rel="stylesheet">
+	<link rel="icon" href="/MindStep/favicon/favicon-16px.ico" sizes="16x16" />
+	<link rel="icon" href="/MindStep/favicon/favicon-32px.ico" sizes="32x32" />
+	<link rel="icon" href="/MindStep/favicon/favicon-48px.ico" sizes="48x48" />
+	<link rel="icon" href="/MindStep/favicon/favicon-64px.ico" sizes="64x64" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="color-scheme" content="light dark" />
+	<!-- Посилання на маніфест (Vite PWA генерує його автоматично) -->
+
+	<link rel="manifest" href="/MindStep/manifest.webmanifest" />
+
+	<!-- Сигнали для мобільних пристроїв та PWA-режиму -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="MindStep" />
+	<meta name="application-name" content="MindStep" />
+
+	<!-- Іконки для різних платформ -->
+	<link rel="apple-touch-icon" href="/MindStep/favicon/icon-180.png" sizes="180x180" />
+	<link rel="icon" type="image/png" sizes="192x192" href="/MindStep/favicon/icon-192.png" />
+
+	<!-- manifest.json handled by vite-plugin-pwa -->
+	<meta http-equiv="content-security-policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.google-analytics.com https://stats.g.doubleclick.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: http://localhost:* http://127.0.0.1:* https://*.google-analytics.com https://www.google-analytics.com https://www.google.com; object-src 'none'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://apis.google.com https://*.firebaseapp.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; base-uri 'self'; form-action 'self'">
+		<link href="/MindStep/_app/immutable/entry/start.D0O3FXsp.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/C5TSnuQi.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/B2RcS2QJ.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/cc4ydY4x.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/D1F_VR5a.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/CaAAEUdS.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DTcGNgst.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/entry/app.0Al5M8iW.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Dp1pzeXC.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Bzak7iHL.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Dxw4U2oo.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Cjc5exi3.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/CFAZ_1pG.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/83zNpS87.js" rel="modulepreload">
 		
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/entry/start.Ca4S7v0K.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/BdkZo3V3.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/CREhLT6v.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/CYlQx1xG.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/DcER0RSx.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/CIFqOFj7.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/c-mzsrjd.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/Zl5nt9oV.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/entry/app.DlZynWKS.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/D9Z9MdNV.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/NZTpNUN0.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/D-N3Gt0C.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/C7R43KLt.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/m9Q1QfxC.js">
-		<link rel="modulepreload" href="/Stay_on_the_board/_app/immutable/chunks/CcT2DH85.js">
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">
+	<style>
+		/* Миттєвий темний фон для уникнення білого спалаху */
+		html, body {
+			background-color: #1a1a1a;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+	<script>
+		// Миттєве застосування теми ще до ініціалізації Svelte
+		(function() {
+			try {
+				const theme = localStorage.getItem('mindstep_theme') || 'dark';
+				const style = localStorage.getItem('mindstep_style') || 'gray';
+				document.documentElement.setAttribute('data-theme', theme);
+				document.documentElement.setAttribute('data-style', style);
+				
+				// Якщо тема світла, змінюємо фон body одразу
+				if (theme === 'light') {
+					document.body.style.backgroundColor = '#f0f2f5';
+				}
+			} catch (e) {}
+		})();
+	</script>
+</head>
+
+<body data-sveltekit-preload-data="hover" class="preload-theme">
+	<div style="display: contents">
 			<script>
 				{
-					__sveltekit_1yvo8aj = {
-						base: "/Stay_on_the_board",
-						assets: "/Stay_on_the_board"
+					__sveltekit_pm2xju = {
+						base: "/MindStep",
+						assets: "/MindStep"
 					};
 
 					const element = document.currentScript.parentElement;
 
 					Promise.all([
-						import("/Stay_on_the_board/_app/immutable/entry/start.Ca4S7v0K.js"),
-						import("/Stay_on_the_board/_app/immutable/entry/app.DlZynWKS.js")
+						import("/MindStep/_app/immutable/entry/start.D0O3FXsp.js"),
+						import("/MindStep/_app/immutable/entry/app.0Al5M8iW.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element);
 					});
 				}
 			</script>
 		</div>
-	</body>
+</body>
+
 </html>

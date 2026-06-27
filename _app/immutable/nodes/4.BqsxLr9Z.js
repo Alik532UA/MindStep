@@ -1,0 +1,6 @@
+import{av as c,f as n,ak as a,aj as o,ah as m,a as r,aw as v,am as h,al as i}from"../chunks/cc4ydY4x.js";import"../chunks/Bzak7iHL.js";import"../chunks/C3eypT2H.js";import{b as u}from"../chunks/D1F_VR5a.js";import{s as g}from"../chunks/ds_mWov9.js";import{b as f}from"../chunks/DTcGNgst.js";const b=c,y=!0,$=Object.freeze(Object.defineProperty({__proto__:null,csr:b,prerender:y},Symbol.toStringTag,{value:"Module"}));var _=n('<meta name="description" content="About this app"/>'),w=n(`<div class="text-column"><h1>About this app</h1> <p>This is a <a href="https://svelte.dev/docs/kit">SvelteKit</a> app. You can make your own by typing
+		the following into your command line and following the prompts:</p> <pre>npx sv create</pre> <p>The page you're looking at is purely static HTML, with no client-side interactivity needed.
+		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
+		the devtools network panel and reloading.</p> <p>The <a>Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
+		using it with JavaScript disabled!</p></div>`);function J(s){var e=w();u(l=>{var d=_();v.title="About",r(l,d)});var t=a(o(e),8),p=a(o(t));h(),i(t),i(e),m(()=>g(p,"href",`${f??""}/sverdle`)),r(s,e)}export{J as component,$ as universal};
+//# sourceMappingURL=4.BqsxLr9Z.js.map
