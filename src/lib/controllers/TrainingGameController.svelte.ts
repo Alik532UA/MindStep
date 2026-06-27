@@ -11,7 +11,14 @@ export class TrainingGameController extends BaseGameController {
    * @param context Назва сторінки.
    */
   init(context: string = "TrainingGamePage") {
-    const mode = this.settings.gameMode || "training";
+    let mode = this.settings.gameMode || "training";
+
+    // Захист від "stale gameMode": режим тренування не повинен успадковувати
+    // режим іншого типу гри з попередньої сесії.
+    if (mode !== "training") {
+      mode = "training";
+    }
+
     this.baseInit(context, mode, true);
   }
 }

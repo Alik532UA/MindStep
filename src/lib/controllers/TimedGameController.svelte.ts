@@ -11,7 +11,14 @@ export class TimedGameController extends BaseGameController {
    * @param context Назва сторінки.
    */
   init(context: string = "TimedGamePage") {
-    const mode = this.settings.gameMode || "timed";
+    let mode = this.settings.gameMode || "timed";
+
+    // Захист від "stale gameMode": приймаємо лише режими на час.
+    const validModes = ["timed", "virtual-player-timed"];
+    if (!validModes.includes(mode)) {
+      mode = "timed";
+    }
+
     this.baseInit(context, mode, true);
   }
 }

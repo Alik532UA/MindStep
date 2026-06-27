@@ -11,7 +11,13 @@ export class LocalGameController extends BaseGameController {
    * @param context Назва сторінки.
    */
   init(context: string = "LocalGamePage") {
-    const mode = this.settings.gameMode || "local";
+    let mode = this.settings.gameMode || "local";
+    
+    // Якщо gameMode не є локальним пресетом — примусово використовуємо "local"
+    const localModes = ["local", "local-observer", "local-experienced", "local-pro", "observer"];
+    if (!localModes.includes(mode)) {
+      mode = "local";
+    }
     
     // Для локального режиму не треба застосовувати пресет, 
     // бо користувач вже налаштував гру в /local-setup.

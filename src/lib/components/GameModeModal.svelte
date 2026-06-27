@@ -6,7 +6,6 @@
   import { onMount } from "svelte";
   import { logService } from "$lib/services/logService.svelte";
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
-  import { localGameController } from "$lib/controllers/LocalGameController.svelte";
   import GameModeButton from "./game-modes/GameModeButton.svelte";
   import NotoEmoji from "./NotoEmoji.svelte";
   import { Users } from 'lucide-svelte';
@@ -52,7 +51,7 @@
   function handleLocalGame() {
     logService.ui("Local Game selected");
     uiState.update(s => ({ ...s, intendedGameType: 'local' }));
-    localGameController.init("GameModeModal");
+    gameSettingsState.applyPreset('local');
     modalStateRune.closeModal();
     goto(`${base}/local-setup`);
   }
