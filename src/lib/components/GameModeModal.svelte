@@ -9,6 +9,7 @@
   import { localGameController } from "$lib/controllers/LocalGameController.svelte";
   import GameModeButton from "./game-modes/GameModeButton.svelte";
   import NotoEmoji from "./NotoEmoji.svelte";
+  import { Users } from 'lucide-svelte';
 
   import { showGameInfoModal } from "$lib/utils/uiHelpers";
 
@@ -53,7 +54,7 @@
     uiState.update(s => ({ ...s, intendedGameType: 'local' }));
     localGameController.init("GameModeModal");
     modalStateRune.closeModal();
-    goto(`${base}/local`);
+    goto(`${base}/local-setup`);
   }
 
   onMount(() => {
@@ -82,8 +83,8 @@
   <NotoEmoji name="stopwatch" size="100%" />
 {/snippet}
 
-{#snippet swordsIcon()}
-  <NotoEmoji name="crossed_swords" size="100%" />
+{#snippet usersIcon()}
+  <Users size="100%" />
 {/snippet}
 
 <div class="game-mode-buttons" bind:this={buttonsNode}>
@@ -132,7 +133,7 @@
       text={$t("mainMenu.localGame")}
       dataTestId="local-game-btn"
       onclick={handleLocalGame}
-      iconSnippet={swordsIcon}
+      iconSnippet={usersIcon}
     />
   {/if}
 </div>

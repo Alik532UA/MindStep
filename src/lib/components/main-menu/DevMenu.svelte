@@ -84,7 +84,7 @@
         <StyledButton
             variant="menu"
             onclick={() =>
-                handlePhantomPage("Local Game Comp (WIP)", "/local")}
+                handlePhantomPage("Local Game Comp (WIP)", "/local-setup")}
             dataTestId="dev-menu-local-comp-btn"
         >
             Local Game Comp (WIP)
