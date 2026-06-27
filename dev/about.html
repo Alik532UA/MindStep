@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uk">
+
+<head>
+	<meta charset="utf-8" />
+	<title>MindStep</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap&text=0123456789↖↑↗←→↙↓↘"
+		rel="stylesheet">
+	<link rel="icon" href="./favicon/favicon-16px.ico" sizes="16x16" />
+	<link rel="icon" href="./favicon/favicon-32px.ico" sizes="32x32" />
+	<link rel="icon" href="./favicon/favicon-48px.ico" sizes="48x48" />
+	<link rel="icon" href="./favicon/favicon-64px.ico" sizes="64x64" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="color-scheme" content="light dark" />
+	<!-- Посилання на маніфест (Vite PWA генерує його автоматично) -->
+
+	<link rel="manifest" href="./manifest.webmanifest" />
+
+	<!-- Сигнали для мобільних пристроїв та PWA-режиму -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="MindStep" />
+	<meta name="application-name" content="MindStep" />
+
+	<!-- Іконки для різних платформ -->
+	<link rel="apple-touch-icon" href="./favicon/icon-180.png" sizes="180x180" />
+	<link rel="icon" type="image/png" sizes="192x192" href="./favicon/icon-192.png" />
+
+	<!-- manifest.json handled by vite-plugin-pwa -->
+	<meta http-equiv="content-security-policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.google-analytics.com https://stats.g.doubleclick.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: http://localhost:* http://127.0.0.1:* https://*.google-analytics.com https://www.google-analytics.com https://www.google.com; object-src 'none'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://apis.google.com https://*.firebaseapp.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; base-uri 'self'; form-action 'self'">
+		
+	<style>
+		/* Миттєвий темний фон для уникнення білого спалаху */
+		html, body {
+			background-color: #1a1a1a;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+	<script>
+		// Миттєве застосування теми ще до ініціалізації Svelte
+		(function() {
+			try {
+				const theme = localStorage.getItem('mindstep_theme') || 'dark';
+				const style = localStorage.getItem('mindstep_style') || 'gray';
+				document.documentElement.setAttribute('data-theme', theme);
+				document.documentElement.setAttribute('data-style', style);
+				
+				// Якщо тема світла, змінюємо фон body одразу
+				if (theme === 'light') {
+					document.body.style.backgroundColor = '#f0f2f5';
+				}
+			} catch (e) {}
+		})();
+	</script>
+</head>
+
+<body data-sveltekit-preload-data="hover" class="preload-theme">
+	<div style="display: contents"></div>
+</body>
+
+</html>
