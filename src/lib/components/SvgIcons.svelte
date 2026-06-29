@@ -6,6 +6,7 @@
    */
   import { icons, type IconName } from "$lib/icons";
   import type { SVGAttributes } from "svelte/elements";
+  import type { Component } from "svelte";
 
   interface Props extends SVGAttributes<SVGElement> {
     name: string;
@@ -14,7 +15,7 @@
   let { name, ...restProps }: Props = $props();
 
   // Обчислюємо компонент іконки через $derived
-  const IconComponent = $derived(icons[name as IconName]);
+  const IconComponent = $derived(icons[name as IconName] as unknown as Component<any>);
 </script>
 
 {#if IconComponent}
