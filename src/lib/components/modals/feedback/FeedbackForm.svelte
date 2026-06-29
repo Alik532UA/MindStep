@@ -101,7 +101,7 @@
     <div class="actions-row">
         <StyledButton
             variant="default"
-            size="large"
+            size="default"
             onclick={goBack}
             disabled={isSubmitting}
         >
@@ -109,7 +109,7 @@
         </StyledButton>
         <StyledButton
             variant="primary"
-            size="large"
+            size="default"
             onclick={handleSubmit}
             disabled={isSubmitting}
         >
@@ -149,9 +149,15 @@
 
     .actions-row {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 12px;
-        gap: 16px;
+        flex-direction: column-reverse;
+        margin-top: 16px;
+        gap: 12px;
+    }
+
+    @media (min-width: 480px) {
+        .actions-row {
+            flex-direction: row;
+            gap: 16px;
+        }
     }
 </style>
