@@ -21,6 +21,7 @@ import IconHandshake from './IconHandshake.svelte';
 import IconLock from './IconLock.svelte';
 import IconArrowUp from './IconArrowUp.svelte';
 import IconArrowDown from './IconArrowDown.svelte';
+import IconArrowLeft from './IconArrowLeft.svelte';
 import IconPlus from './IconPlus.svelte';
 import IconMicrophone from './IconMicrophone.svelte'; // Додано
 
@@ -48,6 +49,7 @@ export const icons = {
     'lock': IconLock,
     'arrow-up': IconArrowUp,
     'arrow-down': IconArrowDown,
+    'arrow-left': IconArrowLeft,
     'plus': IconPlus,
     'microphone': IconMicrophone // Додано
 } as const;

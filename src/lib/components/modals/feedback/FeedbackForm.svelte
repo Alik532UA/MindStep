@@ -1,6 +1,7 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
+    import SvgIcons from "$lib/components/SvgIcons.svelte";
     import type { FeedbackType } from "$lib/services/feedbackService";
     import { createEventDispatcher } from "svelte";
 
@@ -105,7 +106,10 @@
             onclick={goBack}
             disabled={isSubmitting}
         >
-            ← {$t("ui.goBack")}
+            {#snippet icon()}
+                <SvgIcons name="arrow-left" width="18" height="18" />
+            {/snippet}
+            {$t("ui.goBack")}
         </StyledButton>
         <StyledButton
             variant="primary"
@@ -152,12 +156,5 @@
         flex-direction: column-reverse;
         margin-top: 16px;
         gap: 12px;
-    }
-
-    @media (min-width: 480px) {
-        .actions-row {
-            flex-direction: row;
-            gap: 16px;
-        }
     }
 </style>
