@@ -184,11 +184,20 @@
   }
 
   .voice-list-wrapper {
-    flex: 1 1 0;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: 300px;
+    max-height: 50vh;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+  }
+
+  @media (min-width: 768px) {
+    .voice-list-wrapper {
+      flex: 1 1 0;
+      min-height: 0;
+      max-height: none;
+    }
   }
 
   .voice-list-wrapper.fade-bottom {
