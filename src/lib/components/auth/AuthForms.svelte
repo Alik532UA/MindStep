@@ -18,7 +18,7 @@
     const dispatch = createEventDispatcher();
 
     let isCapsLock = $state(false);
-    let keyboardLang = $state("EN");
+    let keyboardLang = $state("");
 
     function handleSubmit() {
         dispatch("submit");
@@ -84,7 +84,9 @@
                 {#if isCapsLock}
                     <span class="caps-indicator" title="Caps Lock">⇪</span>
                 {/if}
-                <span class="lang-indicator">{keyboardLang}</span>
+                {#if keyboardLang}
+                    <span class="lang-indicator">{keyboardLang}</span>
+                {/if}
             </div>
         </div>
     </div>
