@@ -4,8 +4,8 @@
   import { t } from '$lib/i18n/typedI18n';
 </script>
 
-<div class="page-container">
-  <div class="header-container">
+<div class="page-container" data-testid="settings-page-container">
+  <div class="header-container" data-testid="settings-header-container">
     <FloatingBackButton />
     <h1 data-testid="settings-title">{$t('settings.title')}</h1>
   </div>

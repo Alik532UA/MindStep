@@ -55,33 +55,39 @@
 
 <div
   class="voice-settings-modal-content"
-  data-testid="voice-settings-modal-content"
+  data-testid="voice-settings-inner-content"
 >
-  <h2 class="modal-title-menu" id="voice-settings-title">
-    {$t("voiceSettings.title")}
-  </h2>
+  <!-- Removed main title to match VoiceTab -->
 
   <div class="voice-settings-body">
-    <div class="voice-settings-container">
-      {#if VoiceSettings}
-        <VoiceSettings />
-      {:else}
-        <div class="loading-placeholder">Завантаження...</div>
-      {/if}
-    </div>
-    <hr class="divider-h" />
-    <div class="divider-v"></div>
-    <div
-      class="voice-list-container"
-      class:fade-bottom={showFade}
-      bind:this={voiceListContainer}
-      onscroll={updateFadeState}
-    >
-      {#if VoiceList}
-        <VoiceList />
-      {:else}
-        <div class="loading-placeholder">Завантаження...</div>
-      {/if}
+    <div class="setup-grid" data-testid="voice-modal-setup-grid">
+      <div class="grid-column" data-testid="voice-settings-column">
+        <div class="settings-card" data-testid="voice-settings-card">
+          <span class="settings-label">{$t("settings.voiceSettings")}</span>
+          {#if VoiceSettings}
+            <VoiceSettings />
+          {:else}
+            <div class="loading-placeholder">Завантаження...</div>
+          {/if}
+        </div>
+      </div>
+      <div class="grid-column" data-testid="voice-list-column">
+        <div class="settings-card" data-testid="voice-list-card" style="height: 100%; min-height: 400px;">
+          <span class="settings-label">{$t("settings.voiceList")}</span>
+          <div
+            class="voice-list-wrapper"
+            class:fade-bottom={showFade}
+            bind:this={voiceListContainer}
+            onscroll={updateFadeState}
+          >
+            {#if VoiceList}
+              <VoiceList />
+            {:else}
+              <div class="loading-placeholder">Завантаження...</div>
+            {/if}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -98,12 +104,23 @@
 </div>
 
 <style>
+  :global(.base-modal-container[data-testid="voice-settings-modal"]) {
+    width: min(1200px, 95vw) !important;
+    max-width: 95vw !important;
+    --responsive-max-width: min(1200px, 95vw) !important;
+  }
+  
+  :global(.base-modal-container[data-testid="voice-settings-modal"] .modal-window),
+  :global(.base-modal-container[data-testid="voice-settings-modal"] .modal-content) {
+    width: 100% !important;
+    max-width: min(1200px, 95vw) !important;
+  }
+
   .voice-settings-modal-content {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    width: 600px;
-    max-width: 95vw;
+    width: 100%;
     box-sizing: border-box;
   }
 
@@ -117,68 +134,87 @@
   }
 
   .voice-settings-body {
-    padding: 24px;
-    max-height: 60vh;
+    padding: 0;
+    max-height: 65vh;
     display: flex;
     flex-direction: column;
-  }
-
-  .voice-settings-container,
-  .voice-list-container {
-    min-width: 280px;
     overflow-y: auto;
-    flex: 1;
-    min-height: 0;
   }
 
-  .voice-list-container.fade-bottom {
+  .settings-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .setup-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .setup-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .grid-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .settings-card {
+    background: var(--bg-secondary);
+    padding: 24px;
+    border-radius: var(--unified-border-radius);
+    box-shadow: var(--unified-shadow);
+    border: var(--unified-border);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-grow: 1;
+    box-sizing: border-box;
+  }
+
+  .voice-list-wrapper {
+    flex-grow: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+
+  .voice-list-wrapper.fade-bottom {
     -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
   }
 
-  .voice-list-container::-webkit-scrollbar {
+  .voice-list-wrapper::-webkit-scrollbar {
     width: 8px;
   }
-  .voice-list-container::-webkit-scrollbar-track {
+
+  .voice-list-wrapper::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 4px;
   }
-  .voice-list-container::-webkit-scrollbar-thumb {
+
+  .voice-list-wrapper::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
   }
-  .voice-list-container::-webkit-scrollbar-thumb:hover {
+
+  .voice-list-wrapper::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
-  }
-
-  .divider-h {
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 20px 0;
-  }
-
-  .divider-v {
-    display: none;
-    border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 0 20px;
-  }
-
-  @media (min-width: 801px) {
-    .voice-settings-body {
-      flex-direction: row;
-    }
-    .divider-h {
-      display: none;
-    }
-    .divider-v {
-      display: block;
-    }
   }
 
   .actions-column {
     display: flex;
     flex-direction: column;
     margin-top: 10px;
+    padding: 0 16px;
   }
 </style>

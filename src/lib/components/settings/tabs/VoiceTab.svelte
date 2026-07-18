@@ -48,9 +48,9 @@
   });
 </script>
 
-<div class="setup-grid">
-  <div class="grid-column">
-    <div class="settings-card">
+<div class="setup-grid" data-testid="voice-tab-setup-grid">
+  <div class="grid-column" data-testid="voice-settings-column">
+    <div class="settings-card" data-testid="voice-settings-card">
       <span class="settings-label">{$t("settings.voiceSettings")}</span>
       {#if VoiceSettings}
         <VoiceSettings />
@@ -59,8 +59,8 @@
       {/if}
     </div>
   </div>
-  <div class="grid-column">
-    <div class="settings-card" style="height: 100%; min-height: 400px;">
+  <div class="grid-column" data-testid="voice-list-column">
+    <div class="settings-card" data-testid="voice-list-card" style="height: 100%; min-height: 400px;">
       <span class="settings-label">{$t("settings.voiceList")}</span>
       <div
         class="voice-list-wrapper"

@@ -29,9 +29,9 @@
   }
 </script>
 
-<div class="settings-container">
+<div class="settings-container" data-testid="settings-main-container">
   <!-- Tabs Header -->
-  <div class="tabs-header">
+  <div class="tabs-header" data-testid="settings-tabs-header">
     <button
       class="tab-btn"
       class:active={activeTab === "general"}
@@ -59,7 +59,7 @@
   </div>
 
   <!-- Tab Content -->
-  <div class="tab-content">
+  <div class="tab-content" data-testid="settings-tab-content">
     {#if activeTab === "general"}
       <GeneralTab />
     {:else if activeTab === "voice"}
