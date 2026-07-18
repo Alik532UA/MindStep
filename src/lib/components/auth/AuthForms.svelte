@@ -3,12 +3,22 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { createEventDispatcher } from "svelte";
 
-    export let mode: "link" | "login" | "reset";
-    export let email = "";
-    export let password = "";
-    export let isLoading = false;
+    let {
+        mode = $bindable(),
+        email = $bindable(""),
+        password = $bindable(""),
+        isLoading = false
+    }: {
+        mode: "link" | "login" | "reset";
+        email?: string;
+        password?: string;
+        isLoading?: boolean;
+    } = $props();
 
     const dispatch = createEventDispatcher();
+
+    let isCapsLock = $state(false);
+    let keyboardLang = $state("EN");
 
     function handleSubmit() {
         dispatch("submit");
@@ -16,6 +26,23 @@
 
     function setMode(newMode: "link" | "login" | "reset") {
         dispatch("setMode", newMode);
+    }
+
+    function handleModifier(e: MouseEvent | KeyboardEvent) {
+        if (e.getModifierState) {
+            isCapsLock = e.getModifierState('CapsLock');
+        }
+    }
+
+    function handleKeydown(e: KeyboardEvent) {
+        handleModifier(e);
+        if (e.key.length === 1) {
+            if (/[а-яА-ЯіІїЇєЄґҐ]/.test(e.key)) {
+                keyboardLang = "UA";
+            } else if (/[a-zA-Z]/.test(e.key)) {
+                keyboardLang = "EN";
+            }
+        }
     }
 </script>
 
@@ -42,13 +69,24 @@
 {#if mode !== "reset"}
     <div class="form-group">
         <label for="auth-password">{$t("ui.auth.passwordLabel")}</label>
-        <input
-            id="auth-password"
-            type="password"
-            bind:value={password}
-            class="glass-input"
-            placeholder="******"
-        />
+        <div class="password-input-wrapper">
+            <input
+                id="auth-password"
+                type="password"
+                bind:value={password}
+                class="glass-input"
+                placeholder="******"
+                onkeydown={handleKeydown}
+                onkeyup={handleModifier}
+                onclick={handleModifier}
+            />
+            <div class="indicators">
+                {#if isCapsLock}
+                    <span class="caps-indicator" title="Caps Lock">⇪</span>
+                {/if}
+                <span class="lang-indicator">{keyboardLang}</span>
+            </div>
+        </div>
     </div>
 {/if}
 
@@ -72,18 +110,18 @@
 
 <div class="links">
     {#if mode === "link"}
-        <button class="link-btn" on:click={() => setMode("login")}>
+        <button class="link-btn" onclick={() => setMode("login")}>
             {$t("ui.auth.switchLogin")}
         </button>
     {:else if mode === "login"}
-        <button class="link-btn" on:click={() => setMode("link")}>
+        <button class="link-btn" onclick={() => setMode("link")}>
             {$t("ui.auth.switchRegister")}
         </button>
-        <button class="link-btn" on:click={() => setMode("reset")}>
+        <button class="link-btn" onclick={() => setMode("reset")}>
             {$t("ui.auth.forgotPassword")}
         </button>
     {:else}
-        <button class="link-btn" on:click={() => setMode("login")}>
+        <button class="link-btn" onclick={() => setMode("login")}>
             {$t("ui.auth.backToLogin")}
         </button>
     {/if}
@@ -138,5 +176,46 @@
     }
     .link-btn:hover {
         opacity: 1;
+    }
+    
+    .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .password-input-wrapper :global(.glass-input) {
+        padding-right: 60px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .indicators {
+        position: absolute;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        font-weight: 500;
+        pointer-events: none;
+    }
+    
+    .caps-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    
+    .lang-indicator {
+        text-transform: uppercase;
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+        padding-left: 8px;
+        letter-spacing: 0.5px;
     }
 </style>

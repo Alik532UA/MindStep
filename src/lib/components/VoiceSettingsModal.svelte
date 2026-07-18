@@ -124,14 +124,7 @@
     box-sizing: border-box;
   }
 
-  .modal-title-menu {
-    text-align: center;
-    font-size: 1.8em;
-    font-weight: 800;
-    color: #fff;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
+
 
   .voice-settings-body {
     padding: 0;
