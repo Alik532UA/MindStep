@@ -37,7 +37,9 @@
     function handleKeydown(e: KeyboardEvent) {
         handleModifier(e);
         if (e.key.length === 1) {
-            if (/[а-яА-ЯіІїЇєЄґҐ]/.test(e.key)) {
+            if (/[ыъэёЫЪЭЁ]/.test(e.key)) {
+                keyboardLang = "п.х.";
+            } else if (/[а-яА-ЯіІїЇєЄґҐ]/.test(e.key)) {
                 keyboardLang = "UA";
             } else if (/[a-zA-Z]/.test(e.key)) {
                 keyboardLang = "EN";
