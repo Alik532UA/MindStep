@@ -72,7 +72,7 @@
         </div>
       </div>
       <div class="grid-column" data-testid="voice-list-column">
-        <div class="settings-card" data-testid="voice-list-card" style="height: 100%; min-height: 400px;">
+        <div class="settings-card" data-testid="voice-list-card">
           <span class="settings-label">{$t("settings.voiceList")}</span>
           <div
             class="voice-list-wrapper"
@@ -164,6 +164,8 @@
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
   }
 
   .settings-card {
@@ -176,16 +178,17 @@
     flex-direction: column;
     gap: 20px;
     flex-grow: 1;
+    min-height: 0;
+    height: 100%;
     box-sizing: border-box;
   }
 
   .voice-list-wrapper {
-    flex-grow: 1;
+    flex: 1 1 0;
     min-height: 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    max-height: 400px;
   }
 
   .voice-list-wrapper.fade-bottom {
