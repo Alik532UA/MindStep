@@ -30,6 +30,7 @@ yarn-error.log*
 .env.*
 !.env.example
 
+
 # OS files
 .DS_Store
 
@@ -42,6 +43,7 @@ yarn-error.log*
 /blob-report/
 /playwright/.cache/
 /.vite/
+test-results-robust.json
 
 # Firebase logs
 firebase-debug.log

@@ -47,22 +47,45 @@ class AiService {
       return new Promise((resolve) => {
         const settings = gameSettingsState.state;
 
-        const handleMessage = (e: MessageEvent) => {
+        const timeoutId = setTimeout(() => {
+          logService.error('AiService: Worker timeout!');
           this.worker?.removeEventListener('message', handleMessage);
+          resolve(null);
+        }, 5000);
+
+        const handleMessage = (e: MessageEvent) => {
+          clearTimeout(timeoutId);
+          this.worker?.removeEventListener('message', handleMessage);
+          this.worker?.removeEventListener('error', handleError);
           logService.logicVirtualPlayer('getComputerMove (worker): отримано хід', e.data);
           resolve(e.data);
         };
 
+        const handleError = (err: ErrorEvent) => {
+          clearTimeout(timeoutId);
+          this.worker?.removeEventListener('error', handleError);
+          this.worker?.removeEventListener('message', handleMessage);
+          logService.error('AiService: Worker error:', err);
+          resolve(null);
+        };
+
         this.worker?.addEventListener('message', handleMessage);
+        this.worker?.addEventListener('error', handleError);
 
         logService.logicVirtualPlayer('getComputerMove (worker): надсилаю запит у воркер');
-        // FIX: Svelte 5 Runes створюють Proxy-об'єкти, які не можна клонувати для postMessage.
-        // JSON.parse(JSON.stringify()) — єдиний надійний спосіб зняти Proxy.
-        this.worker?.postMessage(JSON.parse(JSON.stringify({
-          boardState,
-          playerState,
-          settings
-        })));
+        try {
+          this.worker?.postMessage(JSON.parse(JSON.stringify({
+            boardState,
+            playerState,
+            settings
+          })));
+        } catch (e) {
+          clearTimeout(timeoutId);
+          this.worker?.removeEventListener('message', handleMessage);
+          this.worker?.removeEventListener('error', handleError);
+          logService.error('AiService: postMessage failed', e);
+          resolve(null);
+        }
       });
     }
 

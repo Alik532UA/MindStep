@@ -49,6 +49,16 @@ async function main() {
         findFailedTests(suite, failedTests);
     }
 
+    // Перевірка на відсутність встановлених браузерів Playwright
+    const missingBrowserTest = failedTests.find(t => t.error && (t.error.includes("Executable doesn't exist") || t.error.includes("playwright install")));
+    if (missingBrowserTest) {
+        console.error('\n\x1b[31m[!] КРИТИЧНА ПОМИЛКА: Playwright браузери не встановлені.\x1b[0m');
+        console.log('\x1b[33mБудь ласка, виконайте команду:\x1b[0m');
+        console.log('\x1b[36m    npx playwright install\x1b[0m\n');
+        cleanup();
+        process.exit(1);
+    }
+
     if (failedTests.length === 0) {
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\x1b[32mУсі тести пройшли успішно за ${duration}с!\x1b[0m`);
