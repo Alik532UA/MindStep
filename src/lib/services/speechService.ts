@@ -214,10 +214,17 @@ function processQueue(): void {
     const allVoices = speechSynthesis.getVoices();
     if (allVoices.length === 0) {
         logService.speech('[Speech] No voices available, waiting for voices...');
-        loadAndGetVoices().then(() => {
-            isSpeaking = false;
-            speechQueue.unshift(item);
-            processQueue();
+        loadAndGetVoices().then((voices) => {
+            if (voices.length === 0) {
+                logService.speech('[Speech] Still no voices available, giving up on this speech item.');
+                isSpeaking = false;
+                if (item.onEnd) item.onEnd();
+                processQueue();
+            } else {
+                isSpeaking = false;
+                speechQueue.unshift(item);
+                processQueue();
+            }
         });
         return;
     }

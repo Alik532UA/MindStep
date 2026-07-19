@@ -31,6 +31,7 @@
 </script>
 
 <button
+  type="button"
   class="styled-button styled-button--variant-{variant} styled-button--size-{size} styled-button--shape-{shape} {customClass}"
   data-testid={dataTestId}
   bind:this={buttonElement}
