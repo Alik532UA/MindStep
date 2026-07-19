@@ -111,6 +111,7 @@ class RewardsService {
     notificationService.show({
       type: 'achievement',
       titleKey: achievement.titleKey,
+      messageKey: achievement.descriptionKey,
       icon: achievement.icon,
       duration: 4000
     });

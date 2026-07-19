@@ -32,14 +32,22 @@
     <div class="icon">
         <NotoEmoji name={icons[notification.type]} size="24px" />
     </div>
-    <div class="message">
+    <div class="content">
+        {#if notification.titleKey}
+            <div class="title">{$t(notification.titleKey as TranslationKey)}</div>
+        {:else if notification.titleRaw}
+            <div class="title">{notification.titleRaw}</div>
+        {/if}
+
         {#if notification.messageKey}
-            {$t(
-                notification.messageKey as TranslationKey,
-                notification.messageValues,
-            )}
+            <div class="message">
+                {$t(
+                    notification.messageKey as TranslationKey,
+                    notification.messageValues,
+                )}
+            </div>
         {:else if notification.messageRaw}
-            {notification.messageRaw}
+            <div class="message">{notification.messageRaw}</div>
         {/if}
     </div>
     <button class="close-btn" on:click={remove} aria-label="Закрити">
@@ -86,11 +94,24 @@
         align-items: center;
     }
 
-    .message {
+    .content {
         flex-grow: 1;
-        font-size: 0.95rem;
-        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .title {
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .message {
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: var(--text-secondary, rgba(255, 255, 255, 0.7));
         line-height: 1.4;
     }
 
