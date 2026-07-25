@@ -703,6 +703,15 @@ export interface TranslationSchema {
       forgotPassword: string;
       backToLogin: string;
       saveDescription: string;
+      showPassword: string;
+      hidePassword: string;
+      capsLockOn: string;
+      checkLayout: string;
+      keyboardLayout: string;
+      authTitle: string;
+      registerBtn: string;
+      authFailed: string;
+      resetSent: string;
     };
   };
   updateNotification: {

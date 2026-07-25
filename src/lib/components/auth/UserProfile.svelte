@@ -3,6 +3,7 @@
     import { authService, userStore } from "$lib/services/authService";
     import { userProfileStore } from "$lib/services/auth/userProfileService";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
+    import PasswordInput from "$lib/components/ui/PasswordInput.svelte";
     import EditableText from "$lib/components/ui/EditableText.svelte";
     import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
 
@@ -87,16 +88,13 @@
 {:else if isChangePasswordMode}
     <!-- CHANGE PASSWORD VIEW -->
     <div class="change-password-zone">
-        <div class="form-group">
-            <label for="new-password">{$t("ui.auth.newPasswordLabel")}</label>
-            <input
-                id="new-password"
-                type="password"
-                bind:value={newPassword}
-                class="glass-input"
-                placeholder="******"
-            />
-        </div>
+        <PasswordInput
+            id="new-password"
+            label={$t("ui.auth.newPasswordLabel")}
+            testId="profile-new-password"
+            autocomplete="new-password"
+            bind:value={newPassword}
+        />
         <div class="actions">
             <StyledButton
                 variant="primary"
@@ -116,16 +114,14 @@
     <!-- DELETE ACCOUNT CONFIRMATION -->
     <div class="delete-zone">
         <p class="warning-text">{$t("ui.auth.deleteWarning")}</p>
-        <div class="form-group">
-            <label for="delete-password">{$t("ui.auth.passwordLabel")}</label>
-            <input
-                id="delete-password"
-                type="password"
-                bind:value={deletePassword}
-                class="glass-input danger-input"
-                placeholder="******"
-            />
-        </div>
+        <PasswordInput
+            id="delete-password"
+            label={$t("ui.auth.passwordLabel")}
+            testId="profile-delete-password"
+            autocomplete="current-password"
+            variant="danger"
+            bind:value={deletePassword}
+        />
         <div class="actions">
             <StyledButton
                 variant="danger"
@@ -206,20 +202,6 @@
         font-size: 0.9em;
         margin: 0 0 12px 0;
         text-align: center;
-    }
-    .danger-input {
-        border-color: var(--error-color);
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    label {
-        font-size: 0.9em;
-        font-weight: bold;
-        color: var(--text-secondary);
     }
 
     .link-btn {

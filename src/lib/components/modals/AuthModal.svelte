@@ -1,48 +1,62 @@
 <script lang="ts">
     import { authService, userStore } from "$lib/services/authService";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
+    import { t } from "$lib/i18n/typedI18n";
     import UserProfile from "$lib/components/auth/UserProfile.svelte";
     import AuthForms from "$lib/components/auth/AuthForms.svelte";
 
-    // Modes: 'link' (register/save), 'login', 'reset'
-    let mode: "link" | "login" | "reset" = "link";
+    // Modes: 'auth' (вхід+реєстрація в одному вікні) | 'forgot' (відновлення пароля)
+    let authMode: "auth" | "forgot" = "auth";
+    let isLoading = false;
+    let authError = "";
+    let authInfo = "";
 
-    let email = "";
-    let password = "";
     let deletePassword = "";
     let newPassword = "";
-    let isLoading = false;
 
     let isDeleteMode = false;
     let isChangePasswordMode = false;
 
     $: isAuthorized = $userStore && !$userStore.isAnonymous;
 
-    async function handleSubmit() {
+    async function handleLogin(email: string, password: string) {
+        if (!email || !password) return;
+        isLoading = true;
+        authError = "";
+        authInfo = "";
+        const success = await authService.loginEmailPassword(email, password);
+        isLoading = false;
+        if (success) modalStateRune.closeModal();
+        else authError = $t("ui.auth.authFailed");
+    }
+
+    async function handleRegister(email: string, password: string) {
+        if (!email || !password) return;
+        isLoading = true;
+        authError = "";
+        authInfo = "";
+        // У MindStep реєстрація = лінкування анонімного акаунта (збереження прогресу)
+        const success = await authService.linkEmailPassword(email, password);
+        isLoading = false;
+        if (success) modalStateRune.closeModal();
+        else authError = $t("ui.auth.authFailed");
+    }
+
+    async function handleForgot(email: string) {
         if (!email) return;
         isLoading = true;
-        let success = false;
-
-        if (mode === "link") {
-            if (!password) {
-                isLoading = false;
-                return;
-            }
-            success = await authService.linkEmailPassword(email, password);
-        } else if (mode === "login") {
-            if (!password) {
-                isLoading = false;
-                return;
-            }
-            success = await authService.loginEmailPassword(email, password);
-        } else if (mode === "reset") {
-            success = await authService.resetPassword(email);
-        }
-
+        authError = "";
+        authInfo = "";
+        await authService.resetPassword(email);
         isLoading = false;
-        if (success) {
-            if (mode === "reset") modalStateRune.closeModal();
-        }
+        // Анти-enumeration (§4): однакове повідомлення незалежно від існування акаунта
+        authInfo = $t("ui.auth.resetSent");
+    }
+
+    function setAuthMode(m: "auth" | "forgot") {
+        authMode = m;
+        authError = "";
+        authInfo = "";
     }
 
     async function handleLogout() {
@@ -98,12 +112,14 @@
         />
     {:else}
         <AuthForms
-            bind:mode
-            bind:email
-            bind:password
-            {isLoading}
-            on:submit={handleSubmit}
-            on:setMode={(e) => (mode = e.detail)}
+            mode={authMode}
+            loading={isLoading}
+            error={authError}
+            info={authInfo}
+            onlogin={handleLogin}
+            onregister={handleRegister}
+            onforgot={handleForgot}
+            onmode={setAuthMode}
         />
     {/if}
 </div>
@@ -119,6 +135,11 @@
         box-shadow: none;
         border: none;
         backdrop-filter: none;
-        padding: 24px;
+        padding: 0;
+    }
+
+    /* §2: розширюємо саме auth-модалку до 440px, не чіпаючи інші модалки */
+    :global(.base-modal-container[data-testid="auth-modal"]) {
+        --responsive-max-width: min(440px, 95vw);
     }
 </style>

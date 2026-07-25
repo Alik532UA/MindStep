@@ -43,8 +43,17 @@ export default {
     deleteWarning: "Warning! This action cannot be undone. All your data and records will be permanently deleted. Enter your password to confirm.",
     switchLogin: "Already have an account? Login",
     switchRegister: "No account? Register",
-    forgotPassword: "Forgot password?",
+    forgotPassword: "Reset password",
     backToLogin: "Back to Login",
-    saveDescription: "Create an account so you don't lose your records and rewards when changing devices or clearing cache."
+    saveDescription: "Create an account so you don't lose your records and rewards when changing devices or clearing cache.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    capsLockOn: "Caps Lock is on",
+    checkLayout: "Check keyboard layout (non-Latin characters typed)",
+    keyboardLayout: "Layout",
+    authTitle: "Sign in or register",
+    registerBtn: "Register",
+    authFailed: "Something went wrong. Check your email and password and try again.",
+    resetSent: "If an account with this email exists, we've sent a recovery link. Check your Spam folder."
   }
 };

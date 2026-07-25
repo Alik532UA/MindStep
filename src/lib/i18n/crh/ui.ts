@@ -43,8 +43,17 @@ export default {
     deleteWarning: "Diqqat! Bu amel keri qaytarılamaz. Bütün malümatlarıñız ve rekordlarıñız ebediyen silinecek. Tasdıqlamaq içün parolnı kiritiñiz.",
     switchLogin: "Esabıñız barmı? Kiriş",
     switchRegister: "Esabıñız yoqmı? Qayd ol",
-    forgotPassword: "Parolnı unuttıñızmı?",
+    forgotPassword: "Parolnı tiklev",
     backToLogin: "Kirişke qayt",
-    saveDescription: "Cihaz deñiştirgende ya da keş temizlegende rekordlarıñıznı ve mukâfatlarıñıznı ğayıp etmemek içün esap yaratıñız."
+    saveDescription: "Cihaz deñiştirgende ya da keş temizlegende rekordlarıñıznı ve mukâfatlarıñıznı ğayıp etmemek içün esap yaratıñız.",
+    showPassword: "Parolnı köster",
+    hidePassword: "Parolnı gizle",
+    capsLockOn: "Caps Lock faal",
+    checkLayout: "Klaviatura tizimini teşkeriñiz (latın olmağan işaretler kirsetildi)",
+    keyboardLayout: "Klavye tizilimi",
+    authTitle: "Kiriş ya da qaydiyat",
+    registerBtn: "Qayd ol",
+    authFailed: "Bir şey yañlış ketti. Email ve parolnı teşkerip, yañıdan deñeñiz.",
+    resetSent: "Eger bu email ile esap bar olsa, tiklev mektübini yolladıq. «Spam» cığasını da teşkeriñiz."
   }
 };

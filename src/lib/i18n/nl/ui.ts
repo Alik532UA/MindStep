@@ -43,8 +43,17 @@ export default {
     deleteWarning: "Waarschuwing! Deze actie kan niet ongedaan worden gemaakt. Al uw gegevens en records worden permanent verwijderd. Voer uw wachtwoord in om te bevestigen.",
     switchLogin: "Heb je al een account? Inloggen",
     switchRegister: "Geen account? Registreren",
-    forgotPassword: "Wachtwoord vergeten?",
+    forgotPassword: "Wachtwoord herstellen",
     backToLogin: "Terug naar Inloggen",
-    saveDescription: "Maak een account aan om je records en beloningen niet te verliezen bij het wisselen van apparaat of het wissen van de cache."
+    saveDescription: "Maak een account aan om je records en beloningen niet te verliezen bij het wisselen van apparaat of het wissen van de cache.",
+    showPassword: "Wachtwoord tonen",
+    hidePassword: "Wachtwoord verbergen",
+    capsLockOn: "Caps Lock staat aan",
+    checkLayout: "Controleer toetsenbordindeling (niet-Latijnse tekens ingevoerd)",
+    keyboardLayout: "Indeling",
+    authTitle: "Inloggen of registreren",
+    registerBtn: "Registreren",
+    authFailed: "Er ging iets mis. Controleer je e-mailadres en wachtwoord en probeer het opnieuw.",
+    resetSent: "Als er een account met dit e-mailadres bestaat, hebben we een herstellink verstuurd. Controleer je map Spam."
   }
 };

@@ -1,185 +1,145 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
+    import PasswordInput from "$lib/components/ui/PasswordInput.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
-    import { createEventDispatcher } from "svelte";
+    import { Mail } from "lucide-svelte";
+
+    interface Props {
+        mode?: "auth" | "forgot";
+        loading?: boolean;
+        error?: string;
+        info?: string;
+        onlogin: (email: string, password: string) => void;
+        onregister: (email: string, password: string) => void;
+        onforgot: (email: string) => void;
+        onmode: (m: "auth" | "forgot") => void;
+    }
 
     let {
-        mode = $bindable(),
-        email = $bindable(""),
-        password = $bindable(""),
-        isLoading = false
-    }: {
-        mode: "link" | "login" | "reset";
-        email?: string;
-        password?: string;
-        isLoading?: boolean;
-    } = $props();
+        mode = "auth",
+        loading = false,
+        error = "",
+        info = "",
+        onlogin,
+        onregister,
+        onforgot,
+        onmode
+    }: Props = $props();
 
-    const dispatch = createEventDispatcher();
-
-    let isCapsLock = $state(false);
-    let keyboardLang = $state("");
-    let showPassword = $state(false);
-
-    function handleSubmit() {
-        dispatch("submit");
-    }
-
-    function setMode(newMode: "link" | "login" | "reset") {
-        dispatch("setMode", newMode);
-    }
-
-    function handleModifier(e: MouseEvent | KeyboardEvent) {
-        if (e.getModifierState) {
-            isCapsLock = e.getModifierState('CapsLock');
-        }
-    }
-
-    function handleKeydown(e: KeyboardEvent) {
-        handleModifier(e);
-        if (e.key.length === 1) {
-            if (/[ыъэёЫЪЭЁ]/.test(e.key)) {
-                keyboardLang = "п.х.";
-            } else if (/[а-яА-ЯіІїЇєЄґҐ]/.test(e.key)) {
-                keyboardLang = "UA";
-            } else if (/[a-zA-Z]/.test(e.key)) {
-                keyboardLang = "EN";
-            }
-        }
-    }
+    // Поля спільні між входом і реєстрацією (§1) — тримаємо їх у самому компоненті.
+    let email = $state("");
+    let password = $state("");
 </script>
 
-{#if mode === "link"}
-    <h3 class="title">{$t("ui.auth.titleSave")}</h3>
-    <p class="description">{$t("ui.auth.saveDescription")}</p>
-{:else if mode === "login"}
-    <h3 class="title">{$t("ui.auth.titleLogin")}</h3>
-{:else}
-    <h3 class="title">{$t("ui.auth.titleReset")}</h3>
-{/if}
+<div class="auth-card" data-testid="auth-card">
+    {#if mode === "forgot"}
+        <h3 class="auth-title">{$t("ui.auth.titleReset")}</h3>
 
-<div class="form-group">
-    <label for="auth-email">{$t("ui.auth.emailLabel")}</label>
-    <input
-        id="auth-email"
-        type="email"
-        bind:value={email}
-        class="glass-input"
-        placeholder="name@example.com"
-    />
-</div>
-
-{#if mode !== "reset"}
-    <div class="form-group">
-        <label for="auth-password">{$t("ui.auth.passwordLabel")}</label>
-        <div class="password-input-wrapper">
-            <input
-                id="auth-password"
-                type={showPassword ? "text" : "password"}
-                bind:value={password}
-                class="glass-input"
-                placeholder="******"
-                onkeydown={handleKeydown}
-                onkeyup={handleModifier}
-                onclick={handleModifier}
-            />
-            <div class="indicators">
-                <button 
-                    type="button" 
-                    class="toggle-password-btn" 
-                    onclick={() => showPassword = !showPassword}
-                    title={showPassword ? "Приховати пароль" : "Показати пароль"}
-                >
-                    {#if showPassword}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
-                    {:else}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-dashed"><path d="M13.054 18.946a11 11 0 0 1-2.11 0"/><path d="M13.054 5.054a11 11 0 0 0-2.11-.001"/><path d="M17.072 6.274a11 11 0 0 1 1.753 1.173"/><path d="M18.825 16.552a11 11 0 0 1-1.753 1.174"/><path d="M2.514 13.303a11 11 0 0 1-.452-.954 1 1 0 0 1 0-.697 11 11 0 0 1 .45-.955"/><path d="M21.485 10.697a11 11 0 0 1 .453.955 1 1 0 0 1 0 .697 11 11 0 0 1-.453.954"/><path d="M5.173 7.448a11 11 0 0 1 1.753-1.174"/><path d="M6.926 17.726a11 11 0 0 1-1.753-1.174"/><circle cx="12" cy="12" r="3"/></svg>
-                    {/if}
-                </button>
-                {#if isCapsLock}
-                    <span class="caps-indicator" title="Caps Lock">⇪</span>
-                {/if}
-                {#if keyboardLang}
-                    <span class="lang-indicator">{keyboardLang}</span>
-                {/if}
+        <form onsubmit={(e) => { e.preventDefault(); onforgot(email); }}>
+            <div class="input-with-icon">
+                <Mail size={18} class="input-icon lead" aria-hidden="true" />
+                <input
+                    id="reset-email"
+                    type="email"
+                    bind:value={email}
+                    class="glass-input"
+                    placeholder=" "
+                    autocomplete="email"
+                    required
+                    data-testid="reset-email-input"
+                />
+                <label for="reset-email" class="floating-label">{$t("ui.auth.emailLabel")}</label>
             </div>
-        </div>
-    </div>
-{/if}
 
-<div class="actions">
-    <StyledButton
-        variant="primary"
-        onclick={handleSubmit}
-        disabled={isLoading}
-    >
-        {#if isLoading}
-            {$t("common.loading")}
-        {:else if mode === "link"}
-            {$t("ui.auth.saveBtn")}
-        {:else if mode === "login"}
-            {$t("ui.auth.loginBtn")}
-        {:else}
-            {$t("ui.auth.resetBtn")}
-        {/if}
-    </StyledButton>
-</div>
+            {#if error}<p class="auth-error" role="alert" data-testid="auth-error">{error}</p>{/if}
+            {#if info}<p class="auth-info" role="status" data-testid="auth-info">{info}</p>{/if}
 
-<div class="links">
-    {#if mode === "link"}
-        <button class="link-btn" onclick={() => setMode("login")}>
-            {$t("ui.auth.switchLogin")}
-        </button>
-    {:else if mode === "login"}
-        <button class="link-btn" onclick={() => setMode("link")}>
-            {$t("ui.auth.switchRegister")}
-        </button>
-        <button class="link-btn" onclick={() => setMode("reset")}>
-            {$t("ui.auth.forgotPassword")}
-        </button>
+            <div class="auth-actions">
+                <StyledButton variant="primary" type="submit" disabled={loading} dataTestId="reset-submit">
+                    {loading ? $t("common.loading") : $t("ui.auth.resetBtn")}
+                </StyledButton>
+                <button class="link-btn" type="button" onclick={() => onmode("auth")} data-testid="reset-back">
+                    {$t("ui.auth.backToLogin")}
+                </button>
+            </div>
+        </form>
     {:else}
-        <button class="link-btn" onclick={() => setMode("login")}>
-            {$t("ui.auth.backToLogin")}
-        </button>
+        <h3 class="auth-title">{$t("ui.auth.authTitle")}</h3>
+
+        <form onsubmit={(e) => { e.preventDefault(); onlogin(email, password); }}>
+            <div class="input-with-icon">
+                <Mail size={18} class="input-icon lead" aria-hidden="true" />
+                <input
+                    id="auth-email"
+                    type="email"
+                    bind:value={email}
+                    class="glass-input"
+                    placeholder=" "
+                    autocomplete="email"
+                    required
+                    data-testid="auth-email-input"
+                />
+                <label for="auth-email" class="floating-label">{$t("ui.auth.emailLabel")}</label>
+            </div>
+
+            <PasswordInput
+                id="auth-password"
+                testId="auth-password"
+                label={$t("ui.auth.passwordLabel")}
+                autocomplete="current-password"
+                bind:value={password}
+            />
+
+            <!-- «Відновити пароль» — окремим рядком ПІД полем (не в полі: там CapsLock/розкладка/око) -->
+            <button class="link-btn reset-link" type="button" onclick={() => onmode("forgot")} data-testid="auth-forgot">
+                {$t("ui.auth.forgotPassword")}
+            </button>
+
+            {#if error}<p class="auth-error" role="alert" data-testid="auth-error">{error}</p>{/if}
+            {#if info}<p class="auth-info" role="status" data-testid="auth-info">{info}</p>{/if}
+
+            <div class="auth-actions">
+                <StyledButton variant="primary" type="submit" disabled={loading} dataTestId="auth-login">
+                    {loading ? $t("common.loading") : $t("ui.auth.loginBtn")}
+                </StyledButton>
+                <StyledButton variant="default" type="button" onclick={() => onregister(email, password)} disabled={loading} dataTestId="auth-register">
+                    {$t("ui.auth.registerBtn")}
+                </StyledButton>
+            </div>
+        </form>
     {/if}
 </div>
 
 <style>
-    .title {
+    .auth-card {
+        width: 100%;
+        max-width: 440px; /* §2: комфортно, не вузько */
+        margin-inline: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        box-sizing: border-box;
+    }
+    .auth-title {
         text-align: center;
         margin: 0;
         color: var(--text-primary);
         font-size: 1.4em;
     }
-    .description {
-        font-size: 0.9em;
-        color: var(--text-secondary);
-        text-align: center;
-        margin: 0;
-        line-height: 1.4;
-    }
-    .form-group {
+    form {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 1rem;
     }
-    label {
-        font-size: 0.9em;
-        font-weight: bold;
-        color: var(--text-secondary);
-    }
-    .actions {
-        margin-top: 8px;
+    .auth-actions {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.6rem;
     }
-    .links {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-        margin-top: 8px;
+    .reset-link {
+        align-self: flex-end;
+        margin-top: -0.5rem;
+        font-size: 0.85em;
     }
     .link-btn {
         background: none;
@@ -194,63 +154,61 @@
     .link-btn:hover {
         opacity: 1;
     }
-    
-    .password-input-wrapper {
+    .auth-error {
+        color: var(--error-color, #ef4444);
+        text-align: center;
+        margin: 0;
+        font-size: 0.9em;
+    }
+    .auth-info {
+        color: var(--success-color, #22c55e);
+        text-align: center;
+        margin: 0;
+        font-size: 0.9em;
+    }
+
+    /* Поле email з leading-іконкою + floating-label (пароль — усередині PasswordInput) */
+    .input-with-icon {
         position: relative;
         display: flex;
         align-items: center;
         width: 100%;
     }
-    
-    .password-input-wrapper :global(.glass-input) {
-        padding-right: 90px;
+    :global(.input-icon.lead) {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.5;
+        color: var(--text-accent, #6ea8fe);
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+    .input-with-icon:focus-within :global(.input-icon.lead) {
+        opacity: 1;
+    }
+    .input-with-icon :global(.glass-input) {
         width: 100%;
         box-sizing: border-box;
+        padding-left: 3rem;
+        padding-top: 1.45rem;
+        padding-bottom: 0.55rem;
     }
-    
-    .indicators {
+    .floating-label {
         position: absolute;
-        right: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        left: 3rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1em; /* збіг із текстом .glass-input у стані-плейсхолдера */
         color: var(--text-secondary);
-        font-size: 0.9em;
-        font-weight: 500;
         pointer-events: none;
+        transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease, opacity 0.15s ease;
     }
-    
-    .toggle-password-btn {
-        background: none;
-        border: none;
-        padding: 0;
-        margin: 0;
-        color: var(--text-secondary);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: color 0.2s;
-        pointer-events: auto;
-    }
-    
-    .toggle-password-btn:hover {
-        color: var(--text-primary);
-    }
-    
-    .caps-indicator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text-primary);
-        font-weight: bold;
-        font-size: 1.1em;
-    }
-    
-    .lang-indicator {
-        text-transform: uppercase;
-        border-left: 1px solid rgba(255, 255, 255, 0.2);
-        padding-left: 8px;
-        letter-spacing: 0.5px;
+    .input-with-icon :global(.glass-input:focus ~ .floating-label),
+    .input-with-icon :global(.glass-input:not(:placeholder-shown) ~ .floating-label) {
+        top: 0.5rem;
+        transform: none;
+        font-size: 0.72em;
+        opacity: 0.7;
     }
 </style>
