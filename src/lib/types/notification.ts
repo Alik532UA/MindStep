@@ -11,5 +11,6 @@ export interface Notification {
     messageValues?: Record<string, any>;
     messageRaw?: string; // Fallback plain text
     icon?: string;
-    duration?: number; // ms, default 3000
+    duration?: number; // ms, default 4000
+    anchor?: HTMLElement;
 }

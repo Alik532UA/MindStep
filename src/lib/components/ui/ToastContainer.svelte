@@ -6,7 +6,7 @@
     const notifications = $derived(notificationState.state);
 </script>
 
-<div class="toast-container" aria-live="polite">
+<div class="toast-container" aria-live="polite" data-testid="toast-notifications-container">
     {#each notifications as notification (notification.id)}
         <div animate:flip={{ duration: 300 }}>
             <Toast {notification} />
