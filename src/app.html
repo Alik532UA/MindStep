@@ -3,7 +3,34 @@
 
 <head>
 	<meta charset="utf-8" />
-	<title>MindStep</title>
+	<!--
+		Static rather than emitted from svelte:head, because +layout.ts sets
+		ssr = false: with SSR off nothing from svelte:head reaches the
+		prerendered HTML. "MindStep" alone said nothing about what this is, and
+		there was no description or link preview data at all. Not localised for
+		the same reason — a crawler never runs the client-side i18n.
+	-->
+	<title>MindStep — стратегічна гра для тренування памʼяті</title>
+	<meta
+		name="description"
+		content="Безкоштовна головоломка для тренування памʼяті та просторового мислення: ходіть ферзем, уникайте пасток або спробуйте гру наосліп. Одиночна гра, гра вдвох та онлайн."
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="MindStep — стратегічна гра для тренування памʼяті" />
+	<meta
+		property="og:description"
+		content="Безкоштовна головоломка для тренування памʼяті та просторового мислення: ходіть ферзем, уникайте пасток або спробуйте гру наосліп."
+	/>
+	<meta property="og:image" content="https://alik532ua.github.io/MindStep/icon-512.png" />
+
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="MindStep — стратегічна гра для тренування памʼяті" />
+	<meta
+		name="twitter:description"
+		content="Безкоштовна головоломка для тренування памʼяті та просторового мислення: ходіть ферзем, уникайте пасток або спробуйте гру наосліп."
+	/>
+	<meta name="twitter:image" content="https://alik532ua.github.io/MindStep/icon-512.png" />
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link
