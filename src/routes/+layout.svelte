@@ -2,6 +2,7 @@
 	import Header from "$lib/components/layouts/Header.svelte";
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
+	import { initAnalytics, trackPageView } from "$lib/services/analyticsService";
 	import { versionState } from "$lib/stores/versionState.svelte";
 	import { onMount, onDestroy } from "svelte";
 	import { get } from "svelte/store";
@@ -62,6 +63,7 @@
 		// Centralized initialization
 		appInitializationService.initialize();
 		errorHandlerService.initGlobalHandlers();
+		initAnalytics();
 
 		// Unlock audio on first click
 		const unlockAudio = () => {
@@ -176,11 +178,19 @@
 
 
 	afterNavigate(({ from, to }) => {
+		// Ahead of the early return below, so a replay restore still counts.
+		// Only on a pathname change: modal state lives in the query string, and
+		// afterNavigate fires for those too — counting them would report every
+		// opened modal as a page view.
+		if (from?.url?.pathname !== to?.url?.pathname) {
+			trackPageView();
+		}
+
 		if (sessionStorage.getItem("isRestoringReplay")) {
 			sessionStorage.removeItem("isRestoringReplay");
 			return;
 		}
-		
+
 		// FIX: Закриваємо ВСІ модалки тільки при зміні шляху (pathname), 
 		// а не при зміні параметрів (?mode=... і т.д.).
 		// Використовуємо closeAllModals замість closeModal, щоб очистити стек.
