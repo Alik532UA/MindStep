@@ -9,6 +9,7 @@ import { TimedGameMode } from '$lib/game-modes/TimedGameMode';
 import { VirtualPlayerGameMode } from '$lib/game-modes/VirtualPlayerGameMode';
 import { OnlineGameMode } from '$lib/game-modes/OnlineGameMode'; // Import OnlineGameMode
 import { logService } from "./logService.svelte";
+import { track } from "./analyticsService";
 import { timerState } from '$lib/stores/timerState.svelte';
 import { GameModePresetSchema } from '$lib/schemas/gameSettingsSchema';
 
@@ -90,6 +91,11 @@ class GameModeService {
       gameState.setMode(mode);
       gameModeState.setActiveMode(implementationName);
       logService.GAME_MODE(`Game mode initialized: ${implementationName} (from preset: ${name})`, options);
+      // The one place every mode starts from, so it is the only place a start
+      // event has to be raised. `preset` carries the difficulty the player
+      // picked, which is the interesting half — mode alone does not say whether
+      // anyone gets past beginner.
+      track('game_start', { mode: implementationName, preset: name ?? 'none' });
     } else {
       logService.GAME_MODE(`Unknown game mode or preset: ${name}`);
     }

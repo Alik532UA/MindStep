@@ -10,6 +10,7 @@ import { uiState } from '$lib/stores/uiState.svelte';
 import type { Player } from '$lib/models/player';
 import { tick } from 'svelte';
 import { gameModeService } from './gameModeService';
+import { track } from './analyticsService';
 import { leaderboardService } from './leaderboardService';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { authService } from './authService';
@@ -50,6 +51,16 @@ export const endGameService = {
 
     const finalScoreDetails = calculateFinalScore(bState, pState, sState, uStateFinal, gameType);
     logService.score('[endGameService] Final score calculated:', finalScoreDetails);
+
+    // Paired with game_start in gameModeService: together they show how many
+    // started games actually reach an ending, and which ending. `reason` is the
+    // translation key rather than the rendered text so the report does not split
+    // by interface language.
+    track('game_end', {
+      mode: gameType,
+      reason: reasonKey,
+      score: finalScoreDetails.totalScore
+    });
 
     if (gameType !== 'local' && gameType !== 'online') {
       const humanPlayer = pState.players.find(p => p.type === 'human');
