@@ -37,7 +37,7 @@
     class="network-monitor" 
     class:expanded 
     style="--scale: {scale}"
-    data-testid="network-monitor"
+    data-testid="network-monitor-panel"
 >
     <div 
         class="header" 
@@ -59,19 +59,19 @@
                 class="size-btn" 
                 onclick={decreaseScale} 
                 title="Decrease size"
-                data-testid="network-monitor-size-decrease"
+                data-testid="network-monitor-size-decrease-btn"
             >−</button>
             <button 
                 class="size-btn" 
                 onclick={increaseScale} 
                 title="Increase size"
-                data-testid="network-monitor-size-increase"
+                data-testid="network-monitor-size-increase-btn"
             >+</button>
         </div>
     </div>
 
     {#if expanded}
-        <div class="details" transition:fade data-testid="network-monitor-details">
+        <div class="details" transition:fade data-testid="network-monitor-details-panel">
             <div class="stats-row">
                 <span>Reads:</span> <strong>{stats.reads}</strong>
             </div>

@@ -124,7 +124,7 @@
         aria-label="Ігрове поле"
         transition:slideAndScale={{ duration: 500, easing: quintOut }}
         onoutroend={onBoardOutroEnd}
-        data-testid="board-wrapper"
+        data-testid="board-container"
       >
         <GameBoard
           boardSize={currentBoardSize}

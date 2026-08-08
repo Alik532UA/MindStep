@@ -6,7 +6,7 @@
     export let dataTestId = "board-hidden-explanation-modal";
 </script>
 
-<div class="board-explanation-content" data-testid={`${dataTestId}-content`}>
+<div class="board-explanation-content" data-testid={`${dataTestId}-panel`}>
     <h2 class="modal-title-menu" data-testid={`${dataTestId}-title`}>
         {$t("modal.boardHiddenExplanationTitle")}
     </h2>

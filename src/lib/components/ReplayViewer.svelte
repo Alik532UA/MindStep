@@ -74,7 +74,7 @@
 </script>
 
 <!-- FIX: Додано data-testid та структуру меню -->
-<div class="replay-viewer-content" data-testid="replay-viewer-content">
+<div class="replay-viewer-content" data-testid="replay-viewer-panel">
   <h2
     class="modal-title-menu"
     data-testid="replay-modal-title"

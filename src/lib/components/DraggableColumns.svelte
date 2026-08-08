@@ -141,7 +141,7 @@
     <ul
       bind:this={colRefs[i]}
       class="dnd-column"
-      data-testid="dnd-column-{col.id}"
+      data-testid="dnd-column-{col.id}-list"
       class:editing-column={columnMode === "flexible"}
       style={columnMode === "flexible"
         ? "padding: 0; background: none; border-radius: 8px; list-style: none; min-height: 80px;"
@@ -154,7 +154,7 @@
       {#each col.items as item, j (item.id)}
         <li
           animate:flip={{ duration: 300 }}
-          data-testid="widget-{item.id}"
+          data-testid="widget-card-{item.id}"
           class="dnd-item"
           style="padding: 12px; margin: 8px 0; background: none; color: #fff; border-radius: 4px; {columnMode ===
           'flexible'

@@ -48,8 +48,8 @@
   });
 </script>
 
-<div class="setup-grid" data-testid="voice-tab-setup-grid">
-  <div class="grid-column" data-testid="voice-settings-column">
+<div class="setup-grid" data-testid="voice-tab-setup-list">
+  <div class="grid-column" data-testid="voice-settings-section">
     <div class="settings-card" data-testid="voice-settings-card">
       <span class="settings-label">{$t("settings.voiceSettings")}</span>
       {#if VoiceSettings}

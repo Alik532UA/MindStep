@@ -43,7 +43,7 @@
         {/if}
     </div>
 
-    <div class="content" data-testid="toast-content-group">
+    <div class="content" data-testid="toast-panel">
         {#if notification.titleKey}
             <div class="title" data-testid="toast-title-label">{$t(notification.titleKey as TranslationKey)}</div>
         {:else if notification.titleRaw}
@@ -66,7 +66,7 @@
         class="close-btn"
         onclick={remove}
         aria-label={$t('modal.close' as TranslationKey) || 'Закрити'}
-        data-testid="toast-close-button"
+        data-testid="toast-close-btn"
     >
         <X size={16} />
     </button>

@@ -107,7 +107,7 @@
             <span
                 class="text-value"
                 title={value}
-                data-testid="{dataTestId}-display">{value || placeholder}</span
+                data-testid="{dataTestId}-value">{value || placeholder}</span
             >
             {#if canEdit}
                 <div class="actions">

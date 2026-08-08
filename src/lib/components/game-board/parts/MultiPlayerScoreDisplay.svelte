@@ -116,7 +116,7 @@
                 {#if player.roundScore && player.roundScore > 0}
                     <span
                         class="round-score"
-                        data-testid={`round-score-${player.id}`}
+                        data-testid={`round-score-value-${player.id}`}
                         >+{player.roundScore}</span
                     >
                 {/if}
@@ -133,7 +133,7 @@
                 use:customTooltip={$t("gameBoard.penaltyHint")}
                 role="button"
                 tabindex="0"
-                data-testid="penalty-display"
+                data-testid="penalty-value"
                 >{$t("modal.scoreDetails.penalty")}: -{scoreStore.penaltyPoints}</span
             >
         </div>

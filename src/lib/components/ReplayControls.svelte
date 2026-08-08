@@ -48,7 +48,7 @@
       disabled={currentStep >= totalSteps - 1}
       title="Next Step">»</StyledButton
     >
-    <div class="step-counter" data-testid="replay-step-counter">
+    <div class="step-counter" data-testid="replay-step-count">
       {$t("replay.step", { current: currentStep + 1, total: totalSteps })}
     </div>
   </div>

@@ -41,7 +41,7 @@
     }
 </script>
 
-<div class="dev-menu-content" data-testid="dev-menu-content">
+<div class="dev-menu-content" data-testid="dev-menu-panel">
     <h2 class="modal-title-menu">dev v.{versionNumber}</h2>
 
     <div class="actions-column">
@@ -58,7 +58,7 @@
             variant="menu"
             onclick={() =>
                 handlePhantomPage("Button Styles Test", "/test/buttons")}
-            dataTestId="dev-menu-buttons-test-btn"
+            dataTestId="dev-menu-test-btn"
         >
             Button Styles Test
         </StyledButton>

@@ -48,7 +48,7 @@
 
 <div class="setup-grid">
   <!-- Column 1: Appearance -->
-  <div class="grid-column" data-testid="settings-column-appearance">
+  <div class="grid-column" data-testid="settings-appearance-section">
     <div class="settings-card">
       <div class="settings-group">
         <span class="settings-label">{$t("settings.language")}</span>
@@ -94,7 +94,7 @@
   </div>
 
   <!-- Column 2: Gameplay -->
-  <div class="grid-column" data-testid="settings-column-game">
+  <div class="grid-column" data-testid="settings-game-section">
     <div class="settings-card">
       <!-- FIX: Видалено секцію вибору режиму гри за замовчуванням -->
 

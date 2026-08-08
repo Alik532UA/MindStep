@@ -90,7 +90,7 @@
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
-    [data-testid="menu-button-play"].primary {
+    [data-testid="menu-item-play"].primary {
         background: #4caf50; /* Green */
         color: white;
     }

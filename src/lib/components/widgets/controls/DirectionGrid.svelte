@@ -50,7 +50,7 @@
     }
 </script>
 
-<div class="directions-3x3" data-testid="direction-grid">
+<div class="directions-3x3" data-testid="direction-list">
     {#each directions.filter(d => d !== null) as dir (dir)}
         <button
             class="dir-btn {selectedDirection === dir ? 'active' : ''} dir-btn--{dir}"

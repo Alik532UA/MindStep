@@ -25,7 +25,7 @@
     <span
         class="volume-thumb-svg"
         style="left: calc((100% - 32px) * {expertVolume});"
-        data-testid="expert-mode-volume-thumb"
+        data-testid="expert-mode-volume-thumb-icon"
         ><SvgIcons name="boxing-glove-pictogram-1" /></span
     >
     <span class="volume-label" data-testid="expert-mode-volume-label"

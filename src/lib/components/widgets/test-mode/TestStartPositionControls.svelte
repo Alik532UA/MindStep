@@ -67,7 +67,7 @@
                     bind:value={manualX}
                     min="0"
                     max="7"
-                    data-testid="test-mode-start-pos-x"
+                    data-testid="test-mode-start-pos-x-input"
                 />
             </div>
             <div class="test-mode-input-group">
@@ -79,7 +79,7 @@
                     bind:value={manualY}
                     min="0"
                     max="7"
-                    data-testid="test-mode-start-pos-y"
+                    data-testid="test-mode-start-pos-y-input"
                 />
             </div>
             <button

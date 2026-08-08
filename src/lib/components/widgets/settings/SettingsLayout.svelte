@@ -18,7 +18,7 @@
     <span class="settings-expander__label">{$t("ui.moveMenuItems")}</span>
     <div
         style="display: flex; gap: 12px;"
-        data-testid="settings-layout-buttons"
+        data-testid="settings-layout-toolbar"
     >
         <button
             data-testid="settings-expander-column-style-fixed-btn"

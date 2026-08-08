@@ -89,7 +89,7 @@
 </script>
 
 <!-- FIX: Додано data-testid -->
-<div class="auth-modal-content" data-testid="auth-modal-content">
+<div class="auth-modal-content" data-testid="auth-modal-panel">
     {#if isAuthorized}
         <UserProfile
             bind:isDeleteMode

@@ -129,7 +129,7 @@
   }
 </script>
 
-<div class="direction-controls-panel" data-testid="direction-controls-widget">
+<div class="direction-controls-panel" data-testid="direction-controls-panel">
   {#snippet centerSnippet()}
     <button
       id="center-info"

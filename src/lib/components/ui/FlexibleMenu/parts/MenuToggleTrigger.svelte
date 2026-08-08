@@ -28,7 +28,7 @@
     class="toggle-trigger position-{position}"
     on:click={onToggle}
     aria-label={isOpen ? "Згорнути меню" : "Розгорнути меню"}
-    data-testid="{position}-menu-toggle-trigger"
+    data-testid="{position}-menu-toggle-btn"
     use:customTooltip={isOpen ? "Згорнути" : "Розгорнути"}
 >
     <div class="toggle-visual">

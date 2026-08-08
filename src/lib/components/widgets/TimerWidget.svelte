@@ -9,7 +9,7 @@
   }
 </script>
 
-<div class="game-info-widget timer-widget" data-testid="timer-widget">
+<div class="game-info-widget timer-widget" data-testid="timer-card">
   {#if mode}
     {#if mode.gameDuration > 0}
       <div class="info-item">

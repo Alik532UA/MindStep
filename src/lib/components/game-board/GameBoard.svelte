@@ -45,7 +45,7 @@
   class="game-board"
   style="--board-size: {boardSize}"
   role="grid"
-  data-testid="game-board"
+  data-testid="game-board-container"
 >
   <StaticGridLayer {boardSize} />
   

@@ -49,7 +49,7 @@
     }
 </script>
 
-<div class="reconnection-content" data-testid="reconnection-modal-content">
+<div class="reconnection-content" data-testid="reconnection-modal-panel">
     <h2 class="modal-title-menu" data-testid="reconnection-title">
         {$t("onlineMenu.waitingForPlayersList")}
     </h2>
@@ -58,7 +58,7 @@
         {#each players as player (player.id)}
             <div
                 class="player-item"
-                data-testid="reconnection-player-{player.id}"
+                data-testid="reconnection-player-item-{player.id}"
             >
                 <span class="player-name">{player.name}</span>
             </div>
@@ -66,16 +66,16 @@
     </div>
 
     {#if timeRemaining > 0}
-        <div class="timer" data-testid="reconnection-timer">
+        <div class="timer" data-testid="reconnection-timer-value">
             {timeRemaining}
         </div>
     {/if}
 
-    <div class="loader-container" data-testid="reconnection-loader">
+    <div class="loader-container" data-testid="reconnection-spinner">
         <div class="pulse-loader"></div>
     </div>
 
-    <div class="actions-column" data-testid="reconnection-actions">
+    <div class="actions-column" data-testid="reconnection-toolbar">
         <button
             class="action-btn kick-btn"
             onclick={kickPlayers}

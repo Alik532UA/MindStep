@@ -61,7 +61,7 @@
     });
 </script>
 
-<div class="simple-modal-content" data-testid={`${dataTestId}-content`}>
+<div class="simple-modal-content" data-testid={`${dataTestId}-panel`}>
     {#if titleSnippet}
         {@render titleSnippet()}
     {:else if titleKey || title}

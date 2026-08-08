@@ -55,13 +55,13 @@
 
 <div
   class="voice-settings-modal-content"
-  data-testid="voice-settings-inner-content"
+  data-testid="voice-settings-inner-panel"
 >
   <!-- Removed main title to match VoiceTab -->
 
   <div class="voice-settings-body">
-    <div class="setup-grid" data-testid="voice-modal-setup-grid">
-      <div class="grid-column" data-testid="voice-settings-column">
+    <div class="setup-grid" data-testid="voice-modal-setup-list">
+      <div class="grid-column" data-testid="voice-settings-section">
         <div class="settings-card" data-testid="voice-settings-card">
           <span class="settings-label">{$t("settings.voiceSettings")}</span>
           {#if VoiceSettings}

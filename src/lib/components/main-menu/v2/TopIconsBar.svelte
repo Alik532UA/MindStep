@@ -38,7 +38,7 @@
     }
 </script>
 
-<div class="top-icons-bar" data-testid="top-icons-bar">
+<div class="top-icons-bar" data-testid="top-icons-toolbar">
     <button
         class="icon-btn"
         onclick={() => navigateTo("/rules")}

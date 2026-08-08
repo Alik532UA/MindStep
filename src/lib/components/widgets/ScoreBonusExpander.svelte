@@ -43,9 +43,9 @@
     role="button"
     tabindex="0"
     aria-expanded={isOpen}
-    data-testid="bonus-expander-summary"
+    data-testid="bonus-expander-toggle"
   >
-    <span class="bonus-score-summary" data-testid="total-bonus-summary">
+    <span class="bonus-score-summary" data-testid="total-bonus-value">
       {parts[0]}<span class="bonus-value">+{parts[1] || totalBonus}</span>
     </span>
     <span class="arrow" class:open={isOpen} aria-hidden="true"

@@ -47,7 +47,7 @@
 </script>
 
 <!-- FIX: Додано data-testid та структуру меню -->
-<div class="faq-content" data-testid="faq-content">
+<div class="faq-content" data-testid="faq-panel">
   <h2
     class="modal-title-menu"
     data-testid="faq-modal-title"

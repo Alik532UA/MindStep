@@ -22,7 +22,7 @@
 
     <div
         class="menu-grid {isVertical ? 'vertical' : 'horizontal'}"
-        data-testid="{position}-menu-grid"
+        data-testid="{position}-menu-list"
         aria-hidden={!isOpen}
     >
         {#each [0, 1, 2, 3, 4] as i}
@@ -43,7 +43,7 @@
                                         : i === 2,
                             }}
                             dataTestId={displayItems[i].dataTestId ||
-                                `menu-button-${displayItems[i].id}`}
+                                `menu-item-${displayItems[i].id}`}
                         />
                     {/if}
                 {/if}

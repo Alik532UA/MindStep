@@ -99,7 +99,7 @@
             </StyledButton>
         </div>
     {:else}
-        <div class="loading-state" data-testid="lobby-loading">
+        <div class="loading-state" data-testid="lobby-spinner">
             <div class="spinner"></div>
             <p>{$t("common.loading" as TranslationKey)}</p>
         </div>

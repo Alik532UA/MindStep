@@ -34,7 +34,7 @@
         class="voice-selection-button"
         class:active={selectedVoiceURI === voice.voiceURI}
         onclick={() => selectVoice(voice.voiceURI)}
-        data-testid="voice-selection-button-{voice.voiceURI}"
+        data-testid="voice-selection-btn-{voice.voiceURI}"
       >
         {voice.name} ({voice.lang})
       </button>

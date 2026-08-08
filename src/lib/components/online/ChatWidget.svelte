@@ -69,7 +69,7 @@
             <div
                 class="chat-window"
                 transition:fly={{ y: 20, duration: 300 }}
-                data-testid="chat-window"
+                data-testid="chat-window-panel"
             >
                 <div class="chat-header">
                     <h3>{$t("onlineMenu.chat.title")}</h3>
@@ -100,13 +100,13 @@
                 <NotoEmoji name="speech_balloon" size="24px" />
             {/if}
             {#if hasUnread}
-                <span class="unread-dot" data-testid="chat-unread-dot"></span>
+                <span class="unread-dot" data-testid="chat-unread-badge"></span>
             {/if}
         </button>
     </div>
 {:else}
     <!-- EMBEDDED VARIANT -->
-    <div class="chat-window embedded" data-testid="chat-window-embedded">
+    <div class="chat-window embedded" data-testid="chat-window-embedded-panel">
         <ChatMessagesList {messages} {playerId} {playerColor} />
         <ChatInput onsend={handleSend} />
     </div>

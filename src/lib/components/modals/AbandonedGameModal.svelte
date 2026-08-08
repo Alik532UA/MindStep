@@ -45,7 +45,7 @@
     }
 </script>
 
-<div class="abandoned-game-content" data-testid="abandoned-game-content">
+<div class="abandoned-game-content" data-testid="abandoned-game-panel">
     <h2 class="modal-title-menu" data-testid="abandoned-game-title">
         {$t("onlineMenu.abandonedGame.title")}
     </h2>

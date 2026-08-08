@@ -59,7 +59,7 @@
   </div>
 
   <!-- Tab Content -->
-  <div class="tab-content" data-testid="settings-tab-content">
+  <div class="tab-content" data-testid="settings-tab-panel">
     {#if activeTab === "general"}
       <GeneralTab />
     {:else if activeTab === "voice"}

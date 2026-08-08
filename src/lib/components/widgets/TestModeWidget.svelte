@@ -12,7 +12,7 @@
   });
 </script>
 
-<div class="test-mode-widget" data-testid="test-mode-widget-content">
+<div class="test-mode-widget" data-testid="test-mode-widget-panel">
   <h3 class="test-mode-widget-title">{$t("testMode.title")}</h3>
 
   <TestStartPositionControls />

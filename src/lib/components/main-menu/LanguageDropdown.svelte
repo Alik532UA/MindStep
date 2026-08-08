@@ -13,7 +13,7 @@
 
 <div
     class="lang-dropdown"
-    data-testid="lang-dropdown"
+    data-testid="lang-menu"
     role="menu"
     tabindex="0"
     onclick={(e) => {

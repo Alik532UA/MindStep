@@ -90,7 +90,7 @@
             onclick={() => (showPassword = !showPassword)}
             aria-pressed={showPassword}
             aria-label={showPassword ? $t("ui.auth.hidePassword") : $t("ui.auth.showPassword")}
-            data-testid={`${testId}-toggle-button`}
+            data-testid={`${testId}-toggle-btn`}
         >
             {#if showPassword}<EyeOff size={18} />{:else}<Eye size={18} />{/if}
         </button>

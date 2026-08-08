@@ -166,12 +166,12 @@
             "isFaq" in (mState.content as any) &&
             (mState.content as any).isFaq}
           bind:this={modalContent}
-          data-testid={`${mState.dataTestId}-content`}
+          data-testid={`${mState.dataTestId}-panel`}
         >
           {#if typeof mState.content === "object" && mState.content && "reason" in (mState.content as any) && !mState.component}
             <p
               class="reason"
-              data-testid={`${mState.dataTestId}-content-reason`}
+              data-testid={`${mState.dataTestId}-reason-text`}
               data-i18n-key={(mState.content as any).reasonKey}
             >
               {(mState.content as any).reason}

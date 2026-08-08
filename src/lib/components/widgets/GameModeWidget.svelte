@@ -99,9 +99,9 @@
   ]);
 </script>
 
-<div class="game-mode-widget" data-testid="game-mode-widget">
+<div class="game-mode-widget" data-testid="game-mode-card">
   {#if activeMode === "online"}
-    <div class="online-lock-overlay" data-testid="game-mode-widget-locked">
+    <div class="online-lock-overlay" data-testid="game-mode-card-locked">
       <span>{$t("gameModes.notAvailableInOnline")}</span>
     </div>
   {/if}
@@ -115,7 +115,7 @@
   {/if}
   <div
     class="description"
-    data-testid="game-mode-description"
+    data-testid="game-mode-description-text"
     class:settings-expander-closed={!uiState.state.isSettingsExpanderOpen}
   >
     {#if descriptionKey}

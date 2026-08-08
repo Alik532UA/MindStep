@@ -70,11 +70,11 @@
     onclick={toggleDropdown}
     use:customTooltip={"Обрати колір"}
     aria-label="Обрати колір гравця"
-    data-testid="{dataTestId}-trigger"
+    data-testid="{dataTestId}-btn"
   ></button>
 
   {#if isOpen}
-    <div class="color-dropdown" data-testid="{dataTestId}-dropdown">
+    <div class="color-dropdown" data-testid="{dataTestId}-menu">
       <div class="color-grid">
         {#each predefinedColors.slice(0, 4) as color}
           <button

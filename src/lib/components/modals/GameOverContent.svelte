@@ -63,7 +63,7 @@
   >);
 </script>
 
-<div class="game-over-content" data-testid="game-over-content">
+<div class="game-over-content" data-testid="game-over-panel">
   <!-- Заголовок -->
   <h2
     class="modal-title-menu"
@@ -77,7 +77,7 @@
   {#if typeof content === "object" && content && "reason" in content}
     <p
       class="reason-text"
-      data-testid={`${dataTestId}-content-reason`}
+      data-testid={`${dataTestId}-reason-text`}
       data-i18n-key={content.reasonKey}
     >
       {content.reason}
@@ -125,7 +125,7 @@
         class="score-details-container"
         data-testid="score-details-container"
       >
-        <div class="score-detail-row" data-testid="base-score">
+        <div class="score-detail-row" data-testid="base-score-row">
           {$t("modal.scoreDetails.baseScore")}
           <span data-testid="base-score-value"
             >{scoreDetails.baseScore ?? 0}</span
@@ -142,7 +142,7 @@
       {/if}
 
       {#if scoreDetails.totalPenalty > 0}
-        <div class="score-detail-row penalty" data-testid="total-penalty">
+        <div class="score-detail-row penalty" data-testid="total-penalty-row">
           {$t("modal.scoreDetails.penalty")}
           <span data-testid="total-penalty-value"
             >-{scoreDetails.totalPenalty}</span

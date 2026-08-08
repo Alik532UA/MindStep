@@ -79,7 +79,7 @@
             use:customTooltip={$t("gameBoard.penaltyHint")}
             role="button"
             tabindex="0"
-            data-testid="penalty-display">- {scoreStore.penaltyPoints}</span
+            data-testid="penalty-value">- {scoreStore.penaltyPoints}</span
         >
     {/if}
 </div>

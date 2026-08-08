@@ -61,9 +61,9 @@
       class="game-info-widget"
       class:compact={isCompact}
       transition:slide={{ duration: 400, easing: quintOut }}
-      data-testid="game-info-panel"
+      data-testid="game-info-container"
     >
-      <div class="game-info-content" data-testid="game-info-content">
+      <div class="game-info-content" data-testid="game-info-panel">
         {#key animationKey}
           <div
             class="fade-wrapper"

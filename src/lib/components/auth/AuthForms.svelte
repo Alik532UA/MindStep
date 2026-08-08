@@ -51,14 +51,14 @@
                 <label for="reset-email" class="floating-label">{$t("ui.auth.emailLabel")}</label>
             </div>
 
-            {#if error}<p class="auth-error" role="alert" data-testid="auth-error">{error}</p>{/if}
-            {#if info}<p class="auth-info" role="status" data-testid="auth-info">{info}</p>{/if}
+            {#if error}<p class="auth-error" role="alert" data-testid="reset-error">{error}</p>{/if}
+            {#if info}<p class="auth-info" role="status" data-testid="reset-info-message">{info}</p>{/if}
 
             <div class="auth-actions">
                 <StyledButton variant="primary" type="submit" disabled={loading} dataTestId="reset-submit">
                     {loading ? $t("common.loading") : $t("ui.auth.resetBtn")}
                 </StyledButton>
-                <button class="link-btn" type="button" onclick={() => onmode("auth")} data-testid="reset-back">
+                <button class="link-btn" type="button" onclick={() => onmode("auth")} data-testid="reset-back-btn">
                     {$t("ui.auth.backToLogin")}
                 </button>
             </div>
@@ -91,12 +91,12 @@
             />
 
             <!-- «Відновити пароль» — окремим рядком ПІД полем (не в полі: там CapsLock/розкладка/око) -->
-            <button class="link-btn reset-link" type="button" onclick={() => onmode("forgot")} data-testid="auth-forgot">
+            <button class="link-btn reset-link" type="button" onclick={() => onmode("forgot")} data-testid="auth-forgot-btn">
                 {$t("ui.auth.forgotPassword")}
             </button>
 
             {#if error}<p class="auth-error" role="alert" data-testid="auth-error">{error}</p>{/if}
-            {#if info}<p class="auth-info" role="status" data-testid="auth-info">{info}</p>{/if}
+            {#if info}<p class="auth-info" role="status" data-testid="auth-info-message">{info}</p>{/if}
 
             <div class="auth-actions">
                 <StyledButton variant="primary" type="submit" disabled={loading} dataTestId="auth-login">

@@ -111,7 +111,7 @@
 </script>
 
 <!-- FIX: Додано data-testid для головного контейнера ігрової сторінки -->
-<div class="game-layout-container" data-testid="game-page-layout">
+<div class="game-layout-container" data-testid="game-page-container">
   <ErrorBoundary>
     {@render children()}
   </ErrorBoundary>

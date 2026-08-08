@@ -90,10 +90,10 @@
 {#if bState}
   <div
     class="settings-expander {isOpen ? 'open' : ''}"
-    data-testid="settings-expander-widget"
+    data-testid="settings-expander-section"
   >
     <div
-      data-testid="settings-expander-summary"
+      data-testid="settings-expander-toggle"
       class="settings-expander__summary"
       role="button"
       aria-label={$t("gameControls.settings")}
@@ -121,7 +121,7 @@
       class="settings-expander__content"
       bind:this={contentRef}
       style="max-height: {contentHeight}px; opacity: {isOpen ? 1 : 0};"
-      data-testid="settings-expander-content"
+      data-testid="settings-expander-panel"
     >
       <SettingsBoardSize />
       <SettingsVisibility {isCompetitiveMode} />

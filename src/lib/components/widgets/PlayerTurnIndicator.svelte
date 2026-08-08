@@ -18,7 +18,7 @@
           ? 1
           : 0.2};"
         use:customTooltip={player.name}
-        data-testid={`turn-indicator-bar-${i}`}
+        data-testid={`turn-indicator-item-${i}`}
         data-active={i === currentPlayerIndex}
       ></div>
     {/each}
