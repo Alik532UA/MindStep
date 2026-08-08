@@ -59,7 +59,7 @@ test.describe('Сценарії завершення гри', { tag: '@GOS' }, (
     await test.step('Перевірка модального вікна "Гру завершено!"', async () => {
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
       await expect(page.getByTestId('game-over-modal-title')).toHaveAttribute('data-i18n-key', 'modal.trainingOverTitle');
-      // await expect(page.getByTestId('modal-content-reason')).toHaveAttribute('data-i18n-key', 'modal.gameOverReasonCashOut');
+      // await expect(page.getByTestId('modal-reason-text')).toHaveAttribute('data-i18n-key', 'modal.gameOverReasonCashOut');
     });
   });
 });

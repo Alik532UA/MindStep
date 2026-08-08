@@ -27,7 +27,7 @@ test.describe('Модальне вікно вибору режиму гри', { 
 
     // 3. Perform test actions
     await page.getByTestId('center-play-btn').click();
-    await expect(page.getByTestId('game-mode-modal-content')).toBeVisible();
+    await expect(page.getByTestId('game-mode-modal-panel')).toBeVisible();
   });
 
   test('1. Повинно показувати FAQ для режиму "новачок"', { tag: ['@done', '@GMM-1'] }, async ({ page }) => {

@@ -114,7 +114,7 @@ test.describe('хепі флоу', () => {
     await test.step('Помилково заявити про відсутність ходів, отримати вікно завершення гри та натискання кнопки "Грати ще раз"', async () => {
       await page.getByTestId('no-moves-btn').click();
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
-      await expect(page.getByTestId('game-over-modal-content-reason')).toBeVisible();
+      await expect(page.getByTestId('game-over-modal-reason-text')).toBeVisible();
       await page.getByTestId('play-again-btn').click();
       await expectScoreToBeZeroOrNegative(page, 'score-value');
     });
@@ -133,7 +133,7 @@ test.describe('хепі флоу', () => {
     // await page.waitForTimeout(7777777); // пауза
     await test.step('Завершення гри та натискання кнопки "Грати ще раз"', async () => {
       await expect(page.getByTestId('game-over-modal')).toBeVisible();
-      await expect(page.getByTestId('game-over-modal-content-reason')).toBeVisible();
+      await expect(page.getByTestId('game-over-modal-reason-text')).toBeVisible();
       await page.getByTestId('watch-replay-btn').click();
       await expect(page.getByTestId('replay-modal')).toBeVisible();
       await expect(page.getByTestId('limit-path-toggle')).toBeVisible();

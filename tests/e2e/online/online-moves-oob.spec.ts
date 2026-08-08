@@ -31,8 +31,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     // --- ГРА ---
     await test.step('Початок гри', async () => {
         // Увімкнення тестового режиму
-        await p1.click('[data-testid="menu-button-test-mode-btn"]');
-        await p2.click('[data-testid="menu-button-test-mode-btn"]');
+        await p1.click('[data-testid="menu-item-test-mode-btn"]');
+        await p2.click('[data-testid="menu-item-test-mode-btn"]');
 
         // І хост, і гість тиснуть "Готовий"
         await expect(async () => {
@@ -52,8 +52,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
         await p1.click('[data-testid="start-game-btn"]');
         
         // Чекаємо появи дошки в обох
-        await expect(p1.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 15000 });
-        await expect(p2.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 15000 });
+        await expect(p1.locator('[data-testid="game-board-container"]')).toBeVisible({ timeout: 15000 });
+        await expect(p2.locator('[data-testid="game-board-container"]')).toBeVisible({ timeout: 15000 });
     });
 
     await test.step('Хост робить хід за межі дошки', async () => {
@@ -63,8 +63,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     });
 
     await test.step('Перевірка результатів', async () => {
-        await expect(p1.locator('[data-testid="game-over-content"]'), 'Хост має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
-        await expect(p2.locator('[data-testid="game-over-content"]'), 'Гість має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
+        await expect(p1.locator('[data-testid="game-over-panel"]'), 'Хост має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
+        await expect(p2.locator('[data-testid="game-over-panel"]'), 'Гість має бачити вікно завершення гри').toBeVisible({ timeout: 10000 });
 
         await expect(p1.locator('.player-score-row.loser')).toContainText('Host_OOB');
         await expect(p2.locator('.player-score-row.winner')).toContainText('Guest_Survivor');
@@ -92,8 +92,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     });
 
     await test.step('Початок гри', async () => {
-        await p1.click('[data-testid="menu-button-test-mode-btn"]');
-        await p2.click('[data-testid="menu-button-test-mode-btn"]');
+        await p1.click('[data-testid="menu-item-test-mode-btn"]');
+        await p2.click('[data-testid="menu-item-test-mode-btn"]');
 
         await expect(async () => {
             const p1ReadyText = await p1.locator('[data-testid="toggle-ready-btn"]').textContent();
@@ -109,15 +109,15 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
         
         await p1.click('[data-testid="start-game-btn"]');
 
-        await expect(p1.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 15000 });
-        await expect(p2.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 15000 });
+        await expect(p1.locator('[data-testid="game-board-container"]')).toBeVisible({ timeout: 15000 });
+        await expect(p2.locator('[data-testid="game-board-container"]')).toBeVisible({ timeout: 15000 });
     });
 
     await test.step('Хост робить валідний хід', async () => {
         await p1.click('[data-testid="dir-btn-right"]');
         await p1.click('[data-testid="dist-btn-1"]');
         await p1.click('[data-testid="confirm-move-btn"]');
-        await expect(p2.locator('[data-testid="direction-controls-widget"]')).toBeVisible({ timeout: 10000 });
+        await expect(p2.locator('[data-testid="direction-controls-panel"]')).toBeVisible({ timeout: 10000 });
     });
 
     await test.step('Гість робить хід за межі', async () => {
@@ -127,8 +127,8 @@ test.describe('Онлайн мультиплеєр: Вихід за межі (OO
     });
 
     await test.step('Перевірка результатів', async () => {
-        await expect(p1.locator('[data-testid="game-over-content"]')).toBeVisible({ timeout: 10000 });
-        await expect(p2.locator('[data-testid="game-over-content"]')).toBeVisible({ timeout: 10000 });
+        await expect(p1.locator('[data-testid="game-over-panel"]')).toBeVisible({ timeout: 10000 });
+        await expect(p2.locator('[data-testid="game-over-panel"]')).toBeVisible({ timeout: 10000 });
 
         await expect(p1.locator('.player-score-row.winner')).toContainText('Host_Winner');
         await expect(p2.locator('.player-score-row.loser')).toContainText('Guest_OOB');

@@ -23,7 +23,7 @@ test.describe('Кнопка "Грати ще раз"', () => {
     await test.step('Перевірка, що нова гра почалася', async () => {
       await expect(page.getByTestId('opponent-trapped-modal')).not.toBeVisible();
       await expect(page.getByTestId('game-over-modal')).not.toBeVisible();
-      await expect(page.getByTestId('game-board')).toBeVisible();
+      await expect(page.getByTestId('game-board-container')).toBeVisible();
     });
   });
 
@@ -50,7 +50,7 @@ test.describe('Кнопка "Грати ще раз"', () => {
     await test.step('Перевірка, що нова гра почалася', async () => {
       await expect(page.getByTestId('player-no-moves-modal')).not.toBeVisible();
       await expect(page.getByTestId('game-over-modal')).not.toBeVisible();
-      await expect(page.getByTestId('game-board')).toBeVisible();
+      await expect(page.getByTestId('game-board-container')).toBeVisible();
     });
   });
 

@@ -212,7 +212,7 @@ export async function createOnlineRoom(page: Page, playerName: string = 'HostMas
     await expect(lobbyContainer, `Після створення кімнати має з'явитися контейнер лобі. Поточна URL: ${page.url()}`).toBeVisible({ timeout: 15000 });
   }).toPass({ timeout: 40000 });
   
-  const roomNameDisplay = page.locator('[data-testid="room-name-editable-display"]');
+  const roomNameDisplay = page.locator('[data-testid="room-name-editable-value"]');
   return (await roomNameDisplay.textContent()) || '';
 }
 
