@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { writable, get } from "svelte/store";
   import ReplayControls from "./ReplayControls.svelte";
   import {
@@ -37,10 +38,14 @@
     }
   });
 
+  // `untrack` — це «так, саме початкове значення». Перегляд запису бере
+  // знімок партії на момент відкриття: якщо `moveHistory` зміниться далі,
+  // перемотування не має стрибати під руками. Без `untrack` компілятор
+  // (справедливо) попереджає, що читання пропа тут одноразове.
   const replayState = writable({
     isReplayMode: true,
-    moveHistory,
-    boardSize,
+    moveHistory: untrack(() => moveHistory),
+    boardSize: untrack(() => boardSize),
     replayCurrentStep: 0,
     autoPlayDirection: "paused" as "paused" | "forward" | "backward",
     limitReplayPath: true,

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import MenuToggleTrigger from "./parts/MenuToggleTrigger.svelte";
     import FlexibleMenuPanel from "./parts/FlexibleMenuPanel.svelte";
     import type { IMenuItem, MenuPosition } from "./FlexibleMenu.types";
@@ -23,7 +23,10 @@
     }: Props = $props();
 
     // State
-    let isOpen = $state(startOpen);
+    // Проп називається `startOpen` — тобто це початкове значення за
+    // визначенням, далі меню відкриває й закриває користувач. `untrack`
+    // говорить це компілятору явно.
+    let isOpen = $state(untrack(() => startOpen));
     let isMounted = $state(false);
 
     // Determine orientation based on position

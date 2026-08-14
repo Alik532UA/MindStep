@@ -2,7 +2,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { fly } from "svelte/transition";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, untrack } from "svelte";
     import { roomService, type ChatMessage } from "$lib/services/roomService";
     import type { Unsubscribe } from "firebase/firestore";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
@@ -25,7 +25,11 @@
         variant = "floating"
     }: Props = $props();
 
-    let isOpen = $state(variant === "embedded");
+    // Початковий стан, далі ним керує користувач: вбудований чат відкритий
+    // одразу, плавучий — згорнутий. `untrack` фіксує, що це знімок пропа, а
+    // не підписка на нього (інакше зміна `variant` перекривала б вибір
+    // користувача).
+    let isOpen = $state(untrack(() => variant === "embedded"));
     let messages = $state<ChatMessage[]>([]);
     let unsubscribe: Unsubscribe | null = null;
     let hasUnread = $state(false);
