@@ -218,7 +218,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s;
     }
 
     .close-btn:hover {

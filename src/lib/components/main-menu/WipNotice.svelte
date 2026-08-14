@@ -96,7 +96,6 @@
         color: var(--text-primary);
         cursor: pointer;
         opacity: 0.7;
-        transition: opacity 0.2s;
     }
     .wip-close-btn:hover {
         opacity: 1;

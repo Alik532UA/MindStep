@@ -182,7 +182,6 @@
         padding: 4px;
         cursor: pointer;
         opacity: 0.6;
-        transition: opacity 0.2s, color 0.2s;
         display: flex;
         align-items: center;
         color: var(--text-secondary, rgba(255, 255, 255, 0.7));
