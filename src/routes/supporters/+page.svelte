@@ -30,6 +30,10 @@
     <!-- Майбутні імена будуть додаватися сюди -->
   </div>
   <p class="call-to-action-text" style="white-space: pre-line">
+    <!-- SECURITY-v8 § 5.3: рядок приходить із власного словника проєкту, а не
+         від користувача чи з Firestore. Це єдине дозволене {@html} тут; решта
+         — помилка збірки (eslint.config.js). -->
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html $t("supportersPage.callToAction")}
   </p>
   <a
