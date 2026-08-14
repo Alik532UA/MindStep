@@ -42,6 +42,27 @@ jobs:
       - name: Run unit tests
         run: npm run test:report
 
+      # Рантайм-інваріант унікальності data-testid (TESTID-AND-NAMING-v8 § 1.9.2).
+      # Статична перевірка в юніт-тестах бачить усі testid, але не бачить, що
+      # один id відповідає двом елементам у DOM. Саме так тут жили
+      # `left-menu-slot-0/1`: слот меню і пункт усередині нього мали один id.
+      #
+      # Вісім сторінок; `/online` і `/game/*` не входять — вони потребують
+      # кімнати й емулятора Firebase, це окремий джоб.
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Unique data-testid invariant
+        run: npx playwright test tests/e2e/invariants.spec.ts
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
       # Поріг high, а не moderate: лишилися 7 moderate у транзитивних
       # залежностях firebase-tools і svelte-i18n, де npm пропонує «фікс»
       # відкотом на кілька мажорів назад. Поріг moderate довелося б одразу

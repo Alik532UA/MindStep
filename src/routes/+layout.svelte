@@ -267,7 +267,7 @@
 				                                                                                                                                        emoji: "house", // FIX: Changed from 🏠 to house
 				                                                                                                                                        tooltip: "На головну",
 				                                                                                                                                        onClick: () => goto(`${base}/`),
-				                                                                                                                                        dataTestId: "left-menu-slot-0",
+				                                                                                                                                        dataTestId: "left-menu-home-btn",
 				                                                                                                                                },
 				                                                                                                                                                                {
 				                                                                                                                                                                        id: "copy-logs-btn",
@@ -282,7 +282,7 @@
 				                                                                                                                                                                                notificationService.show({ type: 'info', messageRaw: 'Logs copied to clipboard' });
 				                                                                                                                                                                            });
 				                                                                                                                                                                        },
-				                                                                                                                                                                        dataTestId: "left-menu-slot-1",
+				                                                                                                                                                                        dataTestId: "left-menu-copy-logs-btn",
 				                                                                                                                                                                },				                                                                {
 				                                                                        id: "test-mode-btn",
 				                                                                        emoji: "gear", // FIX: Changed from 🛠️ to gear

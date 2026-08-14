@@ -1,6 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
+ * Окремий порт саме для тестів, і свій у кожному проєкті.
+ *
+ * Було `5173` плюс `reuseExistingServer: !process.env.CI`. 5173 — типовий порт
+ * Vite, тобто той самий в усіх сімох проєктах. Якщо на ньому вже висить
+ * dev-сервер ІНШОГО проєкту, Playwright спокійно бере його й перевіряє чужий
+ * застосунок: тест зелений, перевірено не те (AI-AGENT-PITFALLS-v8 § 1).
+ */
+const TEST_PORT = 5373;
+
+/**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
@@ -27,7 +37,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${TEST_PORT}`,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
@@ -49,9 +59,10 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    // `--strictPort`: зайнятий порт мусить УПАСТИ, а не тихо з'їхати на наступний.
+    command: `npm run dev -- --port ${TEST_PORT} --strictPort`,
+    url: `http://localhost:${TEST_PORT}`,
+    reuseExistingServer: false,
     env: {
       VITE_USE_FIREBASE_EMULATOR: 'true',
     }
