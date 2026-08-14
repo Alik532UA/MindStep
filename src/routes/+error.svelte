@@ -10,7 +10,7 @@
      * - Композиція: Компонент самодостатній і не залежить від інших.
      */
 
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
     import { base } from "$app/paths";
     import { browser } from "$app/environment";
 
@@ -26,9 +26,9 @@
      * Включає статус, повідомлення та стек викликів.
      */
     function getErrorText(): string {
-        const status = $page.status;
-        const message = $page.error?.message ?? "Невідома помилка";
-        const stack = ($page.error as any)?.stack ?? "";
+        const status = page.status;
+        const message = page.error?.message ?? "Невідома помилка";
+        const stack = (page.error as any)?.stack ?? "";
         const url = browser ? window.location.href : "";
         const timestamp = new Date().toISOString();
 
@@ -84,12 +84,12 @@ ${stack ? `\nStack:\n${stack}` : ""}
 
         <!-- Статус код -->
         <div class="error-status">
-            <span class="status-code">{$page.status}</span>
+            <span class="status-code">{page.status}</span>
         </div>
 
         <!-- Коротке повідомлення (завжди показуємо) -->
         <p class="error-message-short">
-            {#if $page.status === 404}
+            {#if page.status === 404}
                 Сторінку не знайдено
             {:else}
                 Сталася непередбачена помилка
@@ -104,15 +104,15 @@ ${stack ? `\nStack:\n${stack}` : ""}
                 <!-- Повідомлення помилки -->
                 <div class="error-details">
                     <h3>Повідомлення:</h3>
-                    <pre class="error-message">{$page.error?.message ??
+                    <pre class="error-message">{page.error?.message ??
                             "Немає повідомлення"}</pre>
                 </div>
 
                 <!-- Стек викликів -->
-                {#if ($page.error as any)?.stack}
+                {#if (page.error as any)?.stack}
                     <div class="error-details">
                         <h3>Стек викликів:</h3>
-                        <pre class="error-stack">{($page.error as any)
+                        <pre class="error-stack">{(page.error as any)
                                 .stack}</pre>
                     </div>
                 {/if}

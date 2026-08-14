@@ -5,7 +5,7 @@
    * Використовує Svelte 5 runes ($effect).
    */
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
   import { onMount } from 'svelte';
   import { urlSyncService } from '$lib/services/urlSyncService';
@@ -14,7 +14,7 @@
 
   onMount(() => {
     // 1. Initial Load (or Route Change): URL -> Settings
-    const params = urlSyncService.getParamsFromUrl($page.url);
+    const params = urlSyncService.getParamsFromUrl(page.url);
     if (Object.keys(params).length > 0) {
         // Оновлюємо налаштування без збереження в localStorage (опціонально)? 
         // Ні, нехай зберігаються, це очікувана поведінка.
@@ -33,7 +33,7 @@
     // Але нам треба бути обережними з циклічними оновленнями.
     // Використовуємо untracked, якщо хочемо уникнути реакції на зміни page.url тут?
     // Ні, просто читаємо page.url один раз.
-    const currentUrl = $page.url; 
+    const currentUrl = page.url; 
     const url = new URL(currentUrl);
     let changed = false;
 

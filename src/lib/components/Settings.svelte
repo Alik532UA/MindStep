@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { t } from "$lib/i18n/typedI18n";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
 
   // Імпорт вкладок
   import GeneralTab from "./settings/tabs/GeneralTab.svelte";
@@ -14,7 +14,7 @@
 
   onMount(() => {
     // Check URL params for tab selection
-    const tabParam = $page.url.searchParams.get("tab");
+    const tabParam = page.url.searchParams.get("tab");
     if (tabParam && ["general", "voice", "hotkeys"].includes(tabParam)) {
       activeTab = tabParam as Tab;
     }

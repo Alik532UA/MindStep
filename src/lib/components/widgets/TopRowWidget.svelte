@@ -5,7 +5,7 @@
   import { showGameInfoModal } from "$lib/utils/uiHelpers.js";
   import { hotkeyTooltip } from "$lib/actions/hotkeyTooltip.js";
   import { customTooltip } from "$lib/actions/customTooltip.js";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { onMount } from "svelte";
   import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
   import { uiState } from "$lib/stores/uiState.svelte";
@@ -41,7 +41,7 @@
   >
     <SvgIcons name="home" />
   </button>
-  {#if $page.route.id?.includes("/game/local")}
+  {#if page.route.id?.includes("/game/local")}
     <button
       class="main-menu-btn"
       use:customTooltip={$t("tooltips.localGameSettings")}

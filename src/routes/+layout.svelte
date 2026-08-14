@@ -12,7 +12,7 @@
 	import Modal from "$lib/components/Modal.svelte";
 	import { modalStateRune } from "$lib/stores/modalState.svelte";
 	import { afterNavigate, goto } from "$app/navigation";
-	        import { page } from "$app/stores";
+	        import { page } from "$app/state";
 	        import { logService } from "$lib/services/logService.svelte";
 	        import { notificationService } from "$lib/services/notificationService";
 	        import TestModeWidget from "$lib/components/widgets/TestModeWidget.svelte";	import { tooltipState } from "$lib/stores/tooltipState.svelte";
@@ -204,7 +204,7 @@
 
 	// --- URL as State Sync ---
 	$effect(() => {
-		const url = $page.url;
+		const url = page.url;
 		untrack(() => {
 			modalStateRune.syncWithUrl(url);
 		});

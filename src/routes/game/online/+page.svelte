@@ -8,7 +8,7 @@
     import { base } from "$app/paths";
     import { onMount } from "svelte";
 
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
 
     function initOnlineGame() {
         const session = roomService.getSession();
@@ -21,7 +21,7 @@
         }
 
         // ПЕРЕВІРКА: чи ми щойно з лобі?
-        const fromLobby = $page.url.searchParams.get("from") === "lobby";
+        const fromLobby = page.url.searchParams.get("from") === "lobby";
 
         logService.init(
             `[OnlineGamePage] Initializing online game for room: ${session.roomId} (New Game: ${fromLobby})`,
