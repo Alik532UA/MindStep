@@ -178,7 +178,6 @@
 
 
 	afterNavigate(({ from, to }) => {
-		// Ahead of the early return below, so a replay restore still counts.
 		// Only on a pathname change: modal state lives in the query string, and
 		// afterNavigate fires for those too — counting them would report every
 		// opened modal as a page view.
@@ -186,12 +185,17 @@
 			trackPageView();
 		}
 
-		if (sessionStorage.getItem("isRestoringReplay")) {
-			sessionStorage.removeItem("isRestoringReplay");
-			return;
-		}
+		// Тут стояв ранній вихід по sessionStorage-ключу "isRestoringReplay".
+		// Писати його перестали в d08955f (2025-08-16), коли повтор партії
+		// переїхав на ту саму сторінку й перестав користуватися sessionStorage
+		// узагалі. Читання лишилося й рік нічого не робило.
+		//
+		// Прибрано не лише як мертвий код: ключ був БЕЗ префікса `mindstep_`,
+		// тобто лежав у спільному просторі імен origin-а github.io разом із
+		// рештою проєктів акаунта (STORAGE-NAMESPACE-v8). Сусід, що записав би
+		// таку саму назву, мовчки вимикав би закриття модалок при навігації.
 
-		// FIX: Закриваємо ВСІ модалки тільки при зміні шляху (pathname), 
+		// FIX: Закриваємо ВСІ модалки тільки при зміні шляху (pathname),
 		// а не при зміні параметрів (?mode=... і т.д.).
 		// Використовуємо closeAllModals замість closeModal, щоб очистити стек.
 		if (from?.url?.pathname !== to?.url?.pathname) {
@@ -275,7 +279,11 @@
 				                                                                                                                                                                        tooltip: "Копіювати логи",
 				                                                                                                                                                                        onClick: () => {
 				                                                                                                                                                                            const report = logService.getLogReport();
-				                                                                                                                                                                            const timestamp = new Date().toLocaleString();
+				                                                                                                                                                                            // ISO, а не toLocaleString(): звіт читає той, хто розбирає збій, а не
+// гравець, який його скопіював. Голий toLocaleString() рендериться в
+// локалі СИСТЕМИ гравця — 03.08 чи 08.03 залежно від того, де він живе,
+// і розрізнити їх у звіті нема по чому (I18N-v8 § 4.3).
+const timestamp = new Date().toISOString();
 				                                                                                                                                                                            const header = `--- MindStep DEBUG LOG (VERSION: ${logService.version}) ---\nGenerated: ${timestamp}\n-----------------------------------------------\n\n`;
 				                                                                                                                                                                            
 				                                                                                                                                                                            navigator.clipboard.writeText(header + report).then(() => {
