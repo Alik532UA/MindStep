@@ -18,8 +18,12 @@
 
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
+    // updateSettings уже зберігає мову через storageService, тобто під
+    // префіксом mindstep_. Рядок localStorage.setItem("language", lang), що
+    // стояв тут, писав БЕЗ префікса: на спільному origin GitHub Pages це
+    // чужий ключ, і прочитати його назад ніхто не міг — запис був мертвий
+    // і при цьому засмічував сусідів (STORAGE-NAMESPACE-v8 § 1).
     appSettingsState.updateSettings({ language: lang });
-    localStorage.setItem("language", lang);
     locale.set(lang);
     showDropdown = false;
   }

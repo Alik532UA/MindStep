@@ -6,6 +6,7 @@ import { playerState } from '$lib/stores/playerState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
 import { logService } from "./logService.svelte";
 import { notificationService } from './notificationService';
+import { storageService } from './storage';
 
 // Додано 'reward_suggestion'
 export type FeedbackType = 'improvement' | 'bug' | 'other' | 'reward_suggestion';
@@ -88,12 +89,18 @@ class FeedbackService {
         const settings = gameSettingsState.state;
         const pState = playerState.state;
 
-        let playerId = 'anonymous';
-        if (pState && pState.players.length > 0) {
-            playerId = pState.players[0].id.toString();
-        } else if (typeof localStorage !== 'undefined') {
-            playerId = localStorage.getItem('online_playerName') || 'anonymous';
-        }
+        // Через storageService: ім'я гравця пишуть вісім інших місць, і всі —
+        // з префіксом (mindstep_online_playerName). Тут воно читалося БЕЗ
+        // префікса, тобто не знаходилося ніколи, і в кожен звіт про помилку
+        // йшло 'anonymous' (STORAGE-NAMESPACE-v8 § 1).
+        //
+        // Перевірка `typeof localStorage !== 'undefined'`, що стояла тут,
+        // більше не потрібна: storageService сам не кидає ні при SSR, ні в
+        // приватному режимі.
+        const playerId =
+            pState && pState.players.length > 0
+                ? pState.players[0].id.toString()
+                : storageService.get('online_playerName') || 'anonymous';
 
         return {
             appVersion: versionState.state.current || 'unknown',

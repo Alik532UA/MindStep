@@ -3,6 +3,10 @@
     import MenuToggleTrigger from "./parts/MenuToggleTrigger.svelte";
     import FlexibleMenuPanel from "./parts/FlexibleMenuPanel.svelte";
     import type { IMenuItem, MenuPosition } from "./FlexibleMenu.types";
+    import { storageService } from "$lib/services/storage";
+
+    /** Ключ стану меню — в одному місці, щоб читання й запис не розійшлися. */
+    const menuStateKey = (key: string) => `flexibleMenu:${key}`;
 
     interface Props {
         items?: IMenuItem[];
@@ -34,9 +38,11 @@
 
     onMount(() => {
         if (persistenceKey) {
-            const savedState = localStorage.getItem(
-                `flexibleMenu:${persistenceKey}`,
-            );
+            // Через storageService, а не localStorage напряму: ключ мусить
+            // нести префікс mindstep_ (спільний origin), а сам виклик — не
+            // кидати в приватному режимі, де доступ до сховища падає
+            // (STORAGE-NAMESPACE-v8 § 1).
+            const savedState = storageService.get(menuStateKey(persistenceKey));
             if (savedState !== null) {
                 isOpen = savedState === "true";
             }
@@ -47,10 +53,7 @@
     function toggle() {
         isOpen = !isOpen;
         if (persistenceKey) {
-            localStorage.setItem(
-                `flexibleMenu:${persistenceKey}`,
-                String(isOpen),
-            );
+            storageService.set(menuStateKey(persistenceKey), String(isOpen));
         }
     }
 </script>

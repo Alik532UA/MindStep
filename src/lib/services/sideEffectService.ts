@@ -4,6 +4,7 @@ import { speakText, speakMove } from './speechService';
 import { modalService } from './modalService';
 import { gameEventBus } from './gameEventBus';
 import { logService } from "./logService.svelte";
+import { storageService } from './storage';
 import type { MoveDirectionType } from '$lib/models/Piece';
 import type { GameOverPayload } from '$lib/stores/gameOverState.svelte';
 import type { ModalState } from '$lib/stores/modalState.svelte';
@@ -39,7 +40,10 @@ class SideEffectService {
         );
         break;
       case 'localStorage_set':
-        localStorage.setItem(effect.payload.key, JSON.stringify(effect.payload.value));
+        // Через фасад: інакше цей канал побічних ефектів писав би довільний
+        // ключ без префікса й кидав би в приватному режимі, де доступ до
+        // сховища падає (STORAGE-NAMESPACE-v8 § 1).
+        storageService.setJSON(effect.payload.key, effect.payload.value);
         break;
       case 'ui/showGameOverModal':
         modalService.showGameOverModal(effect.payload);

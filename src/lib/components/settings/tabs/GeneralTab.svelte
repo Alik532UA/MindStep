@@ -16,8 +16,9 @@
 
   function selectLang(lang: "uk" | "en" | "crh" | "nl") {
     logService.ui(`Зміна мови: ${lang}`);
+    // Той самий мертвий запис без префікса, що й у LanguageSwitcher —
+    // прибраний з тієї ж причини (STORAGE-NAMESPACE-v8 § 1).
     appSettingsState.updateSettings({ language: lang });
-    localStorage.setItem("language", lang);
     locale.set(lang);
   }
 
