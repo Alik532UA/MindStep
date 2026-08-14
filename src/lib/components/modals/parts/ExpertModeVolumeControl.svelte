@@ -28,7 +28,7 @@
         data-testid="expert-mode-volume-thumb-icon"
         ><SvgIcons name="boxing-glove-pictogram-1" /></span
     >
-    <span class="volume-label" data-testid="expert-mode-volume-label"
+    <span class="volume-label" data-testid="expert-mode-volume-value"
         >{$t("voiceSettings.volumeLabel")}: {volumePercentage.toFixed(0)}%</span
     >
 </div>

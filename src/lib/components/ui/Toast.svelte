@@ -45,20 +45,20 @@
 
     <div class="content" data-testid="toast-panel">
         {#if notification.titleKey}
-            <div class="title" data-testid="toast-title-label">{$t(notification.titleKey as TranslationKey)}</div>
+            <div class="title" data-testid="toast-title">{$t(notification.titleKey as TranslationKey)}</div>
         {:else if notification.titleRaw}
-            <div class="title" data-testid="toast-title-label">{notification.titleRaw}</div>
+            <div class="title" data-testid="toast-title">{notification.titleRaw}</div>
         {/if}
 
         {#if notification.messageKey}
-            <div class="message" data-testid="toast-text-label">
+            <div class="message" data-testid="toast-message">
                 {$t(
                     notification.messageKey as TranslationKey,
                     notification.messageValues,
                 )}
             </div>
         {:else if notification.messageRaw}
-            <div class="message" data-testid="toast-text-label">{notification.messageRaw}</div>
+            <div class="message" data-testid="toast-message">{notification.messageRaw}</div>
         {/if}
     </div>
 
