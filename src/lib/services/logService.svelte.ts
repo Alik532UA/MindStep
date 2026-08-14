@@ -108,7 +108,16 @@ class LogState {
             }
 
             if (this.config[type] || isForceEnabled || isDev) {
-                const timestamp = new Date().toLocaleTimeString();
+                // Час у форматі UTC hh:mm:ss.mmm, а не toLocaleTimeString().
+                //
+                // Цей рядок іде не лише в консоль розробника: нижче він
+                // потрапляє в `this.logs`, тобто в КОЖЕН рядок звіту, який
+                // гравець копіює кнопкою. toLocaleTimeString() рендериться в
+                // локалі СИСТЕМИ гравця: `3:05:12 PM` в одній, `15:05:12` в
+                // іншій, а подекуди й іншими цифрами. Звіт читає той, хто
+                // розбирає збій, і зіставляти події за таким часом ніяк
+                // (I18N-v8 § 4.3).
+                const timestamp = new Date().toISOString().slice(11, 23);
                 const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
                 
                 if (type.toLowerCase() === 'error') {
