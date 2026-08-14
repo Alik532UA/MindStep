@@ -41,6 +41,13 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:report
+
+      # Поріг high, а не moderate: лишилися 7 moderate у транзитивних
+      # залежностях firebase-tools і svelte-i18n, де npm пропонує «фікс»
+      # відкотом на кілька мажорів назад. Поріг moderate довелося б одразу
+      # вимкнути, а вимкнений гейт гірший за відсутній.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
