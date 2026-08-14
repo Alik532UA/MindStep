@@ -35,7 +35,7 @@ export function formatDateTime(timestamp: number, locale: string | null | undefi
     const timeString = date.toLocaleTimeString(currentLocale, { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Використовуємо існуючу функцію для дати
-    let dateString = date.toLocaleDateString(currentLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const dateString = date.toLocaleDateString(currentLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     if (currentLocale === 'uk') {
         // Формат: 20.12.2025 року, о 21:42

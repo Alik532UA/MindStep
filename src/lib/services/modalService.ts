@@ -28,7 +28,7 @@ function showGameOverModal(payload: GameOverPayload) {
   const { reasonKey, reasonValues, finalScoreDetails, winners, gameType } = payload;
 
   let titleKey = 'modal.gameOverTitle';
-  let content: GameOverModalContent = {
+  const content: GameOverModalContent = {
     reasonKey: reasonKey,
     reason: get(tStore)(reasonKey as TranslationKey, reasonValues || undefined),
     scoreDetails: finalScoreDetails

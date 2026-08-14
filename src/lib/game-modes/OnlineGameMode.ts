@@ -520,12 +520,13 @@ export class OnlineGameMode extends BaseGameMode {
       case 'state_updated':
         this.applyRemoteState(event.state);
         break;
-      case 'player_left':
+      case 'player_left': {
         const remainingPlayers = this.roomData ? Object.values(this.roomData.players) : [];
         if (remainingPlayers.length > 1) {
           notificationService.show({ type: 'warning', messageRaw: 'Гравець покинув гру' });
         }
         break;
+      }
       case 'connection_lost':
         notificationService.show({ type: 'error', messageRaw: 'Втрачено з\'єднання з сервером' });
         break;

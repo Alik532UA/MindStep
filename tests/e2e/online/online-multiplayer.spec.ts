@@ -21,6 +21,8 @@ test.describe('Онлайн мультиплеєр', { tag: '@OM' }, () => {
    */
   test.describe.configure({ mode: 'serial' });
   
+  // Порожній шаблон — те, чим Playwright статично розуміє «фікстури не потрібні».
+  // eslint-disable-next-line no-empty-pattern
   test.beforeEach(async ({}, testInfo) => {
     // Встановлюємо таймаут 120 секунд для всього тесту (враховуючи retry логіку toPass)
     testInfo.setTimeout(120000);

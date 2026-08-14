@@ -145,7 +145,7 @@ export function speakMove(
     const directionText = translations.directions[move.direction] || move.direction;
     const distanceText = String(move.distance);
 
-    let textToSpeak = '';
+    let textToSpeak: string;
 
     if (settings.shortSpeech && move.distance === 1) {
         textToSpeak = directionText;

@@ -34,6 +34,11 @@ jobs:
       - name: Check types
         run: npm run check
 
+      # Доданий разом із самим eslint: до цього скрипт `lint` був псевдонімом
+      # для `check`, тобто перевірки ідіом не було ні локально, ні в CI.
+      - name: Lint
+        run: npm run lint
+
       - name: Run unit tests
         run: npm run test:report
         env:

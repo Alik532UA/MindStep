@@ -11,10 +11,12 @@
   const { needRefresh, updateServiceWorker, offlineReady } = useRegisterSW({
     onRegistered(r) {
       logService.info('[PWA] Service Worker registered');
-      r && setInterval(() => {
-        logService.info('[PWA] Checking for updates and validating version...');
-        r.update(); 
-      }, CHECK_INTERVAL);
+      if (r) {
+        setInterval(() => {
+          logService.info('[PWA] Checking for updates and validating version...');
+          r.update();
+        }, CHECK_INTERVAL);
+      }
     },
     onRegisterError(error) {
       logService.error('[PWA] Service Worker registration failed', error);

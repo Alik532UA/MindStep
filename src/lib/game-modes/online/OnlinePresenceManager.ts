@@ -131,7 +131,7 @@ export class OnlinePresenceManager {
 
     private triggerDisconnect(playerId: string, timestamp: number): void {
         const players = this.config.getPlayers();
-        let player = players.find(p => p.id === playerId);
+        const player = players.find(p => p.id === playerId);
 
         let playerName: string;
         if (player) {
@@ -238,7 +238,12 @@ export class OnlinePresenceManager {
                                 isDisconnected: true,
                                 disconnectStartedAt: now
                             });
-                        } catch (e) { }
+                        } catch (e) {
+                            // Мережевий збій тут очікуваний (гравець саме й
+                            // відпадає), тому warn, а не error — інакше кожен
+                            // офлайн виглядав би поломкою застосунку.
+                            logService.warn('[Presence] не вдалося позначити гравця відключеним', e);
+                        }
                     }
                 } else {
                     if (isRtOnline || timeSinceSeen < (this.DISCONNECT_THRESHOLD_MS / 2)) {
@@ -247,12 +252,16 @@ export class OnlinePresenceManager {
                                 isDisconnected: false,
                                 disconnectStartedAt: undefined
                             });
-                        } catch (e) { }
+                        } catch (e) {
+                            logService.warn('[Presence] не вдалося позначити гравця онлайн', e);
+                        }
                     }
                     else if (player.disconnectStartedAt && (now - ensureNumber(player.disconnectStartedAt) > this.KICK_TIMEOUT_MS)) {
                         try {
                             await roomPlayerService.leaveRoom(this.config.roomId, player.id);
-                        } catch (e) { }
+                        } catch (e) {
+                            logService.warn('[Presence] не вдалося виключити гравця з кімнати', e);
+                        }
                     }
                 }
             }

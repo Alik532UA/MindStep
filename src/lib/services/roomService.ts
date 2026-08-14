@@ -170,7 +170,7 @@ class RoomService {
             const [querySnapshot, statsData] = await roomFirestoreService.getPublicRoomsQuerySnapshot();
             const result = this.processRoomsSnapshot(querySnapshot);
             
-            let globalLastCreated = statsData?.lastRoomCreatedAt || 0;
+            const globalLastCreated = statsData?.lastRoomCreatedAt || 0;
             const finalLatestCreatedAt = Math.max(result.latestCreatedAt || 0, globalLastCreated);
 
             return {

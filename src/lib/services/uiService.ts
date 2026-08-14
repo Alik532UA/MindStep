@@ -7,7 +7,7 @@ export function navigateToGame() {
   const { intendedGameType } = uiState.state;
   const { gameMode, boardSize, blockModeEnabled } = gameSettingsState.state;
 
-  let targetPath = "";
+  let targetPath: string;
 
   switch (intendedGameType) {
     case "training":

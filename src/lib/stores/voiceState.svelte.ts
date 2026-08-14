@@ -30,7 +30,7 @@ class VoiceStateRune {
         const currentLocale = get(locale) || 'uk';
         try {
             const allVoices = await loadAndGetVoices();
-            let mainVoices = filterVoicesByLang(allVoices, currentLocale);
+            const mainVoices = filterVoicesByLang(allVoices, currentLocale);
 
             if (currentLocale === 'nl') {
                 mainVoices.sort((a: Voice, b: Voice) => {

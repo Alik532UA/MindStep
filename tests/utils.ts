@@ -166,7 +166,12 @@ export async function clearFirestore() {
     const ping = await fetch('http://127.0.0.1:8080/', { method: 'GET' });
     if (!ping.ok && ping.status !== 404) throw new Error('Not reachable');
   } catch (e) {
-    throw new Error('❌ FIREBASE EMULATOR IS NOT RUNNING! Please start it with: npx firebase emulators:start');
+    // `cause` лишає в звіті справжню причину: без неї видно лише наш текст, а
+    // не те, чи емулятор не запущений, чи порт зайнятий чужим процесом.
+    throw new Error(
+      '❌ FIREBASE EMULATOR IS NOT RUNNING! Please start it with: npx firebase emulators:start',
+      { cause: e }
+    );
   }
 
   try {

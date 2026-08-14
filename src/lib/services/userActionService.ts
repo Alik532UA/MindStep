@@ -253,13 +253,14 @@ export const userActionService = {
           // Використовуємо новий метод голосування
           await this.voteToContinue();
           break;
-        case 'resetGame':
+        case 'resetGame': {
           const activeGameMode = gameModeService.getCurrentMode();
           if (activeGameMode) {
             await activeGameMode.restartGame({ newSize: payload.newSize });
           }
           gameEventBus.dispatch('CloseModal');
           break;
+        }
         case 'closeModal':
           gameEventBus.dispatch('CloseModal');
           break;

@@ -6,7 +6,12 @@
   export let content: string | TooltipData = "";
 
   let tooltipNode: HTMLElement;
+  // Початкові нулі потрібні: реактивний блок нижче виконується лише коли є
+  // `tooltipNode` і `content`, а до першого рендера їх немає — шаблон читає
+  // саме ці значення. eslint цього не бачить, бо не моделює `$:`.
+  // eslint-disable-next-line no-useless-assignment
   let adjustedX = 0;
+  // eslint-disable-next-line no-useless-assignment
   let adjustedY = 0;
 
   $: if (tooltipNode && content && typeof window !== "undefined") {

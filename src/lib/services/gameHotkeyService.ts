@@ -10,7 +10,7 @@ import type { TranslationKey } from '../types/i18n';
 import SimpleModalContent from '../components/modals/SimpleModalContent.svelte';
 
 let unsubscribeGameSettings: (() => void) | null = null;
-let registeredGameActionHandlers: Partial<Record<KeybindingAction, (event?: KeyboardEvent) => void>> = {};
+const registeredGameActionHandlers: Partial<Record<KeybindingAction, (event?: KeyboardEvent) => void>> = {};
 
 function showKeyConflictModal(key: string, actions: KeybindingAction[]) {
     logService.action(`[gameHotkeyService] Key '${key}' has a conflict. Showing resolution modal for actions:`, actions);

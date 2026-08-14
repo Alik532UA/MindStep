@@ -65,7 +65,11 @@
   });
 
   $effect(() => {
-    layoutUpdateState.state;
+    // Читання створює залежність: ефект мусить перезапускатися, коли зовні
+    // просять перерахувати розкладку. Голий вираз-статемент тут eslint ловить
+    // як забутий виклик, тому читаємо у змінну — сенс той самий.
+    const dependency = layoutUpdateState.state;
+    void dependency;
     updateLayoutMode();
   });
 
