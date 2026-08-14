@@ -21,7 +21,7 @@
 
 <button
     class="reward-card suggest-card"
-    on:click={handleClick}
+    onclick={handleClick}
     data-testid="suggest-reward-card"
 >
     <div class="icon-wrapper">

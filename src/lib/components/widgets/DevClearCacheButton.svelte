@@ -24,7 +24,7 @@
   <button
     class="dev-clear-cache-button"
     use:customTooltip={`${$t("gameBoard.clearCache")}`}
-    on:click={handleClearCache}
+    onclick={handleClearCache}
   >
     <SvgIcons name="clear-cache" />
   </button>

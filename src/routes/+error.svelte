@@ -121,7 +121,7 @@ ${stack ? `\nStack:\n${stack}` : ""}
                 <button
                     class="copy-btn"
                     class:success={copySuccess}
-                    on:click={copyError}
+                    onclick={copyError}
                     data-testid="copy-error-btn"
                 >
                     {copyButtonText}
@@ -131,7 +131,7 @@ ${stack ? `\nStack:\n${stack}` : ""}
 
         <!-- Кнопки навігації (завжди показуємо) -->
         <div class="action-buttons">
-            <button class="action-btn secondary" on:click={reload}>
+            <button class="action-btn secondary" onclick={reload}>
                 🔄 Оновити сторінку
             </button>
             <a href="{base}/" class="action-btn primary"> 🏠 На головну </a>

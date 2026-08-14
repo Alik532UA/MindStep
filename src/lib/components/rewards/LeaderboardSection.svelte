@@ -51,7 +51,7 @@
                 <button
                     class="chip"
                     class:active={selectedBoardSize === size.value}
-                    on:click={() => handleSizeFilter(size.value)}
+                    onclick={() => handleSizeFilter(size.value)}
                 >
                     {size.label}
                 </button>

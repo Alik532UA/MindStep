@@ -38,8 +38,8 @@
 <div class="bonus-expander" class:open={isOpen}>
   <div
     class="expander-summary"
-    on:click={toggle}
-    on:keydown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}
+    onclick={toggle}
+    onkeydown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}
     role="button"
     tabindex="0"
     aria-expanded={isOpen}

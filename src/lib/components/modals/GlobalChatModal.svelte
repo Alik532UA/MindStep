@@ -15,7 +15,7 @@
 <div class="global-chat-container">
     <div class="chat-header">
         <h2>{$t("ui.feedback.typeGlobalChat")}</h2>
-        <button class="close-btn" on:click={close}>×</button>
+        <button class="close-btn" onclick={close}>×</button>
     </div>
 
     <div class="chat-wrapper">

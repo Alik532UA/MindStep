@@ -29,7 +29,7 @@
             <div class="cell">
                 <button
                     class="modal-btn-generic"
-                    on:click={() => logClick("Legacy Default")}
+                    onclick={() => logClick("Legacy Default")}
                 >
                     Default
                 </button>
@@ -49,7 +49,7 @@
             <div class="cell">
                 <button
                     class="modal-btn-generic green-btn"
-                    on:click={() => logClick("Legacy Primary")}
+                    onclick={() => logClick("Legacy Primary")}
                 >
                     Primary / Green
                 </button>
@@ -69,7 +69,7 @@
             <div class="cell">
                 <button
                     class="modal-btn-generic blue-btn"
-                    on:click={() => logClick("Legacy Info")}
+                    onclick={() => logClick("Legacy Info")}
                 >
                     Info / Blue
                 </button>
@@ -89,7 +89,7 @@
             <div class="cell">
                 <button
                     class="modal-btn-generic danger-btn"
-                    on:click={() => logClick("Legacy Danger")}
+                    onclick={() => logClick("Legacy Danger")}
                 >
                     Danger
                 </button>
@@ -130,7 +130,7 @@
                     <!-- Стилі видалено, кнопка буде виглядати як дефолтна -->
                     <button
                         class="modal-button secondary"
-                        on:click={() => logClick("Legacy Menu")}
+                        onclick={() => logClick("Legacy Menu")}
                     >
                         Menu Button (Legacy)
                     </button>
@@ -154,7 +154,7 @@
                     <!-- Стилі видалено -->
                     <button
                         class="modal-button secondary"
-                        on:click={() => logClick("Legacy Menu Icon")}
+                        onclick={() => logClick("Legacy Menu Icon")}
                     >
                         <span class="icon-spacer" style="margin-right: 8px;"
                             ><SvgIcons name="trophy_bronze" /></span

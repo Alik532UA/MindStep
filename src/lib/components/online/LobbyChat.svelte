@@ -65,7 +65,7 @@
             type="text"
             bind:value={newMessage}
             placeholder={$t("onlineMenu.chat.placeholder")}
-            on:keydown={handleKeydown}
+            onkeydown={handleKeydown}
             maxlength="100"
         />
         <StyledButton

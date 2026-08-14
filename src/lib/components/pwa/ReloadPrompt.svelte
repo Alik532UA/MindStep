@@ -44,7 +44,7 @@
       <StyledButton variant="primary" onclick={update} style="width: 100%; margin-bottom: 8px;">
         {$t("updateNotification.updateButton")}
       </StyledButton>
-      <button on:click={close} class="dismiss-btn">
+      <button onclick={close} class="dismiss-btn">
         Пізніше
       </button>
     </div>

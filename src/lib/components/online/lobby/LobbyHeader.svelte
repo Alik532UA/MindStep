@@ -51,7 +51,7 @@
         <button
             class="room-id-chip"
             class:copied={isCopied}
-            on:click={copyRoomId}
+            onclick={copyRoomId}
             data-testid="copy-room-id-btn"
             title={$t("onlineMenu.lobby.copyLink")}
         >
