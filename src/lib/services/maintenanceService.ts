@@ -1,6 +1,7 @@
 import { logService } from "./logService.svelte";
 import { storageService } from "./storage";
 import { base } from "$app/paths";
+import { STORAGE_PREFIX } from '$lib/config/storage';
 
 /**
  * Сервіс для технічного обслуговування додатку.
@@ -32,8 +33,8 @@ export const maintenanceService = {
             if ('caches' in window) {
                 try {
                     const cacheNames = await caches.keys();
-                    // Префікс проекту для кешу (визначений в STORAGE-NAMESPACE-v5.md)
-                    const CACHE_PREFIX = 'mindstep_'; 
+                    // Той самий префікс, що й у сховища — з єдиного джерела.
+                    const CACHE_PREFIX = STORAGE_PREFIX;
                     await Promise.all(
                         cacheNames
                             .filter(name => name.startsWith(CACHE_PREFIX))

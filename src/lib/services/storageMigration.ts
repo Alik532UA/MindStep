@@ -4,8 +4,7 @@
  */
 import { storageService } from './storage';
 import { logService } from './logService.svelte';
-
-const PREFIX = 'mindstep_';
+import { STORAGE_PREFIX as PREFIX } from '$lib/config/storage';
 const MIGRATION_KEY = 'migrated_to_v5';
 
 export function migrateStorage(): void {

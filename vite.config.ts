@@ -82,7 +82,11 @@ export default defineConfig(({ mode }) => {
 			sourcemap: true,
 		},
 		test: {
-			include: ['src/**/*.spec.ts']
+			// І `.spec.ts`, і `.test.ts`: конвенція проєкту — `.spec.ts`, але
+			// файл із «неправильним» суфіксом раніше просто не запускався, і
+			// це нічим не було видно — vitest звітував успіх, не подивившись
+			// на нього (AI-AGENT-PITFALLS-v8 § 1).
+			include: ['src/**/*.{spec,test}.ts']
 		}
 	};
 });

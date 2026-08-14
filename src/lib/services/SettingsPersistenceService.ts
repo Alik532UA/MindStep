@@ -4,6 +4,7 @@ import { defaultGameSettings } from '../stores/gameSettingsDefaults';
 import type { GameSettingsState } from '../stores/gameSettingsTypes';
 import { GameSettingsSchema } from '../schemas/gameSettingsSchema';
 import { storageService } from './storage';
+import { getStorageKey } from '$lib/config/storage';
 
 const isBrowser = typeof window !== 'undefined';
 const GAME_SETTINGS_KEY = 'gameSettings';
@@ -47,15 +48,18 @@ export const settingsPersistenceService = {
     
     const stateToPersist = { ...settings, version: SETTINGS_VERSION };
 
-    // Note: Session storage logic is kept but using storageService is not yet implemented 
-    // for session storage specifically in storage.ts. 
-    // However, for consistency with project rules, we should use a prefixed approach.
-    // Since we don't have a sessionStore wrapper yet, we keep it as is but mark for future.
-    
-    if (settings.gameMode) {
-      sessionStorage.setItem('mindstep_gameMode', settings.gameMode);
-    } else {
-      sessionStorage.removeItem('mindstep_gameMode');
+    // Фасада над sessionStorage у проєкті ще немає, тому звернення пряме —
+    // але ключ будується тим самим `getStorageKey()`, щоб префікс лишався в
+    // одному місці. Обгорнуто: у приватному режимі sessionStorage теж кидає.
+    try {
+      const sessionKey = getStorageKey('gameMode');
+      if (settings.gameMode) {
+        sessionStorage.setItem(sessionKey, settings.gameMode);
+      } else {
+        sessionStorage.removeItem(sessionKey);
+      }
+    } catch (e) {
+      logService.warn('[Settings] sessionStorage недоступний — режим гри не збережено на сесію', e);
     }
 
     logService.state('Saving game settings to storageService:', stateToPersist);

@@ -1,4 +1,5 @@
 import { storageService } from '$lib/services/storage';
+import { STORAGE_PREFIX } from '$lib/config/storage';
 
 export interface ClearCacheOptions {
   /** Зберегти тему, стиль та мову. */
@@ -39,7 +40,7 @@ export function clearCache(options: ClearCacheOptions = {}): void {
   const isBrowser = typeof window !== 'undefined';
   if (!isBrowser) return;
 
-  const PREFIX = 'mindstep_';
+  const PREFIX = STORAGE_PREFIX;
   const keysToRemove: string[] = [];
 
   for (let i = 0; i < localStorage.length; i++) {
