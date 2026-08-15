@@ -1,8 +1,86 @@
 rules_version = '2';
+
+/*
+ * Правила доступу до Firestore.
+ *
+ * Доти тут стояло `match /{document=**} { allow read, write: if true; }` —
+ * тобто будь-хто з публічним конфігом Firebase (а він за побудовою лежить у
+ * бандлі) міг прочитати й переписати ЩО ЗАВГОДНО: чужі профілі, рекорди,
+ * нагороди, і завести довільні колекції в чужому проєкті. SECURITY-v8 називає
+ * це втратою даних користувача, а не недоглядом конфігурації.
+ *
+ * ЩО ЗМІНИЛОСЯ, А ЩО НІ. Свідомо змінено рівно дві речі:
+ *   1. типове правило — заборона. Дозволені лише ті шість коренів, які
+ *      застосунок справді використовує;
+ *   2. `users` і `rewards` пише лише власник. У коді ці документи адресуються
+ *      ВИКЛЮЧНО через `user.uid` поточного користувача
+ *      (`userProfileService`, `rewardsState.syncWithCloud`), тож звуження не
+ *      відбирає в застосунку нічого.
+ *
+ * Решта лишилася такою ж відкритою, як була. `rooms` — спільний стан партії,
+ * який обидва гравці мусять писати; `leaderboards` читає будь-хто; `feedback`
+ * приймає повідомлення й від неавторизованого відвідувача. Звужувати це
+ * наосліп означало б поламати гру заради формально гарнішого файлу — таке
+ * робиться окремо, з перевіркою на емуляторі під кожен сценарій.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    /** Профіль гравця: `users/{uid}`. Пише лише власник. */
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    /** Нагороди гравця: `rewards/{uid}`. Пише лише власник. */
+    match /rewards/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    /*
+     * Таблиця рекордів. Ідентифікатор запису — `{uid}_{mode}_{size}`
+     * (`leaderboardService`), тому власника видно з самого імені документа.
+     * Читання відкрите: таблиця й існує, щоб її бачили всі.
+     */
+    match /leaderboards/{entryId} {
+      allow read: if true;
+      allow write: if request.auth != null && entryId.split('_')[0] == request.auth.uid;
+    }
+
+    /*
+     * Кімнати онлайн-гри разом із під-колекцією `presence`. Обидва гравці
+     * пишуть той самий документ стану партії, і жоден із них не «власник»,
+     * тож звузити до автора кімнати не можна без переписування синхронізації.
+     */
+    match /rooms/{roomId} {
       allow read, write: if true;
+      match /{sub=**} {
+        allow read, write: if true;
+      }
+    }
+
+    /*
+     * Відгуки: `feedback/{type}/entries/{id}`. Форму відкриває будь-хто,
+     * зокрема неавторизований відвідувач, тому створення відкрите. Читання
+     * закрите — застосунок відгуків не читає, їх дивляться з консолі.
+     */
+    match /feedback/{type}/entries/{entryId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    /** Лічильники: `general/stats`. */
+    match /general/{docId} {
+      allow read, write: if true;
+    }
+
+    /*
+     * Усе інше — заборонено. Саме цей рядок і закриває головну дірку:
+     * без нього чужа колекція заводиться одним запитом із DevTools.
+     */
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
