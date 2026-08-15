@@ -46,14 +46,6 @@ walkDir(srcDir, (filePath) => {
             content = content.replace(from, to);
         });
 
-        // Додаткове виправлення для LobbyChat.svelte (TypeScript помилка)
-        if (filePath.includes('LobbyChat.svelte')) {
-            content = content.replace(
-                'unsubscribe = roomService.subscribeToChat(roomId, (msgs) => {',
-                'unsubscribe = roomService.subscribeToChat(roomId, (msgs: ChatMessage[]) => {'
-            );
-        }
-
         if (content !== originalContent) {
             fs.writeFileSync(filePath, content, 'utf8');
             console.log(`✅ Виправлено: ${path.relative(srcDir, filePath)}`);

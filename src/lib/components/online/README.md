@@ -21,11 +21,6 @@
 - **Пропси:** `roomId`.
 - **Контролер:** `LobbyController.svelte.ts`.
 
-### [RoomCard.svelte](./RoomCard.svelte)
-Картка кімнати в списку.
-- **Пропси:** `room` (об'єкт RoomSummary).
-- **Дії:** `join` (виклик `roomService.joinRoom`).
-
 ## Правила розробки
 - Не пишіть логіку Firestore прямо у компонентах. Використовуйте `roomService.ts`.
 - Використовуйте `BaseModal` для всіх діалогових вікон створення кімнат.
