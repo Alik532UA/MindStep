@@ -50,7 +50,7 @@
 | Firebase піднімається **ліниво** | `authService` більше не ініціалізує Auth у конструкторі: синглтон рівня модуля робив це на імпорті, і юніт-тест ігрової логіки падав у CI з `auth/invalid-api-key` ще до першого тесту. Не повертай нетерплячу ініціалізацію — тести знову вимагатимуть бойових ключів |
 | `headless` залежить від CI | `playwright.config.ts` має `headless: !!process.env.CI`. Локально — headed, на раннері — ні: там немає X-сервера |
 | Мультіплеєрні тести не в CI | `tests/e2e/online/` (2 файли) потребують емулятора Firebase і запускаються **лише вручну** через `npm run test:online`. Це навмисно: кімнати, створені тестом проти бойового Firebase, побачив би справжній гравець |
-| У CI йде лише один e2e-файл | `tests/e2e/invariants.spec.ts`. Десять наборів у `tests/e2e/virtual/` не запускаються ніде автоматично — не вважай їх покриттям |
+| У CI йде лише один e2e-файл | `tests/e2e/invariants.spec.ts` і `tests/e2e/html-lang.spec.ts`. Десять наборів у `tests/e2e/virtual/` не запускаються ніде автоматично — не вважай їх покриттям |
 | Падіння юніт-тестів мусить бути видно | `test:report` друкує і в консоль, і в JSON (`--outputFile.json`), а `test-reports/` вивантажується артефактом при падінні. Не прибирай `--reporter=default` — без нього лог CI німий |
 
 ## НЕ РОБИ
@@ -81,8 +81,15 @@ npm run lint         # eslint, 0 errors (попередження — запис
 npm run lint:all     # eslint + knip (мертвий код і залежності)
 npm run test:report  # юніт-тести Vitest, вивід у консоль і в JSON
 npm run build        # збірка
+npm run check:build  # інваріанти над build/ — ПІСЛЯ build
 npm run test:online  # мультіплеєр під емулятором Firebase, ЛОКАЛЬНО
+npm run check:rules  # правила доступу Firebase під емулятором, ЛОКАЛЬНО
 ```
+
+`check:build` — єдиний гейт, що бачить дефекти, невидимі в `src/`: порожня
+сторінка, canonical, `sveltekit-prerender` в адресах і CSP, яка у збірці
+приходить `<meta>`-тегом, а не заголовком, як у dev. Будь-яке твердження про
+ці речі робиться після нього, а не після читання коду.
 
 Для e2e економний вивід: `npx playwright test --reporter=line`.
 

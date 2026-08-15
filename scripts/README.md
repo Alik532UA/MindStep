@@ -10,5 +10,5 @@ To run a script, open a PowerShell terminal and execute the script file.
 - `check.ps1`: Runs the type checker. Equivalent to `npm run check`.
 - `test.ps1`: Runs the tests. Equivalent to `npm test`.
 - `playwright-test.ps1`: Runs the Playwright tests. Equivalent to `npx playwright test`.
-- `playwright-test-grep.ps1`: Runs the Playwright tests with a grep filter. Equivalent to `npx playwright test --grep "@GF-1"`.
+- `playwright-test-hf1.ps1`: Runs the Playwright happy-flow suite.
 - `preview.ps1`: Builds the project and starts a local server to preview the production build. Equivalent to `npm run build && npm run preview`.
