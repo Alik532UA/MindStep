@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Header from "$lib/components/layouts/Header.svelte";
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
 	import { initAnalytics, trackPageView } from "$lib/services/analyticsService";

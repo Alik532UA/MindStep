@@ -217,10 +217,6 @@ export interface TranslationSchema {
       'online-pro': string;
     };
   };
-  header: {
-    home: string;
-    about: string;
-  };
   joinRoom: {
     title: string;
   };

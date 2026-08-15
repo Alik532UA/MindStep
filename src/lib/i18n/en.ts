@@ -8,7 +8,6 @@ import modal from './en/modal';
 import settings from './en/settings';
 import rulesPage from './en/rulesPage';
 import voiceSettings from './en/voiceSettings';
-import header from './en/header';
 import onlineMenu from './en/onlineMenu';
 import waitingForPlayer from './en/waitingForPlayer';
 import joinRoom from './en/joinRoom';
@@ -43,7 +42,6 @@ const translations: TranslationSchema = {
   settings,
   rulesPage,
   voiceSettings,
-  header,
   onlineMenu,
   waitingForPlayer,
   joinRoom,
