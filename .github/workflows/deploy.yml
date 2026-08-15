@@ -11,9 +11,15 @@ on:
 permissions:
   contents: write
 
+# `cancel-in-progress: false` — вимога CI-CD-AND-TOOLS-v8 § 1.3 для
+# деплой-пайплайна, і не з міркувань акуратності. Пуш пачкою комітів разом із
+# `true` скасовує всі проміжні прогони, лишаючи тільки останній: прогін, який
+# УПЕРШЕ виконав би щойно доданий гейт, не завершується ніколи. Гейт при цьому
+# виглядає робочим — він просто не виконувався жодного разу
+# (AI-AGENT-PITFALLS-v8 § 1.4, де цей проєкт названий поіменно).
 concurrency:
   group: "pages-main"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
