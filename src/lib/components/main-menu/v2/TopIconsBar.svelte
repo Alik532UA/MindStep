@@ -43,6 +43,7 @@
         class="icon-btn"
         onclick={() => navigateTo("/rules")}
         use:customTooltip={$t("mainMenu.rules")}
+        aria-label={$t("mainMenu.rules")}
         data-testid="top-rules-btn"
     >
         <div class="icon-inner"><NotoEmoji name="memo" size="24px" /></div>
@@ -52,6 +53,7 @@
         class="icon-btn"
         onclick={() => navigateTo("/rewards")}
         use:customTooltip={$t("rewards.pageTitle")}
+        aria-label={$t("rewards.pageTitle")}
         data-testid="top-rewards-btn"
     >
         <div class="icon-inner"><NotoEmoji name="trophy" size="24px" /></div>
@@ -61,6 +63,7 @@
         class="icon-btn"
         onclick={() => navigateTo("/settings")}
         use:customTooltip={$t("mainMenu.settings")}
+        aria-label={$t("mainMenu.settings")}
         data-testid="top-settings-btn"
     >
         <div class="icon-inner"><NotoEmoji name="gear" size="24px" /></div>
@@ -71,6 +74,7 @@
             class="icon-btn"
             onclick={toggleLang}
             use:customTooltip={$t("mainMenu.language")}
+            aria-label={$t("mainMenu.language")}
             data-testid="top-language-btn"
         >
             <div class="icon-inner">
@@ -84,6 +88,7 @@
             class="icon-btn"
             onclick={toggleTheme}
             use:customTooltip={$t("mainMenu.theme")}
+            aria-label={$t("mainMenu.theme")}
             data-testid="top-theme-btn"
         >
             <div class="icon-inner">
@@ -96,6 +101,7 @@
         class="icon-btn desktop-only"
         onclick={() => navigateTo("/settings?tab=hotkeys")}
         use:customTooltip={$t("mainMenu.controls")}
+        aria-label={$t("mainMenu.controls")}
         data-testid="top-controls-btn"
     >
         <div class="icon-inner"><NotoEmoji name="keyboard" size="24px" /></div>
@@ -105,6 +111,7 @@
         class="icon-btn"
         onclick={() => navigateTo("/supporters")}
         use:customTooltip={$t("mainMenu.donate")}
+        aria-label={$t("mainMenu.donate")}
         data-testid="top-donate-btn"
     >
         <div class="icon-inner"><NotoEmoji name="coin" size="24px" /></div>
@@ -114,6 +121,7 @@
         class="icon-btn"
         onclick={onFeedback}
         use:customTooltip={$t("ui.feedback.title")}
+        aria-label={$t("ui.feedback.title")}
         data-testid="top-feedback-btn"
     >
         <div class="icon-inner">
@@ -125,6 +133,7 @@
         class="icon-btn"
         onclick={openAuthModal}
         use:customTooltip={$t("mainMenu.account")}
+        aria-label={$t("mainMenu.account")}
         data-testid="top-account-btn"
     >
         <div class="icon-inner">
