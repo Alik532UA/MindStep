@@ -152,7 +152,9 @@
 
     .rewards-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        /* min(): 300px тут — поріг переносу, а не мінімальна ширина колонки.
+           Без нього на телефоні картка ширша за екран. */
+        grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
         gap: 16px;
     }
 

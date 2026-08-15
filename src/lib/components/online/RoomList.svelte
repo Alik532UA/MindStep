@@ -95,7 +95,9 @@
     }
     .rooms-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        /* min(), бо гола довжина в minmax — це підлога, а не поріг: на екрані
+           320px колонка лишалася б 280px і картка розпирала б сторінку. */
+        grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
         gap: 16px;
     }
     .room-card {
