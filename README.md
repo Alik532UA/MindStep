@@ -83,7 +83,7 @@ const report = logService.getLogReport();
 
 Деплой — GitHub Pages з гілки `main` через `.github/workflows/deploy.yml`.
 
-Про переїзд на власний домен — [CUSTOM-DOMAIN-v8.md](../sveltekit-canon/selection_criteria/v8/CUSTOM-DOMAIN-v8.md). Окремо: тут деплой іде через `peaceiris/actions-gh-pages`, який **перезаписує гілку публікації**, тож за власного домену знадобився б `static/CNAME` — інакше прив'язка злетить після першого ж деплою.
+Про переїзд на власний домен — [CUSTOM-DOMAIN-v8.md](../sveltekit-canon/selection_criteria/v8/ops/CUSTOM-DOMAIN-v8.md). Окремо: тут деплой іде через `peaceiris/actions-gh-pages`, який **перезаписує гілку публікації**, тож за власного домену знадобився б `static/CNAME` — інакше прив'язка злетить після першого ж деплою.
 
 ```typescript
 import { speakText, speakMove } from '$lib/services/speechService';
