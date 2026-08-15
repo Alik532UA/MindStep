@@ -18,15 +18,26 @@ const basePath = process.env.BASE_PATH || (process.argv.includes('dev') ? '' : '
  * додавав жодного хеша взагалі: побачивши 'unsafe-inline', він вважає, що
  * інлайн уже дозволений. У зібраному HTML не було жодного `sha256-`.
  *
- * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): прибрати виклик нижче й
- * зібрати — тема має мигнути, а консоль зібраного сайту сказати
- * «Refused to execute inline script».
+ * ХЕШ БЕРЕТЬСЯ З ТЕКСТУ, НОРМАЛІЗОВАНОГО ДО LF, а не з байтів файлу. Парсер
+ * HTML замінює всі CRLF і CR на LF ще до того, як з'явиться DOM, тож браузер
+ * хешує саме нормалізований текст. `src/app.html` тут збережений із CRLF —
+ * тобто хеш «як у файлі» не збігається з жодним скриптом на сторінці, і
+ * політика мовчки блокує рівно те, що мала дозволити. Симптому при цьому
+ * майже немає: тему все одно виставляє контролер після гідрації, тож зовні
+ * видно лише мигання (AI-AGENT-PITFALLS-v8 § 2.1).
+ *
+ * Зворотний експеримент (§ 1.1): прибрати `.replace()` нижче — у консолі
+ * зібраного сайту з'явиться «Executing inline script violates…», а перевірка
+ * `npm run check:build` почервоніє. Перевірено; саме так ця помилка й
+ * знайшлася — вона була в першій редакції цього коміту.
  */
 function inlineScriptHashes(templatePath) {
 	const template = readFileSync(templatePath, 'utf8');
 	// Лише інлайн: тег зі `src` не має вмісту, який можна захешувати.
 	const inline = [...template.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)];
-	return inline.map((m) => `sha256-${createHash('sha256').update(m[1]).digest('base64')}`);
+	return inline.map(
+		(m) => `sha256-${createHash('sha256').update(m[1].replace(/\r\n/g, '\n')).digest('base64')}`
+	);
 }
 
 const appHtmlHashes = inlineScriptHashes('src/app.html');

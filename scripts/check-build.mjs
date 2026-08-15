@@ -130,7 +130,11 @@ for (const file of pages) {
 	 */
 	const inlineScripts = [...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)];
 	for (const [, source] of inlineScripts) {
-		const hash = `sha256-${createHash('sha256').update(source).digest('base64')}`;
+		// CRLF → LF, як робить парсер HTML перед тим, як браузер порахує хеш.
+		// Без цього рядка перевірка повторює ту саму помилку, що й конфіг, і
+		// вони сходяться на неправильному хеші — тобто гейт підтверджує
+		// зламану політику (див. коментар у `svelte.config.js`).
+		const hash = `sha256-${createHash('sha256').update(source.replace(/\r\n/g, '\n')).digest('base64')}`;
 		if (!scriptSrc.includes(hash)) {
 			fail(name, `інлайн-скрипт не покритий політикою (потрібен '${hash}')`);
 		}
