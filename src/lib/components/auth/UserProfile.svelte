@@ -7,43 +7,36 @@
     import EditableText from "$lib/components/ui/EditableText.svelte";
     import { generateRandomPlayerName } from "$lib/utils/nameGenerator";
 
-    export let isDeleteMode = false;
-    export let isChangePasswordMode = false;
-    export let isLoading = false;
+    interface Props {
+        isDeleteMode?: boolean;
+        isChangePasswordMode?: boolean;
+        isLoading?: boolean;
+        deletePassword?: string;
+        newPassword?: string;
+        onlogout: () => void;
+        ontoggleChangePassword: () => void;
+        ontoggleDeleteAccount: () => void;
+        ondeleteAccount: () => void;
+        onchangePassword: () => void;
+        oncancelMode: () => void;
+    }
 
-    export let deletePassword = "";
-    export let newPassword = "";
-
-    // Event dispatchers usually emitted from buttons
-    import { createEventDispatcher } from "svelte";
-    const dispatch = createEventDispatcher();
+    let {
+        isDeleteMode = false,
+        isChangePasswordMode = false,
+        isLoading = false,
+        deletePassword = $bindable(""),
+        newPassword = $bindable(""),
+        onlogout,
+        ontoggleChangePassword,
+        ontoggleDeleteAccount,
+        ondeleteAccount,
+        onchangePassword,
+        oncancelMode,
+    }: Props = $props();
 
     function handleNameChange(newName: string) {
         authService.updateNickname(newName);
-    }
-
-    function handleLogout() {
-        dispatch("logout");
-    }
-
-    function toggleChangePassword() {
-        dispatch("toggleChangePassword");
-    }
-
-    function toggleDeleteAccount() {
-        dispatch("toggleDeleteAccount");
-    }
-
-    function handleDeleteAccount() {
-        dispatch("deleteAccount");
-    }
-
-    function handleChangePassword() {
-        dispatch("changePassword");
-    }
-
-    function cancelMode() {
-        dispatch("cancelMode");
     }
 </script>
 
@@ -69,17 +62,17 @@
 {#if !isDeleteMode && !isChangePasswordMode}
     <!-- MAIN PROFILE ACTIONS -->
     <div class="actions">
-        <StyledButton variant="default" onclick={toggleChangePassword}>
+        <StyledButton variant="default" onclick={ontoggleChangePassword}>
             {$t("ui.auth.changePasswordBtn")}
         </StyledButton>
 
-        <StyledButton variant="default" onclick={handleLogout}>
+        <StyledButton variant="default" onclick={onlogout}>
             {$t("ui.auth.logoutBtn")}
         </StyledButton>
 
         <StyledButton
             variant="danger"
-            onclick={toggleDeleteAccount}
+            onclick={ontoggleDeleteAccount}
             style="margin-top: 10px;"
         >
             {$t("ui.auth.deleteAccountBtn")}
@@ -98,14 +91,14 @@
         <div class="actions">
             <StyledButton
                 variant="primary"
-                onclick={handleChangePassword}
+                onclick={onchangePassword}
                 disabled={isLoading || !newPassword}
             >
                 {isLoading
                     ? $t("common.loading")
                     : $t("ui.auth.savePasswordBtn")}
             </StyledButton>
-            <button class="link-btn" onclick={cancelMode}>
+            <button class="link-btn" onclick={oncancelMode}>
                 {$t("ui.auth.cancelChangePasswordBtn")}
             </button>
         </div>
@@ -125,14 +118,14 @@
         <div class="actions">
             <StyledButton
                 variant="danger"
-                onclick={handleDeleteAccount}
+                onclick={ondeleteAccount}
                 disabled={isLoading || !deletePassword}
             >
                 {isLoading
                     ? $t("common.loading")
                     : $t("ui.auth.confirmDeleteBtn")}
             </StyledButton>
-            <button class="link-btn" onclick={cancelMode}>
+            <button class="link-btn" onclick={oncancelMode}>
                 {$t("ui.auth.cancelDeleteBtn")}
             </button>
         </div>

@@ -92,18 +92,18 @@
 <div class="auth-modal-content" data-testid="auth-modal-panel">
     {#if isAuthorized}
         <UserProfile
-            bind:isDeleteMode
-            bind:isChangePasswordMode
+            {isDeleteMode}
+            {isChangePasswordMode}
             bind:deletePassword
             bind:newPassword
             {isLoading}
-            on:logout={handleLogout}
-            on:deleteAccount={handleDeleteAccount}
-            on:changePassword={handleChangePassword}
-            on:toggleChangePassword={() =>
+            onlogout={handleLogout}
+            ondeleteAccount={handleDeleteAccount}
+            onchangePassword={handleChangePassword}
+            ontoggleChangePassword={() =>
                 (isChangePasswordMode = !isChangePasswordMode)}
-            on:toggleDeleteAccount={() => (isDeleteMode = !isDeleteMode)}
-            on:cancelMode={() => {
+            ontoggleDeleteAccount={() => (isDeleteMode = !isDeleteMode)}
+            oncancelMode={() => {
                 isDeleteMode = false;
                 isChangePasswordMode = false;
                 deletePassword = "";

@@ -1,15 +1,27 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import { t } from "$lib/i18n/typedI18n";
   import ToggleButton from "./ToggleButton.svelte";
   import StyledButton from "./ui/StyledButton.svelte";
 
-  export let limitReplayPath: boolean;
-  export let currentStep: number;
-  export let totalSteps: number;
-  export let autoPlayDirection: "paused" | "forward" | "backward";
+  interface Props {
+    limitReplayPath: boolean;
+    currentStep: number;
+    totalSteps: number;
+    autoPlayDirection: "paused" | "forward" | "backward";
+    ongoToStep: (step: number) => void;
+    ontoggleAutoPlay: (direction: "forward" | "backward") => void;
+    ontoggleLimitPath: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    limitReplayPath,
+    currentStep,
+    totalSteps,
+    autoPlayDirection,
+    ongoToStep,
+    ontoggleAutoPlay,
+    ontoggleLimitPath
+  }: Props = $props();
 </script>
 
 <div class="replay-ui-container">
@@ -18,7 +30,7 @@
       shape="circle"
       variant="menu"
       dataTestId="replay-prev-step-btn"
-      onclick={() => dispatch("goToStep", currentStep - 1)}
+      onclick={() => ongoToStep(currentStep - 1)}
       disabled={currentStep === 0}
       title="Previous Step">«</StyledButton
     >
@@ -26,7 +38,7 @@
       shape="circle"
       variant={autoPlayDirection === "backward" ? "primary" : "menu"}
       dataTestId="replay-play-backward-btn"
-      onclick={() => dispatch("toggleAutoPlay", "backward")}
+      onclick={() => ontoggleAutoPlay("backward")}
       title="Pop Play Backward"
     >
       {#if autoPlayDirection === "backward"}❚❚{:else}◀{/if}
@@ -35,7 +47,7 @@
       shape="circle"
       variant={autoPlayDirection === "forward" ? "primary" : "menu"}
       dataTestId="replay-play-forward-btn"
-      onclick={() => dispatch("toggleAutoPlay", "forward")}
+      onclick={() => ontoggleAutoPlay("forward")}
       title="Pop Play Forward"
     >
       {#if autoPlayDirection === "forward"}❚❚{:else}▶{/if}
@@ -44,7 +56,7 @@
       shape="circle"
       variant="menu"
       dataTestId="replay-next-step-btn"
-      onclick={() => dispatch("goToStep", currentStep + 1)}
+      onclick={() => ongoToStep(currentStep + 1)}
       disabled={currentStep >= totalSteps - 1}
       title="Next Step">»</StyledButton
     >
@@ -57,7 +69,7 @@
     <ToggleButton
       label={$t("replay.limitPath")}
       checked={limitReplayPath}
-      ontoggle={() => dispatch("toggleLimitPath")}
+      ontoggle={() => ontoggleLimitPath()}
       dataTestId="limit-path-toggle"
     />
   </div>

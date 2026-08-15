@@ -117,8 +117,8 @@
             bind:textContent
             bind:actualResult
             bind:expectedResult
-            on:back={goBack}
-            on:submit={handleSubmit}
+            onback={goBack}
+            onsubmit={handleSubmit}
         />
     {/if}
 </div>

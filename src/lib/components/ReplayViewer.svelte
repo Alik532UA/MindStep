@@ -123,10 +123,9 @@
 
   <ReplayControls
     limitReplayPath={$replayState.limitReplayPath}
-    on:toggleLimitPath={toggleLimitPath}
-    on:goToStep={(e) => goToStep(e.detail)}
-    on:toggleAutoPlay={(e) =>
-      toggleAutoPlay(e.detail as "forward" | "backward")}
+    ontoggleLimitPath={toggleLimitPath}
+    ongoToStep={goToStep}
+    ontoggleAutoPlay={toggleAutoPlay}
     currentStep={$replayState.replayCurrentStep}
     totalSteps={moveHistory.length}
     autoPlayDirection={$replayState.autoPlayDirection}

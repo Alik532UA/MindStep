@@ -3,25 +3,28 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import type { FeedbackType } from "$lib/services/feedbackService";
-    import { createEventDispatcher } from "svelte";
 
-    export let selectedType: FeedbackType | null;
-    export let pageLocation: string;
-    export let isSubmitting: boolean;
-
-    export let textContent: string;
-    export let actualResult: string;
-    export let expectedResult: string;
-
-    const dispatch = createEventDispatcher();
-
-    function goBack() {
-        dispatch("back");
+    interface Props {
+        selectedType: FeedbackType | null;
+        pageLocation: string;
+        isSubmitting: boolean;
+        textContent: string;
+        actualResult: string;
+        expectedResult: string;
+        onback: () => void;
+        onsubmit: () => void;
     }
 
-    function handleSubmit() {
-        dispatch("submit");
-    }
+    let {
+        selectedType,
+        pageLocation = $bindable(),
+        isSubmitting,
+        textContent = $bindable(),
+        actualResult = $bindable(),
+        expectedResult = $bindable(),
+        onback,
+        onsubmit,
+    }: Props = $props();
 </script>
 
 <div class="form-container">
@@ -103,7 +106,7 @@
         <StyledButton
             variant="default"
             size="default"
-            onclick={goBack}
+            onclick={onback}
             disabled={isSubmitting}
         >
             {#snippet icon()}
@@ -114,7 +117,7 @@
         <StyledButton
             variant="primary"
             size="default"
-            onclick={handleSubmit}
+            onclick={onsubmit}
             disabled={isSubmitting}
         >
             {isSubmitting ? $t("common.loading") : $t("ui.feedback.submit")}

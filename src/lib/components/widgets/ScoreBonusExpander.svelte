@@ -1,26 +1,13 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
-  import { createEventDispatcher } from "svelte";
+  import { untrack } from "svelte";
   import { t } from "$lib/i18n/typedI18n";
   import type { TranslationKey } from "$lib/types/i18n";
+  // Саме той тип, який приходить із `GameOverContent`. У `models/score.ts`
+  // лежить однойменний інтерфейс із обов'язковими полями — не він.
+  import type { FinalScoreDetails } from "$lib/stores/gameOverState.svelte";
 
-  export let bonusDetails: any;
-  export let totalBonus: number;
-  export let expanded = false;
-
-  // Використовуємо локальну змінну стану, ініціалізовану пропом
-  let isOpen = expanded;
-
-  // Реактивно оновлюємо локальний стан, якщо проп змінюється ззовні
-  $: isOpen = expanded;
-
-  const dispatch = createEventDispatcher();
-
-  function toggle() {
-    isOpen = !isOpen;
-    dispatch("toggle", { isOpen });
-  }
-
+  /** Ключі бонусів, які показує розгортка. Порядок — порядок у списку. */
   const bonusKeys = [
     "sizeBonus",
     "blockModeBonus",
@@ -28,11 +15,41 @@
     "noMovesBonus",
     "distanceBonus",
     "finishBonus",
-  ];
+  ] as const satisfies readonly (keyof FinalScoreDetails)[];
 
-  // Use reactive statements instead of {@const}
-  $: fullText = $t("modal.scoreDetails.bonusScore", { bonus: totalBonus });
-  $: parts = fullText.split("+");
+  interface Props {
+    // Було `any` — тобто друкарська помилка в назві бонуса не давала
+    // ні помилки типів, ні рядка в UI (CODE-QUALITY-v8 § 1).
+    bonusDetails: FinalScoreDetails;
+    totalBonus: number;
+    /** Лише ПОЧАТКОВИЙ стан розгортання — далі ним керує сам користувач. */
+    expanded?: boolean;
+  }
+
+  let { bonusDetails, totalBonus, expanded = false }: Props = $props();
+
+  /*
+   * Навмисна чернетка (SVELTE-CORE-v8 § 1.10, третій випадок): проп задає
+   * лише початкове значення, а далі блок відкриває й закриває користувач.
+   * `untrack` тут означає конкретний наслідок: якщо `expanded` зміниться
+   * згори (гравець перемкнув компактний режим підрахунку в налаштуваннях),
+   * уже розгорнутий блок НЕ згорнеться назад.
+   *
+   * У легасі-версії тут стояло `$: isOpen = expanded`, тобто зворотна
+   * поведінка. Різниця видима лише в одному сценарії — зміна налаштування
+   * при відкритому вікні підсумку, — і нова поведінка там правильніша:
+   * налаштування не має скасовувати щойно зроблену дію.
+   */
+  let isOpen = $state(untrack(() => expanded));
+
+  function toggle() {
+    isOpen = !isOpen;
+  }
+
+  const fullText = $derived(
+    $t("modal.scoreDetails.bonusScore", { bonus: totalBonus }),
+  );
+  const parts = $derived(fullText.split("+"));
 </script>
 
 <div class="bonus-expander" class:open={isOpen}>
@@ -63,11 +80,12 @@
   </div>
   {#if isOpen}
     <div class="expander-content" transition:slide|local>
-      {#each bonusKeys as key}
-        {#if bonusDetails[key] > 0}
+      {#each bonusKeys as key (key)}
+        {@const value = bonusDetails[key] ?? 0}
+        {#if value > 0}
           <div class="score-detail-row">
             <span>{$t(`modal.scoreDetails.${key}` as TranslationKey)}</span>
-            <span data-testid={`${key}-value`}>+{bonusDetails[key]}</span>
+            <span data-testid={`${key}-value`}>+{value}</span>
           </div>
         {/if}
       {/each}

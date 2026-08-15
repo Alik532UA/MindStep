@@ -1,7 +1,9 @@
 <script lang="ts">
     import "$lib/css/components/game-board.css";
     import "$lib/css/components/controls.css";
-    import DraggableColumns from "$lib/components/DraggableColumns.svelte";
+    import DraggableColumns, {
+        type DropDetail
+    } from "$lib/components/DraggableColumns.svelte";
     import { layoutState, type WidgetId } from "$lib/stores/layoutState.svelte";
     import { widgetRegistry } from "$lib/config/widgetRegistry"; // <-- Новий імпорт
     import URLSyncManager from "$lib/components/utils/URLSyncManager.svelte"; // <-- Новий імпорт
@@ -67,15 +69,11 @@
         return widgetRegistry[item.id] || item.id;
     }
 
-    function handleDrop(
-        e: CustomEvent<{
-            dragging: { id: string; label: string };
-            dragSourceCol: string;
-            dropTargetCol: string;
-            dropIndex: number;
-        }>,
-    ) {
-        const { dragging, dragSourceCol, dropTargetCol, dropIndex } = e.detail;
+    function handleDrop({ dragging, dropTargetCol, dropIndex }: DropDetail) {
+        // Колонка-джерело в обчисленні не бере участі: віджет видаляється з
+        // УСІХ колонок нижче, а потім вставляється в цільову. Раніше вона
+        // діставалася з `e.detail` і не використовувалася.
+        if (dropTargetCol === null || dropIndex === null) return;
         layoutState.update((cols) => {
             let newCols = cols.map((col) => ({
                 ...col,
@@ -110,7 +108,7 @@
     <DraggableColumns
         {columns}
         {itemContent}
-        on:drop={handleDrop}
+        ondrop={handleDrop}
         class_name="game-layout"
     />
 {/if}

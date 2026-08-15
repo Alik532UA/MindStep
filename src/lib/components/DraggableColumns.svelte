@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import { scale } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { columnStyleState } from "$lib/stores/columnStyleState.svelte";
@@ -16,15 +16,23 @@
     }[];
     itemContent?: (item: any) => any;
     class_name?: string;
+    /** Віджет перетягнули в іншу колонку або на іншу позицію. */
+    ondrop?: (detail: DropDetail) => void;
   }
 
-  let { 
-    columns, 
-    itemContent = (item) => item.label, 
-    class_name = "" 
-  }: Props = $props();
+  export interface DropDetail {
+    dragging: { id: string; label: string };
+    dragSourceCol: string | null;
+    dropTargetCol: string | null;
+    dropIndex: number | null;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    columns,
+    itemContent = (item) => item.label,
+    class_name = "",
+    ondrop
+  }: Props = $props();
 
   let dragging: { id: string; label: string } | null = $state(null);
   let dragSourceCol: string | null = $state(null);
@@ -122,7 +130,7 @@
 
   function handlePointerUp(e: PointerEvent) {
     if (isDragging && dragging && dropTargetCol !== null) {
-      dispatch("drop", { dragging, dragSourceCol, dropTargetCol, dropIndex });
+      ondrop?.({ dragging, dragSourceCol, dropTargetCol, dropIndex });
     }
     isDragging = false;
     dragging = null;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useRegisterSW } from 'virtual:pwa-register/svelte';
-  import { onMount, createEventDispatcher } from 'svelte';
+  // `onMount` і `createEventDispatcher` імпортувалися сюди й не вживалися
+  // жодного разу — жодної події цей компонент не надсилає.
   import { logService } from "$lib/services/logService.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
