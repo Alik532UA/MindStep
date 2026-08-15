@@ -16,7 +16,19 @@
 		content="Безкоштовна головоломка для тренування памʼяті та просторового мислення: ходіть ферзем, уникайте пасток або спробуйте гру наосліп. Одиночна гра, гра вдвох та онлайн."
 	/>
 
+	<!--
+		Основна адреса сторінки. Без неї пошуковик обирає її сам, а обирати є з
+		чого: гра відкривається і за адресою з кінцевою косою рискою, і без неї,
+		і з параметрами запиту (`?lang=`, посилання з реферерами). Усе це — та
+		сама сторінка, але для індексу вони різні, і вага розмазується між ними.
+
+		Адреса статична, бо застосунок односторінковий: усі стани — це стани
+		всередині гри, а не окремі документи. `og:url` нижче навмисно той самий.
+	-->
+	<link rel="canonical" href="https://alik532ua.github.io/MindStep/" />
+
 	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://alik532ua.github.io/MindStep/" />
 	<meta property="og:title" content="MindStep — стратегічна гра для тренування памʼяті" />
 	<meta
 		property="og:description"
@@ -60,6 +72,22 @@
 	<!-- manifest.json handled by vite-plugin-pwa -->
 	<meta http-equiv="content-security-policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.google-analytics.com https://stats.g.doubleclick.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: http://localhost:* http://127.0.0.1:* https://*.google-analytics.com https://www.google-analytics.com https://www.google.com; object-src 'none'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://apis.google.com https://*.firebaseapp.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; base-uri 'self'; form-action 'self'">
 		
+		<link href="./_app/immutable/assets/NotoEmoji.CChbZJ-D.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/HamburgerMenuModal.4Xhi0ONB.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/StyledButton.zWQMyuPa.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/EditableText.DDGyo-es.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/SvgIcons.4fZfpjfN.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/ChatWidget.Bt2s-huD.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/FeedbackModal.BR0MOeSX.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/GameModeButton.h1owofgW.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/GameModeModal.UNz5OhHN.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/DevMenu.BecodCtp.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/ToggleButton.CMi0o2B8.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/userActionService.CJ9vjdyP.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/ErrorBoundary.ln26R5DM.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/FloatingBackButton.CfUoruF2.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/0.DOwBq7s8.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/modal.DZBLHdrb.css" rel="stylesheet">
 	<style>
 		/* Миттєвий темний фон для уникнення білого спалаху */
 		html, body {

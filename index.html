@@ -16,7 +16,19 @@
 		content="Безкоштовна головоломка для тренування памʼяті та просторового мислення: ходіть ферзем, уникайте пасток або спробуйте гру наосліп. Одиночна гра, гра вдвох та онлайн."
 	/>
 
+	<!--
+		Основна адреса сторінки. Без неї пошуковик обирає її сам, а обирати є з
+		чого: гра відкривається і за адресою з кінцевою косою рискою, і без неї,
+		і з параметрами запиту (`?lang=`, посилання з реферерами). Усе це — та
+		сама сторінка, але для індексу вони різні, і вага розмазується між ними.
+
+		Адреса статична, бо застосунок односторінковий: усі стани — це стани
+		всередині гри, а не окремі документи. `og:url` нижче навмисно той самий.
+	-->
+	<link rel="canonical" href="https://alik532ua.github.io/MindStep/" />
+
 	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://alik532ua.github.io/MindStep/" />
 	<meta property="og:title" content="MindStep — стратегічна гра для тренування памʼяті" />
 	<meta
 		property="og:description"
@@ -59,21 +71,55 @@
 
 	<!-- manifest.json handled by vite-plugin-pwa -->
 	<meta http-equiv="content-security-policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.google-analytics.com https://stats.g.doubleclick.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: http://localhost:* http://127.0.0.1:* https://*.google-analytics.com https://www.google-analytics.com https://www.google.com; object-src 'none'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://apis.google.com https://*.firebaseapp.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; base-uri 'self'; form-action 'self'">
-		<link href="/MindStep/_app/immutable/entry/start.0ZHQhMkL.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/DVYWRxs3.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/B2RcS2QJ.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/cc4ydY4x.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/D1F_VR5a.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/CaAAEUdS.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/D0imDqa8.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/entry/app.eZj5KaGV.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/entry/start.DeVR_74K.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/-b9mhEEH.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DiUrzGy9.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DBPl8Hx0.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/CS4ZsQR-.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Do06s1vr.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/entry/app.CcmM9vTf.js" rel="modulepreload">
 		<link href="/MindStep/_app/immutable/chunks/Dp1pzeXC.js" rel="modulepreload">
 		<link href="/MindStep/_app/immutable/chunks/Bzak7iHL.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/Dxw4U2oo.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/Cjc5exi3.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/CFAZ_1pG.js" rel="modulepreload">
-		<link href="/MindStep/_app/immutable/chunks/83zNpS87.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/QVdexjjd.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Dgdm8Mmj.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/B-LwbLvY.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/ynYbCpbq.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/nodes/0.CUMAZukD.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/ch-8HDsC.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/wylsHfuf.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/BhwhMUyu.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Crv5_GRc.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Cd12RSiy.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/CxV4fquc.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/D8LIggJx.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DGoNQvSj.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/uiWbxxDn.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/BP66G7fh.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/J4L02hcH.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DonxwjXA.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Dx3KxXq8.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/DHMI4whS.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/By9mF7D1.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/Ccw7PXcW.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/TROEcY7J.js" rel="modulepreload">
+		<link href="/MindStep/_app/immutable/chunks/TC87idKr.js" rel="modulepreload">
 		
+		<link href="/MindStep/_app/immutable/assets/NotoEmoji.CChbZJ-D.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/HamburgerMenuModal.4Xhi0ONB.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/StyledButton.zWQMyuPa.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/EditableText.DDGyo-es.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/SvgIcons.4fZfpjfN.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/ChatWidget.Bt2s-huD.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/FeedbackModal.BR0MOeSX.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/GameModeButton.h1owofgW.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/GameModeModal.UNz5OhHN.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/DevMenu.BecodCtp.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/ToggleButton.CMi0o2B8.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/userActionService.CJ9vjdyP.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/ErrorBoundary.ln26R5DM.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/FloatingBackButton.CfUoruF2.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/0.DOwBq7s8.css" rel="stylesheet">
+		<link href="/MindStep/_app/immutable/assets/modal.DZBLHdrb.css" rel="stylesheet">
 	<style>
 		/* Миттєвий темний фон для уникнення білого спалаху */
 		html, body {
@@ -104,7 +150,7 @@
 	<div style="display: contents">
 			<script>
 				{
-					__sveltekit_p1g2fv = {
+					__sveltekit_1jm1ryv = {
 						base: "/MindStep",
 						assets: "/MindStep"
 					};
@@ -112,8 +158,8 @@
 					const element = document.currentScript.parentElement;
 
 					Promise.all([
-						import("/MindStep/_app/immutable/entry/start.0ZHQhMkL.js"),
-						import("/MindStep/_app/immutable/entry/app.eZj5KaGV.js")
+						import("/MindStep/_app/immutable/entry/start.DeVR_74K.js"),
+						import("/MindStep/_app/immutable/entry/app.CcmM9vTf.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element);
 					});
