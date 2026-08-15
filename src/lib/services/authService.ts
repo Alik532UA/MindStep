@@ -1,6 +1,5 @@
 import { signInAnonymously, onAuthStateChanged, signOut, type User, type Auth, EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword, sendPasswordResetEmail, deleteUser, updatePassword } from 'firebase/auth';
-import { type Firestore } from 'firebase/firestore';
-import { getFirebaseAuth, getFirestoreDb } from './firebaseService';
+import { getFirebaseAuth } from './firebaseService';
 import { logService } from "./logService.svelte";
 import { userProfileService } from './auth/userProfileService';
 import { writable } from 'svelte/store';
@@ -9,12 +8,31 @@ export const currentUserStore = writable<User | null>(null);
 export const userStore = currentUserStore;
 
 class AuthService {
-    private auth: Auth;
-    private db: Firestore;
+    /**
+     * Firebase піднімається на першому звертанні, а не на імпорті модуля.
+     *
+     * Доти конструктор викликав `getFirebaseAuth()` прямо під час імпорту, а
+     * внизу файлу стоїть синглтон `new AuthService()`. Тому будь-який файл,
+     * що транзитивно тягнув цей модуль, ініціалізував Auth — зокрема
+     * `LocalGameController.spec.ts`, тест ігрової логіки, який у CI падав з
+     * `auth/invalid-api-key` ще до першого тесту: 77 тестів проходили, а вся
+     * сюїта не збиралася.
+     *
+     * Віддати юніт-тестам справжні ключі було б лікуванням симптому: тести
+     * ігрової логіки почали б ходити в бойовий Firebase. Тест, який не
+     * торкається автентифікації, тепер її і не піднімає.
+     *
+     * Поле `db` прибрано разом із конструктором: воно лише присвоювалось і
+     * жодного разу не читалось, тобто ініціалізувало Firestore ні для чого.
+     */
+    private authInstance: Auth | null = null;
 
-    constructor() {
-        this.auth = getFirebaseAuth();
-        this.db = getFirestoreDb();
+    private get auth(): Auth {
+        // `getFirebaseAuth()` мемоізований, тож повторні звертання безкоштовні.
+        if (!this.authInstance) {
+            this.authInstance = getFirebaseAuth();
+        }
+        return this.authInstance;
     }
 
     async init() {
