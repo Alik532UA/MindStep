@@ -109,7 +109,10 @@
 <style>
   .player-manager-card {
     background: var(--bg-secondary);
-    padding: 24px;
+    /* 24px з обох боків на екрані 320px — це 15% ширини, віддані відступу.
+       Ведений шириною вікна: на десктопі лишається 24px. */
+    padding: clamp(12px, 5vw, 24px);
+    min-width: 0;
     border-radius: var(--unified-border-radius);
     box-shadow: var(--unified-shadow);
     border: var(--unified-border);
@@ -130,7 +133,11 @@
   .player-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    /* Проміжок ведений шириною вікна: на 320px чотири елементи в рядку плюс
+       три фіксовані проміжки по 12px — це 36px, яких там немає. */
+    gap: clamp(6px, 2.5vw, 12px);
+    /* Дозволяє рядку стискатися разом із карткою. */
+    min-width: 0;
   }
 
   .player-type-btn {
@@ -150,9 +157,22 @@
     flex-shrink: 0;
   }
 
+  /*
+   * `min-width: 0` тут — головний рядок усього файлу.
+   *
+   * У `<input>` є ВЛАСНА внутрішня ширина (близько 180px, від типової
+   * `size="20"`), і флекс-елемент за замовчуванням не стискається нижче неї,
+   * хоч би скільки стояло `flex-grow`. Тому рядок гравця мав жорстку підлогу:
+   * кружок кольору + кнопка типу 40px + інпут ~180px + кнопка видалення 32px
+   * + проміжки — більше, ніж є на екрані 320px.
+   *
+   * Наслідок було видно на телефоні: картка розпирала сторінку, кольорові
+   * кружки зліва й хрестики справа виїжджали за край і ставали недосяжними.
+   */
   .player-name-input {
     flex-grow: 1;
-    padding: 10px 14px;
+    min-width: 0;
+    padding: 10px clamp(8px, 3vw, 14px);
     border-radius: 8px;
     border: var(--global-border-width) solid var(--border-color);
     background: var(--control-bg);
