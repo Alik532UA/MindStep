@@ -2,8 +2,11 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.850",
+  "version": "0.5.851",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node scripts/robust-test.js",
     "test:online": "firebase emulators:exec \"playwright test tests/e2e/online\"",
@@ -24,7 +27,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@neoconfetti/svelte": "^2.0.0",
     "@playwright/test": "^1.55.1",
     "@sveltejs/adapter-static": "^3.0.8",
     "@sveltejs/kit": "^2.17.2",
@@ -46,7 +48,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@types/uuid": "^10.0.0",
     "firebase": "^12.6.0",
     "lucide-svelte": "^0.562.0",
     "pretty-bytes": "^7.1.0",
