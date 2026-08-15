@@ -42,7 +42,21 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
     video: 'retain-on-failure',
-    headless: false,
+    /*
+     * Headed лише локально. На раннері немає X-сервера, тож headed-запуск
+     * падає ще до першого рядка тесту: «Missing X server or $DISPLAY», і
+     * Playwright звітує це як `browserType.launch: Target page, context or
+     * browser has been closed» — помилка, що не має нічого спільного з тим,
+     * що перевіряє тест.
+     *
+     * Доти `headless: false` шкоди не робив, бо Playwright у CI не запускався
+     * взагалі: крок з e2e з'явився у workflow пізніше, а прогони #238 і #239
+     * помирали на юніт-тестах раніше, ніж до нього доходили. #240 став першим
+     * реальним запуском — і одразу червоним.
+     *
+     * Локальний headed-режим лишається: він потрібен, щоб дивитись очима.
+     */
+    headless: !!process.env.CI,
   },
 
   /* Configure projects for major browsers */
