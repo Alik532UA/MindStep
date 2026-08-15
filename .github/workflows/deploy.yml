@@ -39,8 +39,22 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # `--reporter=default` у скрипті — не косметика. Доти стояло лише
+      # `--reporter=json --outputFile=…`: увесь результат ішов у файл, а в лог
+      # крок друкував дванадцять рядків, що обривались на «exit code 1» без
+      # жодної назви впалого тесту. Сам файл нікуди не вивантажувався, тож
+      # причина падіння гинула разом із раннером — CI казав «зламано» і не міг
+      # сказати, що саме. Артефакт нижче закриває той самий розрив.
       - name: Run unit tests
         run: npm run test:report
+
+      - name: Upload unit test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: test-reports/
+          retention-days: 7
 
       # Рантайм-інваріант унікальності data-testid (TESTID-AND-NAMING-v8 § 1.9.2).
       # Статична перевірка в юніт-тестах бачить усі testid, але не бачить, що
