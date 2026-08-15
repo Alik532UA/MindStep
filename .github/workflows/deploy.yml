@@ -72,8 +72,11 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Unique data-testid invariant
-        run: npx playwright test tests/e2e/invariants.spec.ts
+      # Два файли, а не каталог: `tests/e2e/virtual/` — це десять важких
+      # наборів, а `tests/e2e/online/` потребує емулятора Firebase. Перелік
+      # явний саме тому — щоб було видно, що саме гейт і покриває.
+      - name: Runtime invariants (unique data-testid, html lang)
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts
 
       - name: Upload Playwright report
         if: failure()
