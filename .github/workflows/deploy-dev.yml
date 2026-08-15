@@ -30,6 +30,33 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      # Ті самі гейти, що в deploy.yml. Доти цей пайплайн складався з
+      # `npm ci` + `build` + `deploy` — стан, який CI-CD-AND-TOOLS-v8 § 1.6
+      # називає прямо: тести існують, але не виконуються ніколи. Прев'ю
+      # існує саме щоб дивитися на зміну ДО продакшну, тож пропускати на
+      # ньому перевірки — це перевіряти продакшном.
+      #
+      # E2E тут навмисно немає: єдиний e2e-файл у CI (`invariants.spec.ts`)
+      # потребує браузера й додає до прогону хвилини, а прев'ю запускається
+      # руками й часто. Він лишається гейтом `main` — і це записано, а не
+      # мовчить (CI-CD-AND-TOOLS-v8 § 1.6).
+      - name: Check types
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:report
+
+      - name: Upload unit test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report-dev
+          path: test-reports/
+          retention-days: 7
+
       - name: Build
         run: npm run build
         env:
@@ -41,6 +68,12 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+
+      - name: Check built output
+        run: npm run check:build
+
+      - name: Збірка не змінює відстежувані файли
+        run: git diff --exit-code
 
       - name: Deploy to GitHub Pages (dev subfolder)
         uses: peaceiris/actions-gh-pages@v4
