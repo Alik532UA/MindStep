@@ -77,6 +77,14 @@ const report = logService.getLogReport();
 ### speechService
 Централізований сервіс для озвучення тексту (TTS).
 
+## 🌐 Деплой і адреса
+
+**https://alik532ua.github.io/MindStep/** — спільний домен, власного тут немає. Тому `paths.base` дорівнює `/MindStep` (у dev — порожня), а всі ключі сховища мають префікс `mindstep_`: origin ділиться з шістьма сусідніми проєктами, і `localStorage.clear()` зачепив би їх усі.
+
+Деплой — GitHub Pages з гілки `main` через `.github/workflows/deploy.yml`.
+
+Про переїзд на власний домен — [CUSTOM-DOMAIN-v8.md](../sveltekit-canon/selection_criteria/v8/CUSTOM-DOMAIN-v8.md). Окремо: тут деплой іде через `peaceiris/actions-gh-pages`, який **перезаписує гілку публікації**, тож за власного домену знадобився б `static/CNAME` — інакше прив'язка злетить після першого ж деплою.
+
 ```typescript
 import { speakText, speakMove } from '$lib/services/speechService';
 
