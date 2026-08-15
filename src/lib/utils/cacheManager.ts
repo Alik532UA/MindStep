@@ -34,15 +34,29 @@ export function clearCache(options: ClearCacheOptions = {}): void {
     keysToKeep.add('keyConflictResolution');
   }
 
-  // Отримуємо всі ключі проекту MindStep через storageService
-  // Примітка: storageService.clear() видаляє все, тому ми робимо вибірково
-  
+  /*
+   * Прямий доступ замість фасаду, і це свідомо (STORAGE-NAMESPACE-v8, Крок 3).
+   *
+   * Потрібне ВИБІРКОВЕ очищення: зняти всі ключі проєкту, крім переліку
+   * `keysToKeep`. `storageService.clear()` знімає всі, тобто разом із тими, що
+   * треба зберегти — іншої семантики фасад не пропонує.
+   *
+   * Ізоляція при цьому не порушена: перебір фільтрує за `STORAGE_PREFIX`, тож
+   * жоден ключ сусіднього проєкту сюди не потрапляє. Саме цим цей випадок
+   * відрізняється від справжнього обходу — префікс береться з тієї самої
+   * константи, що й у фасаді, а не дублюється рядком.
+   *
+   * БОРГ: правильне місце для цього — метод `clearExcept(keysToKeep)` у самому
+   * фасаді. Не додано тут, бо це нова публічна поверхня API, якій потрібні
+   * власні тести, і робити її мимохідь неправильно.
+   */
   const isBrowser = typeof window !== 'undefined';
   if (!isBrowser) return;
 
   const PREFIX = STORAGE_PREFIX;
   const keysToRemove: string[] = [];
 
+  /* eslint-disable no-restricted-globals -- вибіркове очищення, див. коментар вище */
   for (let i = 0; i < localStorage.length; i++) {
     const fullKey = localStorage.key(i);
     if (fullKey?.startsWith(PREFIX)) {
@@ -54,6 +68,7 @@ export function clearCache(options: ClearCacheOptions = {}): void {
   }
 
   keysToRemove.forEach(key => localStorage.removeItem(key));
+  /* eslint-enable no-restricted-globals */
 
   // Перезавантажуємо сторінку, щоб застосувати зміни
   location.reload();

@@ -51,6 +51,11 @@ export const settingsPersistenceService = {
     // Фасада над sessionStorage у проєкті ще немає, тому звернення пряме —
     // але ключ будується тим самим `getStorageKey()`, щоб префікс лишався в
     // одному місці. Обгорнуто: у приватному режимі sessionStorage теж кидає.
+    //
+    // БОРГ (STORAGE-NAMESPACE-v8, Крок 2): wrapper над sessionStorage має
+    // існувати з тими самими guard-ами, що й над localStorage. Поки його немає,
+    // ізоляція тут тримається на `getStorageKey()`, а не на конструкції.
+    /* eslint-disable no-restricted-globals -- немає sessionStorage-фасаду, див. коментар вище */
     try {
       const sessionKey = getStorageKey('gameMode');
       if (settings.gameMode) {
@@ -58,6 +63,7 @@ export const settingsPersistenceService = {
       } else {
         sessionStorage.removeItem(sessionKey);
       }
+      /* eslint-enable no-restricted-globals */
     } catch (e) {
       logService.warn('[Settings] sessionStorage недоступний — режим гри не збережено на сесію', e);
     }
