@@ -18,14 +18,21 @@ class PresenceService {
     /**
      * Починає відстеження присутності гравця в кімнаті.
      * Автоматично встановлює статус 'offline' при розриві з'єднання в RTDB та Firestore.
+     *
+     * **Повертає відписку — і доти не повертав.** Слухач `.info/connected`
+     * реєструвався й не знімався ніколи: кожен вхід у кімнату додавав ще один, а
+     * кожна подія зʼєднання перереєстровувала `onDisconnect` у ВСІХ накопичених
+     * слухачах. Слухач переживав перехід між сторінками, тож за сесію їх ставало
+     * стільки, скільки разів людина заходила в гру (PERFORMANCE-v8 § 172,
+     * CLOUD-DATABASE-v8 § 9.1).
      */
-    trackPresence(roomId: string, playerId: string) {
+    trackPresence(roomId: string, playerId: string): () => void {
         const userStatusDatabaseRef = ref(this.rtdb, `/status/${roomId}/${playerId}`);
         const connectedRef = ref(this.rtdb, '.info/connected');
 
         logService.init(`[PresenceService] Setting up presence tracking for ${playerId} in ${roomId}`);
 
-        onValue(connectedRef, (snapshot) => {
+        return onValue(connectedRef, (snapshot) => {
             if (snapshot.val() === false) {
                 // З'єднання з RTDB було втрачено - встановлюємо флаг відключення у Firestore
                 logService.presence(`[PresenceService] RTDB connection lost for ${playerId}. Setting disconnected in Firestore.`);

@@ -3,39 +3,62 @@ rules_version = '2';
 /*
  * Правила доступу до Firestore.
  *
- * Доти тут стояло `match /{document=**} { allow read, write: if true; }` —
- * тобто будь-хто з публічним конфігом Firebase (а він за побудовою лежить у
- * бандлі) міг прочитати й переписати ЩО ЗАВГОДНО: чужі профілі, рекорди,
- * нагороди, і завести довільні колекції в чужому проєкті. SECURITY-v8 називає
- * це втратою даних користувача, а не недоглядом конфігурації.
+ * ЄДИНА МЕЖА БЕЗПЕКИ. Публічний конфіг Firebase за побудовою лежить у бандлі,
+ * тож адресу бази знає кожен, хто відкрив сайт. Усе, що робить із базою клієнт,
+ * може зробити будь-хто тим самим SDK із консолі браузера — без нашого UI, без
+ * нашої валідації, без нашої черги ходів. Отже єдине, що стоїть між відвідувачем
+ * і чужими даними, — цей файл (CLOUD-DATABASE-v8 § 1).
  *
- * ЩО ЗМІНИЛОСЯ, А ЩО НІ. Свідомо змінено рівно дві речі:
- *   1. типове правило — заборона. Дозволені лише ті шість коренів, які
- *      застосунок справді використовує;
- *   2. `users` і `rewards` пише лише власник. У коді ці документи адресуються
- *      ВИКЛЮЧНО через `user.uid` поточного користувача
- *      (`userProfileService`, `rewardsState.syncWithCloud`), тож звуження не
- *      відбирає в застосунку нічого.
+ * ПЕРЕВІРЯЮТЬСЯ ГЕЙТОМ, А НЕ ОЧИМА: `npm run check:rules` піднімає емулятор і
+ * проганяє два набори випадків — «застосунок мусить це вміти» й «сторонній не
+ * мусить цього могти». Правила «дозволити все» валять другий набір, «заборонити
+ * все» — перший, тож зелений результат неможливий випадково.
  *
- * Решта лишилася такою ж відкритою, як була. `rooms` — спільний стан партії,
- * який обидва гравці мусять писати; `leaderboards` читає будь-хто; `feedback`
- * приймає повідомлення й від неавторизованого відвідувача. Звужувати це
- * наосліп означало б поламати гру заради формально гарнішого файлу — таке
- * робиться окремо, з перевіркою на емуляторі під кожен сценарій.
+ * ЩО ЗМІНИЛОСЯ РЕВІЗІЄЮ 2026-08-18. Доти `rooms` та всі підколекції були
+ * `allow read, write: if true` — БЕЗ АВТОРИЗАЦІЇ. Тобто будь-хто читав кожну
+ * партію, перезаписував її стан і видаляв будь-яку кімнату (виклик видалення у
+ * клієнті вже був). Причина дірки лежала не в правилі, а в МОДЕЛІ ДАНИХ: вся
+ * партія була одним документом, який писали обидва гравці, тож власника не
+ * існувало й звузити було нічого.
+ *
+ * Тепер у моделі кожен запис має власника:
+ *
+ *   rooms/{id}                     — опис кімнати; пише господар і учасники (свій рядок складу)
+ *   rooms/{id}/moves/{seq}         — ОДИН ХІД: лише створити, лише від себе
+ *   rooms/{id}/votes/{playerId}    — голос: лише сам гравець
+ *   rooms/{id}/presence/{playerId} — присутність: лише сам гравець
+ *
+ * КЛЮЧОВИЙ ФАКТ, ЯКИЙ ЦЕ ДОЗВОЛЯЄ: `playerId` у цьому проєкті — це `auth.uid`
+ * (`roomService.joinRoom`: `const playerId = currentUser.uid`). Тому кожен запис
+ * можна звузити до автора, а не до «будь-хто авторизований».
  */
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    /** Чи є той, хто пише, учасником цієї кімнати. */
+    function memberOf(room) {
+      return signedIn() && request.auth.uid in room.data.players;
+    }
+
+    /** Чи є той, хто пише, господарем цієї кімнати. */
+    function hostOf(room) {
+      return signedIn() && room.data.hostId == request.auth.uid;
+    }
+
     /** Профіль гравця: `users/{uid}`. Пише лише власник. */
     match /users/{uid} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow write: if signedIn() && request.auth.uid == uid;
     }
 
     /** Нагороди гравця: `rewards/{uid}`. Пише лише власник. */
     match /rewards/{uid} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow write: if signedIn() && request.auth.uid == uid;
     }
 
     /*
@@ -45,18 +68,92 @@ service cloud.firestore {
      */
     match /leaderboards/{entryId} {
       allow read: if true;
-      allow write: if request.auth != null && entryId.split('_')[0] == request.auth.uid;
+      allow write: if signedIn() && entryId.split('_')[0] == request.auth.uid;
     }
 
-    /*
-     * Кімнати онлайн-гри разом із під-колекцією `presence`. Обидва гравці
-     * пишуть той самий документ стану партії, і жоден із них не «власник»,
-     * тож звузити до автора кімнати не можна без переписування синхронізації.
-     */
     match /rooms/{roomId} {
-      allow read, write: if true;
-      match /{sub=**} {
-        allow read, write: if true;
+      /*
+       * Читають авторизовані. Перелічувати кімнати теж можна — на цьому стоїть
+       * лобі, — але лише з обмеженням розміру: без нього один запит витягує всі
+       * кімнати з усім їхнім вмістом (CLOUD-DATABASE-v8 § 7.1).
+       */
+      allow get: if signedIn();
+      allow list: if signedIn() && request.query.limit <= 50;
+
+      /** Створити кімнату можна, лише назвавши господарем СЕБЕ. */
+      allow create: if signedIn()
+                    && request.resource.data.hostId == request.auth.uid;
+
+      /*
+       * Правити кімнату може господар або учасник.
+       *
+       * Чому не лише господар: склад кімнати пише кожен про себе (вхід, вихід,
+       * heartbeat), а налаштування — господар. Звузити до «лише господар»
+       * означало б, що гість не може навіть зайти.
+       *
+       * Чому не `if true`, як було: тепер сторонній не може ні прочитати чужу
+       * партію, ні перезаписати її стан, ні підмінити склад.
+       */
+      allow update: if hostOf(resource) || memberOf(resource);
+
+      /*
+       * ЗНЕСТИ кімнату може лише господар. Доти це міг будь-хто без
+       * авторизації — і в клієнті вже лежав виклик видалення, тобто готовий
+       * примітив «видалити всі кімнати» одним циклом.
+       */
+      allow delete: if hostOf(resource);
+
+      /*
+       * ЖУРНАЛ ХОДІВ — головне правило цього файлу.
+       *
+       * `create` і тільки `create`: жодного `update`, жодного `delete` окрім
+       * господаря. Дві властивості за одну умову: журнал не переписати, і хід не
+       * підписати чужим імʼям. Звідси ідемпотентність без сервера — повторний
+       * запис того самого номера відкидає БАЗА, а не клієнт, тож двоє гравців,
+       * які одночасно займають номер, розв'язуються самі.
+       */
+      match /moves/{seq} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+                      && request.resource.data.by == request.auth.uid
+                      && request.resource.data.keys().hasAll(['seq', 'by', 'direction', 'distance'])
+                      && request.resource.data.distance is int
+                      && request.resource.data.direction is string
+                      && request.resource.data.direction.size() <= 16;
+        allow update: if false;
+        // Стерти хід — це «нова партія в тій самій кімнаті», і лише господар.
+        allow delete: if hostOf(get(/databases/$(database)/documents/rooms/$(roomId)));
+      }
+
+      /*
+       * Голос гравця. Документ названий його ідентифікатором, тож власника видно
+       * з імені — і правило стає одним рядком.
+       *
+       * Доти голоси лежали полями в `gameState`, і щоб проголосувати, доводилося
+       * писати весь документ партії. Тобто голосування було ще одним шляхом
+       * перезапису чужого стану.
+       */
+      match /votes/{playerId} {
+        allow read: if signedIn();
+        allow write: if signedIn() && playerId == request.auth.uid;
+      }
+
+      /** Присутність: кожен пише лише про себе. */
+      match /presence/{playerId} {
+        allow read: if signedIn();
+        allow write: if signedIn() && playerId == request.auth.uid;
+      }
+
+      /** Чат кімнати: автор повідомлення — той, хто пише. Правити не можна. */
+      match /messages/{messageId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      /** Решта підколекцій кімнати — заборонено. */
+      match /{other=**} {
+        allow read, write: if false;
       }
     }
 
@@ -70,14 +167,20 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
-    /** Лічильники: `general/stats`. */
+    /*
+     * Лічильники: `general/stats`. Читає будь-хто, пише лише авторизований — і
+     * лише ті поля, які застосунок справді веде. Доти тут стояло `if true`, тож
+     * довільний ключ у спільний документ дописував будь-хто.
+     */
     match /general/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if signedIn()
+                   && request.resource.data.keys().hasOnly(['lastRoomCreatedAt', 'totalRooms', 'totalGames']);
     }
 
     /*
-     * Усе інше — заборонено. Саме цей рядок і закриває головну дірку:
-     * без нього чужа колекція заводиться одним запитом із DevTools.
+     * Усе інше — заборонено. Саме цей блок і закриває головну дірку: без нього
+     * чужа колекція заводиться одним запитом із DevTools.
      */
     match /{document=**} {
       allow read, write: if false;

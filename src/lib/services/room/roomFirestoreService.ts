@@ -7,6 +7,7 @@ import {
     query,
     where,
     orderBy,
+    limit,
     getDoc,
     updateDoc,
     onSnapshot,
@@ -20,8 +21,23 @@ import { withTimeout } from '$lib/utils/asyncUtils';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { RoomSchema } from '$lib/schemas/onlineSchema';
 import { logService } from "$lib/services/logService.svelte";
+import { COLLECTIONS, ROOM_SUBCOLLECTIONS } from '$lib/types/firebaseSchema';
 
 const OPERATION_TIMEOUT_MS = 30000;
+
+/**
+ * Скільки публічних кімнат показувати в лобі.
+ *
+ * Доти запит не мав `limit()` зовсім: читалися ВСІ публічні кімнати, і кожна
+ * несла повний стан партії. Ціна росла лінійно з кількістю кімнат, помножена на
+ * розмір документа, — і жоден тест цього не показував, бо на трьох кімнатах
+ * поведінка бездоганна. Перший сигнал був би рахунок або повільне лобі в живих
+ * людей (CLOUD-DATABASE-v8 § 7.1).
+ *
+ * Число мусить збігатися з межею у `firestore.rules` (`request.query.limit`):
+ * правило відкидає запит без обмеження, тож розходження тут ламає лобі одразу.
+ */
+const PUBLIC_ROOMS_LIMIT = 50;
 
 class RoomFirestoreService {
     private get db() {
@@ -29,7 +45,7 @@ class RoomFirestoreService {
     }
 
     private getRoomRef(roomId: string) {
-        return doc(this.db, 'rooms', roomId);
+        return doc(this.db, COLLECTIONS.ROOMS, roomId);
     }
 
     private validateRoom(data: any, id: string): Room | null {
@@ -46,21 +62,22 @@ class RoomFirestoreService {
     }
 
     async getStatsDoc(): Promise<any> {
-        const statsRef = doc(this.db, 'general', 'stats');
+        const statsRef = doc(this.db, COLLECTIONS.GENERAL, 'stats');
         const snap = await getDoc(statsRef);
         return snap.exists() ? snap.data() : null;
     }
 
     async updateStatsDoc(data: any): Promise<void> {
-        const statsRef = doc(this.db, 'general', 'stats');
+        const statsRef = doc(this.db, COLLECTIONS.GENERAL, 'stats');
         await setDoc(statsRef, data, { merge: true });
     }
 
     async getPublicRoomsQuerySnapshot(): Promise<[QuerySnapshot<DocumentData>, any]> {
         const q = query(
-            collection(this.db, 'rooms'),
+            collection(this.db, COLLECTIONS.ROOMS),
             where('isPrivate', '==', false),
-            orderBy('lastActivity', 'desc')
+            orderBy('lastActivity', 'desc'),
+            limit(PUBLIC_ROOMS_LIMIT)
         );
 
         const [querySnapshot, statsData] = await Promise.all([
@@ -73,9 +90,10 @@ class RoomFirestoreService {
 
     subscribeToPublicRooms(callback: (snapshot: QuerySnapshot<DocumentData>) => void, errorCallback: (error: any) => void): Unsubscribe {
         const q = query(
-            collection(this.db, 'rooms'),
+            collection(this.db, COLLECTIONS.ROOMS),
             where('isPrivate', '==', false),
-            orderBy('lastActivity', 'desc')
+            orderBy('lastActivity', 'desc'),
+            limit(PUBLIC_ROOMS_LIMIT)
         );
         return onSnapshot(q, callback, errorCallback);
     }
@@ -106,17 +124,17 @@ class RoomFirestoreService {
     }
 
     async updatePresenceDoc(roomId: string, playerId: string, data: any): Promise<void> {
-        const presenceRef = doc(this.db, 'rooms', roomId, 'presence', playerId);
+        const presenceRef = doc(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE, playerId);
         await setDoc(presenceRef, { ...data, updatedAt: Date.now() }, { merge: true });
     }
 
     async deletePresenceDoc(roomId: string, playerId: string): Promise<void> {
-        const presenceRef = doc(this.db, 'rooms', roomId, 'presence', playerId);
+        const presenceRef = doc(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE, playerId);
         await deleteDoc(presenceRef);
     }
 
     subscribeToPresence(roomId: string, callback: (presence: Record<string, any>) => void): Unsubscribe {
-        const q = collection(this.db, 'rooms', roomId, 'presence');
+        const q = collection(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE);
         return onSnapshot(q, (snapshot) => {
             const presenceData: Record<string, any> = {};
             snapshot.forEach(doc => {

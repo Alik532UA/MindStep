@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.854",
+  "version": "0.5.855",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -19,7 +19,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "check:build": "node scripts/check-build.mjs",
-    "check:rules": "firebase emulators:exec --only firestore,database,auth \"node scripts/check-rules.mjs\"",
+    "check:rules": "firebase emulators:exec --project demo-mindstep --only firestore,database,auth \"node scripts/check-rules.mjs\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:knip": "knip",

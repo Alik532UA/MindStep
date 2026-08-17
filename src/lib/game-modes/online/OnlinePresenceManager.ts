@@ -24,6 +24,14 @@ export class OnlinePresenceManager {
     private heartbeatInterval: any = null;
     private monitorInterval: any = null;
     private unsubscribeFromRtdb: (() => void) | null = null;
+    /**
+     * Відписка від `.info/connected`.
+     *
+     * Окрема від `unsubscribeFromRtdb`: це два різні слухачі — один стежить за
+     * власним зʼєднанням, другий за статусами всіх у кімнаті. Доти перший не
+     * знімався взагалі й накопичувався з кожним входом у гру.
+     */
+    private unsubscribeFromConnection: (() => void) | null = null;
     private unsubscribeFromStore: (() => void) | null = null;
     private rtStatuses: Record<string, { state: string, last_changed: number }> = {};
     private playerNamesCache: Record<string, string> = {};
@@ -98,6 +106,10 @@ export class OnlinePresenceManager {
             this.unsubscribeFromRtdb();
             this.unsubscribeFromRtdb = null;
         }
+        if (this.unsubscribeFromConnection) {
+            this.unsubscribeFromConnection();
+            this.unsubscribeFromConnection = null;
+        }
         if (this.unsubscribeFromStore) {
             this.unsubscribeFromStore();
             this.unsubscribeFromStore = null;
@@ -108,7 +120,10 @@ export class OnlinePresenceManager {
     }
 
     private startRealtimePresence(): void {
-        presenceService.trackPresence(this.config.roomId, this.config.myPlayerId);
+        this.unsubscribeFromConnection = presenceService.trackPresence(
+            this.config.roomId,
+            this.config.myPlayerId
+        );
         this.unsubscribeFromRtdb = presenceService.subscribeToRoomPresence(
             this.config.roomId,
             (statuses) => {
