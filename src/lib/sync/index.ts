@@ -13,4 +13,8 @@ export type {
 
 export { LocalGameStateSync, localGameStateSync } from './LocalGameStateSync';
 
-export { FirebaseGameStateSync, createFirebaseGameStateSync } from './FirebaseGameStateSync';
+export { MatchLogGameStateSync, createMatchLogGameStateSync } from './MatchLogGameStateSync';
+export { FirestoreMatchLog } from './FirestoreMatchLog';
+export { MemoryMatchLog, moveKey } from './matchLog';
+export type { MatchLog, MatchMove, MatchSetup, MatchSnapshot } from './matchLog';
+export { replayMatch, initialState, initialCellFromSeed } from './matchReplay';

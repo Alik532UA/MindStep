@@ -69,7 +69,6 @@ class RoomService {
             isPrivate: isPrivate,
             settingsLocked: false,
             allowGuestSettings: true,
-            gameState: null,
             players: { [hostId]: initialPlayer },
             settings: onlineDefaultSettings,
             maxPlayers: MAX_PLAYERS
@@ -111,10 +110,30 @@ class RoomService {
         return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}_${ms}_${randomSuffix}`;
     }
 
+    /**
+     * Перетворити знімок кімнат на список для лобі.
+     *
+     * **Прострочені кімнати тут більше НЕ ВИДАЛЯЮТЬСЯ, і це принципово.**
+     *
+     * Доти цей метод видаляв чужі кімнати з клієнта, який просто відкрив лобі:
+     * `Promise.allSettled(...).catch()`, тобто ще й без сліду про невдачу.
+     * Наслідків три, і третій найдорожчий:
+     *
+     *  1. прибирання залежало від того, чи хтось зайшов у лобі;
+     *  2. помилка видалення нікуди не потрапляла;
+     *  3. **щоб прибирати чуже, потрібне право видаляти чуже** — тобто дірка в
+     *     правилах, яка заразом є готовим примітивом «видалити всі кімнати»
+     *     одним циклом. Саме ця вимога й тримала `rooms` відкритими на запис.
+     *
+     * Тепер правило дозволяє знести кімнату лише її господареві, а прострочені
+     * просто НЕ ПОКАЗУЮТЬСЯ. Вони важать кілобайт і нікому не заважають; те, що
+     * їх ніхто не стирає, записано боргом у PROJECT-CONTEXT.md разом із
+     * розв'язком — заплановане завдання на боці провайдера
+     * (CLOUD-DATABASE-v8 § 9.3).
+     */
     private processRoomsSnapshot(querySnapshot: any): { rooms: RoomSummary[], latestCreatedAt?: number } {
         const rooms: RoomSummary[] = [];
         const now = Date.now();
-        const cleanupPromises: Promise<void>[] = [];
         let activeRoomsLatestCreated = 0;
 
         querySnapshot.forEach((doc: any) => {
@@ -126,10 +145,9 @@ class RoomService {
                 activeRoomsLatestCreated = createdAtNum;
             }
 
-            if (now - lastActivityNum > ROOM_TIMEOUT_MS) {
-                cleanupPromises.push(roomFirestoreService.deleteRoomDoc(doc.ref));
-                return;
-            }
+            // Прострочену кімнату просто не показуємо. Видаляти чуже клієнт не
+            // має права — і саме тому більше не намагається.
+            if (now - lastActivityNum > ROOM_TIMEOUT_MS) return;
             
             const allPlayers = Object.values(data.players || {});
             
@@ -154,10 +172,6 @@ class RoomService {
                 });
             }
         });
-
-        if (cleanupPromises.length > 0) {
-            Promise.allSettled(cleanupPromises).catch(e => console.error(e));
-        }
 
         return {
             rooms,
@@ -303,7 +317,6 @@ class RoomService {
 
         await roomFirestoreService.updateRoomDoc(roomId, {
             status: 'playing',
-            gameState: null,
             players: players,
             lastActivity: Date.now()
         });

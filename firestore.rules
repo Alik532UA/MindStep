@@ -49,16 +49,24 @@ service cloud.firestore {
       return signedIn() && room.data.hostId == request.auth.uid;
     }
 
-    /** Профіль гравця: `users/{uid}`. Пише лише власник. */
+    /*
+     * Профіль і нагороди гравця. ЧИТАЄ Й ПИШЕ ЛИШЕ ВЛАСНИК.
+     *
+     * Доти читання було `if true` — тобто будь-хто перелічував усіх користувачів
+     * разом із їхньою статистикою одним запитом. Це не гіпотеза: живий зонд
+     * `GET /documents/users` без жодного токена повертав документи.
+     *
+     * Дозвіл був зайвий: код звертається до `users/{uid}` і `rewards/{uid}`
+     * ВИКЛЮЧНО через `uid` поточного користувача (`userProfileService`,
+     * `rewardsState.syncWithCloud`). Публічні дані живуть окремо — у
+     * `leaderboards`, і саме там читання відкрите навмисно.
+     */
     match /users/{uid} {
-      allow read: if true;
-      allow write: if signedIn() && request.auth.uid == uid;
+      allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
-    /** Нагороди гравця: `rewards/{uid}`. Пише лише власник. */
     match /rewards/{uid} {
-      allow read: if true;
-      allow write: if signedIn() && request.auth.uid == uid;
+      allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
     /*
@@ -67,7 +75,10 @@ service cloud.firestore {
      * Читання відкрите: таблиця й існує, щоб її бачили всі.
      */
     match /leaderboards/{entryId} {
-      allow read: if true;
+      allow get: if true;
+      // Перелічувати можна — на цьому стоїть сама таблиця, — але порціями.
+      // Без межі один запит вивантажує всю таблицю разом із іменами.
+      allow list: if request.query.limit <= 100;
       allow write: if signedIn() && entryId.split('_')[0] == request.auth.uid;
     }
 

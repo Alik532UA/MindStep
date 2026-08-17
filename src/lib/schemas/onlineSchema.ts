@@ -45,7 +45,6 @@ export const RoomSchema = z.object({
     isPrivate: z.any(),
     settingsLocked: z.any(),
     allowGuestSettings: z.any(),
-    gameState: z.any().nullable(),
     players: z.any(), // Радикально!
     settings: z.any(), // Радикально!
     maxPlayers: z.any().optional()

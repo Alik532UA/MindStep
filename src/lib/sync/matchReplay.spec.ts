@@ -250,6 +250,65 @@ describe('незаконний хід нікого не розводить', () 
 	});
 });
 
+describe('продовження партії після «немає ходів»', () => {
+	/*
+	 * Найтонший сценарій цієї моделі. Коли гравцеві немає куди ходити, решта
+	 * голосує; якщо більшість за продовження — лічильники відвідувань
+	 * обнуляються, фігура ЛИШАЄТЬСЯ де стоїть, рахунок зберігається, а черга йде
+	 * далі.
+	 *
+	 * У журналі це не «правка стану», а НОВИЙ ВІДРІЗОК: опис переписується,
+	 * журнал стирається. Без трьох полів опису (`startCell`, `startTurnIndex`,
+	 * рахунок у `players`) «продовжити» означало б «почати спочатку» — і саме це
+	 * тут і перевіряється.
+	 */
+	it('фігура лишається на місці, а лічильники обнуляються', () => {
+		const cfg = settings();
+		const description = setup();
+		let state = initialState(description);
+		const moves: MatchMove[] = [];
+		for (let seq = 1; seq <= 3; seq++) {
+			moves.push(legalMove(state, cfg, seq, seq % 2 === 1 ? ME : OPPONENT));
+			state = replayMatch(description, moves, cfg);
+		}
+		expect(Object.keys(state.boardState.cellVisitCounts).length).toBeGreaterThan(0);
+
+		const continued = initialState({
+			...description,
+			startCell: { row: state.boardState.playerRow!, col: state.boardState.playerCol! },
+			startTurnIndex: 1
+		});
+
+		expect(continued.boardState.playerRow, 'фігура там само').toBe(state.boardState.playerRow);
+		expect(continued.boardState.playerCol).toBe(state.boardState.playerCol);
+		expect(continued.boardState.cellVisitCounts, 'лічильники чисті').toEqual({});
+		expect(continued.playerState.currentPlayerIndex, 'черга наступного').toBe(1);
+	});
+
+	it('рахунок переживає продовження', () => {
+		const description = setup({
+			players: [{ ...player(1, 'Я'), score: 7 }, { ...player(2, 'Суперник'), score: 4 }],
+			startCell: { row: 1, col: 1 }
+		});
+
+		const continued = initialState(description);
+
+		// Рахунок береться З ОПИСУ. Якби перепрогін його обнуляв, «продовжити»
+		// коштувало б гравцям усього набраного.
+		expect(continued.playerState.players.map((p) => p.score)).toEqual([7, 4]);
+	});
+
+	it('свіжа партія все одно починається від зерна й з нуля', () => {
+		const description = setup();
+		const fresh = initialState(description);
+		const fromSeed = initialCellFromSeed(description.seed, description.boardSize);
+
+		expect({ row: fresh.boardState.playerRow, col: fresh.boardState.playerCol }).toEqual(fromSeed);
+		expect(fresh.playerState.currentPlayerIndex).toBe(0);
+		expect(fresh.playerState.players.every((p) => p.score === 0)).toBe(true);
+	});
+});
+
 describe('транспорт журналу', () => {
 	it('зайнятий номер ходу займають лише раз', async () => {
 		const log = new MemoryMatchLog(setup());

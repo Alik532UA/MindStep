@@ -26,7 +26,6 @@ export interface Room {
     isPrivate: boolean;
     settingsLocked: boolean;
     allowGuestSettings: boolean;
-    gameState: any | null;
     players: Record<string, OnlinePlayer>;
     settings: GameSettingsState;
     maxPlayers?: number;

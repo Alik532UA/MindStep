@@ -2,8 +2,7 @@
 import { storageService } from '$lib/services/storage';
 import { logService } from '$lib/services/logService.svelte';
 import { RewardsStateSchema, type RewardsState as RewardsData } from '$lib/schemas/rewardsSchema';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { getFirestoreDb } from '$lib/services/firebaseService';
+import { rewardsCloudService } from '$lib/services/rewardsCloudService';
 
 const STORAGE_KEY = 'rewards';
 const defaultState: RewardsData = {
@@ -74,29 +73,18 @@ class RewardsStore {
         this.notifySubscribers();
     }
 
+    /**
+     * Злити нагороди з хмарою.
+     *
+     * SDK бази тут немає: це сховище з рунами, і мережа живе окремо
+     * (`rewardsCloudService`). Збій синхронізації не чіпає місцевого стану —
+     * нагорода, здобута офлайн, лишається здобутою.
+     */
     async syncWithCloud(uid: string) {
-        const db = getFirestoreDb();
-        const docRef = doc(db, 'rewards', uid);
-        
-        try {
-            const snap = await getDoc(docRef);
-            if (snap.exists()) {
-                const cloudData = snap.data() as RewardsData;
-                const cloudRewards = cloudData.unlockedRewards || {};
-                
-                // Merge local and cloud
-                const mergedRewards = { ...this._state.unlockedRewards, ...cloudRewards };
-                
-                this._state.unlockedRewards = mergedRewards;
-                this.saveLocal();
-                
-                // Sync back if needed
-                await setDoc(docRef, { unlockedRewards: mergedRewards }, { merge: true });
-            } else {
-                await setDoc(docRef, this._state);
-            }
-        } catch (e) {
-            logService.error('[RewardsStore] Sync error', e);
+        const merged = await rewardsCloudService.merge(uid, this._state.unlockedRewards);
+        if (merged) {
+            this._state.unlockedRewards = merged as typeof this._state.unlockedRewards;
+            this.saveLocal();
         }
         this.notifySubscribers();
     }

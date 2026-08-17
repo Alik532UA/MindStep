@@ -3,13 +3,10 @@ import { modalService } from '$lib/services/modalService';
 import { navigationService } from '$lib/services/navigationService';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import { logService } from "$lib/services/logService.svelte";
-import type { IGameStateSync, SyncableGameState, VoteType } from '$lib/sync/gameStateSync.interface';
-import { boardState } from '$lib/stores/boardState.svelte';
-import { playerState } from '$lib/stores/playerState.svelte';
-import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
+import type { SyncableGameState, VoteType } from '$lib/sync/gameStateSync.interface';
+import type { MatchLogGameStateSync } from '$lib/sync/MatchLogGameStateSync';
 import type { Room } from '$lib/types/online';
 import { endGameService } from '$lib/services/endGameService';
-import type { MoveQueueItem } from '$lib/types/gameMove';
 
 export class OnlineMatchController {
     // FIX: Захисний період після початку гри для запобігання race condition
@@ -22,10 +19,16 @@ export class OnlineMatchController {
         private roomId: string,
         private myPlayerId: string,
         private amIHost: boolean,
-        private stateSync: IGameStateSync,
-        private resetBoardCallback: () => void,
-        private advancePlayerCallback: () => void,
-        // FIX: Оновлено сигнатуру колбеку для прийому ID ініціатора
+        private stateSync: MatchLogGameStateSync,
+        /*
+         * Колбеків `resetBoard` і `advancePlayer` тут більше немає.
+         *
+         * Вони існували, щоб «продовжити гру» встигло змінити дошку локально ДО
+         * того, як новий стан доїде з бази. У моделі журналу локального шляху не
+         * існує взагалі: господар переписує опис партії, і дошка в усіх — включно
+         * з ним — перебудовується з нього. Один шлях замість двох, і примиряти
+         * нема чого.
+         */
         private endGameCallback: (reason: string, initiatorId?: string) => void
     ) {
         this.gameStartedAt = Date.now();
@@ -137,42 +140,26 @@ export class OnlineMatchController {
         }
     }
 
+    /**
+     * Більшість вирішила продовжити: лічильники відвідувань обнуляються, фігура
+     * лишається де стоїть, рахунок зберігається, черга йде далі.
+     *
+     * **У моделі журналу це НОВИЙ ВІДРІЗОК, а не правка стану.** Господар
+     * переписує опис партії (та сама позиція, той самий рахунок, наступна черга)
+     * і стирає журнал — тож обнуляти лічильники окремо не треба, їх просто немає
+     * в новому відрізку.
+     *
+     * Доти тут вручну збирався новий `boardState` із порожніми `cellVisitCounts`
+     * і пхався в базу поверх чужого стану. Разом із локальним оновленням це й
+     * давало два стани, які доводилося примиряти.
+     */
     private executeContinueGame() {
-        // Тільки Хост виконує логіку зміни стану гри, щоб уникнути гонки
-        if (this.amIHost) {
-            logService.GAME_MODE('[MatchController] I am Host. Executing CONTINUE logic.');
+        // Виконує лише господар: інакше двоє одночасно почали б різні відрізки.
+        if (!this.amIHost) return;
 
-            const bState = boardState.state;
-            if (bState) {
-                const newBoardState = {
-                    ...bState,
-                    cellVisitCounts: {},
-                    moveHistory: [{
-                        pos: { row: bState.playerRow!, col: bState.playerCol! },
-                        blocked: [] as { row: number; col: number }[],
-                        visits: {},
-                        blockModeEnabled: gameSettingsState.state.blockModeEnabled
-                    }],
-                    moveQueue: [] as MoveQueueItem[],
-                };
-
-                // Оновлюємо локально
-                this.resetBoardCallback();
-                this.advancePlayerCallback();
-
-                const pState = playerState.state;
-
-                gameEventBus.dispatch('CloseModal');
-
-                // Пушимо новий стан і очищаємо голоси
-                this.syncState({
-                    boardState: newBoardState,
-                    playerState: pState!,
-                    noMovesVotes: {}, // Очищаємо голоси
-                    noMovesClaim: null
-                });
-            }
-        }
+        logService.GAME_MODE('[MatchController] Я господар. Продовжую партію новим відрізком.');
+        gameEventBus.dispatch('CloseModal');
+        void this.stateSync.continueMatch();
     }
 
     private executeFinishGame(state: SyncableGameState, reason: string, initiatorId?: string) {

@@ -1,13 +1,24 @@
 /**
- * Firebase Service
- * Централізована ініціалізація та налаштування емуляторів.
+ * Централізована ініціалізація Firebase і підключення емуляторів.
+ *
+ * **Нічого не виконується на імпорті.** `initializeApp` і `get*` живуть у
+ * функціях, а не в тілі модуля. Причина не в мікрооптимізації: синглтон, чий
+ * конструктор піднімає SDK, робить це на ІМПОРТІ — і будь-який тест, який
+ * транзитивно тягне цей модуль, вимагає бойових ключів, щоб узагалі зібратися.
+ * Саме так тут упав `LocalGameController.spec.ts` у CI з
+ * `FirebaseError: auth/invalid-api-key` **до першого тесту**: 77 перевірок
+ * проходили, а одинадцятий файл не збирався (CODE-QUALITY-v8 § 4,
+ * CLOUD-DATABASE-v8 § 10.1).
+ *
+ * **Analytics імпортується ліниво.** Решта SDK потрібна кожному, хто відкриває
+ * онлайн; аналітика — нікому з них, тож вона не має лежати в тому самому чанку.
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/database';
 import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
-import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
+import type { Analytics } from 'firebase/analytics';
 import { logService } from "./logService.svelte";
 
 const isBrowser = typeof window !== 'undefined';
@@ -94,11 +105,15 @@ export async function initializeAnalytics(): Promise<Analytics | null> {
     if (!isBrowser) return null;
     if (analytics) return analytics;
     try {
+        // Ліниво: аналітика не потрібна нікому, хто грає офлайн, тож вона не має
+        // лежати в тому самому чанку, що й решта SDK.
+        const { getAnalytics, isSupported } = await import('firebase/analytics');
         const supported = await isSupported();
         if (!supported) return null;
         analytics = getAnalytics(initializeFirebase());
         return analytics;
     } catch (error) {
+        logService.error('[FirebaseService] Analytics недоступна', error);
         return null;
     }
 }

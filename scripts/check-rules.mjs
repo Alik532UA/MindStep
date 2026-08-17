@@ -240,6 +240,29 @@ const CASES = [
 		run: () => fsCreate('users', guest.uid, { displayName: 'вкрадено' }, host.token)
 	},
 	{
+		// Живий зонд 2026-08-18 показав, що `GET /documents/users` без токена
+		// повертав документи: читання було `if true`, і це перелічувало всіх
+		// користувачів разом зі статистикою.
+		name: 'ПЕРЕЛІЧИТИ всіх користувачів без токена',
+		allowed: false,
+		run: () => fsRead('users?pageSize=5', null)
+	},
+	{
+		name: 'ПЕРЕЛІЧИТИ всіх користувачів з токеном',
+		allowed: false,
+		run: () => fsRead('users?pageSize=5', guest.token)
+	},
+	{
+		name: 'читати чужий профіль users/{uid}',
+		allowed: false,
+		run: () => fsRead(`users/${guest.uid}`, host.token)
+	},
+	{
+		name: 'читати чужі нагороди rewards/{uid}',
+		allowed: false,
+		run: () => fsRead(`rewards/${guest.uid}`, host.token)
+	},
+	{
 		name: 'чужі нагороди rewards/{uid}',
 		allowed: false,
 		run: () => fsCreate('rewards', guest.uid, { any: 1 }, host.token)

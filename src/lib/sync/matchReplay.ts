@@ -83,7 +83,12 @@ export function initialCellFromSeed(seed: number, boardSize: number): { row: num
 
 /** Стан партії до першого ходу. Теж чиста функція від опису. */
 export function initialState(setup: MatchSetup): ReplayedState {
-	const { row, col } = initialCellFromSeed(setup.seed, setup.boardSize);
+	/*
+	 * Клітинка від зерна — типовий випадок. Явна клітинка приходить лише тоді,
+	 * коли це ПРОДОВЖЕННЯ партії: фігура лишається де стояла, а обнуляються
+	 * тільки лічильники відвідувань (див. `MatchSetup.startCell`).
+	 */
+	const { row, col } = setup.startCell ?? initialCellFromSeed(setup.seed, setup.boardSize);
 	const board = createEmptyBoard(setup.boardSize);
 	board[row][col] = 1;
 
@@ -110,9 +115,15 @@ export function initialState(setup: MatchSetup): ReplayedState {
 			moveQueue: []
 		},
 		playerState: {
-			// Копії, а не посилання: згортка не має права правити опис партії.
-			players: setup.players.map((player) => ({ ...player, score: 0 })),
-			currentPlayerIndex: 0
+			/*
+			 * Копії, а не посилання: згортка не має права правити опис партії.
+			 *
+			 * Рахунок береться З ОПИСУ, а не обнуляється. Для свіжої партії він і
+			 * так нульовий (`startMatch` це гарантує), а для продовження після
+			 * «немає ходів» саме тут зберігається все, що гравці набрали.
+			 */
+			players: setup.players.map((player) => ({ ...player })),
+			currentPlayerIndex: setup.startTurnIndex ?? 0
 		},
 		scoreState: { ...initialScoreState },
 		applied: 0,

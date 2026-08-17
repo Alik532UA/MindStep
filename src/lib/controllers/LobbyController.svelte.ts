@@ -1,5 +1,4 @@
-import { doc, onSnapshot, getDoc, updateDoc } from 'firebase/firestore';
-import { getFirestoreDb } from '../services/firebaseService';
+import { roomLobbyService } from '../services/room/roomLobbyService';
 import { logService } from "../services/logService.svelte";
 import { type OnlineRoom, OnlineRoomSchema, type OnlinePlayer } from '../schemas/onlineSchema';
 import { authService } from '../services/authService';
@@ -8,8 +7,16 @@ import { roomService } from '../services/roomService';
 import { goto } from '$app/navigation';
 import { base } from '$app/paths';
 
+/**
+ * Стан і поведінка лобі.
+ *
+ * **SDK бази тут немає навмисно.** Це `.svelte.ts` — модуль із рунами, і Firebase
+ * у ньому означав би мережевий шар, зрощений із реактивністю: не підмінити в
+ * тесті, не винести, а кожен тест, що транзитивно тягне контролер, вимагав би
+ * бойових ключів. Записи йдуть через `roomLobbyService`, читання — через
+ * `roomService.subscribeToRoom` (SVELTE-CORE-v8 § 8.1, CLOUD-DATABASE-v8 § 10.4).
+ */
 export class LobbyController {
-    private db = getFirestoreDb();
     private roomUnsubscribe: (() => void) | null = null;
 
     room = $state<OnlineRoom | null>(null);
@@ -80,38 +87,33 @@ export class LobbyController {
 
     async toggleReady() {
         if (!this.room || !this.myPlayerId) return;
-        const roomRef = doc(this.db, 'rooms', this.room.id);
         const currentReady = this.room.players[this.myPlayerId]?.isReady || false;
-
-        await updateDoc(roomRef, {
-            [`players.${this.myPlayerId}.isReady`]: !currentReady
-        });
+        await roomLobbyService.setReady(this.room.id, this.myPlayerId, !currentReady);
     }
 
     async startGame() {
         if (!this.room || !this.amIHost) return;
-        const roomRef = doc(this.db, 'rooms', this.room.id);
-        await updateDoc(roomRef, { status: 'playing' });
+        await roomLobbyService.setStatus(this.room.id, 'playing');
         // Навігація до гри відбудеться через onSnapshot або вручну
         goto(`${base}/game/online?roomId=${this.room.id}&from=lobby`);
     }
 
     async updateSetting(key: string, value: any) {
         if (!this.room || !this.amIHost) return;
-        const roomRef = doc(this.db, 'rooms', this.room.id);
-        await updateDoc(roomRef, { [`settings.${key}`]: value });
+        await roomLobbyService.setSetting(this.room.id, key, value);
     }
 
     async updateRoomSetting(key: string, value: any) {
         if (!this.room || !this.amIHost) return;
-        const roomRef = doc(this.db, 'rooms', this.room.id);
-        await updateDoc(roomRef, { [key]: value });
+        await roomLobbyService.setRoomField(this.room.id, key, value);
     }
 
     async updatePlayer(data: Partial<OnlinePlayer>) {
         if (!this.room || !this.myPlayerId) return;
-        const roomRef = doc(this.db, 'rooms', this.room.id);
-        await updateDoc(roomRef, { [`players.${this.myPlayerId}`]: { ...this.myPlayer, ...data } });
+        await roomLobbyService.updatePlayer(this.room.id, this.myPlayerId, {
+            ...this.myPlayer,
+            ...data
+        });
     }
 
     handleNavigation(to: any) {

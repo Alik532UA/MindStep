@@ -1,7 +1,6 @@
 import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
 import { logService } from "$lib/services/logService.svelte";
-import { gameService } from '$lib/services/gameService';
 import { createOnlinePlayers } from '$lib/utils/playerFactory';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
@@ -10,7 +9,7 @@ import { scoreState } from '$lib/stores/scoreState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
 import { gameEventBus } from '$lib/services/gameEventBus';
 import type { IGameStateSync, GameStateSyncEvent, SyncableGameState } from '$lib/sync/gameStateSync.interface';
-import { createFirebaseGameStateSync } from '$lib/sync/FirebaseGameStateSync';
+import { createMatchLogGameStateSync, type MatchLogGameStateSync } from '$lib/sync/MatchLogGameStateSync';
 import type { ScoreChangesData } from '$lib/types/gameMove';
 import { roomService } from '$lib/services/roomService';
 import { roomPlayerService } from '$lib/services/room/roomPlayerService';
@@ -25,18 +24,21 @@ import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { GameStateReconciler } from './online/GameStateReconciler';
 import { OnlineMatchController } from './online/OnlineMatchController';
 import { OnlineGameEventManager } from './online/OnlineGameEventManager';
-import { OnlineStateSynchronizer } from './online/OnlineStateSynchronizer';
 import { OnlinePresenceManager } from './online/OnlinePresenceManager';
 
 import { navigationService } from '$lib/services/navigationService';
 import { BoardStateSchema, PlayerStateSchema, ScoreStateSchema } from '$lib/schemas/gameStateSchema';
 
 export class OnlineGameMode extends BaseGameMode {
-  private stateSync: IGameStateSync | null = null;
+  /**
+   * Синхронізація партії. Тип конкретний, а не `IGameStateSync`, бо журнал додає
+   * дві операції, яких у «пхнути стан» не існує: почати партію (описом) і
+   * дописати ХІД. Інтерфейс лишається там, де він і був швом — у контролерах.
+   */
+  private stateSync: MatchLogGameStateSync | null = null;
   private reconciler: GameStateReconciler | null = null;
   private matchController: OnlineMatchController | null = null;
   private eventManager: OnlineGameEventManager | null = null;
-  private synchronizer: OnlineStateSynchronizer | null = null;
   private presenceManager: OnlinePresenceManager | null = null;
 
   private unsubscribeSync: (() => void) | null = null;
@@ -148,17 +150,14 @@ export class OnlineGameMode extends BaseGameMode {
   }
 
   private initializeControllers() {
-    this.stateSync = createFirebaseGameStateSync();
+    this.stateSync = createMatchLogGameStateSync(this.myPlayerId!);
     this.reconciler = new GameStateReconciler(this.myPlayerId!);
-    this.synchronizer = new OnlineStateSynchronizer(this.stateSync);
 
     this.matchController = new OnlineMatchController(
       this.roomId!,
       this.myPlayerId!,
       this.amIHost,
       this.stateSync,
-      () => this.resetBoardForContinuation(),
-      () => this.advanceToNextPlayer(),
       (reason: string, initiatorId?: string) => this.handleGameEnd(reason, initiatorId)
     );
 
@@ -167,9 +166,18 @@ export class OnlineGameMode extends BaseGameMode {
       this.myPlayerId!,
       this.matchController,
       {
-        onSyncState: (overrides: Partial<SyncableGameState>) => this.synchronizer?.syncCurrentState(overrides),
-        onSyncSettings: () => this.synchronizer?.syncSettings(),
-        onPatchState: (updates: Partial<SyncableGameState>) => this.synchronizer?.patchState(updates),
+        /*
+         * Викликається напряму, без прошарку `OnlineStateSynchronizer`.
+         *
+         * Той прошарок збирав ПОВНИЙ локальний стан і пхав його в базу. У моделі
+         * журналу пхати нема чого: стан обчислюється, а до бази потрапляє лише
+         * те, що журналом не виводиться — кінець партії, заявка «немає ходів» і
+         * налаштування кімнати. Збирати заради цього всю дошку означало б робити
+         * роботу, результат якої викидається.
+         */
+        onSyncState: (overrides: Partial<SyncableGameState>) => void this.stateSync?.patchState(overrides ?? {}),
+        onSyncSettings: () => void this.stateSync?.patchState({ settings: gameSettingsState.state }),
+        onPatchState: (updates: Partial<SyncableGameState>) => void this.stateSync?.patchState(updates),
         isApplyingRemoteState: () => this.isApplyingRemoteState
       },
       this.turnDuration
@@ -251,26 +259,26 @@ export class OnlineGameMode extends BaseGameMode {
       
       const remoteState = await this.stateSync!.pullState();
 
-      // СИСТЕМНЕ ВИПРАВЛЕННЯ: Вважаємо гру "існуючою" тільки якщо в ній є стан дошки.
-      // Якщо там тільки налаштування (після патчу) — хост має ініціалізувати нову гру.
-      const isRemoteStateComplete = remoteState && remoteState.boardState && remoteState.playerState;
-
-      if (isRemoteStateComplete) {
-        logService.GAME_MODE('[OnlineGameMode] Loaded existing state from server');
+      /*
+       * Партія «існує», якщо господар написав ОПИС — зерно, склад, налаштування.
+       * Стану дошки в базі більше немає й перевіряти нема чого: він обчислюється
+       * з опису й журналу.
+       */
+      if (remoteState) {
+        logService.GAME_MODE('[OnlineGameMode] Партію відтворено з опису й журналу');
         this.applyRemoteState(remoteState);
+      } else if (this.amIHost) {
+        /*
+         * Господар починає партію одним записом: зерно + склад + налаштування.
+         * ОДНЕ ЧИСЛО замість усієї початкової розкладки — і саме воно робить
+         * дошку однаковою в усіх без жодного обміну станом.
+         */
+        logService.GAME_MODE('[OnlineGameMode] Я господар. Починаю партію.');
+        const playersConfig = this.getPlayersConfiguration();
+        const finalSize = newSize || gameSettingsState.state.boardSize || 4;
+        await this.stateSync!.startMatch(playersConfig, finalSize);
       } else {
-        if (this.amIHost) {
-          logService.GAME_MODE('[OnlineGameMode] I am Host. Initializing new game state.');
-          const playersConfig = this.getPlayersConfiguration();
-          const finalSize = newSize || gameSettingsState.state.boardSize || 4;
-          gameService.initializeNewGame({
-            size: finalSize,
-            players: playersConfig,
-          });
-          await this.synchronizer!.syncCurrentState();
-        } else {
-          logService.GAME_MODE('[OnlineGameMode] I am Guest. Waiting for Host to initialize state...');
-        }
+        logService.GAME_MODE('[OnlineGameMode] Я гість. Чекаю, доки господар почне партію.');
       }
 
       // Підписуємось на події ТІЛЬКИ ПІСЛЯ того, як початковий стан встановлено.
@@ -333,15 +341,35 @@ export class OnlineGameMode extends BaseGameMode {
       return;
     }
 
-    logService.GAME_MODE(`[OnlineGameMode] Executing local move: ${direction} ${distance}`);
-    await super.handlePlayerMove(direction, distance, onEndCallback);
+    /*
+     * КЛІК НЕ ЗМІНЮЄ ДОШКУ. Він дописує хід у журнал, а дошка ворухнеться, коли
+     * хід приїде назад перепрогоном.
+     *
+     * Це не педантизм і не «повільніше»: Firestore відбиває власний запис
+     * одразу, тож на око різниці немає. Різниця в тому, чого більше НЕ ПОТРІБНО.
+     * Доти хід застосовувався локально, а потім увесь стан пхався в базу — і
+     * два стани доводилося примиряти. Саме на цьому тут виросли захисні періоди,
+     * прапорці «перемогу вже оголошено» й комментарі `// FIX: race condition`.
+     * З одним джерелом правди примиряти нічого.
+     */
+    const accepted = await this.stateSync?.appendMove(direction, distance);
+
+    if (accepted === false) {
+      /*
+       * Номер уже зайнятий — тобто суперник устиг раніше, і ЦЕЙ хід не
+       * відбувся. Не помилка: журнал і є правда. Мовчати тут не можна — людина
+       * натиснула й мусить розуміти, чому нічого не сталося.
+       */
+      logService.GAME_MODE('[OnlineGameMode] Хід не зараховано: номер уже зайнято');
+      notificationService.show({ type: 'warning', messageRaw: 'Суперник устиг раніше' });
+    }
+
+    onEndCallback?.();
 
     // Implicit Heartbeat: Хід підтверджує присутність. Не чекаємо завершення.
     if (this.roomId && this.myPlayerId) {
       roomPlayerService.sendHeartbeat(this.roomId, this.myPlayerId).catch(() => { });
     }
-
-    await this.synchronizer?.syncCurrentState();
   }
 
   async claimNoMoves(): Promise<void> {
