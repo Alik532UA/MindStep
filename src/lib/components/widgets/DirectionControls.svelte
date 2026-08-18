@@ -91,8 +91,11 @@
     registerGameAction("no-moves", handleNoMoves);
 
     // Реєструємо дистанції заздалегідь (до 5, для запасу)
-    [1, 2, 3, 4, 5].forEach(dist => {
-      // @ts-ignore
+    // `as const` — не косметика: без нього `dist` має тип `number`, шаблонний
+    // рядок звужується до `string`, і назва дії перестає збігатися з union
+    // `KeybindingAction`. Саме це й пригнічував `@ts-ignore` — тобто друкарську
+    // помилку в назві дії тут не побачив би ніхто.
+    ([1, 2, 3, 4, 5] as const).forEach((dist) => {
       registerGameAction(`distance-${dist}`, () => handleDistance(dist));
     });
   });

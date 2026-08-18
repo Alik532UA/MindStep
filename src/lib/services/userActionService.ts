@@ -20,6 +20,32 @@ import { navigateToGame } from './uiService';
 let lastMoveTimestamp: number = 0;
 const MOVE_COOLDOWN_MS = 250; // Чверть секунди для запобігання деренчанню
 
+/**
+ * Режим, у якому «продовжити» й «завершити» — це ГОЛОСИ, а не рішення.
+ *
+ * Такий лише онлайн: локально рішення виконується одразу. Оголошувати ці методи
+ * на `BaseGameMode` не можна — вони існують не в кожному режимі.
+ *
+ * Доти замість цієї сторожі стояло `'voteToContinue' in activeGameMode` під
+ * `@ts-ignore`. Оператор `in` звужує до `BaseGameMode & Record<'voteToContinue',
+ * unknown>` — тобто до значення, яке НЕ можна викликати, і саме цю помилку
+ * пригнічував коментар. Разом із нею він пригнічував і те, що `voteToFinish`
+ * викликався без обовʼязкового для нього аргументу.
+ */
+interface VotingGameMode {
+  voteToContinue(): Promise<void>;
+  voteToFinish(reasonKey?: string): Promise<void>;
+}
+
+function canVote(mode: unknown): mode is VotingGameMode {
+  const candidate = mode as Partial<VotingGameMode> | null;
+  return (
+    !!candidate &&
+    typeof candidate.voteToContinue === 'function' &&
+    typeof candidate.voteToFinish === 'function'
+  );
+}
+
 export const userActionService = {
   selectDirection(direction: Direction): void {
     const uState = uiState.state;
@@ -209,9 +235,7 @@ export const userActionService = {
 
   async voteToContinue(): Promise<void> {
     const activeGameMode = gameModeService.getCurrentMode();
-    // Перевіряємо, чи це OnlineGameMode (через перевірку наявності методу)
-    if (activeGameMode && 'voteToContinue' in activeGameMode) {
-      // @ts-ignore
+    if (canVote(activeGameMode)) {
       await activeGameMode.voteToContinue();
     } else {
       // Локальний режим - просто продовжуємо
@@ -221,9 +245,11 @@ export const userActionService = {
 
   async voteToFinish(reasonKey: string): Promise<void> {
     const activeGameMode = gameModeService.getCurrentMode();
-    if (activeGameMode && 'voteToFinish' in activeGameMode) {
-      // @ts-ignore
-      await activeGameMode.voteToFinish();
+    if (canVote(activeGameMode)) {
+      // `reasonKey` тепер доїжджає до режиму. Доти виклик ішов без аргументів
+      // під `@ts-ignore`, тож підпис методу й місце виклику розходилися, і
+      // компілятор про це не казав.
+      await activeGameMode.voteToFinish(reasonKey);
     } else {
       // Локальний режим - завершуємо
       await this.finishWithBonus(reasonKey);

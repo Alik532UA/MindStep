@@ -146,9 +146,12 @@ export const endGameService = {
     logService.score('[endGameService] Dispatching GameOver event:', gameOverPayload);
     gameOverState.setGameOver(gameOverPayload);
 
-        // @ts-ignore
-
-        gameEventBus.dispatch('GameOver', { ...gameOverPayload, state: { ...bState, ...finalPlayerState, ...scoreState.state!, ...uStateFinal } });
+    // Без поля `state`. Доти сюди підмішувався спред ЧОТИРЬОХ сховищ
+    // (`boardState`, `playerState`, `scoreState`, `uiState`) під `@ts-ignore` —
+    // поле, якого немає в `GameOverPayload` і якого не читає жоден із двох
+    // підписників. В онлайні воно доїжджало ще й до `onPatchState`, тобто цілий
+    // зліпок стану вирушав у базу, щоб там ніколи не знадобитися.
+    gameEventBus.dispatch('GameOver', gameOverPayload);
 
       }
 

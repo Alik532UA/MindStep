@@ -22,43 +22,43 @@ describe('LocalGameController', () => {
 
     describe('shouldShowWidget', () => {
         it('should show TIMER only in timed modes', () => {
-            // @ts-expect-error - overriding private state for testing
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'local' };
             expect(controller.shouldShowWidget(WIDGETS.TIMER)).toBe(false);
 
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'timed' };
             expect(controller.shouldShowWidget(WIDGETS.TIMER)).toBe(true);
 
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'virtual-player-timed' };
             expect(controller.shouldShowWidget(WIDGETS.TIMER)).toBe(true);
         });
 
         it('should hide TIMER in observer mode even if timed', () => {
-             // @ts-expect-error
+             // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'observer' };
             expect(controller.shouldShowWidget(WIDGETS.TIMER)).toBe(false);
         });
 
         it('should handle PLAYER_TURN_INDICATOR visibility', () => {
             // Online mode
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'online' };
             expect(controller.shouldShowWidget(WIDGETS.PLAYER_TURN_INDICATOR)).toBe(true);
 
             // Virtual player modes (should be hidden)
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'beginner' };
             expect(controller.shouldShowWidget(WIDGETS.PLAYER_TURN_INDICATOR)).toBe(false);
 
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'pro' };
             expect(controller.shouldShowWidget(WIDGETS.PLAYER_TURN_INDICATOR)).toBe(false);
         });
 
         it('should show other widgets by default', () => {
-            // @ts-expect-error
+            // @ts-expect-error підміна цілого стану заглушкою: тест дає лише те поле, яке читає перевірка
             gameSettingsState.state = { gameMode: 'local' };
             expect(controller.shouldShowWidget('ANY_OTHER_WIDGET')).toBe(true);
         });

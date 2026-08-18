@@ -78,7 +78,7 @@ export class OnlineGameEventManager {
 
         // 4. Game Logic Events
         this.subscriptions.push(
-            gameEventBus.subscribe('ShowNoMovesModal', (payload: ShowNoMovesModalPayload & { isRemote?: boolean }) => {
+            gameEventBus.subscribe('ShowNoMovesModal', (payload: ShowNoMovesModalPayload) => {
                 timeService.stopTurnTimer();
 
                 if (this.myPlayerId && !payload.isRemote) {

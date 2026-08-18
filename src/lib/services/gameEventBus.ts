@@ -42,6 +42,16 @@ export interface ShowNoMovesModalPayload {
   scoreDetails: any; // Можна уточнити тип, якщо він експортується (FinalScoreDetails)
   boardSize: number;
   playerScores?: Array<PlayerScoreResult & { playerName: string; playerColor: string; isWinner?: boolean; isLoser?: boolean }>;
+  /**
+   * Заявка приїхала від суперника, а не зроблена тут.
+   *
+   * Поле не косметичне: саме воно вирішує, чи надсилати заявку на сервер —
+   * інакше клієнт відповідав би на власну ж заявку, яку йому щойно повернув
+   * перепрогін. Доти воно жило у двох місцях порізно: видавець дописував його
+   * під `@ts-ignore`, а підписник розширював тип у себе в аргументі. Тобто
+   * перейменування з одного боку інша сторона не помітила б ніяк.
+   */
+  isRemote?: boolean;
 }
 
 /**

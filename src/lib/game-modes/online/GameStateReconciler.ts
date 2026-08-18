@@ -158,7 +158,6 @@ export class GameStateReconciler {
                 scoreDetails: claim.scoreDetails,
                 boardSize: claim.boardSize,
                 playerScores: claim.playerScores,
-                // @ts-ignore
                 isRemote: true
             });
         }
