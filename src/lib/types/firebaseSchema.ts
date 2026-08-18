@@ -24,14 +24,20 @@ export const COLLECTIONS = {
 	GENERAL: 'general'
 } as const;
 
-/** Підколекції кімнати. Кожна має власника — саме тому правила такі вузькі. */
+/**
+ * Підколекції кімнати. Кожна має власника — саме тому правила такі вузькі.
+ *
+ * **`presence` тут більше немає.** Присутність жила в трьох місцях одночасно, і
+ * дзеркало у Firestore було найгіршим із трьох: його писав САМ КЛІЄНТ, коли
+ * помічав обрив, тобто саме в тому випадку, для якого присутність і існує,
+ * писати вже нікому. `onDisconnect` у RTDB тим часом спрацьовував правильно, тож
+ * два сховища стверджували протилежне (CLOUD-DATABASE-v8 § 5.2).
+ */
 export const ROOM_SUBCOLLECTIONS = {
-	/** Журнал ходів: `rooms/{id}/moves/{seq}`. Лише створити, лише від себе. */
+	/** Журнал ходів: `rooms/{id}/moves/{segment}-{seq}`. Лише створити, лише від себе. */
 	MOVES: 'moves',
-	/** Голоси: `rooms/{id}/votes/{playerId}`. Пише лише сам гравець. */
+	/** Голоси й кінець партії: `rooms/{id}/votes/{playerId}`. Пише лише сам гравець. */
 	VOTES: 'votes',
-	/** Присутність: `rooms/{id}/presence/{playerId}`. Пише лише сам гравець. */
-	PRESENCE: 'presence',
 	/** Чат: `rooms/{id}/messages/{id}`. Створити може автор; правити — ніхто. */
 	MESSAGES: 'messages'
 } as const;
@@ -108,12 +114,14 @@ export interface RoomDocument {
 	players: Record<string, { id: string; name: string }>;
 	settings: Record<string, unknown>;
 	/**
-	 * Опис поточної партії: `{ seed, boardSize, players, settings, startedAt }`.
+	 * Опис поточної партії: `{ seed, segment, boardSize, players, settings, startedAt }`.
 	 * Стан дошки не зберігається — він відтворюється перепрогоном журналу
 	 * (`sync/matchReplay.ts`).
 	 */
 	match?: {
 		seed: number;
+		/** Номер відрізка. Перепрогін бере лише ходи з цим номером. */
+		segment: number;
 		boardSize: number;
 		players: unknown[];
 		settings: Record<string, unknown>;
@@ -121,8 +129,13 @@ export interface RoomDocument {
 	} | null;
 }
 
-/** `rooms/{roomId}/moves/{seq}` — один хід. Створити можна лише раз. */
+/**
+ * `rooms/{roomId}/moves/{segment}-{seq}` — один хід. Створити можна лише раз, і
+ * ні переписати, ні стерти — НІКОМУ, включно з господарем.
+ */
 export interface MoveDocument {
+	/** Номер відрізка партії. Заміна стиранню журналу — див. `sync/matchLog.ts`. */
+	segment: number;
 	seq: number;
 	/** `auth.uid` того, хто зробив хід. Правило звіряє його з автором запису. */
 	by: string;
@@ -131,17 +144,20 @@ export interface MoveDocument {
 	at: number | Timestamp;
 }
 
-/** `rooms/{roomId}/votes/{playerId}` — голос гравця. */
+/**
+ * `rooms/{roomId}/votes/{playerId}` — голос гравця, заявка «немає ходів» і
+ * КІНЕЦЬ ПАРТІЇ від того, хто його оголосив.
+ *
+ * Доти кінець партії лежав у `votes/__match`, і правило цієї колекції звіряє
+ * ідентифікатор документа з `auth.uid` — тобто той запис відкидався завжди, а
+ * кінець партії не доїжджав до суперника ніколи.
+ */
 export interface VoteDocument {
-	vote: 'continue' | 'finish';
+	vote?: 'continue' | 'finish';
+	finishRequested?: boolean;
+	/** Кінець партії. Пише той, хто оголосив; читають усі учасники. */
+	over?: Record<string, unknown>;
 	at: number | Timestamp;
-}
-
-/** `rooms/{roomId}/presence/{playerId}` — присутність у Firestore. */
-export interface RoomPresenceDocument {
-	isDisconnected: boolean;
-	lastSeen?: number;
-	updatedAt: number;
 }
 
 /** `rooms/{roomId}/messages/{id}` — повідомлення чату. */

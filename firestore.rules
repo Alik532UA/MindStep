@@ -50,6 +50,96 @@ service cloud.firestore {
     }
 
     /*
+     * --- ЗВУЖЕННЯ `update` ДО ПОЛІВ (CLOUD-DATABASE-v8 § 4.7) ---
+     *
+     * Доти тут стояло `allow update: if hostOf(resource) || memberOf(resource)`, і
+     * читалося воно як «правити кімнату може господар або учасник». Означало ж
+     * інше: БУДЬ-ЯКИЙ учасник кімнати міг записати в документ що завгодно —
+     * поставити `hostId` собі, переписати `players` цілком, викинувши решту,
+     * перевернути `isPrivate`, підмінити `settings` і перезаписати `match.seed`
+     * посеред партії, тобто перероздати дошку всім. Правило назвало ЛЮДИНУ й не
+     * назвало ПОЛЯ, а `resource` у ньому — документ ДО запису, тож про вміст
+     * запису воно не сказало нічого.
+     *
+     * Те саме правило заразом забороняло ВХІД: той, хто заходить, ще не у складі,
+     * тож `memberOf(resource)` для нього хибне. Зафіксовано гейтом: випадок
+     * «ГІСТЬ заходить у кімнату» давав 403.
+     */
+
+    /** Які ключі верхнього рівня змінює цей запис. */
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    /**
+     * Чи зачепив запис ЛИШЕ свій рядок складу.
+     *
+     * `affectedKeys()` віддає ключі ВЕРХНЬОГО рівня, тож `players.abc.isReady`
+     * показується просто як `players`. Тому потрібен ДРУГИЙ `diff` — уже на самій
+     * мапі `players`, — і саме він дає перелік зачеплених `uid`. Порожній набір
+     * (запис не торкався складу) `hasOnly` задовольняє.
+     */
+    function onlyMyPlayerRow() {
+      return request.resource.data.players.diff(resource.data.players)
+               .affectedKeys().hasOnly([request.auth.uid]);
+    }
+
+    /** Господарювання не змінюється тихою правкою поля. */
+    function hostKept() {
+      return request.resource.data.hostId == resource.data.hostId;
+    }
+
+    /**
+     * Передача господарювання — законна рівно в одному сценарії: господар ІДЕ.
+     *
+     * `roomPlayerService.leaveRoom` призначає наступного, коли кімнату покидає
+     * господар, тож заборонити зміну `hostId` цілком не можна. Але дозвіл звужений
+     * до трьох умов разом: пише сам старий господар, він прибирає СЕБЕ зі складу,
+     * і новий господар — із тих, хто лишився.
+     */
+    function hostHandover() {
+      return resource.data.hostId == request.auth.uid
+             && !(request.auth.uid in request.resource.data.players)
+             && request.resource.data.hostId in request.resource.data.players;
+    }
+
+    /** Стан кімнати — з переліку, а не довільний рядок. */
+    function statusValid() {
+      return !('status' in request.resource.data)
+             || request.resource.data.status in ['waiting', 'playing', 'finished'];
+    }
+
+    /**
+     * Налаштування партії учасник міняє лише тоді, коли господар це дозволив.
+     *
+     * Прапорець `allowGuestSettings` існував і доти, але тримався виключно на UI:
+     * той самий SDK із консолі писав `settings` попри нього.
+     */
+    function guestSettingsAllowed() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['settings'])
+             || ('allowGuestSettings' in resource.data && resource.data.allowGuestSettings == true);
+    }
+
+    /**
+     * Вхід нового учасника — ОКРЕМИЙ випадок, і його забувають саме тому, що він
+     * не схожий на решту: той, хто заходить, ще не у складі.
+     *
+     * `maxPlayers` перевіряється лише якщо поле є: кімнати, створені старішою
+     * збіркою, його не мають, і вимога зламала б вхід у них.
+     */
+    function joining() {
+      return signedIn()
+             && !(request.auth.uid in resource.data.players)
+             && request.auth.uid in request.resource.data.players
+             && onlyMyPlayerRow()
+             && changedOnly(['players', 'lastActivity'])
+             && hostKept()
+             && resource.data.status == 'waiting'
+             && (!('maxPlayers' in resource.data)
+                 || request.resource.data.players.size() <= resource.data.maxPlayers);
+    }
+
+    /*
      * Профіль і нагороди гравця. ЧИТАЄ Й ПИШЕ ЛИШЕ ВЛАСНИК.
      *
      * Доти читання було `if true` — тобто будь-хто перелічував усіх користувачів
@@ -96,16 +186,31 @@ service cloud.firestore {
                     && request.resource.data.hostId == request.auth.uid;
 
       /*
-       * Правити кімнату може господар або учасник.
+       * ПРАВКА КІМНАТИ — три різні дозволи, а не один.
        *
-       * Чому не лише господар: склад кімнати пише кожен про себе (вхід, вихід,
-       * heartbeat), а налаштування — господар. Звузити до «лише господар»
-       * означало б, що гість не може навіть зайти.
+       * Спільні умови для всіх трьох: стан із переліку, і `hostId` або незмінний,
+       * або переданий за правилами `hostHandover()`.
        *
-       * Чому не `if true`, як було: тепер сторонній не може ні прочитати чужу
-       * партію, ні перезаписати її стан, ні підмінити склад.
+       * 1. ГОСПОДАР міняє перелічені поля кімнати. `isPrivate`, `maxPlayers` і
+       *    `createdAt` до переліку НЕ входять: вони задаються при створенні й
+       *    після нього не міняються ніким — доти публічність кімнати перевертав
+       *    будь-який учасник.
+       * 2. УЧАСНИК міняє свій рядок складу, позначку активності й стан кімнати
+       *    (`returnToLobby` і `leaveRoom` кличе не господар). Налаштування —
+       *    лише якщо господар дозволив гостям. `match` для учасника закритий:
+       *    доти він міг перекотити `seed` посеред партії.
+       * 3. ГІСТЬ, який заходить, додає рівно свій рядок — див. `joining()`.
        */
-      allow update: if hostOf(resource) || memberOf(resource);
+      allow update: if signedIn() && statusValid() && (hostKept() || hostHandover()) && (
+        (hostOf(resource)
+           && changedOnly(['players', 'lastActivity', 'status', 'settings', 'settingsLocked',
+                           'allowGuestSettings', 'name', 'match', 'hostId']))
+        || (memberOf(resource)
+           && onlyMyPlayerRow()
+           && guestSettingsAllowed()
+           && changedOnly(['players', 'lastActivity', 'status', 'settings', 'hostId']))
+        || joining()
+      );
 
       /*
        * ЗНЕСТИ кімнату може лише господар. Доти це міг будь-хто без
@@ -123,17 +228,42 @@ service cloud.firestore {
        * запис того самого номера відкидає БАЗА, а не клієнт, тож двоє гравців,
        * які одночасно займають номер, розв'язуються самі.
        */
-      match /moves/{seq} {
+      /*
+       * ЖУРНАЛ ХОДІВ — головне правило цього файлу, і тепер воно ЛОКАЛЬНЕ.
+       *
+       * Ключ документа — `{segment}-{seq}`, і це знімає три речі одразу
+       * (CLOUD-DATABASE-v8 § 8.7). Доти «нова партія в тій самій кімнаті» означала
+       * СТЕРТИ журнал, і переклад цієї операції у Firestore давав три дефекти:
+       *
+       *  1. читання всього журналу заради того, щоб його видалити — платимо за
+       *     кожен хід другий раз;
+       *  2. межа батча 500: партія, довша за 499 ходів, не перезапускалася взагалі;
+       *  3. `get()` на кімнату в правилі `delete` — по одному зверненню на кожен
+       *     видалений хід при межі 20 звернень на батч (§ 4.8). Тобто перезапуск
+       *     після довгої партії впирався у правила, а не в код.
+       *
+       * Тепер відрізок партії — НОВИЙ СЕГМЕНТ: опис кімнати називає номер, ключ
+       * ходу його несе, а перепрогін бере лише ходи поточного сегмента. Видалення
+       * не потрібне нікому, тож його немає — і разом із ним немає ні батча, ні
+       * `get()`. Журнал став тим, чим і мусив бути: append-only.
+       *
+       * `hasOnly` поруч із `hasAll`: без нього хід приймав довільні зайві поля
+       * до мегабайта в кожному (§ 4.6).
+       */
+      match /moves/{moveId} {
         allow read: if signedIn();
         allow create: if signedIn()
                       && request.resource.data.by == request.auth.uid
-                      && request.resource.data.keys().hasAll(['seq', 'by', 'direction', 'distance'])
+                      && request.resource.data.keys().hasAll(['segment', 'seq', 'by', 'direction', 'distance'])
+                      && request.resource.data.keys().hasOnly(['segment', 'seq', 'by', 'direction', 'distance', 'at'])
+                      && request.resource.data.segment is int
+                      && request.resource.data.seq is int
                       && request.resource.data.distance is int
                       && request.resource.data.direction is string
                       && request.resource.data.direction.size() <= 16;
-        allow update: if false;
-        // Стерти хід — це «нова партія в тій самій кімнаті», і лише господар.
-        allow delete: if hostOf(get(/databases/$(database)/documents/rooms/$(roomId)));
+        // Ні переписати, ні стерти — НІКОМУ, включно з господарем. Подія, яку
+        // можна видалити, не є подією.
+        allow update, delete: if false;
       }
 
       /*
@@ -144,13 +274,21 @@ service cloud.firestore {
        * писати весь документ партії. Тобто голосування було ще одним шляхом
        * перезапису чужого стану.
        */
+      /*
+       * Голос гравця — і КІНЕЦЬ ПАРТІЇ, який тепер лежить тут само.
+       *
+       * Доти кінець партії писався в `votes/__match`, а це правило звіряє
+       * ідентифікатор документа з `auth.uid`: `'__match'` не дорівнює жодному uid,
+       * тож запис відкидався ЗАВЖДИ. Кінець партії не доїжджав до суперника
+       * ніколи, а виклик ішов через `void patchState(...)`, тож відмова гинула без
+       * сліду. Колекція мала випадок у гейті, правило написане правильно — не
+       * збігався лише ідентифікатор документа, який код підставляв в обхід власної
+       * ж моделі власності (CLOUD-DATABASE-v8 § 3.5).
+       *
+       * Тепер `over` лежить у документі ТОГО, ХТО оголосив: власник у ключі, як і
+       * все інше тут, і правило лишається одним рядком.
+       */
       match /votes/{playerId} {
-        allow read: if signedIn();
-        allow write: if signedIn() && playerId == request.auth.uid;
-      }
-
-      /** Присутність: кожен пише лише про себе. */
-      match /presence/{playerId} {
         allow read: if signedIn();
         allow write: if signedIn() && playerId == request.auth.uid;
       }
@@ -174,7 +312,33 @@ service cloud.firestore {
      * закрите — застосунок відгуків не читає, їх дивляться з консолі.
      */
     match /feedback/{type}/entries/{entryId} {
-      allow create: if true;
+      /*
+       * ТОЧКА, ОБСЯГ ЯКОЇ ЗАДАЄ СТОРОННІЙ (CLOUD-DATABASE-v8 § 12.1).
+       *
+       * Доти тут стояло `allow create: if true` без жодних меж, і це означало не
+       * «зручно гостеві», а «будь-хто в інтернеті дописує документи в мою базу зі
+       * швидкістю мережі». UI для цього не потрібен: адреса бази публічна за
+       * побудовою.
+       *
+       * Створення лишається відкритим для НЕАВТОРИЗОВАНОГО — форму справді
+       * відкриває гість, і вимога входу відрізала б саме тих, чиї відгуки
+       * найцінніші. Натомість стоять три інші межі: перелік ключів, перелік типів
+       * і довжина кожного текстового поля.
+       */
+      allow create: if type in ['bug', 'improvement', 'other', 'reward_suggestion']
+                    && request.resource.data.keys().hasAll(['type'])
+                    && request.resource.data.keys().hasOnly(
+                         ['type', 'page', 'text', 'actualResult', 'expectedResult',
+                          'context', 'createdAt', 'status', 'id'])
+                    // Тип у полі мусить збігатися з типом у ШЛЯХУ: інакше відгук
+                    // ляже в чужу теку й у консолі його не знайде ніхто.
+                    && request.resource.data.type == type
+                    && (!('text' in request.resource.data)
+                        || request.resource.data.text.size() <= 4000)
+                    && (!('actualResult' in request.resource.data)
+                        || request.resource.data.actualResult.size() <= 4000)
+                    && (!('expectedResult' in request.resource.data)
+                        || request.resource.data.expectedResult.size() <= 4000);
       allow read, update, delete: if false;
     }
 
@@ -185,8 +349,27 @@ service cloud.firestore {
      */
     match /general/{docId} {
       allow read: if true;
+      /*
+       * Лічильники лише ЗРОСТАЮТЬ, і це не педантизм.
+       *
+       * Перелік ключів стояв і доти, тож довільне поле дописати не можна було. Але
+       * значення не перевірялося ніяк: будь-хто авторизований обнуляв спільні
+       * лічильники або ставив `lastRoomCreatedAt` у майбутнє — а від цієї позначки
+       * лобі вирішує, чи є новіші кімнати.
+       */
       allow write: if signedIn()
-                   && request.resource.data.keys().hasOnly(['lastRoomCreatedAt', 'totalRooms', 'totalGames']);
+                   && request.resource.data.keys().hasOnly(['lastRoomCreatedAt', 'totalRooms', 'totalGames'])
+                   // `resource == null` — це СТВОРЕННЯ. Без цієї перевірки звернення
+                   // до `resource.data` на першому в житті записі кидає, і правило
+                   // відмовляє: документ `general/stats` неможливо було б завести.
+                   && (resource == null || (
+                        (!('lastRoomCreatedAt' in resource.data)
+                          || request.resource.data.lastRoomCreatedAt >= resource.data.lastRoomCreatedAt)
+                        && (!('totalRooms' in resource.data)
+                          || request.resource.data.totalRooms >= resource.data.totalRooms)
+                        && (!('totalGames' in resource.data)
+                          || request.resource.data.totalGames >= resource.data.totalGames)
+                      ));
     }
 
     /*

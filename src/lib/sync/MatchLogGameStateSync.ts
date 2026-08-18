@@ -13,7 +13,7 @@ import { logService } from '$lib/services/logService.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { FirestoreMatchLog } from './FirestoreMatchLog';
 import { replayMatch, initialState } from './matchReplay';
-import type { MatchLog, MatchMove, MatchSetup, MatchSnapshot } from './matchLog';
+import { segmentOf, type MatchLog, type MatchMove, type MatchSetup, type MatchSnapshot } from './matchLog';
 import type {
 	IGameStateSync,
 	SyncableGameState,
@@ -97,6 +97,11 @@ export class MatchLogGameStateSync implements IGameStateSync {
 		return this.#snapshot.setup !== null;
 	}
 
+	/** Номер поточного відрізка. Входить у ключ кожного ходу. */
+	get #segment(): number {
+		return segmentOf(this.#snapshot.setup);
+	}
+
 	async initialize(sessionId?: string): Promise<void> {
 		if (!sessionId) throw new Error('MatchLogGameStateSync: потрібен roomId');
 		this.#roomId = sessionId;
@@ -126,6 +131,14 @@ export class MatchLogGameStateSync implements IGameStateSync {
 		const settings = gameSettingsState.state;
 		const setup: MatchSetup = {
 			seed: options.seed ?? Math.floor(Math.random() * 2 ** 31),
+			/*
+			 * НАСТУПНИЙ відрізок, а не стертий журнал.
+			 *
+			 * Ходи попередніх відрізків лишаються в базі назавжди — саме тому їх не
+			 * треба ні читати, ні видаляти, — а перепрогін бере лише ті, чий сегмент
+			 * збігається з цим числом (CLOUD-DATABASE-v8 § 8.7).
+			 */
+			segment: this.#segment + 1,
 			boardSize,
 			/*
 			 * Рахунок обнуляється тут, а не в перепрогоні. Різниця важлива: свіжа
@@ -181,6 +194,7 @@ export class MatchLogGameStateSync implements IGameStateSync {
 	async appendMove(direction: MoveDirectionType, distance: number): Promise<boolean> {
 		if (!this.#log) return false;
 		const move: MatchMove = {
+			segment: this.#segment,
 			seq: this.nextSeq,
 			by: this.#myPlayerId,
 			direction,
@@ -315,8 +329,10 @@ export class MatchLogGameStateSync implements IGameStateSync {
 					if (data.vote) votes[entry.id] = data.vote;
 					if (data.finishRequested) finishRequests[entry.id] = true;
 					if (data.claim) claim = data.claim;
-					// Кінець партії оголошує господар — документ `__match`.
-					if (entry.id === '__match' && data.over) over = data.over;
+					// Кінець партії лежить у документі того, ХТО ЙОГО ОГОЛОСИВ, тож
+					// службового `__match` більше немає — саме він і робив цей запис
+					// неможливим (див. `#writeOver`).
+					if (data.over) over = data.over;
 				});
 
 				this.#side = { votes, finishRequests, claim, over };
@@ -343,12 +359,25 @@ export class MatchLogGameStateSync implements IGameStateSync {
 		);
 	}
 
-	/** Кінець партії — окремий документ, який пише лише той, хто його оголосив. */
+	/**
+	 * Кінець партії — у ВЛАСНОМУ документі того, хто його оголосив.
+	 *
+	 * Доти він писався в `votes/__match`, а правило цієї колекції звіряє
+	 * ідентифікатор документа з `auth.uid`: `'__match'` не дорівнює жодному uid,
+	 * тож запис відкидався ЗАВЖДИ. Кінець партії не доїжджав до суперника ніколи,
+	 * а виклик іде через `void patchState(...)`, тож відмова гинула без сліду — ні
+	 * в консолі, ні в журналі. Колекція мала випадок у гейті, правило написане
+	 * правильно; не збігався лише ІДЕНТИФІКАТОР документа, який код підставляв в
+	 * обхід власної ж моделі власності (CLOUD-DATABASE-v8 § 3.5).
+	 *
+	 * Тепер власник у ключі, як і в усього іншого тут, і правило лишається одним
+	 * рядком.
+	 */
 	async #writeOver(over: GameOverPayload | null | undefined): Promise<void> {
 		if (!this.#roomId) return;
 		const db = getFirestoreDb();
 		await setDoc(
-			doc(db, 'rooms', this.#roomId, 'votes', '__match'),
+			doc(db, 'rooms', this.#roomId, 'votes', this.#myPlayerId),
 			over ? { over, at: serverTimestamp() } : { over: deleteField() },
 			{ merge: true }
 		);
@@ -367,7 +396,7 @@ export class MatchLogGameStateSync implements IGameStateSync {
 	async #clearSide(): Promise<void> {
 		if (!this.#roomId) return;
 		const db = getFirestoreDb();
-		const ids = new Set([...Object.keys(this.#side.votes), '__match', this.#myPlayerId]);
+		const ids = new Set([...Object.keys(this.#side.votes), this.#myPlayerId]);
 		await Promise.all(
 			[...ids].map((id) =>
 				setDoc(

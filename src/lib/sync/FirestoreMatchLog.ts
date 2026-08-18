@@ -1,16 +1,14 @@
-import {
-	collection,
-	doc,
-	onSnapshot,
-	serverTimestamp,
-	setDoc,
-	getDocs,
-	writeBatch,
-	type Unsubscribe
-} from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp, setDoc, type Unsubscribe } from 'firebase/firestore';
 import { getFirestoreDb } from '$lib/services/firebaseService';
 import { logService } from '$lib/services/logService.svelte';
-import { moveKey, type MatchLog, type MatchMove, type MatchSetup, type MatchSnapshot } from './matchLog';
+import {
+	moveKey,
+	segmentOf,
+	type MatchLog,
+	type MatchMove,
+	type MatchSetup,
+	type MatchSnapshot
+} from './matchLog';
 
 /**
  * Журнал партії у Firestore.
@@ -29,7 +27,7 @@ import { moveKey, type MatchLog, type MatchMove, type MatchSetup, type MatchSnap
 export class FirestoreMatchLog implements MatchLog {
 	#roomId: string;
 	#setup: MatchSetup | null = null;
-	#moves = new Map<number, MatchMove>();
+	#moves = new Map<string, MatchMove>();
 	#listeners = new Set<(snapshot: MatchSnapshot) => void>();
 	#unsubscribeRoom: Unsubscribe | null = null;
 	#unsubscribeMoves: Unsubscribe | null = null;
@@ -53,7 +51,7 @@ export class FirestoreMatchLog implements MatchLog {
 
 	async append(move: MatchMove): Promise<boolean> {
 		const db = getFirestoreDb();
-		const ref = doc(db, 'rooms', this.#roomId, 'moves', moveKey(move.seq));
+		const ref = doc(db, 'rooms', this.#roomId, 'moves', moveKey(move.segment, move.seq));
 		try {
 			/*
 			 * `setDoc` без merge на документ, який правило дозволяє лише СТВОРИТИ.
@@ -80,26 +78,33 @@ export class FirestoreMatchLog implements MatchLog {
 		}
 	}
 
+	/**
+	 * Почати новий відрізок — ОДНИМ записом одного поля.
+	 *
+	 * Доти тут стояло читання всього журналу плюс батч видалень, і це давало три
+	 * дефекти одразу: платню за кожен хід удруге, межу батча 500 (партія довша за
+	 * 499 ходів не перезапускалася взагалі) і `get()` на кімнату в правилі
+	 * `delete`, по одному зверненню на кожен видалений хід при межі 20 звернень на
+	 * батч — тобто перезапуск після довгої партії впирався у ПРАВИЛА, а не в код.
+	 *
+	 * Причина всіх трьох одна: видалення журналу суперечить самій моделі журналу.
+	 * Тепер відрізок отримує наступний `segment`, старі ходи лишаються назавжди, а
+	 * перепрогін їх не бачить. Атомарність § 8.6 виходить сама — записується одне
+	 * поле, тож проміжку «опис уже новий, а ходи ще старі» не існує в принципі
+	 * (CLOUD-DATABASE-v8 § 8.7).
+	 */
 	async start(setup: MatchSetup): Promise<void> {
 		const db = getFirestoreDb();
 		const roomRef = doc(db, 'rooms', this.#roomId);
-		const movesRef = collection(roomRef, 'moves');
+		const segment = segmentOf(setup);
 
-		/*
-		 * Опис і стирання журналу — ОДНИМ батчем.
-		 *
-		 * Двома записами існувала б мить, у яку опис уже новий, а ходи ще старі:
-		 * усі роздали б нову дошку й програли б на ній чужу партію.
-		 */
-		const stale = await getDocs(movesRef);
-		const batch = writeBatch(db);
-		batch.set(roomRef, { match: { ...setup, startedAt: serverTimestamp() } }, { merge: true });
-		for (const move of stale.docs) batch.delete(move.ref);
-		await batch.commit();
-
-		logService.GAME_MODE(
-			`[FirestoreMatchLog] партію почато: seed ${setup.seed}, стерто ходів: ${stale.size}`
+		await setDoc(
+			roomRef,
+			{ match: { ...setup, segment, startedAt: serverTimestamp() } },
+			{ merge: true }
 		);
+
+		logService.GAME_MODE(`[FirestoreMatchLog] відрізок ${segment} почато: seed ${setup.seed}`);
 	}
 
 	cleanup(): void {
@@ -136,10 +141,13 @@ export class FirestoreMatchLog implements MatchLog {
 				 * Читаємо ЗМІНИ, а не весь набір: `docChanges()` віддає лише те, що
 				 * приїхало. Перечитувати весь журнал на кожен хід означало б платити за
 				 * нього квадратично від довжини партії.
+					 *
+					 * Ключ мапи — ІДЕНТИФІКАТОР документа (`{segment}-{seq}`), а не число:
+					 * `Number('001-000002')` дало б `NaN`, і всі ходи склалися б в один ключ.
 				 */
 				for (const change of snapshot.docChanges()) {
-					if (change.type === 'removed') this.#moves.delete(Number(change.doc.id));
-					else this.#moves.set(Number(change.doc.id), change.doc.data() as MatchMove);
+					if (change.type === 'removed') this.#moves.delete(change.doc.id);
+					else this.#moves.set(change.doc.id, change.doc.data() as MatchMove);
 				}
 				this.#gotMoves = true;
 				this.#emit();
@@ -154,7 +162,13 @@ export class FirestoreMatchLog implements MatchLog {
 			// Порядок ЗАДАЄМО самі: покладатися на порядок, у якому приїхали
 			// документи, означало б грати ту саму партію в різній послідовності на
 			// різних пристроях.
-			moves: [...this.#moves.values()].sort((a, b) => a.seq - b.seq)
+			moves: [...this.#moves.values()]
+				// Лише ПОТОЧНИЙ відрізок. Ходи попередніх лежать у журналі назавжди —
+				// саме тому їх не треба видаляти, — але до стану цієї партії не належать.
+				// Кімнати старішої збірки ходів без `segment` не мають, і `segmentOf`
+				// трактує це як нуль.
+				.filter((move) => (move.segment ?? 0) === segmentOf(this.#setup))
+				.sort((a, b) => a.seq - b.seq)
 		};
 	}
 

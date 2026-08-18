@@ -103,17 +103,28 @@ async function dbRead(path, token) {
 const host = await signIn('господар');
 const guest = await signIn('гість');
 const ROOM = 'room-probe';
+/** Кімната для випадків про звуження `update` — своя, щоб не залежати від порядку. */
+const ROOM_FIELDS = 'room-fields';
 const SERVER_TIME = { '.sv': 'timestamp' };
 
-const room = () => ({
+const room = (extra = {}) => ({
 	name: 'Проба',
 	hostId: host.uid,
 	status: 'waiting',
 	isPrivate: false,
-	players: { [host.uid]: { id: host.uid, name: 'Господар' } }
+	maxPlayers: 8,
+	lastActivity: 1,
+	players: { [host.uid]: { id: host.uid, name: 'Господар' } },
+	...extra
 });
 
-const move = (by, seq) => ({ seq, by, direction: 'up', distance: 1 });
+/** Склад із двома учасниками — потрібен випадкам про звуження `update`. */
+const bothPlayers = {
+	[host.uid]: { id: host.uid, name: 'Господар' },
+	[guest.uid]: { id: guest.uid, name: 'Гість' }
+};
+
+const move = (by, seq, segment = 0) => ({ segment, seq, by, direction: 'up', distance: 1 });
 
 /**
  * Порядок має значення: пізніші випадки спираються на стан, створений раніше.
@@ -135,12 +146,43 @@ const CASES = [
 	{
 		name: 'господар править кімнату (склад, налаштування)',
 		allowed: true,
-		run: () => fsUpdate(`rooms/${ROOM}`, { ...room(), status: 'playing' }, host.token)
+		run: () => fsUpdate(`rooms/${ROOM}`, room({ players: bothPlayers, status: 'playing' }), host.token)
+	},
+	{
+		/*
+		 * ВХІД ГОСТЯ — випадок, якого тут не було, і саме тому він був зламаний.
+		 *
+		 * Той, хто заходить, ще НЕ у складі, тож правило, звужене до складу
+		 * (`memberOf(resource)` дивиться на СТАРИЙ документ), забороняло не дірку,
+		 * а функцію: приєднатися до кімнати не міг ніхто, крім господаря
+		 * (CLOUD-DATABASE-v8 § 4.7).
+		 */
+		name: 'ГІСТЬ заходить у кімнату — додає рівно свій рядок складу',
+		allowed: true,
+		run: () => fsUpdate(`rooms/${ROOM}`, room({ players: bothPlayers }), guest.token)
 	},
 	{
 		name: 'господар дописує СВІЙ хід у журнал',
 		allowed: true,
-		run: () => fsCreate(`rooms/${ROOM}/moves`, '000001', move(host.uid, 1), host.token)
+		run: () => fsCreate(`rooms/${ROOM}/moves`, '000-000001', move(host.uid, 1), host.token)
+	},
+	{
+		/*
+		 * КІНЕЦЬ ПАРТІЇ. Доти застосунок писав його в `rooms/{id}/votes/__match`,
+		 * а правило цієї колекції звіряє ідентифікатор документа з `auth.uid`:
+		 * `'__match'` не дорівнює жодному uid, тож запис відкидався ЗАВЖДИ —
+		 * кінець партії не доїжджав до суперника ніколи. Колекція випадок мала,
+		 * не збігався лише ідентифікатор документа (CLOUD-DATABASE-v8 § 3.5).
+		 */
+		name: 'той, хто оголосив кінець партії, пише його у СВІЙ документ',
+		allowed: true,
+		run: () =>
+			fsCreate(
+				`rooms/${ROOM}/votes`,
+				guest.uid,
+				{ over: { reason: 'modal.gameOverReasonOut' } },
+				guest.token
+			)
 	},
 	{
 		name: 'гравець пише СВІЙ голос',
@@ -148,9 +190,44 @@ const CASES = [
 		run: () => fsCreate(`rooms/${ROOM}/votes`, host.uid, { vote: 'continue' }, host.token)
 	},
 	{
-		name: 'гравець пише СВОЮ присутність (Firestore)',
+		// Позначка «я тут» тепер ОДНА — поле `players.{uid}.lastSeen` у документі
+		// кімнати. Швидкий heartbeat у дзеркало присутності прибраний разом із самим
+		// дзеркалом (CLOUD-DATABASE-v8 § 5.2).
+		name: 'учасник оновлює СВОЮ позначку активності в кімнаті',
 		allowed: true,
-		run: () => fsCreate(`rooms/${ROOM}/presence`, host.uid, { isDisconnected: false }, host.token)
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM}`,
+				room({ players: { ...bothPlayers, [guest.uid]: { id: guest.uid, name: 'Гість', lastSeen: 2 } } }),
+				guest.token
+			)
+	},
+	{
+		name: 'господар дозволяє гостям правити налаштування',
+		allowed: true,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM}`,
+				room({ players: bothPlayers, status: 'playing', allowGuestSettings: true }),
+				host.token
+			)
+	},
+	{
+		// Прапорець `allowGuestSettings` існував і доти, але тримався виключно на
+		// UI: той самий SDK із консолі писав `settings` попри нього.
+		name: 'гість править налаштування, коли господар це ДОЗВОЛИВ',
+		allowed: true,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM}`,
+				room({
+					players: bothPlayers,
+					status: 'playing',
+					allowGuestSettings: true,
+					settings: { boardSize: 3 }
+				}),
+				guest.token
+			)
 	},
 	{
 		name: 'гравець пише СВОЮ присутність (RTDB)',
@@ -160,7 +237,7 @@ const CASES = [
 	{
 		name: 'відгук від неавторизованого відвідувача',
 		allowed: true,
-		run: () => fsCreate('feedback/bug/entries', 'probe', { text: 'проба' }, null)
+		run: () => fsCreate('feedback/bug/entries', 'probe', { type: 'bug', text: 'проба' }, null)
 	},
 	{
 		name: 'лічильники general/* — застосунок їх пише',
@@ -192,7 +269,7 @@ const CASES = [
 	{
 		name: 'ПЕРЕЗАПИС уже зайнятого номера ходу',
 		allowed: false,
-		run: () => fsUpdate(`rooms/${ROOM}/moves/000001`, move(host.uid, 1), host.token)
+		run: () => fsUpdate(`rooms/${ROOM}/moves/000-000001`, move(host.uid, 1), host.token)
 	},
 	{
 		name: 'хід, підписаний ЧУЖИМ uid',
@@ -210,9 +287,149 @@ const CASES = [
 		run: () => fsCreate(`rooms/${ROOM}/votes`, host.uid, { vote: 'finish' }, guest.token)
 	},
 	{
-		name: 'чужа присутність (Firestore)',
+		// Підколекції присутності більше не існує: дзеркало прибране, і разом із ним
+		// правило. Тепер її ловить catch-all — тобто випадкове повернення дзеркала в
+		// код одразу впаде, а не запрацює тихо (CLOUD-DATABASE-v8 § 5.2).
+		name: 'присутність у Firestore — підколекції більше немає',
 		allowed: false,
-		run: () => fsCreate(`rooms/${ROOM}/presence`, host.uid, { isDisconnected: true }, guest.token)
+		run: () => fsCreate(`rooms/${ROOM}/presence`, guest.uid, { isDisconnected: true }, guest.token)
+	},
+	{
+		/*
+		 * ОКРЕМА КІМНАТА для випадків нижче, і це не охайність.
+		 *
+		 * Негативні випадки спираються на стан, який створили попередні, — і якщо
+		 * ЗЛОМАНЕ правило дає раніше стоячому випадку пройти, він змінює стан так,
+		 * що наступні перестають перевіряти те, що збиралися. Зворотний дослід це й
+		 * показав: із поверненим `allow update: if hostOf || memberOf` упав ОДИН
+		 * випадок, а всі шість про підвищення прав «пройшли» — бо той, що впав,
+		 * устиг викинути гостя зі складу, і далі він уже не був учасником.
+		 *
+		 * Ця кімната створюється господарем одразу з ОБОМА учасниками, тож випадки
+		 * нижче не залежать ні від входу гостя, ні від порядку.
+		 */
+		name: 'господар створює кімнату з обома учасниками (для випадків нижче)',
+		allowed: true,
+		run: () => fsCreate('rooms', ROOM_FIELDS, room({ players: bothPlayers }), host.token)
+	},
+	{
+		/*
+		 * ГОЛОВНИЙ НЕГАТИВНИЙ ВИПАДОК ЦЬОГО ФАЙЛУ.
+		 *
+		 * Доти `allow update: if hostOf(resource) || memberOf(resource)` дозволяв
+		 * учасникові кімнати поставити `hostId` собі. Позитивні випадки на такому
+		 * правилі проходять УСІ до одного, тож без цього рядка гейт був зелений
+		 * (CLOUD-DATABASE-v8 § 4.7).
+		 */
+		name: 'учасник підвищує СЕБЕ до господаря',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({ players: bothPlayers, hostId: guest.uid }),
+				guest.token
+			)
+	},
+	{
+		name: 'учасник переписує ЧУЖИЙ рядок складу',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({
+					players: { ...bothPlayers, [host.uid]: { id: host.uid, name: 'Підміна' } }
+				}),
+				guest.token
+			)
+	},
+	{
+		name: 'учасник викидає решту складу',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({ players: { [guest.uid]: { id: guest.uid, name: 'Гість' } } }),
+				guest.token
+			)
+	},
+	{
+		name: 'учасник перевертає публічність кімнати',
+		allowed: false,
+		run: () =>
+			fsUpdate(`rooms/${ROOM_FIELDS}`, room({ players: bothPlayers, isPrivate: true }), guest.token)
+	},
+	{
+		// Перекотити зерно посеред партії = перероздати дошку всім.
+		name: 'учасник підмінює опис партії (seed)',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({ players: bothPlayers, match: { seed: 999, segment: 0, boardSize: 2 } }),
+				guest.token
+			)
+	},
+	{
+		name: 'учасник міняє налаштування, коли господар НЕ дозволив',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({ players: bothPlayers, settings: { boardSize: 9 } }),
+				guest.token
+			)
+	},
+	{
+		name: 'стан кімнати поза переліком',
+		allowed: false,
+		run: () =>
+			fsUpdate(`rooms/${ROOM_FIELDS}`, room({ players: bothPlayers, status: 'winner' }), guest.token)
+	},
+	{
+		// Ключ, який не є `uid`, у колекції, чиє правило звіряє `uid`. Саме такий
+		// документ (`__match`) і робив кінець партії недоставленим.
+		name: 'службовий документ __match у колекції голосів',
+		allowed: false,
+		run: () => fsCreate(`rooms/${ROOM}/votes`, '__match', { over: { any: 1 } }, host.token)
+	},
+	{
+		name: 'хід із ЗАЙВИМ полем',
+		allowed: false,
+		run: () =>
+			fsCreate(
+				`rooms/${ROOM}/moves`,
+				'000-000002',
+				{ ...move(host.uid, 2), score: 999 },
+				host.token
+			)
+	},
+	{
+		// Журнал append-only: подія, яку можна стерти, не є подією. Разом із
+		// видаленням зникли межа батча 500 і `get()` у правилі (§ 8.7, § 4.8).
+		name: 'ГОСПОДАР стирає хід із журналу',
+		allowed: false,
+		run: () => fsDelete(`rooms/${ROOM}/moves/000-000001`, host.token)
+	},
+	{
+		name: 'спільний лічильник назад',
+		allowed: false,
+		run: () => fsUpdate('general/stats', { lastRoomCreatedAt: 0 }, host.token)
+	},
+	{
+		name: 'відгук із типом, що не збігається зі шляхом',
+		allowed: false,
+		run: () => fsCreate('feedback/bug/entries', 'wrong-type', { type: 'other', text: 'х' }, null)
+	},
+	{
+		name: 'відгук у неіснуючий тип',
+		allowed: false,
+		run: () => fsCreate('feedback/pwned/entries', 'probe', { type: 'pwned', text: 'х' }, null)
+	},
+	{
+		name: 'відгук із текстом на межі мегабайта',
+		allowed: false,
+		run: () =>
+			fsCreate('feedback/bug/entries', 'too-long', { type: 'bug', text: 'я'.repeat(4001) }, null)
 	},
 	{
 		name: 'чужа присутність (RTDB)',

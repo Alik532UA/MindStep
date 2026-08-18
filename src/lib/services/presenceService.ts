@@ -1,4 +1,3 @@
-import { roomFirestoreService } from './room/roomFirestoreService';
 import {
     ref,
     onValue,
@@ -10,6 +9,32 @@ import {
 import { getRealtimeDb } from './firebaseService';
 import { logService } from "./logService.svelte";
 
+/**
+ * Присутність гравця — і ЄДИНЕ її джерело.
+ *
+ * **Доти той самий факт лежав у трьох місцях**: `/status/{room}/{uid}` у RTDB,
+ * `rooms/{id}/presence/{uid}` у Firestore і поле `players.{uid}.isDisconnected`
+ * у документі кімнати. Три сховища, два шляхи запису, і розходяться вони рівно
+ * тоді, коли присутність потрібна (CLOUD-DATABASE-v8 § 5.2).
+ *
+ * Дзеркало у Firestore було найгіршим із трьох, і не через кількість: його писав
+ * САМ КЛІЄНТ, коли помічав, що звʼязок зник. Тобто в єдиному випадку, для якого
+ * присутність і існує, — вкладку закрили, ноутбук згорнули, тунель метро зʼїв
+ * зʼєднання — писати його вже нікому, і документ назавжди лишався «на звʼязку».
+ * `onDisconnect` у RTDB тим часом спрацьовував правильно, тож два сховища
+ * стверджували протилежне. Дзеркала більше немає.
+ *
+ * **Що лишилося і чому це не те саме дублювання.** Поле
+ * `players.{uid}.isDisconnected` у документі кімнати лишається — воно ПОХІДНЕ, і
+ * шлях запису до нього один: монітор господаря (`OnlinePresenceManager`), який
+ * виводить його з `/status` і з позначки `lastSeen`. Копія потрібна тому, що
+ * лобі перелічує кімнати запитом до Firestore і не може підписатися на RTDB для
+ * кожної з них; § 5.2 такий випадок дозволяє — за умови, що копія названа
+ * похідною й має єдиний шлях запису. Обидві умови тепер виконані.
+ *
+ * **Чому взагалі RTDB.** Через `onDisconnect`: обіцянку виконує СЕРВЕР, коли
+ * клієнт зник. У Firestore такого механізму немає (§ 5.1).
+ */
 class PresenceService {
     private get rtdb(): Database {
         return getRealtimeDb();
@@ -17,7 +42,6 @@ class PresenceService {
 
     /**
      * Починає відстеження присутності гравця в кімнаті.
-     * Автоматично встановлює статус 'offline' при розриві з'єднання в RTDB та Firestore.
      *
      * **Повертає відписку — і доти не повертав.** Слухач `.info/connected`
      * реєструвався й не знімався ніколи: кожен вхід у кімнату додавав ще один, а
@@ -34,69 +58,54 @@ class PresenceService {
 
         return onValue(connectedRef, (snapshot) => {
             if (snapshot.val() === false) {
-                // З'єднання з RTDB було втрачено - встановлюємо флаг відключення у Firestore
-                logService.presence(`[PresenceService] RTDB connection lost for ${playerId}. Setting disconnected in Firestore.`);
-                roomFirestoreService.updatePresenceDoc(roomId, playerId, { isDisconnected: true });
+                /*
+                 * Звʼязок зник — і писати про це НІКУДИ не треба.
+                 *
+                 * Доти тут ішов запис у дзеркало Firestore, і саме він створював
+                 * ілюзію надійності: у випадку «вкладку закрили» цей рядок не
+                 * виконується взагалі. Прибирає запис `onDisconnect`, і робить це
+                 * сервер.
+                 */
+                logService.presence(`[PresenceService] RTDB connection lost for ${playerId}`);
                 return;
             }
 
             logService.presence(`[PresenceService] RTDB connected for ${playerId}. Setting up onDisconnect and online status.`);
 
-            // Якщо ми підключилися:
             const rtdbOnDisconnect = onDisconnect(userStatusDatabaseRef);
 
-            // 1. Реєструємо дію "на випадок відключення" (onDisconnect) для RTDB
-            // Ця операція буде виконана Firebase сервером коли клієнт відключиться
+            /*
+             * Порядок саме такий: спершу домовляємось, ЩО зробити при зникненні, і
+             * лише тоді зʼявляємось. У зворотному порядку існує вікно, у якому
+             * запис уже є, а домовленості про його прибирання ще немає — і
+             * зникнення клієнта в цю мить лишає привида назавжди (§ 9.1).
+             */
             rtdbOnDisconnect.set({
                 state: 'offline',
                 last_changed: serverTimestamp()
             }).then(() => {
-                // onDisconnect зареєстровано успішно
-                // Тепер встановлюємо поточний статус "online"
-
-                // RTDB online
                 set(userStatusDatabaseRef, {
                     state: 'online',
                     last_changed: serverTimestamp()
                 });
-
-                // Firestore online (одразу, бо ми зараз online)
-                roomFirestoreService.updatePresenceDoc(roomId, playerId, {
-                    isDisconnected: false,
-                    lastSeen: Date.now()
-                });
-
                 logService.presence(`[PresenceService] Presence tracking active for ${playerId}`);
             });
         });
     }
 
-    /**
-     * Встановлює статус офлайн вручну (наприклад, при виході з кімнати).
-     */
+    /** Встановити офлайн вручну — при явному виході з кімнати. */
     async setOffline(roomId: string, playerId: string) {
         const userStatusDatabaseRef = ref(this.rtdb, `/status/${roomId}/${playerId}`);
-        // Оновлюємо RTDB
         await set(userStatusDatabaseRef, {
             state: 'offline',
             last_changed: serverTimestamp()
         });
-        // Оновлюємо Firestore
-        await roomFirestoreService.updatePresenceDoc(roomId, playerId, { isDisconnected: true });
     }
 
-    /**
-     * Підписується на зміни статусів всіх гравців у кімнаті.
-     */
+    /** Підписка на статуси всіх гравців кімнати. Повертає відписку. */
     subscribeToRoomPresence(roomId: string, callback: (statuses: Record<string, { state: string, last_changed: number }>) => void): () => void {
         const roomStatusRef = ref(this.rtdb, `/status/${roomId}`);
-
-        const unsubscribe = onValue(roomStatusRef, (snapshot) => {
-            const val = snapshot.val();
-            callback(val || {});
-        });
-
-        return unsubscribe;
+        return onValue(roomStatusRef, (snapshot) => callback(snapshot.val() || {}));
     }
 }
 

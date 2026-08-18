@@ -92,10 +92,6 @@ describe('хмарна база', () => {
 			why: 'таблиця рекордів: вона й існує, щоб її бачили всі; перелік обмежений limit'
 		},
 		{
-			rule: 'allow create: if true;',
-			why: 'відгук: форму відкриває будь-хто, зокрема неавторизований відвідувач'
-		},
-		{
 			rule: 'allow read: if true;',
 			why: 'лічильники general/*: публічна статистика, запис обмежений переліком ключів'
 		}
@@ -130,11 +126,15 @@ describe('хмарна база', () => {
 	it('журнал ходів можна лише СТВОРИТИ, і лише від себе (§ 4.2)', () => {
 		// Без цього правила журнал перестає бути правдою: хід перезаписується, і
 		// його можна підписати чужим імʼям.
-		const moves = rulesCode.match(/match\s+\/moves\/\{seq\}\s*\{([\s\S]*?)\n\s{6}\}/);
-		expect(moves, 'правила для moves/{seq} не знайдено').not.toBeNull();
+		const moves = rulesCode.match(/match\s+\/moves\/\{\w+\}\s*\{([\s\S]*?)\n\s{6}\}/);
+		expect(moves, 'правила для moves/{moveId} не знайдено').not.toBeNull();
 		expect(moves?.[1]).toMatch(/allow\s+create:/);
-		expect(moves?.[1]).toMatch(/allow\s+update:\s*if\s+false/);
+		// Ні переписати, ні стерти — НІКОМУ. Доти видалення мав господар, і разом
+		// із ним у правилі жив `get()` на кімнату (§ 4.8, § 8.7).
+		expect(moves?.[1]).toMatch(/allow\s+update,\s*delete:\s*if\s+false/);
 		expect(moves?.[1]).toMatch(/request\.resource\.data\.by\s*==\s*request\.auth\.uid/);
+		// `hasOnly` поруч із `hasAll`: без нього хід приймав довільні зайві поля.
+		expect(moves?.[1]).toMatch(/keys\(\)\.hasOnly\(/);
 	});
 
 	/**
@@ -199,8 +199,160 @@ describe('хмарна база', () => {
 		// Мережа, зрощена з реактивністю, не підміняється в тесті й не виноситься.
 		const bad = sources
 			.filter((file) => file.endsWith('.svelte.ts'))
-			.filter((file) => /from\s+['"]firebase\//.test(readFileSync(file, 'utf8')));
+			// `import type` зникає при компіляції — це не мережа в модулі, і ловити
+			// його означає звинувачувати правильний код.
+			.filter((file) =>
+				/^\s*import\s+(?!type\b)[^;]*from\s+['"]firebase\//m.test(readFileSync(file, 'utf8'))
+			);
 		expect(bad, `Firebase у реактивному модулі:\n${bad.join('\n')}`).toEqual([]);
+	});
+
+	it('файл індексів прив’язаний і існує (§ 2.4)', () => {
+		/*
+		 * Індекси — той самий клас дефекту, що правила лише в консолі (§ 2.1), і
+		 * навіть гірший: складений запит без індексу дає ГОТОВЕ посилання в консоль,
+		 * тобто дефект зникає за десять секунд і назавжди лишається поза
+		 * репозиторієм. Проєкт, розгорнутий у новому Firebase, ламається на запиті,
+		 * який «працює вже пів року».
+		 */
+		const config = JSON.parse(readFileSync('firebase.json', 'utf8'));
+		const indexes = config.firestore?.indexes;
+		expect(indexes, 'firebase.json не вказує firestore.indexes').toBeTruthy();
+		expect(existsSync(indexes), `${indexes} немає`).toBe(true);
+		expect(JSON.parse(readFileSync(indexes, 'utf8')).indexes).toBeInstanceOf(Array);
+	});
+
+	it('складений запит має індекс у файлі (§ 7.4)', () => {
+		// Емулятор індексів НЕ перевіряє — він виконує будь-який запит. Тобто гейт
+		// правил зелений на запиті, який у продакшні відмовить, і жоден локальний
+		// прогін цього не покаже. Ця перевірка — єдина, що його бачить.
+		const config = JSON.parse(readFileSync('firebase.json', 'utf8'));
+		const declared: Array<{ fields: Array<{ fieldPath: string }> }> =
+			JSON.parse(readFileSync(config.firestore.indexes, 'utf8')).indexes ?? [];
+		const bad: string[] = [];
+		for (const file of sources) {
+			const text = readFileSync(file, 'utf8');
+			for (const match of text.matchAll(/query\s*\(([\s\S]{0,500}?)\)\s*[;,)]/g)) {
+				const wheres = [...match[1].matchAll(/where\s*\(\s*['"]([\w.]+)['"]/g)].map((w) => w[1]);
+				const orders = [...match[1].matchAll(/orderBy\s*\(\s*['"]([\w.]+)['"]/g)].map((o) => o[1]);
+				// Індекс потрібен лише коли сортування йде НЕ по полю фільтра.
+				for (const field of orders.filter((o) => wheres.length > 0 && !wheres.includes(o))) {
+					const has = declared.some(
+						(index) =>
+							index.fields.some((f) => f.fieldPath === field) &&
+							wheres.every((w) => index.fields.some((f) => f.fieldPath === w))
+					);
+					if (!has) bad.push(`${file}: where(${wheres.join(',')}) + orderBy(${field})`);
+				}
+			}
+		}
+		expect(bad, `складений запит без індексу:\n${bad.join('\n')}`).toEqual([]);
+	});
+
+	it('кожен шлях із коду має випадок у гейті (§ 3.5)', () => {
+		/*
+		 * Напрямок зворотний до § 3.3, і він ловить інший клас дефекту: шлях, у який
+		 * пише код, а правил для нього немає, забирає catch-all — тобто функція тихо
+		 * не працює. Саме так тут пролежав `votes/__match`: колекція випадок мала,
+		 * не збігався лише ІДЕНТИФІКАТОР документа.
+		 */
+		const gate = readFileSync('scripts/check-rules.mjs', 'utf8');
+		const paths = new Set<string>();
+		for (const file of sources) {
+			const text = readFileSync(file, 'utf8');
+			for (const m of text.matchAll(
+				/\b(?:collection|doc)\s*\(\s*[^,)]+,\s*['"]([a-z_][\w-]*)['"]/gi
+			)) {
+				paths.add(m[1]);
+			}
+			for (const m of text.matchAll(/\bref\s*\(\s*[^,)]+,\s*[`'"]\/?([a-z_][\w-]*)/gi)) {
+				paths.add(m[1]);
+			}
+		}
+		expect(paths.size, 'шляхів до бази не знайдено — перевірка мертва').toBeGreaterThan(0);
+		const uncovered = [...paths].filter((p) => !gate.includes(p));
+		expect(uncovered, `шлях без випадку в гейті:\n${uncovered.join('\n')}`).toEqual([]);
+	});
+
+	it('allow update звужений до полів, а не лише до людини (§ 4.7)', () => {
+		/*
+		 * Доти `allow update: if hostOf(resource) || memberOf(resource)` дозволяв
+		 * будь-якому учасникові поставити `hostId` собі, викинути решту складу,
+		 * перевернути `isPrivate` і перекотити `match.seed` посеред партії. Правило
+		 * назвало ЛЮДИНУ й не назвало ПОЛЯ — а `resource` у ньому це документ ДО
+		 * запису, тож про вміст запису воно не сказало нічого.
+		 */
+		const updates = [
+			...rulesCode.matchAll(/allow\s+[a-z, ]*\bupdate\b[a-z, ]*:\s*if([\s\S]*?);/g)
+		].map((m) => m[1]);
+		expect(updates.length, 'правил update не знайдено — перевірка мертва').toBeGreaterThan(0);
+		// `changedOnly` — власна функція цього файлу правил; вона й перелічує поля.
+		const broad = updates.filter((rule) => !/changedOnly|affectedKeys|hasOnly|false/.test(rule));
+		expect(broad, `update без переліку полів:\n${broad.join('\n')}`).toEqual([]);
+
+		// Друга половина: сама функція мусить спиратися на `affectedKeys`, інакше
+		// перевірка вище приймала б будь-що з такою назвою.
+		expect(rulesCode, 'changedOnly не спирається на diff().affectedKeys()').toMatch(
+			/function changedOnly\(keys\)[\s\S]{0,200}?diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(keys\)/
+		);
+		// І третя: ключові поля мусять бути незмінними, інакше перелік нічого не
+		// тримає — `hostId` у ньому стоїть саме тому, що його передає той, хто йде.
+		expect(rulesCode, 'немає перевірки незмінності hostId').toMatch(/function hostKept\(\)/);
+	});
+
+	it('правило не читає інші документи (§ 4.8)', () => {
+		// `get()` у правилі — справжнє читання: воно тарифікується й обмежене
+		// 10 зверненнями на запит, 20 на батч. Правило видалення ходу тягло по
+		// одному на кожен видалений документ, тож перезапуск після довгої партії
+		// впирався у ПРАВИЛА, а не в код.
+		const reads = [...rulesCode.matchAll(/allow[^;]*\b(?:get|exists)\s*\(\s*\//g)].map((m) => m[0]);
+		expect(reads, `get()/exists() у правилі:\n${reads.join('\n')}`).toEqual([]);
+	});
+
+	it('журнал ходів append-only: сегмент замість стирання (§ 8.7)', () => {
+		expect(rulesCode, 'видалення ходу мусить бути заборонене ВСІМ').toMatch(
+			/allow update, delete: if false/
+		);
+		// Стирання журналу в коді теж не має лишитися: воно тягло за собою читання
+		// всього журналу, межу батча 500 і `get()` у правилі.
+		const log = readFileSync('src/lib/sync/FirestoreMatchLog.ts', 'utf8');
+		expect(log, 'журнал усе ще стирається батчем').not.toMatch(/writeBatch|getDocs/);
+		expect(log, 'ключ ходу мусить нести сегмент').toMatch(/moveKey\(move\.segment/);
+	});
+
+	it('ідентифікатор кімнати не монотонний у часі (§ 6.5)', () => {
+		// Монотонний ключ зводить усі записи в ОДИН діапазон — той, що на кінці, —
+		// і розділити його неможливо: наступний запис однаково піде в останній.
+		// Межа близько 500 записів/с, і виглядає це як затримки, а не як помилка.
+		const body = readFileSync('src/lib/services/roomService.ts', 'utf8').match(
+			/private generateTimestampId\(\)[\s\S]*?\n {4}\}/
+		);
+		expect(body, 'generateTimestampId не знайдено').not.toBeNull();
+		expect(body?.[0], 'ключ мусить починатися з випадкового префікса').toMatch(/Math\.random/);
+		expect(body?.[0], 'рік не має стояти першим у ключі').toMatch(/\$\{prefix\}/);
+	});
+
+	it('присутність живе в ОДНОМУ місці (§ 5.2)', () => {
+		/*
+		 * Той самий факт лежав у трьох: `/status` у RTDB, `rooms/{id}/presence` у
+		 * Firestore і поле `players.{uid}.isDisconnected`. Дзеркало у Firestore було
+		 * найгіршим із трьох: його писав САМ КЛІЄНТ, коли помічав обрив, — тобто в
+		 * єдиному випадку, для якого присутність існує, писати вже нікому.
+		 *
+		 * Лишилося поле `players.{uid}` як ПОХІДНА копія для лобі: § 5.2 такий
+		 * випадок дозволяє за умови, що копія названа похідною й має один-єдиний
+		 * шлях запису — монітор господаря.
+		 */
+		const offenders = sources.filter((file) =>
+			/ROOM_SUBCOLLECTIONS\.PRESENCE|['"]presence['"]/.test(readFileSync(file, 'utf8'))
+		);
+		expect(
+			offenders,
+			`дзеркало присутності у Firestore повернулося:\n${offenders.join('\n')}`
+		).toEqual([]);
+		expect(rulesCode, 'правило для підколекції присутності повернулося').not.toMatch(
+			/match \/presence\//
+		);
 	});
 
 	it('SDK не ініціалізується в тілі модуля (§ 10.1)', () => {

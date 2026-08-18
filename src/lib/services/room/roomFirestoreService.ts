@@ -21,7 +21,7 @@ import { withTimeout } from '$lib/utils/asyncUtils';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { RoomSchema } from '$lib/schemas/onlineSchema';
 import { logService } from "$lib/services/logService.svelte";
-import { COLLECTIONS, ROOM_SUBCOLLECTIONS } from '$lib/types/firebaseSchema';
+import { COLLECTIONS } from '$lib/types/firebaseSchema';
 
 const OPERATION_TIMEOUT_MS = 30000;
 
@@ -60,15 +60,23 @@ class RoomFirestoreService {
      * б, що одне зайве поле від новішої збірки вибиває людину з партії. Тому
      * розходження **логується як дефект даних** і не зупиняє гру: у журналі є
      * слід, з якого видно, що саме розійшлося, а гравець продовжує грати.
+     *
+     * **Розібране значення ВИКОРИСТОВУЄТЬСЯ, і доти не використовувалося.** На
+     * успішному розборі повертався не `parsed.data`, а сирий `data` через
+     * `as Room` — тобто схема відпрацьовувала й результат ішов у смітник. Це той
+     * самий стан, що й невикликана схема, лише дорожчий: значення за
+     * замовчуванням, приведення типів і відкидання зайвих полів не діяли ні на
+     * що, а файл читався як перевірений.
      */
     private validateRoom(data: any, id: string): Room | null {
         const parsed = RoomSchema.safeParse({ ...data, id });
-        if (!parsed.success) {
-            logService.error(
-                `[RoomFirestoreService] Кімната ${id} не відповідає схемі`,
-                parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-            );
-        }
+        if (parsed.success) return parsed.data as Room;
+
+        logService.error(
+            `[RoomFirestoreService] Кімната ${id} не відповідає схемі`,
+            parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        );
+        // Сирі дані — лише як запасний шлях: гру не зупиняємо.
         return { ...data, id } as Room;
     }
 
@@ -140,27 +148,6 @@ class RoomFirestoreService {
             return this.validateRoom(roomSnap.data(), roomSnap.id);
         }
         return null;
-    }
-
-    async updatePresenceDoc(roomId: string, playerId: string, data: any): Promise<void> {
-        const presenceRef = doc(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE, playerId);
-        await setDoc(presenceRef, { ...data, updatedAt: Date.now() }, { merge: true });
-    }
-
-    async deletePresenceDoc(roomId: string, playerId: string): Promise<void> {
-        const presenceRef = doc(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE, playerId);
-        await deleteDoc(presenceRef);
-    }
-
-    subscribeToPresence(roomId: string, callback: (presence: Record<string, any>) => void): Unsubscribe {
-        const q = collection(this.db, COLLECTIONS.ROOMS, roomId, ROOM_SUBCOLLECTIONS.PRESENCE);
-        return onSnapshot(q, (snapshot) => {
-            const presenceData: Record<string, any> = {};
-            snapshot.forEach(doc => {
-                presenceData[doc.id] = doc.data();
-            });
-            callback(presenceData);
-        });
     }
 
     async updateRoomDoc(roomId: string, updates: any, useTimeout: boolean = false): Promise<void> {

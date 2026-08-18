@@ -44,20 +44,27 @@ export class RoomPlayerService {
         networkStatsState.recordWrite('RoomPlayer:setWatchingReplay', updates);
     }
 
+    /**
+     * Позначка «я тут» — ОДНА, а не дві.
+     *
+     * Доти їх було дві на різні сховища: швидка писала в дзеркало присутності у
+     * Firestore (`rooms/{id}/presence/{uid}`), повільна — у сам документ кімнати
+     * для лобі. Дзеркало прибрано (див. `presenceService`), тож лишилася та
+     * позначка, від якої справді щось залежить: `players.{uid}.lastSeen` читає й
+     * лобі, і монітор господаря. Один факт — один шлях запису
+     * (CLOUD-DATABASE-v8 § 5.2).
+     */
     async sendHeartbeat(roomId: string, playerId: string): Promise<void> {
-        // Fast Heartbeat -> Presence Subcollection
-        await roomFirestoreService.updatePresenceDoc(roomId, playerId, { lastSeen: Date.now(), isDisconnected: false });
-        networkStatsState.recordWrite('RoomPlayer:FastHeartbeat', { lastSeen: Date.now() });
+        await this.updateLobbyPresence(roomId, playerId);
     }
 
     async updateLobbyPresence(roomId: string, playerId: string): Promise<void> {
-        // Slow Heartbeat -> Main Room Doc (for Lobby visibility)
         const roomRef = doc(this.db, 'rooms', roomId);
         const updates = {
             [`players.${playerId}.lastSeen`]: Date.now()
         };
         await updateDoc(roomRef, updates);
-        networkStatsState.recordWrite('RoomPlayer:LobbyHeartbeat', updates);
+        networkStatsState.recordWrite('RoomPlayer:Heartbeat', updates);
     }
 
     async leaveRoom(roomId: string, playerId: string): Promise<void> {

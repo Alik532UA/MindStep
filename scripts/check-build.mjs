@@ -161,6 +161,46 @@ if (existsSync(sitemapPath)) {
 	}
 }
 
+/*
+ * SDK бази — не в критичному шляху (CLOUD-DATABASE-v8 § 10.2).
+ *
+ * ЧОМУ ПО `build/`, А НЕ ПО КОДУ. Пакет `firebase` статично імпортується в
+ * `services/firebaseService.ts`, і формально це відхилення від § 10.2, який
+ * просить `await import()`. Але сам § 10.2 називає справжню перевірку: «чанк із
+ * SDK не має бути в `modulepreload` початкової сторінки». Vite ділить збірку по
+ * маршрутах, і оскільки жоден із тринадцяти файлів, що торкаються SDK, не
+ * доїжджає до кореневого layout, пакет лягає в окремий чанк онлайн-маршруту.
+ *
+ * Заміряно 2026-08-18: один чанк 738 КБ, у передзавантаженні початкової
+ * сторінки — нуль. Тобто мета правила виконана, а форма — ні; ця перевірка й
+ * робить різницю між «виконана» і «схоже, що виконана». Щойно якийсь сервіс із
+ * SDK потрапить у кореневий шар, гейт впаде — і тоді ліниві імпорти стануть
+ * обовʼязковими, а не косметичними.
+ */
+{
+	const entryPath = join(BUILD, 'index.html');
+	const entryHtml = existsSync(entryPath) ? readFileSync(entryPath, 'utf8') : '';
+	const preloaded = new Set(
+		[...entryHtml.matchAll(/immutable\/(?:chunks|entry|nodes)\/[\w.-]+\.js/g)].map((m) => m[0])
+	);
+	let sdkChunks = 0;
+	for (const rel of preloaded) {
+		const file = join(BUILD, '_app', rel);
+		if (!existsSync(file)) continue;
+		if (readFileSync(file, 'utf8').includes('FirebaseError')) {
+			fail('bundle', `SDK бази в критичному шляху: ${rel}`);
+			sdkChunks++;
+		}
+	}
+	// Канарка: якщо передзавантажених файлів не знайшлося взагалі, перевірка
+	// нічого не доводить — вона просто не мала на що дивитися.
+	if (preloaded.size === 0) {
+		fail('bundle', 'у початковій сторінці немає жодного modulepreload — перевірку SDK нічим виконати');
+	} else if (sdkChunks === 0) {
+		console.log(`check-build: SDK бази поза критичним шляхом (${preloaded.size} передзавантажених файлів)`);
+	}
+}
+
 // Друга канарка, окрема від першої: `.html` у `build/` може бути багато, а
 // перевіреними — нуль, якщо всі потраплять у виняток. Тоді гейт зелений і не
 // доводить нічого (AI-AGENT-PITFALLS-v8 § 1).

@@ -10,7 +10,7 @@ vi.mock('$lib/services/logService.svelte', () => ({
 	logService: new Proxy({}, { get: () => () => {} })
 }));
 
-const { MemoryMatchLog } = await import('./matchLog');
+const { MemoryMatchLog, moveKey } = await import('./matchLog');
 const { replayMatch, initialState, initialCellFromSeed } = await import('./matchReplay');
 const { GameEngine } = await import('$lib/logic/GameEngine');
 
@@ -109,7 +109,7 @@ function legalMove(
 				state.playerState.currentPlayerIndex,
 				'online'
 			);
-			if (probe.success) return { seq, by, direction: direction as never, distance };
+			if (probe.success) return { segment: 0, seq, by, direction: direction as never, distance };
 		}
 	}
 	throw new Error('немає жодного законного ходу — дошка не роздана');
@@ -215,7 +215,7 @@ describe('незаконний хід нікого не розводить', () 
 	it('хід за межі дошки відкидають', () => {
 		const cfg = settings();
 		const description = setup();
-		const far: MatchMove = { seq: 1, by: ME, direction: 'up' as never, distance: 99 };
+		const far: MatchMove = { segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 99 };
 
 		const state = replayMatch(description, [far], cfg);
 
@@ -312,7 +312,7 @@ describe('продовження партії після «немає ходів
 describe('транспорт журналу', () => {
 	it('зайнятий номер ходу займають лише раз', async () => {
 		const log = new MemoryMatchLog(setup());
-		const first: MatchMove = { seq: 1, by: ME, direction: 'up' as never, distance: 1 };
+		const first: MatchMove = { segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 };
 
 		expect(await log.append(first), 'перший займає номер').toBe(true);
 		expect(await log.append({ ...first, by: OPPONENT }), 'другий отримує відмову').toBe(false);
@@ -322,7 +322,7 @@ describe('транспорт журналу', () => {
 
 	it('підписка одразу віддає поточний стан', async () => {
 		const log = new MemoryMatchLog(setup());
-		await log.append({ seq: 1, by: ME, direction: 'up' as never, distance: 1 });
+		await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 });
 
 		const seen: number[] = [];
 		const off = log.watch((snapshot) => seen.push(snapshot.moves.length));
@@ -333,29 +333,79 @@ describe('транспорт журналу', () => {
 
 	it('час ходу ставить транспорт, а не той, хто надіслав', async () => {
 		const log = new MemoryMatchLog(setup());
-		await log.append({ seq: 1, by: ME, direction: 'up' as never, distance: 1, at: 5 });
+		await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1, at: 5 });
 		expect(log.moves[0].at, 'підроблене значення заміщено «серверним»').not.toBe(5);
 	});
 
 	it('undefined усередині ходу кидає — як і справжня база', async () => {
 		const log = new MemoryMatchLog(setup());
 		await expect(
-			log.append({ seq: 1, by: ME, direction: undefined as never, distance: 1 })
+			log.append({ segment: 0, seq: 1, by: ME, direction: undefined as never, distance: 1 })
 		).rejects.toThrow(/direction is undefined/);
 	});
 
-	it('нова партія стирає журнал і дає нову дошку', async () => {
+	it('нова партія НЕ стирає журнал, а починає новий відрізок', async () => {
+		/*
+		 * Доти цей тест вимагав протилежного — щоб журнал спорожнів, — і саме тому
+		 * приймав реалізацію, у якій «нова партія» означала прочитати всі ходи й
+		 * видалити їх батчем. У Firestore це давало три дефекти одразу: платню за
+		 * кожен хід удруге, межу батча 500 (партія довша за 499 ходів не
+		 * перезапускалася) і `get()` на кімнату в правилі видалення при межі 20
+		 * звернень на батч (CLOUD-DATABASE-v8 § 8.7, § 4.8).
+		 */
 		const cfg = settings();
 		const log = new MemoryMatchLog(setup());
-		await log.append({ seq: 1, by: ME, direction: 'up' as never, distance: 1 });
+		await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 });
 
-		await log.start(setup({ seed: 999 }));
+		await log.start(setup({ seed: 999, segment: 1 }));
 
-		expect(log.moves, 'журнал порожній').toHaveLength(0);
+		expect(log.moves, 'старий хід лишається в журналі назавжди').toHaveLength(1);
 		expect(
 			shape(replayMatch(setup({ seed: 999 }), [], cfg)),
 			'дошка інша, бо зерно інше'
 		).not.toBe(shape(replayMatch(setup(), [], cfg)));
+	});
+
+	it('ходи попереднього відрізка не потрапляють у поточний', async () => {
+		// Це і є те, що раніше забезпечувалося видаленням. Тепер — фільтром за
+		// сегментом, тож старі ходи лишаються, але на стан не впливають.
+		const log = new MemoryMatchLog(setup());
+		await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 });
+
+		let seen: MatchMove[] = [];
+		log.watch((snapshot) => (seen = snapshot.moves));
+		expect(seen, 'у нульовому відрізку хід видно').toHaveLength(1);
+
+		await log.start(setup({ segment: 1 }));
+		expect(seen, 'у першому відрізку ходів нульового не видно').toHaveLength(0);
+
+		await log.append({ segment: 1, seq: 1, by: ME, direction: 'up' as never, distance: 1 });
+		expect(seen, 'номери починаються заново в кожному відрізку').toHaveLength(1);
+		expect(seen[0].segment).toBe(1);
+	});
+
+	it('той самий номер у РІЗНИХ відрізках — не колізія', async () => {
+		// Ключ документа — пара (сегмент, номер). Підставка, яка відмовляла б за
+		// номером самим по собі, забороняла б перший хід нового відрізка.
+		const log = new MemoryMatchLog(setup());
+		expect(
+			await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 })
+		).toBe(true);
+		expect(
+			await log.append({ segment: 1, seq: 1, by: ME, direction: 'up' as never, distance: 1 }),
+			'той самий номер в іншому відрізку мусить пройти'
+		).toBe(true);
+		expect(
+			await log.append({ segment: 1, seq: 1, by: ME, direction: 'up' as never, distance: 1 }),
+			'той самий номер у ТОМУ САМОМУ відрізку — зайнятий'
+		).toBe(false);
+	});
+
+	it('ключ ходу впорядкований лексикографічно так само, як числом', () => {
+		// Без вирівнювання нулями «10» стало б між «1» і «2», і партія грала б у
+		// різній послідовності на різних пристроях (§ 8.2).
+		const keys = [moveKey(0, 2), moveKey(0, 10), moveKey(0, 1), moveKey(1, 1)];
+		expect([...keys].sort()).toEqual([moveKey(0, 1), moveKey(0, 2), moveKey(0, 10), moveKey(1, 1)]);
 	});
 
 	it('відписка справді знімає слухача', async () => {
@@ -364,7 +414,7 @@ describe('транспорт журналу', () => {
 		const off = log.watch(() => calls++);
 		expect(calls).toBe(1);
 		off();
-		await log.append({ seq: 1, by: ME, direction: 'up' as never, distance: 1 });
+		await log.append({ segment: 0, seq: 1, by: ME, direction: 'up' as never, distance: 1 });
 		expect(calls, 'після відписки знімки не приходять').toBe(1);
 	});
 });
