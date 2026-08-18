@@ -365,7 +365,16 @@ const timestamp = new Date().toISOString();
 		</div>
 	{/if}
 
-	{#if import.meta.env.DEV}
+	<!--
+	  `$i18nReady` тут обов'язковий, а не про акуратність. Монітор монтується з
+	  кореневого layout, тобто ДО того, як `svelte-i18n` отримає початкову
+	  локаль, — і перший же `$t` усередині кидає «Cannot format a message
+	  without first setting the initial locale», що валить увесь застосунок на
+	  сторінку помилки. Симптом видно лише в dev (сам віджет існує лише там), і
+	  саме e2e-гейт його й знайшов: `top-language-btn` не існує, бо головного
+	  меню на екрані немає взагалі.
+	-->
+	{#if import.meta.env.DEV && $i18nReady}
 		<NetworkMonitorWidget />
 	{/if}
 
