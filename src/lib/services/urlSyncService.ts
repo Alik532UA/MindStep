@@ -125,7 +125,7 @@ export const urlSyncService = {
             }).catch(err => {
                 // Ігноруємо помилки переривання навігації (якщо нова почалася швидше)
                 if (err?.message !== 'navigation-cancelled') {
-                    console.error('[UrlSyncService] Navigation error:', err);
+                    logService.error('[UrlSyncService] Navigation error:', err);
                 }
             });
         }

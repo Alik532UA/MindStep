@@ -15,7 +15,10 @@
         copied = false;
       }, 1000);
     } catch (err) {
-      console.error('Failed to copy logs', err);
+      // Відмова буфера обміну — буденна річ поза HTTPS і без дозволу, тож
+      // `warn`. І саме `logService`, а не `console`: тут `error` крутив би
+      // лічильник, з якого живе сама ця кнопка (DEBUGGING-v8 § 1.3).
+      logService.warn('[LogCopyButton] не вдалося скопіювати звіт', err);
     }
   }
 </script>

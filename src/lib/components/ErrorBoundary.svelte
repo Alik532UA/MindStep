@@ -11,6 +11,7 @@
 
     import { base } from "$app/paths";
     import { browser } from "$app/environment";
+    import { logService } from "$lib/services/logService.svelte";
     import type { Snippet } from "svelte";
 
     interface Props {
@@ -91,12 +92,9 @@ ${stack ? `\nStack:\n${stack}` : ""}
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
 
-        console.group("🔴 [MindStep Error Boundary]");
-        console.error("Message:", message);
-        if (stack) {
-            console.error("Stack:", stack);
-        }
-        console.groupEnd();
+        // Те саме, що й у `hooks.client.ts`: помилка мусить дійти до буфера
+        // звіту, а не лишитися в консолі того, хто дивиться на неї зараз.
+        logService.error(`[ErrorBoundary] ${message}`, stack ? { stack } : undefined);
     }
 </script>
 

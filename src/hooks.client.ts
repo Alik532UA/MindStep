@@ -10,6 +10,7 @@
  */
 
 import type { HandleClientError } from "@sveltejs/kit";
+import { logService } from "$lib/services/logService.svelte";
 
 /**
  * Глобальний обробник клієнтських помилок.
@@ -29,18 +30,19 @@ export const handleError: HandleClientError = ({ error, event }) => {
         error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    // У dev-режимі виводимо повну інформацію
-    if (isDev) {
-        console.group(`🔴 [MindStep Error] ${errorId}`);
-        console.error("Timestamp:", timestamp);
-        console.error("URL:", event.url.href);
-        console.error("Route:", event.route.id);
-        console.error("Message:", errorMessage);
-        if (errorStack) {
-            console.error("Stack:", errorStack);
-        }
-        console.groupEnd();
-    }
+    // Через `logService`, а не `console`, і без гарду `isDev`.
+    //
+    // Доти повна інформація виводилася ЛИШЕ в dev і лише в консоль: у
+    // продакшні необроблена помилка не доходила нікуди — ні в буфер звіту, який
+    // гравець копіює кнопкою, ні в лічильник, з якого та кнопка з'являється.
+    // Тобто єдиний спосіб дізнатися про збій на чужому пристрої не бачив саме
+    // тих збоїв, для яких існує (DEBUGGING-v8 § 1, ERROR-HANDLING-v8 § 1.4).
+    logService.error(`[hooks.client] ${errorId}: ${errorMessage}`, {
+        timestamp,
+        url: event.url.href,
+        route: event.route.id,
+        ...(errorStack ? { stack: errorStack } : {})
+    });
 
     // Повертаємо об'єкт помилки для відображення в +error.svelte
     // У dev-режимі включаємо стек, в production — тільки повідомлення

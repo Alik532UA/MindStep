@@ -81,7 +81,12 @@ class RoomService {
 
             if (!isPrivate) {
                 roomFirestoreService.updateStatsDoc({ lastRoomCreatedAt: Date.now() })
-                    .catch((e: any) => console.warn('Failed to update global stats', e));
+                    // Спільний лічильник кімнат — річ довідкова: якщо запис не
+                    // пройшов, кімната вже створена й гра працює. Рівень `warn`,
+                    // а не `error` (ERROR-HANDLING-v8 § 1.4).
+                    .catch((e: unknown) =>
+                        logService.warn('[RoomService] спільна статистика не оновилася', e)
+                    );
             }
 
             roomSessionService.saveSession(roomId, hostId);

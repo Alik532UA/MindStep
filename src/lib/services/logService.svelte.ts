@@ -9,16 +9,31 @@ const isBrowser = typeof window !== 'undefined';
 const STORAGE_KEY = 'log_config';
 
 export interface LogConfig {
+    // Індексна підпис лишається навмисно: сюди приходить те, що ЛЕЖИТЬ У
+    // СХОВИЩІ, а там можуть бути теми зі старіших версій застосунку.
     [key: string]: boolean;
 }
 
-const initialConfig: LogConfig = {
+/**
+ * Теми логування та їхній типовий стан. Це ЄДИНЕ місце, де вони перелічені:
+ * тип `LogTopic` виводиться звідси, а не дублює список окремо. Продубльований
+ * перелік розійшовся б із цим на першій же новій темі — і розходження було б
+ * видно лише як «чомусь не типізується» (AI-AGENT-PITFALLS-v8 § 4).
+ *
+ * Ключі — ідентифікатори, а не рядки в лапках, і це має значення: інваріанти
+ * `cloud-database.spec.ts` шукають у джерелах рядкові літерали з назвами
+ * колекцій Firestore. Тема, чия назва збігається з назвою колекції, у лапках
+ * прочиталася б там як звернення до бази — і перевірка, яка стежить за
+ * дзеркалом присутності, впала б на файлі логера.
+ */
+const initialConfig = {
     init: true,
     ui: true,
     action: true,
     score: true,
     ai: true,
     error: true,
+    warn: true,
     info: true,
     sync: true,
     reward: true,
@@ -35,6 +50,38 @@ const initialConfig: LogConfig = {
     speech: false,
     voiceControl: true,
     presence: true
+} satisfies LogConfig;
+
+/**
+ * Закритий перелік тем.
+ *
+ * Навіщо він з'явився. Проксі нижче віддавав функцію логування на будь-яку
+ * властивість і був типізований `as any`, тож `logService.щоЗавгодно` бачився
+ * компілятору робочим кодом. Двоє органів керування зневадженням через це
+ * були мовчазними заглушками: `logService.errorCount` (кнопка копіювання
+ * логів) повертав ФУНКЦІЮ, а `function > 0` — це `false`, тобто кнопка не
+ * з'являлася ніколи; `logService.forceEnableLogging()` замість увімкнення
+ * логування дописував рядок із темою `FORCEENABLELOGGING`. Обидва — рівно той
+ * випадок, який AI-AGENT-PITFALLS-v8 § 3 називає «файл є, отже працює»: код на
+ * місці, ніхто не перевіряв досяжність.
+ *
+ * Тепер перелік тем — тип, і `logService.<друкарська помилка>` валить
+ * `svelte-check`.
+ */
+export type LogTopic = keyof typeof initialConfig;
+
+const LOG_TOPICS = Object.keys(initialConfig) as readonly LogTopic[];
+
+type LogFn = (message: string, ...args: unknown[]) => void;
+
+export type LogService = Record<LogTopic, LogFn> & {
+    readonly config: LogConfig;
+    readonly version: string;
+    /** Скільки помилок сталося за сесію. Кнопка копіювання логів живе з цього. */
+    readonly errorCount: number;
+    getLogReport(): string;
+    /** Увімкнути всі теми до кінця сесії — прихований жест у панелі керування. */
+    forceEnableLogging(): void;
 };
 
 let isForceEnabled = false;
@@ -84,6 +131,7 @@ function safeStringify(args: any[]): string {
 class LogState {
     config = $state<LogConfig>(loadConfig());
     logs = $state<string[]>([]);
+    errorCount = $state(0);
     version = __APP_VERSION__;
 
     constructor() {
@@ -99,9 +147,13 @@ class LogState {
         }
     }
 
-    add(type: string, message: string, ...args: any[]) {
+    add(type: string, message: string, ...args: unknown[]) {
         const isDev = import.meta.env.DEV;
-        
+
+        // Лічильник рахує ВСІ помилки, а не лише ті, чия тема увімкнена:
+        // вимкнена тема — це про шум у консолі, а не про «помилки не було».
+        if (type.toLowerCase() === 'error') this.errorCount += 1;
+
         untrack(() => {
             if (this.config[type] === undefined) {
                 this.config[type] = true;
@@ -123,7 +175,11 @@ class LogState {
                 if (type.toLowerCase() === 'error') {
                     console.error(logEntry, ...args);
                 } else if (isDev || isForceEnabled) {
-                    console.log(logEntry, ...args);
+                    // `warn` окремим каналом: DevTools дає йому власний фільтр
+                    // і стек, а очікуваних збоїв (офлайн, відмова сховища) тут
+                    // рівно цей рівень (DEBUGGING-v8 § 1.3).
+                    if (type.toLowerCase() === 'warn') console.warn(logEntry, ...args);
+                    else console.log(logEntry, ...args);
                 }
 
                 // Безпечно додаємо в масив логів для звіту
@@ -136,19 +192,43 @@ class LogState {
     getReport(): string {
         return untrack(() => this.logs.join('\n'));
     }
+
+    /**
+     * Вмикає всі теми й запам'ятовує це у сховищі. Викликається прихованим
+     * жестом (три кліки по підпису панелі керування) — щоб зібрати звіт із
+     * пристрою гравця, до якого немає доступу.
+     */
+    forceEnableLogging(): void {
+        isForceEnabled = true;
+        storageService.set('force-logging', 'true');
+        this.add('init', '[logService] логування увімкнено вручну на цю сесію');
+    }
 }
 
 const logState = new LogState();
 
-const loggerProxy = new Proxy({
+/**
+ * Явні члени проксі. Усе, що не тут і не в переліку тем, — друкарська помилка,
+ * і тепер це видно компілятору.
+ */
+const facade = {
     get config() { return logState.config; },
     get version() { return logState.version; },
-    getLogReport: () => logState.getReport()
-} as any, {
-    get(target, prop: string) {
-        if (prop in target) return target[prop];
-        return (msg: string, ...args: any[]) => logState.add(prop, msg, ...args);
+    get errorCount() { return logState.errorCount; },
+    getLogReport: () => logState.getReport(),
+    forceEnableLogging: () => logState.forceEnableLogging()
+};
+
+const loggerProxy = new Proxy(facade, {
+    get(target, prop) {
+        if (prop in target) return target[prop as keyof typeof target];
+        // Невідома тема все ще стає рядком у звіті, а не винятком: логер не має
+        // права нічого кидати (DEBUGGING-v8 § 1.5), а межу тепер тримає тип.
+        return (msg: string, ...args: unknown[]) => logState.add(String(prop), msg, ...args);
     }
-});
+}) as unknown as LogService;
 
 export const logService = loggerProxy;
+
+/** Для інваріанта: перелік тем мусить збігатися з тим, що знає тип. */
+export const LOG_TOPIC_NAMES: readonly string[] = LOG_TOPICS;
