@@ -23,6 +23,38 @@ const enabled = () => isBrowser && !dev && isConfigured;
 
 type EventParams = Record<string, string | number | boolean>;
 
+/**
+ * Реєстр подій (ANALYTICS-v8 § 3.1).
+ *
+ * Назви подій були рядковими літералами в місцях виклику. GA4 приймає будь-який
+ * рядок: `game_end`, `game-end` і `gameEnd` стають ТРЬОМА різними подіями, і
+ * зрозуміти це можна лише згодом, коли в звіті замість одної метрики три
+ * недорахованих. Опечатка тут не ламає нічого й не видна ніде — вона просто
+ * тихо ділить дані.
+ *
+ * Реєстр — не документація, а тип: `track('game-end', …)` тепер не збирається.
+ *
+ * Кожен ключ несе призначення, бо подія без пояснення через півроку не
+ * відрізняється від забутої.
+ */
+export const ANALYTICS_EVENTS = {
+    /** Партія почалася. Парна до `game_end` — разом дають частку дограних. */
+    game_start: 'game_start',
+    /**
+     * Партія завершилася. `reason` — ключ словника, а не показаний текст,
+     * інакше звіт розділиться за мовою інтерфейсу.
+     */
+    game_end: 'game_end',
+    /**
+     * Перегляд сторінки. Надсилається вручну через `trackPageView()`:
+     * автоматичний летить до того, як роутер устоявся, і не повторюється при
+     * клієнтській навігації.
+     */
+    page_view: 'page_view'
+} as const;
+
+export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
+
 declare global {
     interface Window {
         dataLayer?: unknown[];
@@ -65,10 +97,12 @@ export function trackPageView() {
     const { origin, pathname } = window.location;
     // Modal state is carried in the query string (?mode=...), so keeping it in
     // page_location would turn every modal into its own row in the report.
-    window.gtag?.("event", "page_view", { page_location: `${origin}${pathname}` });
+    window.gtag?.("event", ANALYTICS_EVENTS.page_view, {
+        page_location: `${origin}${pathname}`
+    });
 }
 
-export function track(event: string, params: EventParams = {}) {
+export function track(event: AnalyticsEvent, params: EventParams = {}) {
     if (!enabled()) return;
     initAnalytics();
     window.gtag?.("event", event, params);
