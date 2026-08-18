@@ -1,1 +1,0 @@
-git diff HEAD > changes.diff.txt
