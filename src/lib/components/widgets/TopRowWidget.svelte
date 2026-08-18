@@ -36,6 +36,7 @@
   <button
     class="main-menu-btn"
     use:hotkeyTooltip={{ title: $t("gameBoard.mainMenu"), key: "ESC" }}
+    aria-label={$t("gameBoard.mainMenu")}
     onclick={handleMainMenuClick}
     data-testid="top-row-main-menu-btn"
   >
@@ -45,6 +46,7 @@
     <button
       class="main-menu-btn"
       use:customTooltip={$t("tooltips.localGameSettings")}
+      aria-label={$t("tooltips.localGameSettings")}
       onclick={handleLocalSetupClick}
       data-testid="local-game-settings-btn"
     >
@@ -54,6 +56,7 @@
   <button
     class="main-menu-btn"
     use:hotkeyTooltip={{ title: $t("faq.title"), key: "I" }}
+    aria-label={$t("faq.title")}
     onclick={showGameInfoModal}
     data-testid="game-info-btn"
   >

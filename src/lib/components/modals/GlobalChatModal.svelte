@@ -15,7 +15,9 @@
 <div class="global-chat-container">
     <div class="chat-header">
         <h2>{$t("ui.feedback.typeGlobalChat")}</h2>
-        <button class="close-btn" onclick={close}>×</button>
+        <button class="close-btn" onclick={close} aria-label={$t("modal.close")}
+            ><span aria-hidden="true">×</span></button
+        >
     </div>
 
     <div class="chat-wrapper">

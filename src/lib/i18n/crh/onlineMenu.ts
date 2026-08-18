@@ -51,7 +51,9 @@ export default {
   chat: {
     title: "Sohbet",
     placeholder: "Bir şey yazıñız...",
-    empty: "Çat boş"
+    empty: "Çat boş",
+    send: "Mesajnı yiber",
+    collapse: "Çatnı yıq"
   },
   errors: {
     fetchFailed: "Odalar listesi yüklenemedi",

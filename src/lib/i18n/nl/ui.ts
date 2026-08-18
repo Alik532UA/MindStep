@@ -1,4 +1,7 @@
 export default {
+  editValue: "Bewerken",
+  generateRandom: "Willekeurig genereren",
+  cancel: "Annuleren",
   closeAndReturnToMenu: 'Sluiten en terug naar hoofdmenu',
   goBack: 'Ga terug',
   dndEditInstruction: "Menu bewerken: Sleep blokken om ze naar wens te rangschikken.",

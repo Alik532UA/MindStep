@@ -1,4 +1,6 @@
 export default {
+  decreaseSize: "Shrink panel",
+  increaseSize: "Enlarge panel",
   random: "Random",
   manual: "Manual",
   set: "✔️",

@@ -1,4 +1,6 @@
 export default {
+  decreaseSize: "Paneel verkleinen",
+  increaseSize: "Paneel vergroten",
   random: "Willekeurig",
   manual: "Handmatig",
   set: "✔️",

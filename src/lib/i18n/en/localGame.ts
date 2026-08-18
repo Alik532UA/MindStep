@@ -1,4 +1,6 @@
 export default {
+  pickColor: "Pick colour {color}",
+  openPalette: "Open colour palette",
   title: "Local Game Setup",
   playerManagerTitle: "Player Manager",
   addPlayer: "Add Player",

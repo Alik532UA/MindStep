@@ -34,6 +34,7 @@
     <button
         class="send-icon-btn"
         onclick={sendMessage}
+        aria-label={$t("onlineMenu.chat.send")}
         data-testid="chat-send-btn"
     >
         <SvgIcons name="arrow-up" width="18" height="18" />

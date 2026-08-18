@@ -2,6 +2,7 @@
   import SvgIcons from "$lib/components/SvgIcons.svelte";
   import { logService } from "$lib/services/logService.svelte";
   import { customTooltip } from "$lib/actions/customTooltip.js";
+  import { t } from "$lib/i18n/typedI18n";
 
   interface Props {
     value?: string;
@@ -81,15 +82,16 @@
             class="color-option"
             style="background-color: {color}"
             onclick={() => selectColor(color)}
-            use:customTooltip={`Обрати ${color}`}
-            aria-label="Обрати колір {color}"
+            use:customTooltip={$t("localGame.pickColor", { color })}
+            aria-label={$t("localGame.pickColor", { color })}
             data-testid="{dataTestId}-option-{color}"
           ></button>
         {/each}
         <button
           class="color-option palette-button"
           onclick={openColorPicker}
-          use:customTooltip={"Відкрити палітру кольорів"}
+          use:customTooltip={$t("localGame.openPalette")}
+          aria-label={$t("localGame.openPalette")}
           data-testid="{dataTestId}-palette-btn"
         >
           <SvgIcons name="theme" />
@@ -99,8 +101,8 @@
             class="color-option"
             style="background-color: {color}"
             onclick={() => selectColor(color)}
-            use:customTooltip={`Обрати ${color}`}
-            aria-label="Обрати колір {color}"
+            use:customTooltip={$t("localGame.pickColor", { color })}
+            aria-label={$t("localGame.pickColor", { color })}
             data-testid="{dataTestId}-option-{color}"
           ></button>
         {/each}

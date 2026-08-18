@@ -221,6 +221,8 @@ export interface TranslationSchema {
     title: string;
   };
   localGame: {
+    pickColor: string;
+    openPalette: string;
     title: string;
     playerManagerTitle: string;
     addPlayer: string;
@@ -435,6 +437,8 @@ export interface TranslationSchema {
       title: string;
       placeholder: string;
       empty: string;
+      send: string;
+      collapse: string;
     };
     errors: {
       fetchFailed: string;
@@ -623,6 +627,8 @@ export interface TranslationSchema {
     supportButton: string;
   };
   testMode: {
+    decreaseSize: string;
+    increaseSize: string;
     random: string;
     manual: string;
     set: string;
@@ -654,6 +660,9 @@ export interface TranslationSchema {
     };
   };
   ui: {
+    editValue: string;
+    generateRandom: string;
+    cancel: string;
     closeAndReturnToMenu: string;
     goBack: string;
     dndEditInstruction: string;

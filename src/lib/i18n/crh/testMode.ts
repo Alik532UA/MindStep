@@ -1,4 +1,6 @@
 export default {
+  decreaseSize: "Panelni kiçiklet",
+  increaseSize: "Panelni büyüt",
   random: "Tesadüfiy",
   manual: "Qolnen",
   set: "✔️",

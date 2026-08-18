@@ -80,6 +80,7 @@
                     <button
                         class="close-btn"
                         onclick={toggleChat}
+                        aria-label={$t("onlineMenu.chat.collapse")}
                         data-testid="chat-close-btn"
                     >
                         <SvgIcons name="arrow-down" width="16" height="16" />

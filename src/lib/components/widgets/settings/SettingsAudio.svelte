@@ -43,6 +43,7 @@
         class="settings-expander__square-btn"
         use:blurOnClick
         use:customTooltip={$t("gameControls.voiceSettingsTitle")}
+        aria-label={$t("gameControls.voiceSettingsTitle")}
         onclick={openVoiceSettings}
     >
         <SvgIcons name="voice-settings" />

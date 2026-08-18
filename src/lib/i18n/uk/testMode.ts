@@ -1,4 +1,6 @@
 export default {
+  decreaseSize: "Зменшити панель",
+  increaseSize: "Збільшити панель",
   random: "Випадковий",
   manual: "Ручний",
   set: "✔️",

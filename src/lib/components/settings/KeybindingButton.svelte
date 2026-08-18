@@ -44,11 +44,12 @@
     <button
         class="remove-key-btn"
         use:customTooltip={$t("controlsPage.removeKey")}
+        aria-label={$t("controlsPage.removeKey")}
         onclick={(e) => {
             e.stopPropagation();
             onremove?.();
         }}
-    >×</button>
+    ><span aria-hidden="true">×</span></button>
 </div>
 
 <style>

@@ -51,7 +51,9 @@ export default {
   chat: {
     title: "Чат",
     placeholder: "Напишіть повідомлення...",
-    empty: "Чат порожній"
+    empty: "Чат порожній",
+    send: "Надіслати повідомлення",
+    collapse: "Згорнути чат"
   },
   errors: {
     fetchFailed: "Не вдалося завантажити список кімнат",

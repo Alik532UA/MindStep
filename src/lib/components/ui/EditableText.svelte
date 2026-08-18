@@ -2,6 +2,7 @@
     import { tick } from "svelte";
     import { customTooltip } from "$lib/actions/customTooltip";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+    import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.svelte";
 
     interface Props {
@@ -88,7 +89,8 @@
             <button
                 class="icon-btn save"
                 onmousedown={(e) => { e.preventDefault(); save(); }}
-                title="Зберегти"
+                title={$t("common.save")}
+                aria-label={$t("common.save")}
                 data-testid="{dataTestId}-save-btn"
             >
                 <NotoEmoji name="check_mark_button" size="1.1em" />
@@ -96,7 +98,8 @@
             <button
                 class="icon-btn cancel"
                 onmousedown={(e) => { e.preventDefault(); cancel(); }}
-                title="Скасувати"
+                title={$t("ui.cancel")}
+                aria-label={$t("ui.cancel")}
                 data-testid="{dataTestId}-cancel-btn"
             >
                 <NotoEmoji name="cross_mark" size="1.1em" />
@@ -114,7 +117,8 @@
                     <button
                         class="icon-btn edit"
                         onclick={startEditing}
-                        use:customTooltip={"Редагувати"}
+                        use:customTooltip={$t("ui.editValue")}
+                        aria-label={$t("ui.editValue")}
                         data-testid="{dataTestId}-edit-btn"
                     >
                         <NotoEmoji name="pencil" size="1.1em" />
@@ -123,7 +127,8 @@
                     <button
                         class="icon-btn random"
                         onclick={handleRandom}
-                        use:customTooltip={"Згенерувати випадково"}
+                        use:customTooltip={$t("ui.generateRandom")}
+                        aria-label={$t("ui.generateRandom")}
                         data-testid="{dataTestId}-random-btn"
                     >
                         <NotoEmoji name="game_die" size="1.1em" />

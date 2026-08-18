@@ -1,4 +1,7 @@
 export default {
+  editValue: "Deñiştir",
+  generateRandom: "Tesadüfiy yarat",
+  cancel: "Vazgeç",
   closeAndReturnToMenu: 'Qapatıp ana menüye qaytmaq',
   goBack: 'Qaytmaq',
   dndEditInstruction: "Menüni düzenleme kipi: Blokları sürükleyip istediğiniz gibi yerleştirin.",

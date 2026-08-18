@@ -1,4 +1,6 @@
 export default {
+  pickColor: "Kies kleur {color}",
+  openPalette: "Kleurenpalet openen",
   title: "Lokale Spel Setup",
   playerManagerTitle: "Speler Manager",
   addPlayer: "Speler Toevoegen",

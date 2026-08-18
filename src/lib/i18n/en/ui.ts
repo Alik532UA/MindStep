@@ -1,4 +1,7 @@
 export default {
+  editValue: "Edit",
+  generateRandom: "Generate at random",
+  cancel: "Cancel",
   closeAndReturnToMenu: 'Close and return to main menu',
   goBack: 'Go back',
   dndEditInstruction: "Menu editing mode: Drag and drop blocks to rearrange them as you like.",

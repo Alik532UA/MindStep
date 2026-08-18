@@ -2,6 +2,7 @@
     import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
     import { fade } from 'svelte/transition';
     import prettyBytes from 'pretty-bytes';
+    import { t } from '$lib/i18n/typedI18n';
 
     let expanded = $state(false);
     let scale = $state(0.5); // 0.5 means 2x smaller than the current "large" size
@@ -58,13 +59,15 @@
             <button 
                 class="size-btn" 
                 onclick={decreaseScale} 
-                title="Decrease size"
+                title={$t("testMode.decreaseSize")}
+                aria-label={$t("testMode.decreaseSize")}
                 data-testid="network-monitor-size-decrease-btn"
             >−</button>
             <button 
                 class="size-btn" 
                 onclick={increaseScale} 
-                title="Increase size"
+                title={$t("testMode.increaseSize")}
+                aria-label={$t("testMode.increaseSize")}
                 data-testid="network-monitor-size-increase-btn"
             >+</button>
         </div>
