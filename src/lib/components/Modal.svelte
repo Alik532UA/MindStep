@@ -9,7 +9,6 @@
   import { focusManager } from "$lib/stores/focusManager.js";
   import { logService } from "$lib/services/logService.svelte";
   import hotkeyService from "$lib/services/hotkeyService";
-  import { trapFocus } from "$lib/actions/trapFocus.js";
   import { uiState } from "$lib/stores/uiState.svelte";
   import { gameEventBus } from "$lib/services/gameEventBus";
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
@@ -49,6 +48,29 @@
 
   const themeClass = $derived(
     mState.variant === "menu" ? "style-glass" : "style-classic"
+  );
+
+  /**
+   * Чи малює вікно свою шапку. Одне джерело істини для двох речей: `{#if}`
+   * нижче й `aria-labelledby`, який мусить показувати на існуючий `id`.
+   * Розійшовшись, вони дали б порожнє посилання — а це для читалки те саме,
+   * що діалог без назви взагалі (ACCESSIBILITY-v8 § 4.4).
+   */
+  const hasVisibleHeader = $derived(
+    mState.variant === "standard" &&
+      Boolean(mState.titleKey || mState.title) &&
+      !(mState.dataTestId === "replay-modal" && windowHeight < 870)
+  );
+
+  /**
+   * Назва для випадку, коли шапки на екрані немає. Спершу власний заголовок
+   * вікна (він існує навіть коли шапку прибрано за браком висоти), далі —
+   * загальне слово: «діалог» без назви читалка озвучує як безіменний.
+   */
+  const fallbackLabel = $derived(
+    mState.titleKey
+      ? $t(mState.titleKey as import("$lib/types/i18n").TranslationKey)
+      : (mState.title || $t("modal.dialogLabel"))
   );
 
   $effect(() => {
@@ -117,18 +139,9 @@
     }
   });
 
-  function onOverlayClick(e: MouseEvent) {
-    if (!mState.closeOnOverlayClick) return;
-    const target = e.target as HTMLElement;
-    if (
-      target &&
-      (target.classList.contains("modal-overlay") ||
-        target.classList.contains("modal-window"))
-    ) {
-      logService.ui("Закриття модального вікна (overlay)");
-      gameEventBus.dispatch("CloseModal");
-    }
-  }
+  // Клік по тлу й пастка фокуса лишилися в `BaseModal` — сюди від них зостався
+  // мертвий обробник `onOverlayClick` і мертвий імпорт `trapFocus`, які шукали
+  // клас `.modal-overlay`, знятий разом зі старою розміткою.
 </script>
 
 {#if mState.isOpen}
@@ -137,6 +150,8 @@
     onclose={() => mState.closable && gameEventBus.dispatch("CloseModal")}
     closeOnOverlayClick={mState.closeOnOverlayClick}
     dataTestId={mState.dataTestId}
+    ariaLabelledby={hasVisibleHeader ? `${mState.dataTestId}-title` : undefined}
+    ariaLabel={hasVisibleHeader ? undefined : fallbackLabel}
   >
     {#snippet extra()}
       {#if mState.variant === "menu" && mState.closeOnOverlayClick}
@@ -148,7 +163,7 @@
       class="modal-window {themeClass} variant-{mState.variant}"
       class:custom={mState.customClass}
     >
-      {#if mState.variant === "standard" && (mState.titleKey || mState.title) && !(mState.dataTestId === "replay-modal" && windowHeight < 870)}
+      {#if hasVisibleHeader}
         <ModalHeader modalState={mState}>
           {#snippet volumeControl()}
             {#if mState.titleKey === "modal.expertModeTitle"}

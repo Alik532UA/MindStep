@@ -1,4 +1,5 @@
 export default {
+  dialogLabel: "Dialog penceresi",
   confirm: "Tasdiqla",
   mainMenu: "Ana Menü",
   ok: "OK",

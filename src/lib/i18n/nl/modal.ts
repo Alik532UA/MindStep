@@ -1,4 +1,5 @@
 export default {
+  dialogLabel: "Dialoogvenster",
   confirm: "Bevestigen",
   mainMenu: "Hoofdmenu",
   ok: "OK",

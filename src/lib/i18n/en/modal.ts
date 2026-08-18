@@ -1,4 +1,5 @@
 export default {
+  dialogLabel: "Dialog",
   confirm: "Confirm",
   mainMenu: "Main Menu",
   ok: "OK",

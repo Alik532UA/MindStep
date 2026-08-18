@@ -11,15 +11,25 @@
     closeOnOverlayClick?: boolean;
     variant?: 'glass' | 'classic';
     dataTestId?: string;
+    /**
+     * `id` заголовка вікна. Читалка озвучує його при вході в діалог, тож без
+     * нього гравець чує «діалог» і нічого більше (ACCESSIBILITY-v8 § 4.4).
+     * Заголовок малює виклик, а не `BaseModal`, тому сюди приходить саме `id`.
+     */
+    ariaLabelledby?: string;
+    /** Запасна назва, коли заголовка на екрані немає зовсім. */
+    ariaLabel?: string;
   }
 
-  let { 
-    children, 
+  let {
+    children,
     extra,
-    onclose, 
-    closeOnOverlayClick = true, 
+    onclose,
+    closeOnOverlayClick = true,
     variant = 'glass',
-    dataTestId = 'base-modal'
+    dataTestId = 'base-modal',
+    ariaLabelledby,
+    ariaLabel
   }: Props = $props();
 
   function handleOverlayClick(e: MouseEvent) {
@@ -35,20 +45,40 @@
   }
 </script>
 
-<div 
-  class="base-modal-backdrop {variant}" 
+<!--
+  Escape слухається на вікні, а не на підкладці. Доти обробник стояв на
+  `div`-підкладці й спрацьовував лише поки фокус лежав усередині неї: варто
+  було фокусу піти на `<body>` (клік по тлу, закритий `<select>`, повернення з
+  іншої вкладки) — і клавіша перестає закривати вікно, хоча код на місці.
+  `BaseModal` існує в DOM тільки коли вікно відкрите, тож глобальний слухач
+  живе рівно стільки, скільки триває діалог.
+-->
+<svelte:window onkeydown={handleKeydown} />
+
+<!--
+  `role="presentation"` — свідомо, і це не спосіб замовкнути попередження.
+  Доти тут стояв `role="button"`: підкладка — це весь екран, тож читалка
+  оголошувала «кнопка» на все вікно діалогу й пропонувала натиснути те, що
+  насправді лише тло. Клік по тлу лишається зручністю для мишки; клавіатурний
+  шлях до того самого — Escape вище й кнопка закриття в шапці
+  (ACCESSIBILITY-v8 § 4.4).
+-->
+<div
+  class="base-modal-backdrop {variant}"
   transition:fade={{ duration: 200 }}
   onclick={handleOverlayClick}
-  onkeydown={handleKeydown}
-  role="button"
-  tabindex="-1"
+  role="presentation"
   data-testid="{dataTestId}-overlay"
 >
   {@render extra?.()}
-  <div 
+  <div
     class="base-modal-container {variant}"
     use:trapFocus
     transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: quintOut }}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby={ariaLabelledby}
+    aria-label={ariaLabelledby ? undefined : ariaLabel}
     data-testid={dataTestId}
   >
     {@render children()}

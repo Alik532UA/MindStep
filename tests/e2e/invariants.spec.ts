@@ -49,3 +49,45 @@ for (const path of PAGES) {
 		expect(dupes, `${path}: duplicate data-testid: ${dupes.join(', ')}`).toEqual([]);
 	});
 }
+
+/**
+ * Модальне вікно — діалог із назвою (ACCESSIBILITY-v8 § 4.4).
+ *
+ * Перевірка саме рантаймова, і саме через роль: `getByRole('dialog')` бачить
+ * те, що бачить читалка, а не те, що написано в розмітці. До цього коміту
+ * підкладка була `role="button"`, а сама картка вікна — безрольовим `div`:
+ * тобто на екрані існувала кнопка на все вікно й НІ ОДНОГО діалогу. Ні
+ * `svelte-check`, ні ESLint цього не бачать — обидва вважають розмітку
+ * правильною, бо роль присутня, просто не та.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): прибрати `role="dialog"`
+ * у `BaseModal.svelte` — перший `expect` червоніє на таймауті; прибрати
+ * `aria-labelledby` разом із `id` заголовка — червоніє другий.
+ *
+ * `game-mode-modal` як зразок: це єдине вікно, яке відкривається з головної
+ * одним кліком, без гри, кімнати й емулятора.
+ */
+test('модалка оголошується діалогом і має назву', async ({ page }) => {
+	await page.goto('/');
+	await page.addInitScript(() => {
+		(window as unknown as Record<string, boolean>).updateNoticeDisabled = true;
+	});
+	await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
+
+	await page.getByTestId('center-play-btn').click();
+
+	const dialog = page.getByRole('dialog');
+	await expect(dialog, 'вікно не оголошується діалогом').toBeVisible();
+
+	// `/./` — будь-який непорожній підпис. Точний текст залежить від мови
+	// інтерфейсу, і закріплювати його тут означало б зламати перевірку першим
+	// же перекладом (I18N-v8 § 2).
+	await expect(dialog, 'діалог без назви — читалка озвучує лише «діалог»').toHaveAccessibleName(
+		/./
+	);
+
+	// Кнопки закриття в шапці тут немає навмисно: усі вікна головного меню —
+	// варіанта `menu`, який шапки не малює зовсім, а `standard` вимагає початої
+	// партії. Підпис хрестика перевіряє статичний інваріант у
+	// `src/a11y-conventions.spec.ts` — і там же названо, чому саме статичний.
+});

@@ -1,4 +1,5 @@
 export default {
+  dialogLabel: "Діалогове вікно",
   confirm: "Підтвердити",
   mainMenu: "Головне меню",
   ok: "OK",

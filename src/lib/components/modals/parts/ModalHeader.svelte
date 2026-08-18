@@ -25,8 +25,14 @@
     {/if}
 
     <div class="modal-title-wrapper">
+        <!--
+          `id`, а не лише `data-testid`: на нього посилається `aria-labelledby`
+          вікна (ACCESSIBILITY-v8 § 4.4). Значення те саме, що в локаторі, — тож
+          унікальність заголовка вже стежить інваріант з `invariants.spec.ts`.
+        -->
         <h2
             class="modal-title"
+            id={`${modalState.dataTestId}-title`}
             data-testid={`${modalState.dataTestId}-title`}
             data-i18n-key={modalState.titleKey}
         >
@@ -42,11 +48,19 @@
     </div>
 
     {#if modalState.closable}
+        <!--
+          Підпис кнопки — `aria-label`, бо всередині лежить знак множення.
+          Читалка озвучувала його як символ («times», «знак множення»), тобто
+          єдина кнопка закриття всіх вікон застосунку не мала назви взагалі
+          (UI-ELEMENTS-v8 § 1). Сам символ від озвучення прихований.
+        -->
         <button
             class="modal-close"
             use:hotkeyTooltip={{ key: "ESC" }}
             onclick={close}
-            data-testid={`${modalState.dataTestId}-close-btn`}>×</button
+            aria-label={$t("modal.close")}
+            data-testid={`${modalState.dataTestId}-close-btn`}
+            ><span aria-hidden="true">×</span></button
         >
     {/if}
 </div>

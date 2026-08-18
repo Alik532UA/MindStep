@@ -289,6 +289,8 @@ export interface TranslationSchema {
     };
   };
   modal: {
+    /** Назва діалогу для читалки, коли вікно малюється без шапки. */
+    dialogLabel: string;
     confirm: string;
     mainMenu: string;
     ok: string;
