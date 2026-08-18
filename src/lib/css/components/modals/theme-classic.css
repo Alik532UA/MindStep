@@ -26,7 +26,7 @@
     box-sizing: border-box;
 
     /* Класична поведінка висоти */
-    max-height: 85vh;
+    max-height: 85dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;

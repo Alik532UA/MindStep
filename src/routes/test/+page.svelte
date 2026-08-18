@@ -159,7 +159,7 @@
 	.test-container {
 		padding: 40px;
 		background: #222;
-		min-height: 100vh;
+		min-height: 100dvh;
 		color: #fff;
 		display: flex;
 		flex-direction: column;

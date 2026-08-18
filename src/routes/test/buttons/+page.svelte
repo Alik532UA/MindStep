@@ -232,7 +232,7 @@
         padding: 40px;
         background: #333; /* Dark bg to test contrast */
         color: #fff;
-        min-height: 100vh;
+        min-height: 100dvh;
     }
     .comparison-section {
         margin-bottom: 40px;

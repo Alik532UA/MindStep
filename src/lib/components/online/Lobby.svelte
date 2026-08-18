@@ -111,7 +111,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
-        min-height: 100vh;
+        min-height: 100dvh;
         color: var(--text-primary);
         box-sizing: border-box;
         width: 100%;

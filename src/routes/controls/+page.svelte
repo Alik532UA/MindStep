@@ -9,6 +9,6 @@
   });
 </script>
 
-<div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: var(--text-primary);">
+<div style="display: flex; justify-content: center; align-items: center; height: 100dvh; color: var(--text-primary);">
   <p>Redirecting to settings...</p>
 </div>

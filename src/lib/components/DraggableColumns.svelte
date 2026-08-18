@@ -57,7 +57,7 @@
         if (contentHeight < windowHeight) {
           marginTop = `${(windowHeight - contentHeight) / 2}px`;
         } else {
-          marginTop = "2vh";
+          marginTop = "2dvh";
         }
       } else {
         marginTop = "0";

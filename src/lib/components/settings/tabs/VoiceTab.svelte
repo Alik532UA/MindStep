@@ -123,7 +123,7 @@
   .voice-list-wrapper {
     flex: 1 1 auto;
     min-height: 300px;
-    max-height: 50vh;
+    max-height: 50dvh;
     display: flex;
     flex-direction: column;
     overflow-y: auto;

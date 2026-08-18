@@ -35,7 +35,7 @@
     .global-chat-container {
         display: flex;
         flex-direction: column;
-        height: 60vh; /* Висота модального вікна */
+        height: 60dvh; /* Висота модального вікна */
         min-height: 400px;
         width: 100%;
         background: var(--bg-secondary);

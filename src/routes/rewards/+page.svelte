@@ -95,7 +95,7 @@
 <style>
     .rewards-page {
         /* FIX: Видалено фіксовану висоту та внутрішній скрол */
-        min-height: 100vh;
+        min-height: 100dvh;
         padding: 20px;
         display: flex;
         flex-direction: column;

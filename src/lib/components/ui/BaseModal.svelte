@@ -90,8 +90,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,7 +113,7 @@
   .base-modal-container {
     width: var(--responsive-max-width, 400px);
     max-width: 95vw;
-    max-height: 100vh;
+    max-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;

@@ -25,7 +25,7 @@
     width: 100%;
     /* FIX: Використовуємо змінну для адаптивної ширини */
     max-width: var(--responsive-max-width);
-    max-height: 85vh;
+    max-height: 85dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;

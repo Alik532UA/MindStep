@@ -136,7 +136,7 @@
     }
     .test-mode-manual-coords {
         display: grid;
-        grid-template-columns: repeat(2, 1fr) 30px;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) 30px;
         gap: 0.25rem;
         align-items: end;
     }

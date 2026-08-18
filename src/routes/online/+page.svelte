@@ -103,7 +103,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;

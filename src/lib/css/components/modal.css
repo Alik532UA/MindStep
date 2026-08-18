@@ -15,7 +15,7 @@
 
   /* Тільки для класичних вікон, бо скляні мають свою адаптивність */
   .modal-window.style-classic {
-    max-height: 80vh;
+    max-height: 80dvh;
     margin: 8px;
   }
 }
