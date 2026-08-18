@@ -3,7 +3,11 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
 
-    export let dataTestId = "board-hidden-explanation-modal";
+    interface Props {
+        dataTestId?: string;
+    }
+
+    let { dataTestId = "board-hidden-explanation-modal" }: Props = $props();
 </script>
 
 <div class="board-explanation-content" data-testid={`${dataTestId}-panel`}>

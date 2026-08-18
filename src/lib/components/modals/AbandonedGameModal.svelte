@@ -7,8 +7,12 @@
 
     import { logService } from "$lib/services/logService.svelte";
 
-    export let roomId: string;
-    export let playerId: string;
+    interface Props {
+        roomId: string;
+        playerId: string;
+    }
+
+    let { roomId, playerId }: Props = $props();
 
     async function goToGame() {
         if (!roomId) {

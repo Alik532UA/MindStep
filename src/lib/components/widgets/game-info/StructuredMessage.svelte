@@ -1,13 +1,17 @@
 <script lang="ts">
-    export let lines: Array<{
-        type: "line";
-        parts: Array<{
-            type: "text" | "player";
-            content?: string;
-            name?: string;
-            style?: string;
+    interface Props {
+        lines: Array<{
+            type: "line";
+            parts: Array<{
+                type: "text" | "player";
+                content?: string;
+                name?: string;
+                style?: string;
+            }>;
         }>;
-    }>;
+    }
+
+    let { lines }: Props = $props();
 </script>
 
 {#each lines as line}

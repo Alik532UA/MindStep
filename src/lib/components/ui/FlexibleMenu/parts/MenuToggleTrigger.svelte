@@ -3,9 +3,13 @@
     import { customTooltip } from "$lib/actions/customTooltip";
     import type { MenuPosition } from "../FlexibleMenu.types";
 
-    export let isOpen: boolean;
-    export let position: MenuPosition;
-    export let onToggle: () => void;
+    interface Props {
+        isOpen: boolean;
+        position: MenuPosition;
+        onToggle: () => void;
+    }
+
+    let { isOpen, position, onToggle }: Props = $props();
 
     // Helper to determine arrow icon name based on position and state
     function getArrowIconName(pos: MenuPosition): string {

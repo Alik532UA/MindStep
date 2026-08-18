@@ -2,9 +2,15 @@
     import { t } from "$lib/i18n/typedI18n";
     import SvgIcons from "../../SvgIcons.svelte";
 
-    export let expertVolume: number = 0.3;
+    interface Props {
+        // `$bindable`: батько (`Modal.svelte`) прив'язує це через `bind:`, і
+        // без позначки значення ходило б лише в одну сторону.
+        expertVolume?: number;
+    }
 
-    $: volumePercentage = expertVolume * 100;
+    let { expertVolume = $bindable(0.3) }: Props = $props();
+
+    const volumePercentage = $derived(expertVolume * 100);
 </script>
 
 <div

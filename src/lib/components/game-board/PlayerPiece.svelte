@@ -1,12 +1,20 @@
 <script lang="ts">
   import { logService } from "$lib/services/logService.svelte";
-  export let row: number;
-  export let col: number;
-  export let boardSize: number;
   import SvgIcons from "../SvgIcons.svelte";
   import NotoEmoji from "../NotoEmoji.svelte";
 
-  $: logService.animation("Visual Position (PlayerPiece props)", { row, col });
+  interface Props {
+    row: number;
+    col: number;
+    boardSize: number;
+  }
+
+  let { row, col, boardSize }: Props = $props();
+
+  // `$effect`, а не `$derived`: тут не обчислення, а побічна дія — рядок у лог.
+  $effect(() => {
+    logService.animation("Visual Position (PlayerPiece props)", { row, col });
+  });
 </script>
 
 <div

@@ -9,11 +9,17 @@
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { fade } from "svelte/transition";
 
-    export let room: Room;
-    export let roomId: string;
-    export let amIHost: boolean = false;
+    interface Props {
+        room: Room;
+        roomId: string;
+        amIHost?: boolean;
+    }
 
-    let isCopied = false;
+    let { room, roomId, amIHost = false }: Props = $props();
+
+    // `$state`, а не `let`: у рунному режимі звичайне присвоєння DOM не оновлює,
+    // і галочка «скопійовано» просто не з'явилася б.
+    let isCopied = $state(false);
 
     function copyRoomId() {
         navigator.clipboard.writeText(roomId);

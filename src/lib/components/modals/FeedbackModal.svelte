@@ -6,7 +6,7 @@
     } from "$lib/services/feedbackService";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { logService } from "$lib/services/logService.svelte";
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
 
     import { userStore } from "$lib/services/authService";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
@@ -16,15 +16,30 @@
     import FeedbackMenu from "./feedback/FeedbackMenu.svelte";
     import FeedbackForm from "./feedback/FeedbackForm.svelte";
 
-    export let initialType: FeedbackType | null = null;
+    interface Props {
+        initialType?: FeedbackType | null;
+    }
 
-    let selectedType: FeedbackType | null = initialType;
-    let isSubmitting = false;
+    let { initialType = null }: Props = $props();
 
-    let pageLocation = "";
-    let textContent = "";
-    let actualResult = "";
-    let expectedResult = "";
+    /**
+     * Чернетка форми, а не похідне від пропа.
+     *
+     * `untrack` тут не косметика: без нього копіювання пропа в локальний
+     * `$state` — саме те «мовчазне копіювання», яке SVELTE-CORE-v8 § 1.10
+     * називає HIGH. Позначка робить намір явним: `initialType` задає ЛИШЕ
+     * початковий вибір, а далі його змінює гравець, і повертати сюди значення
+     * пропа не потрібно.
+     */
+    let selectedType = $state<FeedbackType | null>(untrack(() => initialType));
+    let isSubmitting = $state(false);
+
+    // `$state`, а не `let`: усі чотири прив'язані через `bind:` до
+    // `FeedbackForm`, який уже рунний і оголошує їх `$bindable()`.
+    let pageLocation = $state("");
+    let textContent = $state("");
+    let actualResult = $state("");
+    let expectedResult = $state("");
 
     onMount(() => {
         if (typeof window !== "undefined") {

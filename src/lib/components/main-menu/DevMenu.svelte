@@ -7,10 +7,19 @@
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
 
-    export let onClose: () => void = () => modalStateRune.closeModal();
-    export let onPlayVsComputer: () => void = () => {};
-    export let onLocalGame: () => void = () => {};
-    export let versionNumber: string;
+    interface Props {
+        onClose?: () => void;
+        onPlayVsComputer?: () => void;
+        onLocalGame?: () => void;
+        versionNumber: string;
+    }
+
+    let {
+        onClose = () => modalStateRune.closeModal(),
+        onPlayVsComputer = () => {},
+        onLocalGame = () => {},
+        versionNumber
+    }: Props = $props();
 
     function navigateTo(route: string) {
         goto(`${base}${route}`);

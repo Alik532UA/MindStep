@@ -8,36 +8,45 @@
     import { customTooltip } from "$lib/actions/customTooltip";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
 
-    export let achievement: Achievement;
-    export let unlockedInfo: UnlockedReward | UnlockedReward[] | undefined =
-        undefined;
+    interface Props {
+        achievement: Achievement;
+        unlockedInfo?: UnlockedReward | UnlockedReward[] | undefined;
+    }
 
-    $: isGroup = Array.isArray(unlockedInfo);
+    let { achievement, unlockedInfo = undefined }: Props = $props();
 
-    $: mainUnlock = isGroup
-        ? (unlockedInfo as UnlockedReward[]).sort(
-              (a, b) => b.unlockedAt - a.unlockedAt,
-          )[0]
-        : (unlockedInfo as UnlockedReward);
+    const isGroup = $derived(Array.isArray(unlockedInfo));
 
-    $: isUnlocked = !!mainUnlock;
+    // `.sort()` міняє масив на місці, тож копія обов'язкова: без неї похідне
+    // значення перевпорядковувало б САМ проп при кожному перерахунку.
+    const mainUnlock = $derived(
+        isGroup
+            ? [...(unlockedInfo as UnlockedReward[])].sort(
+                  (a, b) => b.unlockedAt - a.unlockedAt,
+              )[0]
+            : (unlockedInfo as UnlockedReward)
+    );
 
-    $: dateString = mainUnlock
-        ? formatDate(mainUnlock.unlockedAt, $locale)
-        : "";
+    const isUnlocked = $derived(!!mainUnlock);
 
-    $: tooltipText = isGroup
-        ? (unlockedInfo as UnlockedReward[])
-              .map((u) => {
-                  const parts = u.id.split("_");
-                  const size = parts[parts.length - 1];
-                  return !isNaN(Number(size)) ? `${size}x${size}` : size;
-              })
-              .sort((a, b) => parseInt(a) - parseInt(b))
-              .join(", ")
-        : "";
+    const dateString = $derived(
+        mainUnlock ? formatDate(mainUnlock.unlockedAt, $locale) : ""
+    );
 
-    $: badgeLabel = (() => {
+    const tooltipText = $derived(
+        isGroup
+            ? [...(unlockedInfo as UnlockedReward[])]
+                  .map((u) => {
+                      const parts = u.id.split("_");
+                      const size = parts[parts.length - 1];
+                      return !isNaN(Number(size)) ? `${size}x${size}` : size;
+                  })
+                  .sort((a, b) => parseInt(a) - parseInt(b))
+                  .join(", ")
+            : ""
+    );
+
+    const badgeLabel = $derived.by(() => {
         if (isGroup) {
             const rewards = unlockedInfo as UnlockedReward[];
             if (rewards.length > 1) {
@@ -49,9 +58,11 @@
             }
         }
         return achievement.variantLabel;
-    })();
+    });
 
-    $: showTooltip = isGroup && (unlockedInfo as UnlockedReward[]).length > 1;
+    const showTooltip = $derived(
+        isGroup && (unlockedInfo as UnlockedReward[]).length > 1
+    );
 </script>
 
 <div

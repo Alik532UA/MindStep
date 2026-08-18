@@ -1,5 +1,9 @@
 <script lang="ts">
-    export let message: { part1: string; move: string; part2: string };
+    interface Props {
+        message: { part1: string; move: string; part2: string };
+    }
+
+    let { message }: Props = $props();
 </script>
 
 <div class="compact-message-line">
