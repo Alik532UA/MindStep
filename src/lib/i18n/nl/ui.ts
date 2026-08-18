@@ -30,6 +30,8 @@ export default {
     titleLogin: "Inloggen",
     titleReset: "Wachtwoord Resetten",
     titleProfile: "Mijn Profiel",
+    nicknameLabel: "Bijnaam:",
+    emailLabel2: "E-mail:",
     emailLabel: "E-mail",
     passwordLabel: "Wachtwoord",
     newPasswordLabel: "Nieuw Wachtwoord",

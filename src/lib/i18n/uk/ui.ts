@@ -30,6 +30,8 @@ export default {
     titleLogin: "Вхід",
     titleReset: "Відновлення паролю",
     titleProfile: "Мій профіль",
+    nicknameLabel: "Нікнейм:",
+    emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Пароль",
     newPasswordLabel: "Новий пароль", // New

@@ -30,6 +30,8 @@ export default {
     titleLogin: "Kiriş",
     titleReset: "Parolnı Yañıla",
     titleProfile: "Menim Profilim",
+    nicknameLabel: "Taqma ad:",
+    emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Parol",
     newPasswordLabel: "Yañı Parol",

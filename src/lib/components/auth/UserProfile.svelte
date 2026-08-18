@@ -44,11 +44,11 @@
 
 <div class="profile-info">
     <div class="info-row">
-        <span class="label">Email:</span>
+        <span class="label">{$t("ui.auth.emailLabel2")}</span>
         <span class="value">{$userStore?.email}</span>
     </div>
     <div class="info-row">
-        <span class="label">Нікнейм:</span>
+        <span class="label">{$t("ui.auth.nicknameLabel")}</span>
         <EditableText
             value={$userProfileStore?.displayName || "Player"}
             canEdit={true}

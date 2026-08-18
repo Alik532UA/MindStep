@@ -78,7 +78,7 @@
         <hr class="divider" />
 
         <!-- Секція 3: Досягнення -->
-        <h2>Досягнення</h2>
+        <h2>{$t("rewards.achievementsTitle")}</h2>
         <div class="rewards-grid">
             {#each displayAchievements as item}
                 <RewardCard

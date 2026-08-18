@@ -3,6 +3,7 @@
     import { userProfileStore } from "$lib/services/auth/userProfileService";
     import { authService } from "$lib/services/authService";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
+    import { t } from "$lib/i18n/typedI18n";
 
     function handleNameChange(newName: string) {
         authService.updateNickname(newName);
@@ -16,12 +17,12 @@
             <NotoEmoji name="stopwatch" size="60px" />
         </div>
         <div class="pb-info">
-            <div class="pb-label">Мій рекорд (Гра на час)</div>
+            <div class="pb-label">{$t("rewards.personalBestTitle")}</div>
             <div class="pb-value">
                 {$userProfileStore?.bestTimeScore || 0}
             </div>
             <div class="pb-name">
-                <span class="label">Ім'я в рейтингу:</span>
+                <span class="label">{$t("rewards.leaderboardName")}</span>
                 <EditableText
                     value={$userProfileStore?.displayName || "Player"}
                     canEdit={true}

@@ -46,7 +46,7 @@
         {$t("updateNotification.updateButton")}
       </StyledButton>
       <button onclick={close} class="dismiss-btn">
-        Пізніше
+        {$t("updateNotification.dismissButton")}
       </button>
     </div>
   </div>

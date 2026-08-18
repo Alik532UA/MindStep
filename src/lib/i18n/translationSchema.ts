@@ -465,6 +465,7 @@ export interface TranslationSchema {
   };
   replay: {
     title: string;
+    loading: string;
     step: string;
     limitPath: string;
     close: string;
@@ -476,6 +477,16 @@ export interface TranslationSchema {
   };
   rewards: {
     pageTitle: string;
+    achievementsTitle: string;
+    personalBestTitle: string;
+    leaderboardName: string;
+    leaderboardTitle: string;
+    leaderboardLoading: string;
+    leaderboardEmpty: string;
+    filterAll: string;
+    columnPlayer: string;
+    columnBoard: string;
+    columnScore: string;
     unlockedOn: string;
     suggestRewardTitle: string;
     suggestRewardDescription: string;
@@ -691,6 +702,8 @@ export interface TranslationSchema {
       titleLogin: string;
       titleReset: string;
       titleProfile: string;
+      nicknameLabel: string;
+      emailLabel2: string;
       emailLabel: string;
       passwordLabel: string;
       newPasswordLabel: string;
@@ -725,6 +738,7 @@ export interface TranslationSchema {
     title: string;
     description: string;
     updateButton: string;
+    dismissButton: string;
   };
   voiceSettings: {
     title: string;

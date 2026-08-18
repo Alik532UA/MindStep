@@ -13,6 +13,7 @@
     import { boardState } from '$lib/stores/boardState.svelte';
     import { replayState } from "$lib/stores/replayState.svelte";
     import { i18nReady } from "$lib/i18n/init.js";
+    import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.svelte";
     import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
@@ -100,7 +101,7 @@
                 autoPlayForward={true}
             />
         {:else}
-            <div class="loading-overlay">Завантаження запису гри...</div>
+            <div class="loading-overlay">{$t("replay.loading")}</div>
         {/if}
     </ErrorBoundary>
 {:else}

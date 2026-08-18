@@ -1,5 +1,6 @@
 export default {
   title: "Доступне оновлення!",
   description: "Щоб уникнути помилок через старий кеш, будь ласка, перезавантажте гру.",
-  updateButton: "Оновити"
+  updateButton: "Оновити",
+  dismissButton: "Пізніше"
 };

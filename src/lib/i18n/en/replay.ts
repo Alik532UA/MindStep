@@ -1,4 +1,5 @@
 export default {
+    loading: "Loading the game recording...",
   title: "Game Replay",
   step: "Step {current}/{total}",
   limitPath: "Improved path visibility",

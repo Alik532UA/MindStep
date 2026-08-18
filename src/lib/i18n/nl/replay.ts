@@ -1,4 +1,5 @@
 export default {
+    loading: "Opname van het spel laden...",
   title: "Spel Herhaling",
   step: "Stap {current}/{total}",
   limitPath: "Verbeterde zichtbaarheid van het pad",

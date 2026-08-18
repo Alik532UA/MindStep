@@ -1,5 +1,15 @@
 // src/lib/i18n/uk/rewards.js
 export default {
+    achievementsTitle: "Досягнення",
+    personalBestTitle: "Мій рекорд (Гра на час)",
+    leaderboardName: "Ім'я в рейтингу:",
+    leaderboardTitle: "Топ гравців",
+    leaderboardLoading: "Завантаження рейтингу...",
+    leaderboardEmpty: "Поки що немає рекордів. Станьте першим!",
+    filterAll: "Всі",
+    columnPlayer: "Гравець",
+    columnBoard: "Дошка",
+    columnScore: "Рахунок",
     pageTitle: "Нагороди",
     unlockedOn: "Відкрито: {date}",
     suggestRewardTitle: "Запропонувати нагороду",

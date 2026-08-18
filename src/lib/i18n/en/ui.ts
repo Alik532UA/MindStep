@@ -30,6 +30,8 @@ export default {
     titleLogin: "Login",
     titleReset: "Password Reset",
     titleProfile: "My Profile",
+    nicknameLabel: "Nickname:",
+    emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Password",
     newPasswordLabel: "New Password",

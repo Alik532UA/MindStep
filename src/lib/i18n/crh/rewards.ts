@@ -1,5 +1,15 @@
 // src/lib/i18n/crh/rewards.ts
 export default {
+    achievementsTitle: "Nailiyetler",
+    personalBestTitle: "Menim rekordım (Vaqıtqa oyun)",
+    leaderboardName: "Reytingdeki adım:",
+    leaderboardTitle: "Eñ yahşı oyunçılar",
+    leaderboardLoading: "Reyting yüklene...",
+    leaderboardEmpty: "Alâ rekord yoq. Birinci oluñız!",
+    filterAll: "Episi",
+    columnPlayer: "Oyunçı",
+    columnBoard: "Tahta",
+    columnScore: "Esap",
     pageTitle: "Mukâfatlar",
     unlockedOn: "Açıldı: {date}",
     suggestRewardTitle: "Mükâfat teklif et",

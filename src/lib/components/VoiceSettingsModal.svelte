@@ -67,7 +67,7 @@
           {#if VoiceSettings}
             <VoiceSettings />
           {:else}
-            <div class="loading-placeholder">Завантаження...</div>
+            <div class="loading-placeholder">{$t("common.loading")}</div>
           {/if}
         </div>
       </div>
@@ -83,7 +83,7 @@
             {#if VoiceList}
               <VoiceList />
             {:else}
-              <div class="loading-placeholder">Завантаження...</div>
+              <div class="loading-placeholder">{$t("common.loading")}</div>
             {/if}
           </div>
         </div>

@@ -1,4 +1,5 @@
 export default {
+    loading: "Завантаження запису гри...",
   title: "Перегляд запису гри",
   step: "Крок {current}/{total}",
   limitPath: "Покращена видимість шляху",

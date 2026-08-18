@@ -1,5 +1,15 @@
 // src/lib/i18n/en/rewards.js
 export default {
+    achievementsTitle: "Achievements",
+    personalBestTitle: "My best (Timed game)",
+    leaderboardName: "Leaderboard name:",
+    leaderboardTitle: "Top players",
+    leaderboardLoading: "Loading the leaderboard...",
+    leaderboardEmpty: "No records yet. Be the first!",
+    filterAll: "All",
+    columnPlayer: "Player",
+    columnBoard: "Board",
+    columnScore: "Score",
     pageTitle: "Rewards",
     unlockedOn: "Unlocked: {date}",
     suggestRewardTitle: "Suggest a Reward",

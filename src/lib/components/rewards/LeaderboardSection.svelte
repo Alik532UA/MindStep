@@ -6,13 +6,18 @@
     } from "$lib/services/leaderboardService";
     import { userProfileStore } from "$lib/services/auth/userProfileService";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+    import { t } from "$lib/i18n/typedI18n";
 
     let leaders: LeaderboardEntry[] = [];
     let isLoadingLeaders = true;
     let selectedBoardSize: number | "all" = "all";
 
-    const boardSizes: { value: number | "all"; label: string }[] = [
-        { value: "all", label: "Всі" },
+    // `label: null` для «усіх розмірів», а підпис — у шаблоні. Якби рядок зі
+    // словника лежав тут, у `const`, він порахувався б РАЗ: перемикання мови
+    // лишало б чип із назвою попередньої, доки компонент не перемонтують
+    // (I18N-v8 § 2). Решта чипів — самі числа, однакові в усіх мовах.
+    const boardSizes: { value: number | "all"; label: string | null }[] = [
+        { value: "all", label: null },
         { value: 2, label: "2x2" },
         { value: 3, label: "3x3" },
         { value: 4, label: "4x4" },
@@ -45,7 +50,7 @@
 
 <div class="leaderboard-section">
     <div class="lb-header">
-        <h2>Топ гравців</h2>
+        <h2>{$t("rewards.leaderboardTitle")}</h2>
         <div class="filter-chips">
             {#each boardSizes as size}
                 <button
@@ -53,7 +58,7 @@
                     class:active={selectedBoardSize === size.value}
                     onclick={() => handleSizeFilter(size.value)}
                 >
-                    {size.label}
+                    {size.label ?? $t("rewards.filterAll")}
                 </button>
             {/each}
         </div>
@@ -61,17 +66,17 @@
 
     <div class="leaderboard-table-wrapper">
         {#if isLoadingLeaders}
-            <div class="loading">Завантаження рейтингу...</div>
+            <div class="loading">{$t("rewards.leaderboardLoading")}</div>
         {:else if leaders.length === 0}
-            <div class="empty">Поки що немає рекордів. Станьте першим!</div>
+            <div class="empty">{$t("rewards.leaderboardEmpty")}</div>
         {:else}
             <table class="leaderboard-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Гравець</th>
-                        <th>Дошка</th>
-                        <th>Рахунок</th>
+                        <th>{$t("rewards.columnPlayer")}</th>
+                        <th>{$t("rewards.columnBoard")}</th>
+                        <th>{$t("rewards.columnScore")}</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -1,5 +1,15 @@
 // src/lib/i18n/nl/rewards.ts
 export default {
+    achievementsTitle: "Prestaties",
+    personalBestTitle: "Mijn record (Op tijd)",
+    leaderboardName: "Naam in de ranglijst:",
+    leaderboardTitle: "Topspelers",
+    leaderboardLoading: "Ranglijst laden...",
+    leaderboardEmpty: "Nog geen records. Wees de eerste!",
+    filterAll: "Alle",
+    columnPlayer: "Speler",
+    columnBoard: "Bord",
+    columnScore: "Score",
     pageTitle: "Beloningen",
     unlockedOn: "Ontgrendeld: {date}",
     suggestRewardTitle: "Beloning voorstellen",

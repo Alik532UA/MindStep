@@ -1,4 +1,5 @@
 export default {
+    loading: "Oyun yazması yüklene...",
   title: "Oyun Tekrarı",
   step: "Adım {current}/{total}",
   limitPath: "Yaxşılaşdırılğan yol körünüşi",
