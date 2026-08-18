@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.867",
+  "version": "0.5.868",
   "type": "module",
   "engines": {
     "node": ">=22"
