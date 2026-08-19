@@ -9,7 +9,6 @@ export default {
   cashOut: "Start New Game",
   cashOutTooltip: "Cash out and start a new game",
   cashOutLocal: `End Game\nEarly`,
-  tutorialTitle: "",
   tutorialContent: "Your goal is to take turns moving the shared piece without going off the board. Hide the piece or the board in the settings to earn more points for each move!",
   info: "Instructions",
   details: "Details",

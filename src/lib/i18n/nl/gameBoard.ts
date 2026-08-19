@@ -9,7 +9,6 @@ export default {
   cashOut: "Nieuw spel starten",
   cashOutTooltip: "Punten innen en een nieuw spel starten",
   cashOutLocal: `Spel vroeg\nbeëindigen`,
-  tutorialTitle: "",
   tutorialContent: "Je doel is om beurten het gedeelde stuk te verplaatsen zonder van het bord te gaan. Verberg het stuk of het bord in de instellingen om meer punten te verdienen voor elke zet!",
   info: "Instructies",
   details: "Details",

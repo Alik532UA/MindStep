@@ -106,7 +106,6 @@ export interface TranslationSchema {
     cashOut: string;
     cashOutTooltip: string;
     cashOutLocal: string;
-    tutorialTitle: string;
     tutorialContent: string;
     info: string;
     details: string;
