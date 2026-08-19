@@ -7,7 +7,7 @@
  * | Клавіша | Стан | Де / чому |
  * |---|---|---|
  * | `T` | ✅ тема | `global`, `+layout.svelte`; світла ↔ темна |
- * | `L` | ✅ мова | `global`, `+layout.svelte`; по колу uk → en → crh → nl |
+ * | `L` | ✅ мова | `global`, `+layout.svelte`; по колу uk → en → crh → nl — мов чотири, і зміна НЕ навігація (`locale.set`), тож перебір дозволений (HOTKEYS-v8 `HK-LANGUAGE-KEY`). Там, де мов більше або зміна є навігацією, `L` відкриває панель — див. `CV`, `DigitalWorkshop`, `VetCrewGames` |
  * | `V` | ✅ службове табло | серія натискань, нижче в цьому файлі; сам елемент — `widgets/LogCopyButton.svelte` |
  * | `R` | ✅ аварійне скидання | серія натискань, нижче в цьому файлі |
  * | `Esc` | ✅ головне меню | `main-menu` у `gameSettingsDefaults` |

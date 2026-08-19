@@ -40,7 +40,7 @@ class DebugMode {
         // `browser &&` обовʼязково: під час prerender сховища немає, а фасад, хоч і
         // не кидає, віддав би `null` — читати його там просто нема сенсу.
         if (browser) {
-            const stored = storageService.get('debug-mode');
+            const stored = storageService.get('debug_mode');
             this.override = stored === '1' ? true : stored === '0' ? false : null;
         }
     }
@@ -72,7 +72,7 @@ class DebugMode {
          * зʼявилося б знову після перезавантаження — а людина щойно попросила його
          * сховати. Три стани в сховищі мусять бути тими самими трьома, що в памʼяті.
          */
-        storageService.set('debug-mode', next ? '1' : '0');
+        storageService.set('debug_mode', next ? '1' : '0');
         return next;
     }
 }
