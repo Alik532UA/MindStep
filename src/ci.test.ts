@@ -12,7 +12,31 @@ import { describe, expect, it } from 'vitest';
 const DIR = '.github/workflows';
 
 const files = existsSync(DIR) ? readdirSync(DIR).filter((f) => /\.ya?ml$/.test(f)) : [];
-const all = files.map((f) => readFileSync(`${DIR}/${f}`, 'utf8')).join('\n');
+
+/**
+ * Рядки-коментарі відрізаються перед пошуком.
+ *
+ * Перевірка читає текст файлу, а не розібраний YAML, — і через це вважала
+ * порушенням ЗГАДКУ про порушення. `ci.yml` пояснює в шапці, чому в ньому немає
+ * `concurrency`, і цитує при цьому заборонений рядок; тест червонів на
+ * коментарі, який описує саме те правило, яке він стереже.
+ *
+ * Це та сама помилка, що вже ловилася в `test-runners.test.ts` (там докблок
+ * цитував мертвий імпорт і оголошував сиротою сам файл), і той самий висновок:
+ * перевірка, яка червоніє без порушення, недовго лишається ввімкненою
+ * (CODE-QUALITY-v8 § 6.4.1).
+ *
+ * Відрізаються лише ЦІЛІ рядки-коментарі: `#` усередині значення (наприклад,
+ * колір) при цьому лишається на місці.
+ */
+const withoutComments = (yaml: string): string =>
+	yaml
+		.split('\n')
+		.filter((line) => !/^\s*#/.test(line))
+		.join('\n');
+
+const sourceOf = (file: string): string => withoutComments(readFileSync(`${DIR}/${file}`, 'utf8'));
+const all = files.map(sourceOf).join('\n');
 const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
 	scripts?: Record<string, string>;
 };
@@ -63,12 +87,32 @@ describe('CI', () => {
 	 */
 	it('деплой-пайплайн не скасовує проміжні прогони (§ 1.3)', () => {
 		const cancelling = files.filter((f) =>
-			/cancel-in-progress:\s*true/.test(readFileSync(`${DIR}/${f}`, 'utf8'))
+			/cancel-in-progress:\s*true/.test(sourceOf(f))
 		);
 		expect(
 			cancelling,
 			'скасований прогін ховає гейт, який жодного разу не виконувався'
 		).toEqual([]);
+	});
+
+	/**
+	 * CODE-QUALITY-v8 § 6.1 — гейти виконуються на Pull Request.
+	 *
+	 * Доти обидва workflow були прив'язані до викладання: `push` у `main` і
+	 * ручний запуск. На PR не виконувалося нічого — а `.github/dependabot.yml`
+	 * щотижня відкриває до п'яти PR з оновленнями залежностей, тобто рівно той
+	 * стан, який DEPENDENCIES-v8 § 3.1 називає «автоматичне злиття оновлень без
+	 * запуску тестів».
+	 *
+	 * Перевіряється саме тригер, а не назва файлу: гейт може переїхати в інший
+	 * workflow, і це нормально; зникнути з PR — ні.
+	 */
+	it('є workflow, що запускається на pull_request (§ 6.1)', () => {
+		const onPullRequest = files.filter((f) => /^\s{1,4}pull_request:/m.test(sourceOf(f)));
+		expect(
+			onPullRequest.length,
+			'жоден workflow не запускається на PR — оновлення залежностей приїжджають неперевіреними'
+		).toBeGreaterThan(0);
 	});
 
 	/**

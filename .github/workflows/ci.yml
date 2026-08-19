@@ -1,0 +1,106 @@
+# .github/workflows/ci.yml
+#
+# Гейти на Pull Request (CODE-QUALITY-v8 § 6.1).
+#
+# ЧОГО БРАКУВАЛО. У репозиторії два workflow, і обидва прив'язані не до змін, а
+# до викладання: `deploy.yml` — `push` у `main`, `deploy-dev.yml` — тільки
+# `workflow_dispatch`. Тобто на Pull Request не виконувалося НІЧОГО.
+#
+# Це не теоретична дірка. `.github/dependabot.yml` щотижня відкриває до п'яти PR
+# з оновленнями залежностей — і жоден із них доти не проходив ні `check`, ні
+# `lint`, ні тестів, ні збірки. Оновлення приїжджало в `dev`, звідти в `main`, і
+# першим, хто його перевіряв, був деплой у продакшн. DEPENDENCIES-v8 § 3.1
+# називає цей стан прямо: «автоматичне злиття оновлень без запуску тестів».
+#
+# ЧОМУ ОКРЕМИЙ ФАЙЛ, А НЕ ТРИГЕР У НАЯВНИХ. `deploy.yml` і `deploy-dev.yml`
+# закінчуються викладанням на GitHub Pages і мають `contents: write`. Додати їм
+# `pull_request` означало б дати право запису гілці, яка приїхала з PR. Тут
+# `contents: read` і жодного кроку деплою — цей workflow нічого не змінює.
+#
+# ЧОМУ НЕМАЄ concurrency. `cancel-in-progress: true` заборонений інваріантом
+# `src/ci.test.ts` (CI-CD-AND-TOOLS-v8 § 1.3): скасований прогін ховає гейт,
+# який жодного разу не виконувався. Для PR-гейта група з `false` означала б
+# чергу замість паралельних прогонів, тож групи немає зовсім.
+#
+# ЩО ТУТ НЕ ПЕРЕВІРЯЄТЬСЯ. `npm run check:rules` — окремий джоб `rules` у
+# `deploy.yml`, він потребує Java та емуляторів і не залежить від коду
+# застосунку. Онлайн-e2e (`test:online`) — теж емулятор, це записано в
+# PROJECT-CONTEXT.md як борг.
+
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Check types
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:report
+
+      - name: Upload unit test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report-pr
+          path: test-reports/
+          retention-days: 7
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      # Ті самі два файли, що і в `deploy.yml`: решта `tests/e2e/` або важка
+      # (`virtual/`), або потребує емулятора Firebase (`online/`).
+      - name: Runtime invariants (unique data-testid, html lang, focus)
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pr
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      # Секрети сюди НЕ передаються навмисно: у PR із форку й у PR від
+      # Dependabot вони недоступні за побудовою, тож крок, який на них
+      # розраховує, був би червоним завжди. Збірка їх і не потребує —
+      # `+layout.ts` вимикає SSR, тож під час prerender жоден код застосунку не
+      # виконується й до конфігу Firebase не звертається. Перевірено локально:
+      # збірка без `.env` проходить, `check:build` теж.
+      - name: Build
+        run: npm run build
+        env:
+          BASE_PATH: "/MindStep"
+
+      - name: Check built output
+        run: npm run check:build
+
+      - name: Збірка не змінює відстежувані файли
+        run: git diff --exit-code
