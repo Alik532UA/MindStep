@@ -164,7 +164,7 @@
     .test-mode-row-btn {
         background: var(--control-bg);
         border: var(--global-border-width) solid var(--border-color);
-        color: var(--text-color);
+        color: var(--text-primary);
         padding: 0 0.4rem;
         line-height: 1.5;
         font-size: 0.8rem;
@@ -193,7 +193,7 @@
     .test-mode-dir-btn {
         background: var(--control-bg);
         border: var(--global-border-width) solid var(--border-color);
-        color: var(--text-color);
+        color: var(--text-primary);
         border-radius: 16px;
         min-width: 100%;
         font-size: 0.9rem;
@@ -253,7 +253,7 @@
     .test-mode-square-btn {
         background: var(--control-bg);
         border: var(--global-border-width) solid var(--border-color);
-        color: var(--text-color);
+        color: var(--text-primary);
         border-radius: 12px;
         width: 100%;
         height: 100%;

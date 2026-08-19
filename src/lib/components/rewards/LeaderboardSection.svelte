@@ -201,7 +201,10 @@
     }
 
     .leaderboard-table tr.me {
-        background: rgba(var(--text-accent-rgb), 0.1);
+        /* `--text-accent-rgb` не оголошена ніде, тож рядок «я» не підсвічувався
+           взагалі. `color-mix` не потребує окремої RGB-трійки на кожну з шести
+           тем — бере вже наявний токен. */
+        background: color-mix(in srgb, var(--text-accent) 12%, transparent);
         font-weight: bold;
     }
 
