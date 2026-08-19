@@ -1,4 +1,4 @@
-import type { BetaCheck, BetaTab } from './betaChecklist.types';
+import type { BetaCheck, BetaTab, Localized } from './betaChecklist.types';
 
 /**
  * Пункти чеклиста бета-тестування (BETA-CHECKLIST-v8 § 2).
@@ -79,10 +79,11 @@ export const BETA_UNCOVERED_ROUTES: readonly string[] = [
 	'/test',
 	'/test/buttons',
 	'/test-error',
-	'/test-main-menu-v2'
-	// Сама сторінка чеклиста дописується сюди разом із самим маршрутом:
-	// інваріант § 5.1 не приймає винятку для сторінки, якої ще не існує, — і це
-	// правильно, бо виняток, що переживає сторінку, лишає наступну без перевірок.
+	'/test-main-menu-v2',
+	// Сама сторінка чеклиста: перевіряти списком список — порожня рекурсія.
+	// Дописано разом із самим маршрутом; доти інваріант § 5.1 цього винятку не
+	// приймав, бо виняток, що переживає сторінку, лишає наступну без перевірок.
+	'/beta-test-checklists'
 ];
 
 export const BETA_CHECKS: readonly BetaCheck[] = [
@@ -583,3 +584,52 @@ export const BETA_CHECKS: readonly BetaCheck[] = [
 		}
 	}
 ];
+
+/**
+ * Текст обв'язки сторінки — тим самим двомовним механізмом, що й пункти.
+ *
+ * Не у словнику інтерфейсу, і з тієї самої причини, що в § 2.4: сторінка
+ * службова, її бачить тестувальник, а паритет чотирьох мов зробив би кожну
+ * правку чотирикратною. Дві мови в даних; решта мов інтерфейсу показує
+ * англійський — так само, як самі пункти.
+ */
+export const BETA_UI = {
+	pageTitle: { uk: 'Чеклист бета-тестування', en: 'Beta testing checklist' },
+	intro: {
+		uk: 'Список того, чого не перевіряє машина. Ставте позначку одразу — вона запам’ятовується разом із версією збірки, тож позначка з іншої версії буде видна окремо.',
+		en: 'A list of what machines do not check. Mark as you go — each mark is stored with the build version, so a mark from another build stays visible as such.'
+	},
+	levelManual: { uk: 'Лише руками', en: 'By hand only' },
+	levelManualHint: {
+		uk: 'Автотестом це не перевіряється — потрібне око, палець або другий пристрій.',
+		en: 'No automated test covers this — it needs an eye, a finger, or a second device.'
+	},
+	levelTestable: { uk: 'Можна покрити тестом, покриття немає', en: 'Coverable, not covered' },
+	levelTestableHint: {
+		uk: 'Це готовий перелік тестів, яких бракує.',
+		en: 'This is a ready-made list of the tests that are missing.'
+	},
+	levelCovered: { uk: 'Покрито автотестом', en: 'Covered by a test' },
+	levelCoveredHint: {
+		uk: 'Контрольна група. Помилка тут — звіт про дефект ТЕСТА, а не гри, і у звіті вона позначається окремо.',
+		en: 'A control group. A failure here reports a defect in the TEST, not the game, and the report flags it separately.'
+	},
+	voteFail: { uk: 'Не працює', en: 'Broken' },
+	voteWeird: { uk: 'Працює, але дивно', en: 'Works, but oddly' },
+	voteOk: { uk: 'Працює', en: 'Works' },
+	staleHint: { uk: 'позначено на іншій версії', en: 'marked on another build' },
+	boundary: { uk: 'межа', en: 'boundary' },
+	progress: { uk: 'Позначено на цій версії', en: 'Marked on this build' },
+	copyReport: { uk: 'Скопіювати звіт', en: 'Copy the report' },
+	copied: { uk: 'Звіт у буфері обміну.', en: 'The report is in the clipboard.' },
+	copyFailed: {
+		uk: 'Буфер обміну недоступний. Звіт нижче — виділіть і скопіюйте вручну.',
+		en: 'The clipboard is unavailable. The report is below — select it and copy by hand.'
+	},
+	clear: { uk: 'Стерти всі позначки', en: 'Erase every mark' },
+	clearConfirm: {
+		uk: 'Стерти всі позначки? Скасувати це не вийде.',
+		en: 'Erase every mark? This cannot be undone.'
+	},
+	nothingMarked: { uk: 'Жодного пункта ще не позначено.', en: 'Nothing marked yet.' }
+} as const satisfies Record<string, Localized>;

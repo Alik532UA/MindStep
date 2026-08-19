@@ -162,6 +162,37 @@ if (existsSync(sitemapPath)) {
 }
 
 /*
+ * Прихована сторінка чеклиста (BETA-CHECKLIST-v8 § 5.5) — і чому перевірка тут
+ * НЕ така, як у каноні.
+ *
+ * Канон просить перевіряти зібраний HTML сторінки: `noindex` є, `canonical`
+ * немає. Це передбачає, що в кожного маршруту свій файл. У цьому профілі його
+ * немає ні в кого: `+layout.ts` вимикає SSR для всього застосунку, тож
+ * `build/` містить рівно `index.html` (фолбек SPA) і `404.html`. Тег
+ * `<meta name="robots">` зі `<svelte:head>` виставляє клієнт після гідрації —
+ * у поданому HTML його немає, і жодна перевірка над `build/` цього не побачить.
+ *
+ * Тому обіцянка «сторінку не індексують» тут тримається на `robots.txt`, який
+ * діє незалежно від того, чи виконує краулер JS. Саме це й перевіряється нижче.
+ * Рантаймовий `noindex` — другий шар, і його бік перевіряє e2e: там же
+ * перевіряється ПРОТИЛЕЖНЕ (що на грі цього тега немає), бо випадковий
+ * `noindex` на грі вивів би її з індексу тихо.
+ */
+const HIDDEN_ROUTES = ['/MindStep/beta-test-checklists'];
+const robotsPath = join(BUILD, 'robots.txt');
+if (!existsSync(robotsPath)) {
+	fail('robots.txt', 'файлу немає — приховані сторінки нічим не закриті');
+} else {
+	const robots = readFileSync(robotsPath, 'utf8');
+	const disallowed = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]);
+	for (const route of HIDDEN_ROUTES) {
+		if (!disallowed.some((d) => route.startsWith(d))) {
+			fail('robots.txt', `${route} не закрита Disallow — службова сторінка піде в індекс`);
+		}
+	}
+}
+
+/*
  * SDK бази — не в критичному шляху (CLOUD-DATABASE-v8 § 10.2).
  *
  * ЧОМУ ПО `build/`, А НЕ ПО КОДУ. Пакет `firebase` статично імпортується в

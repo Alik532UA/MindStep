@@ -122,6 +122,19 @@ function collectLocators(): { literals: Set<string>; patterns: RegExp[] } {
 	return { literals, patterns };
 }
 
+/**
+ * Один обхід дерева на весь файл.
+ *
+ * Перша редакція кликала `collectLocators()` у трьох перевірках окремо, тобто
+ * читала все `src` тричі. Під паралельним прогоном 21 файлу це перевалило за
+ * типові 5 c, і перевірка почала падати з таймауту — плаваючий гейт, на який
+ * швидко перестають дивитися (CODE-QUALITY-v8 § 6.4.2). Дані за прогін не
+ * змінюються, тож обхід має бути один.
+ */
+const LOCATORS = collectLocators();
+const resolvesLocator = (id: string) =>
+	LOCATORS.literals.has(id) || LOCATORS.patterns.some((p) => p.test(id));
+
 function escapeRe(s: string): string {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -148,12 +161,13 @@ describe('перевірка жива', () => {
 	});
 
 	it('локатори збираються, і вигаданий не проходить', () => {
-		const { literals, patterns } = collectLocators();
-		expect(literals.size, 'жодного локатора — регулярка перестала збігатися').toBeGreaterThan(100);
+		expect(
+			LOCATORS.literals.size,
+			'жодного локатора — регулярка перестала збігатися'
+		).toBeGreaterThan(100);
 		// Канарка: без неї послаблена перевірка приймала б будь-що й виглядала
 		// як доказ (AI-AGENT-PITFALLS-v8 § 1.1).
-		const fake = 'this-locator-does-not-exist-anywhere-btn';
-		expect(literals.has(fake) || patterns.some((p) => p.test(fake))).toBe(false);
+		expect(resolvesLocator('this-locator-does-not-exist-anywhere-btn')).toBe(false);
 	});
 });
 
@@ -229,9 +243,6 @@ describe('BETA-CHECKLIST-v8 § 5.2 — покриття', () => {
 });
 
 describe('BETA-CHECKLIST-v8 § 5.3 — «натисніть» вимагає локатора', () => {
-	const { literals, patterns } = collectLocators();
-	const resolves = (id: string) => literals.has(id) || patterns.some((p) => p.test(id));
-
 	it('пункт, що просить натиснути, називає локатор', () => {
 		const naked = checks
 			.filter((c) => /натисн/i.test(c.text.uk) || /\bpress\b|\bclick\b/i.test(c.text.en))
@@ -243,7 +254,7 @@ describe('BETA-CHECKLIST-v8 § 5.3 — «натисніть» вимагає л�
 	it('кожен названий локатор існує в розмітці', () => {
 		const ghosts = checks
 			.filter((c) => c.testid)
-			.filter((c) => !resolves(c.testid as string))
+			.filter((c) => !resolvesLocator(c.testid as string))
 			.map((c) => `${c.id} → ${c.testid}`);
 		expect(ghosts, 'локатор із чеклиста не знайдено в жодному компоненті').toEqual([]);
 	});
