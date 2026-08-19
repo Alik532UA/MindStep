@@ -78,20 +78,40 @@
 			margin: 0;
 			padding: 0;
 		}
+
+		/*
+			Світлий фон — селектором, а не присвоєнням із скрипта нижче.
+
+			Доти тут стояло `document.body.style.backgroundColor = '#f0f2f5'`, і
+			воно не виконувалося ЖОДНОГО разу: скрипт лежить у <head>, а поки
+			парситься <head>, `document.body` дорівнює null. Присвоєння кидало
+			TypeError, і його з'їдав `catch (e) {}` поруч. Симптому при цьому
+			майже немає — сторінка малюється правильно, просто зі світлою темою
+			перший кадр темний, доки не приїде app.css. Рівно той клас, який
+			AI-AGENT-PITFALLS-v8 § 2.1 називає «відсутність симптому не є
+			доказом відсутності проблеми».
+
+			Атрибут виставляє той самий скрипт, тож правило спрацьовує на
+			першому ж обчисленні стилів — тобто раніше, ніж будь-який JS міг би.
+			Значення — перший стоп градієнта `--bg-primary` світлої теми типового
+			стилю `gray` (themes/gray.css), тобто рівно той колір, який ляже на
+			<body> після app.css. Попереднє `#f0f2f5` не збігалося ні з чим.
+		*/
+		html[data-theme='light'],
+		html[data-theme='light'] body {
+			background-color: #f5f6fa;
+		}
 	</style>
 	<script>
-		// Миттєве застосування теми ще до ініціалізації Svelte
+		// Миттєве застосування теми ще до ініціалізації Svelte.
+		// Фон при цьому НЕ чіпається: <body> тут ще не існує (див. коментар у
+		// <style> вище) — за нього відповідає правило `html[data-theme='light']`.
 		(function() {
 			try {
 				const theme = localStorage.getItem('mindstep_theme') || 'dark';
 				const style = localStorage.getItem('mindstep_style') || 'gray';
 				document.documentElement.setAttribute('data-theme', theme);
 				document.documentElement.setAttribute('data-style', style);
-				
-				// Якщо тема світла, змінюємо фон body одразу
-				if (theme === 'light') {
-					document.body.style.backgroundColor = '#f0f2f5';
-				}
 			} catch (e) {}
 		})();
 	</script>
