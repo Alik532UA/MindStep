@@ -21,6 +21,9 @@
 	import { testModeState } from "$lib/stores/testModeState.svelte";
 	import { resetAllStores } from "$lib/services/testingService";
 	import hotkeyService from "$lib/services/hotkeyService";
+	// Тема й мова — для глобальних клавіш `T` і `L` (див. onMount нижче).
+	import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
+	import { locale } from "svelte-i18n";
 	import { i18nReady } from "$lib/i18n/init.js";
 	import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
@@ -91,9 +94,37 @@
 			(window as any).resetAllStores = resetAllStores;
 		}
 
-		// REMOVED: Global hotkeys registration
-		// hotkeyService.register("global", "[", ...);
-		// hotkeyService.register("global", "t", ...);
+		/*
+		 * ГЛОБАЛЬНІ КЛАВІШІ: `T` — тема, `L` — мова (HOTKEYS-v8 § 1.1).
+		 *
+		 * Тут, а не в `gameSettingsDefaults`, бо той перелік діє в контексті
+		 * `game` — тобто лише під час партії. Тема й мова потрібні на кожному
+		 * екрані, а `global` лежить у стеку завжди.
+		 *
+		 * Ключі саме `KeyT`/`KeyL`, а не `'t'`/`'l'`: реєстр звіряється з
+		 * `event.code`, і на нелатинській розкладці `event.key` віддав би інший
+		 * символ — скорочення просто зникло б для того, хто не перемкнув розкладку
+		 * (HOTKEYS-v8 § 1.3). Доти тут стояли закомментовані рядки саме з `"t"`.
+		 *
+		 * Захист полів вводу й модифікаторів дає сам `hotkeyService`: обробник
+		 * виходить, поки фокус у полі, і не реагує на `Ctrl+T`.
+		 */
+		hotkeyService.register("global", "KeyT", () => {
+			const next = appSettingsState.state.theme === "dark" ? "light" : "dark";
+			logService.ui(`Зміна теми клавішею: ${next}`);
+			appSettingsState.updateSettings({ theme: next });
+		});
+
+		hotkeyService.register("global", "KeyL", () => {
+			// Той самий порядок, що в налаштуваннях: людина, яка звикла до списку,
+			// не мусить вгадувати, куди веде клавіша.
+			const order = ["uk", "en", "crh", "nl"] as const;
+			const current = appSettingsState.state.language as (typeof order)[number];
+			const next = order[(order.indexOf(current) + 1) % order.length];
+			logService.ui(`Зміна мови клавішею: ${next}`);
+			appSettingsState.updateSettings({ language: next });
+			locale.set(next);
+		});
 
 		// Remove old 'sw.js' service worker to fix 404 errors during migration to 'service-worker.js'
 		if ("serviceWorker" in navigator) {
@@ -277,17 +308,12 @@
 				                                                                                                                                                                        emoji: "memo", // memo emoji exists
 				                                                                                                                                                                        tooltip: "Копіювати логи",
 				                                                                                                                                                                        onClick: () => {
-				                                                                                                                                                                            const report = logService.getLogReport();
-				                                                                                                                                                                            // ISO, а не toLocaleString(): звіт читає той, хто розбирає збій, а не
-// гравець, який його скопіював. Голий toLocaleString() рендериться в
-// локалі СИСТЕМИ гравця — 03.08 чи 08.03 залежно від того, де він живе,
-// і розрізнити їх у звіті нема по чому (I18N-v8 § 4.3).
-const timestamp = new Date().toISOString();
-				                                                                                                                                                                            const header = `--- MindStep DEBUG LOG (VERSION: ${logService.version}) ---\nGenerated: ${timestamp}\n-----------------------------------------------\n\n`;
-				                                                                                                                                                                            
-				                                                                                                                                                                            navigator.clipboard.writeText(header + report).then(() => {
-				                                                                                                                                                                                notificationService.show({ type: 'info', messageRaw: 'Logs copied to clipboard' });
-				                                                                                                                                                                            });
+							// Шапка звіту (версія, адреса, пристрій, стан мережі) живе в
+							// `getLogReport()`, а не тут: доти її будували двоє й по-різному,
+							// і сходилися вони лише в номері версії.
+							navigator.clipboard.writeText(logService.getLogReport()).then(() => {
+								notificationService.show({ type: 'info', messageRaw: 'Logs copied to clipboard' });
+							});
 				                                                                                                                                                                        },
 				                                                                                                                                                                        dataTestId: "left-menu-copy-logs-btn",
 				                                                                                                                                                                },				                                                                {
@@ -381,6 +407,20 @@ const timestamp = new Date().toISOString();
 	<!-- PWA Update Prompt -->
 	<ReloadPrompt />
 </ErrorBoundary>
+
+<!--
+  Службове табло — ПОЗА `ErrorBoundary`, і це головне в його розміщенні.
+
+  Доти компонент був лише ЗАІМПОРТОВАНИЙ, а в розмітці не стояв: тобто кнопка
+  копіювання звіту не існувала на екрані взагалі, ні в dev, ні в проді. Тепер
+  вона стоїть поза межею перехоплення, бо `ErrorBoundary` при падінні ЗАМІНЯЄ
+  дітей своєю сторінкою — тобто прибрав би табло рівно в ту мить, коли звіт
+  найпотрібніший. Власна кнопка межі копіює один виняток; це табло копіює весь
+  журнал до падіння включно.
+
+  Показувати себе чи ні, компонент вирішує сам (`?debug=1`, серія `V`, dev).
+-->
+<LogCopyButton />
 
 <style>
 	.app {
