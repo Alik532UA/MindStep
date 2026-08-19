@@ -11,30 +11,71 @@ type HotkeyAction = {
 const contextStack = writable<string[]>(['global']);
 const hotkeyRegistry = new Map<string, Map<string, HotkeyAction>>();
 
-// Логіка для Hard Reset (KeyR sequence)
+/*
+ * АВАРІЙНЕ СКИДАННЯ: серія натискань `R`.
+ *
+ * Доти тут не було ЖОДНОГО з чотирьох потрібних обмежень, і найдорожчим був
+ * порядок перевірок: `KeyR` рахувався ВИЩЕ захисту полів вводу, тобто жест
+ * працював і тоді, коли людина друкує. Разом із відсутнім фільтром автоповтору це
+ * означало ось що: затиснута `R` дає ~30 подій за секунду, тож поріг у 55
+ * набирався менш ніж за дві секунди — у полі пошуку, без вікна між натисканнями й
+ * без підтвердження. Усі локальні дані стиралися випадково, від того, що на
+ * клавіатуру щось поклали.
+ *
+ * Чотири обмеження, і кожне закриває свій спосіб спрацювати випадково:
+ *
+ *  1. `event.repeat` — затиснута клавіша це ОДНЕ натискання, а не серія;
+ *  2. поля вводу — перевірка тепер стоїть ПЕРЕД лічильником, і жест її враховує;
+ *  3. вікно 2 с між натисканнями — без нього лічильник живе всю сесію, і
+ *     натиснувши `R` по одному разу протягом години, людина отримує скидання,
+ *     якого не робила;
+ *  4. підтвердження в проді — `hardReset` без нього стирає прогрес без запитання.
+ *
+ * `closest`, а не `tagName`: фокус усередині `contenteditable` стоїть на
+ * вкладеному вузлі, і його `tagName` — це `SPAN`, тож перевірка за тегом його
+ * пропускала.
+ */
 let resetKeyCounter = 0;
+let resetKeyTimer: ReturnType<typeof setTimeout> | undefined;
 const RESET_THRESHOLD = import.meta.env.DEV ? 5 : 55;
+const RESET_WINDOW_MS = 2000;
+
+function isTypingTarget(target: EventTarget | null): boolean {
+    const element = target as HTMLElement | null;
+    if (!element || typeof element.closest !== 'function') return false;
+    return (
+        element.closest(
+            'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+        ) !== null
+    );
+}
 
 function handleKeydown(event: KeyboardEvent) {
-    // 0. Спеціальна перевірка на Hard Reset (KeyR)
-    if (event.code === 'KeyR') {
-        resetKeyCounter++;
-        logService.hotkey(`[hotkeyService] KeyR pressed. Count: ${resetKeyCounter}/${RESET_THRESHOLD}`);
-        if (resetKeyCounter >= RESET_THRESHOLD) {
-            resetKeyCounter = 0;
-            maintenanceService.hardReset();
-            return;
-        }
-    } else {
-        resetKeyCounter = 0;
-    }
+    // 1. Перевірка на фокус в полях вводу (Global Input Protection).
+    //    Стоїть ПЕРЕД лічильником скидання: інакше жест працює під час набору.
+    const isInputActive = isTypingTarget(event.target);
 
-    // 1. Перевірка на фокус в полях вводу (Global Input Protection)
-    const target = event.target as HTMLElement;
-    const isInputActive =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable;
+    // 2. Аварійне скидання. Автоповтор і набір тексту не рахуються.
+    if (!event.repeat && !isInputActive) {
+        if (event.code === 'KeyR') {
+            resetKeyCounter++;
+            clearTimeout(resetKeyTimer);
+            logService.hotkey(`[hotkeyService] KeyR pressed. Count: ${resetKeyCounter}/${RESET_THRESHOLD}`);
+            if (resetKeyCounter >= RESET_THRESHOLD) {
+                resetKeyCounter = 0;
+                // У проді — з підтвердженням: другий незалежний бар'єр перед
+                // знищенням прогресу.
+                void maintenanceService.hardReset(!import.meta.env.DEV);
+                return;
+            }
+            // Вікно між натисканнями робить це СЕРІЄЮ, а не сумою за сесію.
+            resetKeyTimer = setTimeout(() => {
+                resetKeyCounter = 0;
+            }, RESET_WINDOW_MS);
+        } else {
+            resetKeyCounter = 0;
+        }
+    }
 
     if (isInputActive && event.code !== 'Escape') {
         return;
