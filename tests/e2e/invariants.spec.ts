@@ -154,3 +154,71 @@ test('чеклист малює вкладки, рівні та позначки
 	await page.getByTestId('beta-vote-ok-menu_1-btn').click();
 	await expect(progress).toHaveText(/^0 \//);
 });
+
+/**
+ * Кожен елемент, до якого доходить Tab, показує, що він у фокусі
+ * (ACCESSIBILITY-v8, HIGH — WCAG 2.4.7 Focus Visible, рівень AA).
+ *
+ * **Чому саме рантаймово.** Статично видно лише текст правил: у `src/` є
+ * п'ятнадцять місць із `outline: none`, і більшість із них законні — поруч
+ * стоїть власний індикатор (рамка поля, тінь, підсвітка). Відрізнити законне
+ * від дірки можна лише склавши каскад, а склавши його — лише в браузері.
+ * Перевірка з хибними спрацюваннями закінчується вимкненою перевіркою
+ * (CODE-QUALITY-v8 § 6.4.1), тому статичного гейта тут немає навмисно.
+ *
+ * **Чому саме Tab, а не `element.focus()`.** `:focus-visible` за побудовою
+ * залежить від того, ЯК прийшов фокус: після кліку мишею він не спрацьовує, і
+ * саме заради цього `outline: none` і ставлять. Програмний `focus()` дав би
+ * зелений результат на кнопці без жодної рамки.
+ *
+ * Перевіряється `outline-style`, а не ширина: нативна рамка Chromium — це
+ * `outline-style: auto`, а її обчислена ширина одразу після Tab буває нульовою,
+ * якщо на елементі висить `transition: all` (так у `.menu-button`). Ширина тут
+ * дала б плаваючий гейт, стиль — ні.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): повернути
+ * `.toggle-trigger:focus { outline: none }` у `MenuToggleTrigger.svelte` —
+ * перевірка червоніє з `left-menu-toggle-btn` у переліку.
+ */
+test('кожен елемент у Tab-обході головної має видимий фокус', async ({ page }) => {
+	await page.goto('/');
+	await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
+
+	const STOPS = 14;
+	const naked: string[] = [];
+	const visited = new Set<string>();
+
+	for (let i = 0; i < STOPS; i++) {
+		await page.keyboard.press('Tab');
+		const stop = await page.evaluate(() => {
+			const el = document.activeElement as HTMLElement | null;
+			if (!el || el === document.body) return null;
+			const style = getComputedStyle(el);
+			return {
+				name:
+					el.getAttribute('data-testid') ??
+					`${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}`,
+				focusVisible: el.matches(':focus-visible'),
+				outlineStyle: style.outlineStyle,
+				boxShadow: style.boxShadow
+			};
+		});
+		if (!stop) continue;
+		visited.add(stop.name);
+		// Індикатором вважається рамка або тінь: обидва видно оком, і обидва
+		// зустрічаються в цьому проєкті (рамка — кнопки, тінь — поля вводу).
+		const hasIndicator = stop.outlineStyle !== 'none' || stop.boxShadow !== 'none';
+		if (stop.focusVisible && !hasIndicator) naked.push(stop.name);
+	}
+
+	// Канарка: без неї зламана навігація дає нуль зупинок і зелений результат.
+	expect(
+		visited.size,
+		'Tab не дійшов до жодного елемента — перевірка міряє порожнечу'
+	).toBeGreaterThan(7);
+
+	expect(
+		naked,
+		`елементи у фокусі з клавіатури без жодного видимого індикатора: ${naked.join(', ')}`
+	).toEqual([]);
+});

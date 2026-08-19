@@ -63,10 +63,23 @@
         /* FIX: Явно вмикаємо події миші для кнопки перемикання */
         pointer-events: auto;
     }
-    .toggle-trigger:focus,
+    /*
+      `:focus` без `-visible` гасив рамку й на клавіатурі: кнопка розгортання
+      меню лишалася без жодної ознаки фокуса, хоча вона перша на шляху Tab-а
+      (ACCESSIBILITY-v8, HIGH). Тепер тиша лише там, де її й хотіли — на кліку
+      мишею та під час натискання.
+    */
+    .toggle-trigger:focus:not(:focus-visible),
     .toggle-trigger:active {
         outline: none;
         box-shadow: none;
+    }
+
+    .toggle-trigger:focus-visible {
+        outline: 3px solid var(--control-selected, #ff9800);
+        outline-offset: 2px;
+        /* z-index: -1 у базовому правилі ховає рамку під сусідів. */
+        z-index: 1;
     }
 
     .toggle-visual {

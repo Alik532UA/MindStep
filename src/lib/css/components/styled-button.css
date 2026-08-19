@@ -21,6 +21,21 @@
   font-family: inherit;
 }
 
+/*
+  ACCESSIBILITY-v8, HIGH: `outline: none` вище знімав нативну рамку фокуса з
+  КОЖНОЇ кнопки застосунку й нічого не давав натомість — тобто той, хто ходить
+  Tab-ом, не бачив, де він. Правило нижче повертає індикатор рівно там, де він
+  потрібен: `:focus-visible` спрацьовує на клавіатурі й мовчить на кліку мишею,
+  заради чого `outline: none` і ставили.
+
+  Форма та сама, що в `widgets/direction-controls.css` — щоб рамка фокуса в
+  застосунку виглядала однаково, а не по-різному в кожному компоненті.
+*/
+.styled-button:focus-visible {
+  outline: 3px solid var(--control-selected, #ff9800);
+  outline-offset: 2px;
+}
+
 .styled-button:not(:disabled):hover {
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }

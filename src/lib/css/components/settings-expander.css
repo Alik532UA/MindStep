@@ -57,9 +57,20 @@
     cursor: not-allowed;
 }
 
-.settings-expander__summary:focus {
+/*
+  `:focus` без `-visible` знімав рамку й на клавіатурі теж — заголовок
+  розгортайки лишався єдиним інтерактивним елементом сторінки налаштувань, на
+  якому не видно, що він у фокусі (ACCESSIBILITY-v8, HIGH).
+*/
+.settings-expander__summary:focus:not(:focus-visible) {
     outline: none;
     box-shadow: none;
+}
+
+.settings-expander__summary:focus-visible {
+    outline: 3px solid var(--control-selected, #ff9800);
+    /* Всередину: заголовок займає всю ширину картки, зовнішня рамка вилізла б за неї. */
+    outline-offset: -3px;
 }
 
 .settings-expander.open>.settings-expander__summary {
@@ -183,7 +194,18 @@
     background: var(--control-selected);
     color: var(--control-selected-text);
     border-color: var(--control-selected);
-    outline: none;
+}
+
+/*
+  `outline: none` тут стояв у правилі `:hover, .active`. На hover він не робив
+  нічого (нативної рамки там немає), а на `.active` знімав рамку фокуса саме з
+  тієї кнопки, яку щойно натиснули з клавіатури — тобто фокус зникав рівно
+  після дії, коли він найпотрібніший (ACCESSIBILITY-v8, HIGH).
+*/
+.settings-expander__square-btn:focus-visible,
+.settings-expander__row-btn:focus-visible {
+    outline: 3px solid var(--control-selected, #ff9800);
+    outline-offset: 2px;
 }
 
 .settings-expander__current-size {
@@ -249,7 +271,6 @@
 .settings-expander__row-btn:focus {
     border-color: var(--control-selected);
     color: var(--text-primary);
-    outline: none;
 }
 
 .settings-expander__row-btn.active {

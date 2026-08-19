@@ -63,6 +63,16 @@
     background: transparent;
 }
 
+/*
+  Повзунок гучності керується стрілками з клавіатури, тож бачити його фокус
+  обов'язково. `outline: none` вище знімав нативну рамку й нічого не давав
+  натомість (ACCESSIBILITY-v8, HIGH).
+*/
+.volume-slider:focus-visible {
+    outline: 3px solid var(--control-selected, #ff9800);
+    outline-offset: 4px;
+}
+
 .volume-slider::-webkit-slider-runnable-track {
     height: 14px;
     background: linear-gradient(to right,

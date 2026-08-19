@@ -191,6 +191,16 @@
     margin: 0;
 }
 
+/*
+  Пункт випадайки — кнопка, і до неї доходять клавіатурою. `outline: none` у
+  базовому правилі вище лишав її без жодної ознаки фокуса
+  (ACCESSIBILITY-v8, HIGH).
+*/
+.board-size-dropdown-option:focus-visible {
+    outline: 3px solid var(--control-selected, #ff9800);
+    outline-offset: -3px;
+}
+
 .board-size-dropdown-option:hover,
 .board-size-dropdown-option.selected {
     background: rgba(255, 152, 0, 0.85);
