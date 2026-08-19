@@ -1,55 +1,54 @@
 <script lang="ts">
   import type { TooltipData } from "$lib/stores/tooltipState.svelte";
+  import { clampTooltipToViewport } from "$lib/utils/tooltipPosition";
 
-  export let x = 0;
-  export let y = 0;
-  export let content: string | TooltipData = "";
-
-  let tooltipNode: HTMLElement;
-  // Початкові нулі потрібні: реактивний блок нижче виконується лише коли є
-  // `tooltipNode` і `content`, а до першого рендера їх немає — шаблон читає
-  // саме ці значення. eslint цього не бачить, бо не моделює `$:`.
-  // eslint-disable-next-line no-useless-assignment
-  let adjustedX = 0;
-  // eslint-disable-next-line no-useless-assignment
-  let adjustedY = 0;
-
-  $: if (tooltipNode && content && typeof window !== "undefined") {
-    const width = tooltipNode.offsetWidth;
-    const height = tooltipNode.offsetHeight;
-    const safetyMargin = 10;
-
-    let newX = x;
-    let newY = y;
-
-    if (newX + width + safetyMargin > window.innerWidth) {
-      newX = window.innerWidth - width - safetyMargin;
-    }
-    if (newY + height + safetyMargin > window.innerHeight) {
-      newY = window.innerHeight - height - safetyMargin;
-    }
-    if (newX < safetyMargin) {
-      newX = safetyMargin;
-    }
-    if (newY < safetyMargin) {
-      newY = safetyMargin;
-    }
-    adjustedX = newX;
-    adjustedY = newY;
-  } else {
-    adjustedX = x;
-    adjustedY = y;
+  interface Props {
+    x?: number;
+    y?: number;
+    content?: string | TooltipData;
   }
 
-  function isStructured(data: any): data is TooltipData {
+  let { x = 0, y = 0, content = "" }: Props = $props();
+
+  /**
+   * Останній компонент проєкту на `export let` — і лишався він не з недогляду.
+   * Позиція тут не обчислюється зі стану, а виводиться з ВИМІРУ DOM
+   * (`offsetWidth` після рендера), тож прямолінійний переклад дав би `$effect`
+   * із записом у `$state` — сам по собі HIGH за SVELTE-CORE-v8 § 1.2.
+   *
+   * `bind:offsetWidth`/`bind:offsetHeight` знімають дилему цілком: вимір стає
+   * реактивним значенням, яке веде сам Svelte (через ResizeObserver), а позиція
+   * — звичайним `$derived` від нього. Жодного `$effect` і жодного запису в стан
+   * із побічного ефекту.
+   *
+   * Нулі до першого виміру — не проблема й більше не потребують
+   * `eslint-disable`: `clampTooltipToViewport` віддає координати як є, доки
+   * розмір нульовий.
+   */
+  let measuredWidth = $state(0);
+  let measuredHeight = $state(0);
+
+  const position = $derived(
+    clampTooltipToViewport({
+      x,
+      y,
+      width: measuredWidth,
+      height: measuredHeight,
+      viewportWidth: typeof window === "undefined" ? 0 : window.innerWidth,
+      viewportHeight: typeof window === "undefined" ? 0 : window.innerHeight,
+    }),
+  );
+
+  function isStructured(data: unknown): data is TooltipData {
     return typeof data === "object" && data !== null && "hotkeys" in data;
   }
 </script>
 
 <div
   class="tooltip"
-  style="left: {adjustedX}px; top: {adjustedY}px;"
-  bind:this={tooltipNode}
+  style="left: {position.x}px; top: {position.y}px;"
+  bind:offsetWidth={measuredWidth}
+  bind:offsetHeight={measuredHeight}
 >
   {#if isStructured(content)}
     {#if content.title}
@@ -62,7 +61,7 @@
 
     {#if content.hotkeys && content.hotkeys.length > 0}
       <div class="hotkey-title">HotKey</div>
-      {#each content.hotkeys as hotkey}
+      {#each content.hotkeys as hotkey (hotkey.text)}
         <div class="hotkey-item">
           <span class="hotkey-kbd" class:single-char={hotkey.singleChar}>
             {hotkey.text}

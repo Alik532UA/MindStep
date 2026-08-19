@@ -222,3 +222,64 @@ test('кожен елемент у Tab-обході головної має ви
 		`елементи у фокусі з клавіатури без жодного видимого індикатора: ${naked.join(', ')}`
 	).toEqual([]);
 });
+
+/**
+ * Підказка не вилазить за край вікна.
+ *
+ * `PROJECT-CONTEXT.md` тримав цю перевірку записаною умовою переведення
+ * `Tooltip.svelte` з `export let` на руни: позиція там виводиться не зі стану, а
+ * з ВИМІРУ DOM, тож зламати її можна так, що ні типи, ні `svelte-check` цього не
+ * побачать. Арифметика меж перевіряється окремо й повністю
+ * (`src/lib/utils/tooltipPosition.spec.ts`); тут — те, чого юніт-тест не бачить:
+ * що вимір справді доїжджає до компонента (`bind:offsetWidth`), а результат —
+ * до стилю елемента.
+ *
+ * **Вікно 900×100 — не примха.** Підказка стає під курсором зі зсувом 10 px, і
+ * при звичайній висоті вона просто вміщається — перевірка була б зеленою навіть
+ * із цілком вимкненим підтягуванням, тобто нічого не доводила б. При висоті 100
+ * нижній край без підтягування опинився б за межею, і це стверджується
+ * канаркою нижче, а не приймається на віру.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): змусити
+ * `clampTooltipToViewport` віддавати `{ x, y }` без змін — перевірка червоніє
+ * на нижньому краї.
+ */
+test('підказка тримається в межах вікна', async ({ page }) => {
+	const VIEWPORT = { width: 900, height: 100 };
+	const CURSOR_OFFSET = 10; // customTooltip: pageX + 10, pageY + 10
+
+	await page.setViewportSize(VIEWPORT);
+	await page.goto('/');
+	await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
+
+	const target = page.getByTestId('top-account-btn');
+	const box = (await target.boundingBox())!;
+	// `hover()` вішає підказку, `mouse.move` ставить курсор туди, де потрібно:
+	// саме `mousemove` рухає підказку за курсором.
+	await target.hover();
+	const cursorY = box.y + box.height - 3;
+	await page.mouse.move(box.x + box.width / 2, cursorY);
+
+	const tooltip = page.locator('.tooltip');
+	await expect(tooltip).toBeVisible({ timeout: 5000 });
+	const shown = (await tooltip.boundingBox())!;
+
+	expect(shown.width, 'підказка нульового розміру — вимір не доїхав').toBeGreaterThan(0);
+	expect(shown.height, 'підказка нульового розміру — вимір не доїхав').toBeGreaterThan(0);
+
+	// Канарка: без підтягування підказка вийшла б за нижній край. Якщо це
+	// перестане бути правдою, перевірка нижче нічого не доводить.
+	expect(
+		cursorY + CURSOR_OFFSET + shown.height,
+		'вікно замале для перевірки: підказка вміщається й без підтягування'
+	).toBeGreaterThan(VIEWPORT.height);
+
+	expect(shown.x, 'підказка вилізла за лівий край').toBeGreaterThanOrEqual(0);
+	expect(shown.y, 'підказка вилізла за верхній край').toBeGreaterThanOrEqual(0);
+	expect(shown.x + shown.width, 'підказка вилізла за правий край').toBeLessThanOrEqual(
+		VIEWPORT.width
+	);
+	expect(shown.y + shown.height, 'підказка вилізла за нижній край').toBeLessThanOrEqual(
+		VIEWPORT.height
+	);
+});
