@@ -52,7 +52,7 @@
     <div class="lb-header">
         <h2>{$t("rewards.leaderboardTitle")}</h2>
         <div class="filter-chips">
-            {#each boardSizes as size}
+            {#each boardSizes as size (size.value)}
                 <button
                     class="chip"
                     class:active={selectedBoardSize === size.value}
@@ -80,7 +80,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#each leaders as leader, i}
+                    {#each leaders as leader, i (leader.uid)}
                         <tr class:me={leader.uid === $userProfileStore?.uid}>
                             <td class="rank">
                                 {#if i === 0}

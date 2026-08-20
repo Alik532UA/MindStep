@@ -80,7 +80,7 @@
         <!-- Секція 3: Досягнення -->
         <h2>{$t("rewards.achievementsTitle")}</h2>
         <div class="rewards-grid">
-            {#each displayAchievements as item}
+            {#each displayAchievements as item (item.achievement.id)}
                 <RewardCard
                     achievement={item.achievement}
                     unlockedInfo={item.unlocked}

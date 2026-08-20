@@ -25,7 +25,7 @@
         data-testid="{position}-menu-list"
         aria-hidden={!isOpen}
     >
-        {#each [0, 1, 2, 3, 4] as i}
+        {#each [0, 1, 2, 3, 4] as i (i)}
             <div
                 class="menu-slot slot-{i}"
                 data-testid="{position}-menu-slot-{i}"

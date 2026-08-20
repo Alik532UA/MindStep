@@ -61,7 +61,7 @@
         <div class="empty-state">{$t("onlineMenu.noRooms", { lastInfo: "" })}</div>
     {:else}
         <div class="rooms-grid">
-            {#each rooms as room}
+            {#each rooms as room (room.id)}
                 <div class="room-card">
                     <div class="room-info">
                         <span class="room-name">{room.name}</span>

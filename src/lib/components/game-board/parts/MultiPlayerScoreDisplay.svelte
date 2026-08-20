@@ -94,7 +94,7 @@
     data-testid="multiplayer-score-container"
 >
     <div class="score-label-multiplayer">{$t("gameBoard.scoreLabel")}</div>
-    {#each players as player}
+    {#each players as player (player.id)}
         <div class="score-row" data-testid={`score-row-${player.id}`}>
             <span
                 class="player-name-plate"

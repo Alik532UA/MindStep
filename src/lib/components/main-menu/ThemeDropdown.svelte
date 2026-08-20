@@ -36,7 +36,7 @@
     }}
     onkeydown={(e) => e.key === "Escape" && modalStateRune.closeModal()}
 >
-    {#each styles as style}
+    {#each styles as style (style)}
         <div class="theme-style-row" data-style={style}>
             <button
                 class="theme-btn"

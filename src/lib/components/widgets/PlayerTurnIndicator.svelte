@@ -10,7 +10,7 @@
 
 {#if players}
   <div class="indicator-wrapper" data-testid="player-turn-indicator-container">
-    {#each players as player, i}
+    {#each players as player, i (player.id)}
       <div
         class="player-bar"
         style="background-color: {player.color}; opacity: {i ===

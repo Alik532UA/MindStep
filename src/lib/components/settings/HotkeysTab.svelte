@@ -73,10 +73,10 @@
 </script>
 
 <div class="hotkeys-tab">
-  {#each actionGroups as group}
+  {#each actionGroups as group (group.title)}
     <h3 class="group-title">{$t(group.title as TranslationKey)}</h3>
     <div class="key-grid">
-      {#each group.actions as action}
+      {#each group.actions as action (action)}
         <div class="key-item">
           <span class="action-name"
             >{$t(`controlsPage.actions.${action}` as TranslationKey)}</span

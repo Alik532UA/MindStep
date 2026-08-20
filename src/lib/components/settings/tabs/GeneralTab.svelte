@@ -54,7 +54,7 @@
       <div class="settings-group">
         <span class="settings-label">{$t("settings.language")}</span>
         <div class="language-selector">
-          {#each languages as lang}
+          {#each languages as lang (lang.code)}
             <button
               class="language-button"
               class:active={settings.language === lang.code}
@@ -69,7 +69,7 @@
       </div>
       <hr class="settings-divider" />
       <div class="theme-selector">
-        {#each ["purple", "green", "blue", "gray", "orange", "wood"] as const as style}
+        {#each ["purple", "green", "blue", "gray", "orange", "wood"] as const as style (style)}
           <div class="theme-style-row" data-style={style}>
             <button
               class="theme-btn"

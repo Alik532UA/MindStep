@@ -77,7 +77,7 @@
   {#if isOpen}
     <div class="color-dropdown" data-testid="{dataTestId}-menu">
       <div class="color-grid">
-        {#each predefinedColors.slice(0, 4) as color}
+        {#each predefinedColors.slice(0, 4) as color (color)}
           <button
             class="color-option"
             style="background-color: {color}"
@@ -96,7 +96,7 @@
         >
           <SvgIcons name="theme" />
         </button>
-        {#each predefinedColors.slice(4) as color}
+        {#each predefinedColors.slice(4) as color (color)}
           <button
             class="color-option"
             style="background-color: {color}"

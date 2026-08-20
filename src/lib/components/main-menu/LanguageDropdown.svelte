@@ -21,7 +21,7 @@
     }}
     onkeydown={(e) => e.key === "Escape" && modalStateRune.closeModal()}
 >
-    {#each languages as lang}
+    {#each languages as lang (lang.code)}
         {@const Flag = lang.component}
         <button
             class="lang-option"
