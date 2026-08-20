@@ -64,7 +64,7 @@
       copied = true;
       copyTimer = setTimeout(() => {
         copied = false;
-      }, 1000);
+      }, 1500);
     } catch (err) {
       // Відмова буфера обміну — буденна річ поза HTTPS і без дозволу, тож
       // `warn`. І саме `logService`, а не `console`: тут `error` крутив би
