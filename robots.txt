@@ -7,6 +7,11 @@ Disallow: /MindStep/test
 Disallow: /MindStep/test-error
 Disallow: /MindStep/test-main-menu-v2
 
+# Чеклист бета-тестування: службова сторінка. Не таємниця — статичний сайт з
+# відкритого репозиторію її не тримає, — але в індексі вона конкурувала б із
+# грою й приводила туди тих, хто прийшов грати (BETA-CHECKLIST-v8 § 4).
+Disallow: /MindStep/beta-test-checklists
+
 # Transient game-flow states: they mean nothing without a session behind them.
 Disallow: /MindStep/waiting
 Disallow: /MindStep/join

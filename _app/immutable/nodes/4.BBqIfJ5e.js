@@ -1,2 +1,0 @@
-import"../chunks/Bzak7iHL.js";import"../chunks/DOUpAnAe.js";import{o as r}from"../chunks/O78IhZF9.js";import{p as a,a as e,b as s,f as p}from"../chunks/Db0k6a-t.js";import{i as n}from"../chunks/CnstK1Dl.js";import{g as m,b as f}from"../chunks/C9SPePqd.js";var g=p('<div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: var(--text-primary);"><p>Redirecting to settings...</p></div>');function b(t,o){a(o,!1),r(()=>{m(`${f}/settings?tab=hotkeys`)}),n();var i=g();e(t,i),s()}export{b as component};
-//# sourceMappingURL=4.BBqIfJ5e.js.map
