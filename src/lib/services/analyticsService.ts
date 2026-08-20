@@ -12,9 +12,10 @@ import { dev } from "$app/environment";
  * no script is loaded and nothing is sent — so the file can be carried into a
  * new project without it reporting into this property.
  */
-const GA_ID = "G-CPGNM62XZW";
+const GA_ID: string = "G-CPGNM62XZW";
+const PLACEHOLDER: string = "G-XXXXXXXXXX";
 
-const isConfigured = /^G-[A-Z0-9]{6,}$/.test(GA_ID) && !GA_ID.includes("XXXX");
+const isConfigured = GA_ID !== PLACEHOLDER && /^G-[A-Z0-9]{6,}$/.test(GA_ID);
 
 const isBrowser = typeof window !== "undefined";
 

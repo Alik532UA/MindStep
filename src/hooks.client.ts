@@ -1,56 +1,53 @@
-/**
- * @file Клієнтські хуки SvelteKit для обробки помилок.
- * @description Перехоплює всі необроблені помилки на клієнті.
- * У dev-режимі виводить детальну інформацію в консоль.
- *
- * Архітектура:
- * - SSoT: Централізована точка обробки всіх клієнтських помилок.
- * - SoC: Тільки обробка помилок, без бізнес-логіки.
- * - Ізоляція побічних ефектів: Всі "брудні" операції (console) ізольовані тут.
- */
-
-import type { HandleClientError } from "@sveltejs/kit";
-import { logService } from "$lib/services/logService.svelte";
+import { env } from '$env/dynamic/public';
+import { dev } from '$app/environment';
+import { logService } from '$lib/services/logService.svelte';
+import type { HandleClientError } from '@sveltejs/kit';
 
 /**
- * Глобальний обробник клієнтських помилок.
- * Перехоплює помилки, які не були оброблені в компонентах.
- *
- * @param error - Об'єкт помилки
- * @param event - Об'єкт події з інформацією про запит
- * @returns Об'єкт з повідомленням для відображення користувачу
+ * Telemetry endpoint for CSP validation (OBSERVABILITY-v8 § 1.5):
+ * - https://*.sentry.io
+ * - https://*.ingest.sentry.io
  */
-export const handleError: HandleClientError = ({ error, event }) => {
-    const isDev = import.meta.env.DEV;
-    const errorId = crypto.randomUUID();
-    const timestamp = new Date().toISOString();
+const DSN = env.PUBLIC_SENTRY_DSN || '';
+const sentryPkg = '@sentry/sveltekit';
 
-    // Отримуємо повідомлення та стек
-    const errorMessage =
-        error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
+interface SentryClient {
+	init: (options: Record<string, unknown>) => void;
+	captureException: (error: unknown, context?: Record<string, unknown>) => void;
+}
 
-    // Через `logService`, а не `console`, і без гарду `isDev`.
-    //
-    // Доти повна інформація виводилася ЛИШЕ в dev і лише в консоль: у
-    // продакшні необроблена помилка не доходила нікуди — ні в буфер звіту, який
-    // гравець копіює кнопкою, ні в лічильник, з якого та кнопка з'являється.
-    // Тобто єдиний спосіб дізнатися про збій на чужому пристрої не бачив саме
-    // тих збоїв, для яких існує (DEBUGGING-v8 § 1, ERROR-HANDLING-v8 § 1.4).
-    logService.error(`[hooks.client] ${errorId}: ${errorMessage}`, {
-        timestamp,
-        url: event.url.href,
-        route: event.route.id,
-        ...(errorStack ? { stack: errorStack } : {})
-    });
+const tracker: Promise<SentryClient | null> | null =
+	DSN && !dev
+		? import(/* @vite-ignore */ sentryPkg)
+				.then((module: unknown) => {
+					const Sentry = module as SentryClient;
+					Sentry.init({
+						dsn: DSN,
+						enabled: !dev,
+						tracesSampleRate: 0.1,
+						replaysSessionSampleRate: 0.0,
+						replaysOnErrorSampleRate: 1.0,
+						environment: import.meta.env.MODE,
+						ignoreErrors: ['AbortError', 'Failed to fetch', 'ResizeObserver loop limit exceeded'],
+						beforeSend(event: Record<string, unknown>) {
+							const req = event.request as Record<string, Record<string, unknown>> | undefined;
+							if (req?.headers) {
+								delete req.headers['authorization'];
+								delete req.headers['cookie'];
+							}
+							return event;
+						}
+					});
+					return Sentry;
+				})
+				.catch(() => null)
+		: null;
 
-    // Повертаємо об'єкт помилки для відображення в +error.svelte
-    // У dev-режимі включаємо стек, в production — тільки повідомлення
-    return {
-        message: isDev
-            ? errorMessage
-            : "Сталася непередбачена помилка. Спробуйте оновити сторінку.",
-        // Додаємо стек тільки в dev-режимі
-        ...(isDev && errorStack ? { stack: errorStack } : {}),
-    };
+export const handleError: HandleClientError = async ({ error, event, status, message }) => {
+	logService.error(`Unhandled client error at ${event.url.pathname}: ${error}`);
+	if (tracker) {
+		const Sentry = await tracker;
+		Sentry?.captureException(error, { extra: { route: event.url.pathname, status, message } });
+	}
+	return { message: '' };
 };

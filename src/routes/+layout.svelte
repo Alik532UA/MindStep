@@ -2,6 +2,7 @@
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
 	import { initAnalytics, trackPageView } from "$lib/services/analyticsService";
+	import { webVitals } from "$lib/controllers/webVitals.svelte";
 	import { versionState } from "$lib/stores/versionState.svelte";
 	import { onMount, onDestroy } from "svelte";
 	import { get } from "svelte/store";
@@ -52,6 +53,9 @@
 	}
 
 	let { children }: Props = $props();
+
+	// Start RUM Core Web Vitals collection (OBSERVABILITY-v8 § 2.1)
+	$effect(() => webVitals.start());
 
 	const APP_VERSION_KEY = "app_version";
 
