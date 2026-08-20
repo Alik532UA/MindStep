@@ -1,2 +1,0 @@
-import"../chunks/Bzak7iHL.js";import"../chunks/-iQvUSBv.js";import{p as t,a as i,b as n,f as m}from"../chunks/B30SJgZU.js";import{i as s}from"../chunks/CVOj0GRe.js";var e=m("<h1>Ця сторінка ніколи не відобразиться</h1>");function g(r,o){t(o,!1);function a(){throw new Error("🧪 Це тестова помилка для перевірки Error Boundary! Все працює коректно.")}a(),s();var p=e();i(r,p),n()}export{g as component};
-//# sourceMappingURL=21.C-Ao5_I5.js.map
