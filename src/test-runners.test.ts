@@ -121,3 +121,53 @@ describe('файли перевірок', () => {
 		).toEqual([]);
 	});
 });
+
+/**
+ * Маска `include` раннера не викидає жодного файлу перевірки
+ * (AI-AGENT-PITFALLS-v8 § 1.2).
+ *
+ * Це третій випадок того самого класу, і найгірший: файл написаний
+ * правильно, ловить свою помилку — і не входить у прогін. Тоді його не
+ * видно ніде. У виводі немає ні падіння, ні згадки; підсумковий рядок
+ * звітує успіх по тому, що лишилося, і читається як «все перевірено».
+ *
+ * У цьому проєкті так уже було: маска стояла `src/**\/*.spec.ts`, конвенція
+ * — `.spec.ts`, і доданий `storage.test.ts` не запускався ЗОВСІМ. Зараз
+ * маска покриває обидва суфікси; перевірка тримає це.
+ *
+ * Читається саме конфіг, а не список файлів у пам'яті раннера: сюди можна
+ * потрапити лише через `vite.config.ts`, і саме його правлять.
+ *
+ * Зворотний експеримент (§ 1.1): звузити маску до `*.spec.ts` — перевірка
+ * перелічує всі чотири `.test.ts` (`ci`, `eslint-baseline`, `test-runners`
+ * і будь-який новий).
+ */
+describe('маска раннера (AI-AGENT-PITFALLS-v8 § 1.2)', () => {
+	const CONFIG = 'vite.config.ts';
+
+	/** Суфікси з `include: ['src/**\/*.{spec,test}.ts']` → ['spec', 'test']. */
+	function includedSuffixes(): string[] {
+		const source = readFileSync(join(ROOT, CONFIG), 'utf8');
+		return [...source.matchAll(/\*\.\{?([a-z,]*(?:spec|test)[a-z,]*)\}?\./g)].flatMap((m) =>
+			m[1].split(',')
+		);
+	}
+
+	it('перевірка жива: маску в конфігу знайдено', () => {
+		expect(
+			includedSuffixes().length,
+			`у ${CONFIG} не знайдено маски include — порівнювати нема з чим`
+		).toBeGreaterThan(0);
+	});
+
+	it('кожен файл перевірки в src/ потрапляє в маску', () => {
+		const suffixes = includedSuffixes();
+		const missed = specFiles
+			.filter((file) => file.startsWith('src/'))
+			.filter((file) => !suffixes.some((suffix) => file.endsWith(`.${suffix}.ts`)));
+		expect(
+			missed,
+			`ці файли не запускаються ніде, а підсумок прогону виглядає зеленим:\n${missed.join('\n')}`
+		).toEqual([]);
+	});
+});
