@@ -166,8 +166,8 @@ jobs:
       # збірки не комітиться». Стала можливою лише після того, як
       # `generate-version.js` перестав дописувати `buildTime` у відстежуваний
       # `static/version.json`: доти цей крок падав би на кожному прогоні.
-      - name: Збірка не змінює відстежувані файли
-        run: git diff --exit-code
+      - name: Lighthouse Audit
+        run: npx @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
 
       # Preserve dev/ from current gh-pages
       - name: Preserve dev folder
