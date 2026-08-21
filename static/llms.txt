@@ -1,0 +1,27 @@
+# MindStep — Strategic Cognitive Training & Memory Puzzle Game
+
+> MindStep is an interactive web-based puzzle game for training spatial memory, strategic logic, and cognitive awareness. Players navigate a dynamic grid moving like a chess queen while avoiding hidden memory traps.
+
+## Main Pages
+
+- [Play MindStep (Game Entry)](https://alik532ua.github.io/MindStep/): Play directly in the browser (Single player, 2-player local pass-and-play, and online multiplayer modes).
+- [Rules & How to Play](https://alik532ua.github.io/MindStep/): In-game interactive tutorial and rules guide.
+
+## Game Modes & Features
+
+- Single Player Mode: Progressive challenge with AI opponents and customizable grid sizes (4x4, 5x5, 6x6).
+- Blindfold Mode (Наосліп): Hardcore cognitive training where visited trap locations disappear from view.
+- 2-Player Hotseat: Local pass-and-play turn-based competition on a single device.
+- Online Multiplayer: Real-time peer matches using WebRTC / WebSocket connections.
+- Offline & PWA support: Fully functional offline with zero latency and automatic state persistence.
+
+## Technical Details
+
+- Built with SvelteKit 2 and Svelte 5 runes.
+- Fully accessible with full keyboard navigation and high-contrast theme support.
+- Zero analytics tracking / privacy-friendly client-side execution.
+
+## Resources
+
+- GitHub Repository: https://github.com/Alik532UA/MindStep
+- [Sitemap](https://alik532ua.github.io/MindStep/sitemap.xml): XML index of public game routes.

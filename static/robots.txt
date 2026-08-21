@@ -1,20 +1,42 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 
-# Scratch routes for manual UI checks — they render debug widgets and would be
-# indexed as real pages otherwise.
+# Scratch routes for manual UI checks
 Disallow: /MindStep/test
 Disallow: /MindStep/test-error
 Disallow: /MindStep/test-main-menu-v2
 
-# Чеклист бета-тестування: службова сторінка. Не таємниця — статичний сайт з
-# відкритого репозиторію її не тримає, — але в індексі вона конкурувала б із
-# грою й приводила туди тих, хто прийшов грати (BETA-CHECKLIST-v8 § 4).
+# Beta test checklists
 Disallow: /MindStep/beta-test-checklists
 
-# Transient game-flow states: they mean nothing without a session behind them.
+# Transient game-flow states
 Disallow: /MindStep/waiting
 Disallow: /MindStep/join
 Disallow: /MindStep/online/lobby/
+
+# AI Search Crawlers
+User-agent: GPTBot
+Allow: /MindStep/
+Disallow: /MindStep/test
+Disallow: /MindStep/test-error
+Disallow: /MindStep/test-main-menu-v2
+Disallow: /MindStep/beta-test-checklists
+Disallow: /MindStep/waiting
+Disallow: /MindStep/join
+Disallow: /MindStep/online/lobby/
+
+User-agent: PerplexityBot
+Allow: /MindStep/
+Disallow: /MindStep/test
+Disallow: /MindStep/beta-test-checklists
+Disallow: /MindStep/waiting
+Disallow: /MindStep/join
+
+User-agent: ClaudeBot
+Allow: /MindStep/
+Disallow: /MindStep/test
+Disallow: /MindStep/beta-test-checklists
+Disallow: /MindStep/waiting
+Disallow: /MindStep/join
 
 Sitemap: https://alik532ua.github.io/MindStep/sitemap.xml
