@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.889",
+  "version": "0.5.890",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -13,7 +13,7 @@
     "test:report": "vitest run --reporter=default --reporter=json --outputFile.json=test-reports/test-results.json",
     "dev": "vite dev",
     "emulators": "firebase emulators:start",
-    "build": "node scripts/generate-version.js && vite build",
+    "build": "node scripts/generate-version.js && node scripts/generate-sitemap.mjs && vite build",
     "preview": "vite preview",
     "prepare": "husky",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
