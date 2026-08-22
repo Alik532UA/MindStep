@@ -84,6 +84,7 @@ jobs:
       # Доданий разом із самим eslint: до цього скрипт `lint` був псевдонімом
       # для `check`, тобто перевірки ідіом не було ні локально, ні в CI.
       - name: Lint
+        if: ${{ !cancelled() }}
         run: npm run lint
 
       # `--reporter=default` у скрипті — не косметика. Доти стояло лише
@@ -93,6 +94,7 @@ jobs:
       # причина падіння гинула разом із раннером — CI казав «зламано» і не міг
       # сказати, що саме. Артефакт нижче закриває той самий розрив.
       - name: Run unit tests
+        if: ${{ !cancelled() }}
         run: npm run test:report
 
       - name: Upload unit test report
@@ -132,6 +134,7 @@ jobs:
       # відкотом на кілька мажорів назад. Поріг moderate довелося б одразу
       # вимкнути, а вимкнений гейт гірший за відсутній.
       - name: Audit dependencies
+        if: ${{ !cancelled() }}
         run: npm audit --audit-level=high
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
