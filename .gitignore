@@ -49,3 +49,6 @@ test-results-robust.json
 firebase-debug.log
 firestore-debug.log
 database-debug.log
+
+# Звіти Lighthouse CI — артефакт прогону, а не джерело.
+.lighthouseci/
