@@ -1,9 +1,10 @@
-import adapter from '@sveltejs/adapter-static';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import adapter from "@sveltejs/adapter-static";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 
-const basePath = process.env.BASE_PATH || (process.argv.includes('dev') ? '' : '/MindStep');
+const basePath =
+  process.env.BASE_PATH || (process.argv.includes("dev") ? "" : "/MindStep");
 
 /**
  * Хеші власних інлайн-скриптів `app.html` (SECURITY-v8 § 6.3, § 16).
@@ -32,15 +33,18 @@ const basePath = process.env.BASE_PATH || (process.argv.includes('dev') ? '' : '
  * знайшлася — вона була в першій редакції цього коміту.
  */
 function inlineScriptHashes(templatePath) {
-	const template = readFileSync(templatePath, 'utf8');
-	// Лише інлайн: тег зі `src` не має вмісту, який можна захешувати.
-	const inline = [...template.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)];
-	return inline.map(
-		(m) => `sha256-${createHash('sha256').update(m[1].replace(/\r\n/g, '\n')).digest('base64')}`
-	);
+  const template = readFileSync(templatePath, "utf8");
+  // Лише інлайн: тег зі `src` не має вмісту, який можна захешувати.
+  const inline = [
+    ...template.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g),
+  ];
+  return inline.map(
+    (m) =>
+      `sha256-${createHash("sha256").update(m[1].replace(/\r\n/g, "\n")).digest("base64")}`,
+  );
 }
 
-const appHtmlHashes = inlineScriptHashes('src/app.html');
+const appHtmlHashes = inlineScriptHashes("src/app.html");
 
 // /**
 //  * Кастомний препроцесор для автоматичного додавання data-testid
@@ -79,43 +83,70 @@ const appHtmlHashes = inlineScriptHashes('src/app.html');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: [
-		vitePreprocess(),
-		// autoDataTestId // Додаємо наш препроцесор
-	],
+  // Consult https://svelte.dev/docs/kit/integrations
+  // for more information about preprocessors
+  preprocess: [
+    vitePreprocess(),
+    // autoDataTestId // Додаємо наш препроцесор
+  ],
 
-	kit: {
-		// Використовується adapter-static для GitHub Pages
-		adapter: adapter({
-			fallback: 'index.html'
-		}),
-		prerender: {
-			entries: ['*']
-		},
-		paths: {
-			base: basePath
-		},
-		csp: {
-			mode: 'hash',
-			directives: {
-				'default-src': ['self'],
-				// 'unsafe-inline' тут заборонений (SECURITY-v8 § 6.1). Замість нього —
-				// хеші власних інлайн-скриптів `app.html`; хеші того, що вставляє
-				// сам SvelteKit, він тепер додає сам, бо більше не бачить
-				// 'unsafe-inline' і не вважає інлайн уже дозволеним.
-				'script-src': ['self', ...appHtmlHashes, 'https://*.googleapis.com', 'https://apis.google.com', 'https://*.firebaseapp.com', 'https://www.googletagmanager.com'],
-				'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
-				'font-src': ['self', 'https://fonts.gstatic.com'],
-				'connect-src': ['self', 'http://localhost:*', 'ws://localhost:*', 'http://127.0.0.1:*', 'ws://127.0.0.1:*', 'https://*.googleapis.com', 'https://*.firebaseio.com', 'https://*.firebasedatabase.app', 'wss://*.firebasedatabase.app', 'https://*.google-analytics.com', 'https://stats.g.doubleclick.net', 'https://*.sentry.io', 'https://*.ingest.sentry.io'],
-				'img-src': ['self', 'data:', 'http://localhost:*', 'http://127.0.0.1:*', 'https://*.google-analytics.com', 'https://www.google-analytics.com', 'https://www.google.com'],
-				'object-src': ['none'],
-				'base-uri': ['self'],
-				'form-action': ['self']
-			}
-		}
-	}
+  kit: {
+    // Використовується adapter-static для GitHub Pages
+    adapter: adapter({
+      fallback: "index.html",
+    }),
+    prerender: {
+      entries: ["*"],
+    },
+    paths: {
+      base: basePath,
+    },
+    csp: {
+      mode: "hash",
+      directives: {
+        "default-src": ["self"],
+        // 'unsafe-inline' тут заборонений (SECURITY-v8 § 6.1). Замість нього —
+        // хеші власних інлайн-скриптів `app.html`; хеші того, що вставляє
+        // сам SvelteKit, він тепер додає сам, бо більше не бачить
+        // 'unsafe-inline' і не вважає інлайн уже дозволеним.
+        "script-src": [
+          "self",
+          ...appHtmlHashes,
+          "https://*.googleapis.com",
+          "https://apis.google.com",
+          "https://*.firebaseapp.com",
+          "https://www.googletagmanager.com",
+        ],
+        "style-src": ["self", "unsafe-inline", "https://fonts.googleapis.com"],
+        "font-src": ["self", "https://fonts.gstatic.com"],
+        "connect-src": [
+          "self",
+          "http://localhost:*",
+          "ws://localhost:*",
+          "http://127.0.0.1:*",
+          "ws://127.0.0.1:*",
+          "https://*.googleapis.com",
+          "https://*.firebaseio.com",
+          "https://*.firebasedatabase.app",
+          "wss://*.firebasedatabase.app",
+          "https://*.google-analytics.com",
+          "https://stats.g.doubleclick.net",
+        ],
+        "img-src": [
+          "self",
+          "data:",
+          "http://localhost:*",
+          "http://127.0.0.1:*",
+          "https://*.google-analytics.com",
+          "https://www.google-analytics.com",
+          "https://www.google.com",
+        ],
+        "object-src": ["none"],
+        "base-uri": ["self"],
+        "form-action": ["self"],
+      },
+    },
+  },
 };
 
 export default config;
