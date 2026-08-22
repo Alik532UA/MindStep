@@ -4,22 +4,28 @@
 
 ## Main Pages
 
-- [Play MindStep (Game Entry)](https://alik532ua.github.io/MindStep/): Play directly in the browser (Single player, 2-player local pass-and-play, and online multiplayer modes).
-- [Rules & How to Play](https://alik532ua.github.io/MindStep/): In-game interactive tutorial and rules guide.
+- [Play MindStep (Game Entry)](https://alik532ua.github.io/MindStep/): Mode selection and the start of a game.
+- [Rules & How to Play](https://alik532ua.github.io/MindStep/rules): Movement rules, traps, scoring and win conditions.
+- [Controls & Hotkeys](https://alik532ua.github.io/MindStep/controls): Keyboard, mouse and touch input reference.
+- [Settings](https://alik532ua.github.io/MindStep/settings): Board size, themes, language, speech and accessibility options.
+- [Rewards](https://alik532ua.github.io/MindStep/rewards): Achievements and progression unlocked by play.
+- [Local Two-Player Setup](https://alik532ua.github.io/MindStep/local-setup): Configuring a pass-and-play match on one device.
+- [Online Multiplayer](https://alik532ua.github.io/MindStep/online): Creating and joining real-time matches.
+- [Supporters](https://alik532ua.github.io/MindStep/supporters): Credits and people who backed the project.
 
 ## Game Modes & Features
 
-- Single Player Mode: Progressive challenge with AI opponents and customizable grid sizes (4x4, 5x5, 6x6).
+- Single Player Mode: Progressive challenge with virtual opponents and customizable grid sizes (4x4, 5x5, 6x6).
 - Blindfold Mode (Наосліп): Hardcore cognitive training where visited trap locations disappear from view.
 - 2-Player Hotseat: Local pass-and-play turn-based competition on a single device.
-- Online Multiplayer: Real-time peer matches using WebRTC / WebSocket connections.
-- Offline & PWA support: Fully functional offline with zero latency and automatic state persistence.
+- Online Multiplayer: Real-time matches over Firebase Realtime Database.
+- Offline & PWA support: Fully functional offline with automatic state persistence.
 
 ## Technical Details
 
 - Built with SvelteKit 2 and Svelte 5 runes.
 - Fully accessible with full keyboard navigation and high-contrast theme support.
-- Zero analytics tracking / privacy-friendly client-side execution.
+- Client-side execution; no personal data is collected.
 
 ## Resources
 
