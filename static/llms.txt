@@ -4,14 +4,17 @@
 
 ## Main Pages
 
-- [Play MindStep (Game Entry)](https://alik532ua.github.io/MindStep/): Mode selection and the start of a game.
-- [Rules & How to Play](https://alik532ua.github.io/MindStep/rules): Movement rules, traps, scoring and win conditions.
-- [Controls & Hotkeys](https://alik532ua.github.io/MindStep/controls): Keyboard, mouse and touch input reference.
-- [Settings](https://alik532ua.github.io/MindStep/settings): Board size, themes, language, speech and accessibility options.
-- [Rewards](https://alik532ua.github.io/MindStep/rewards): Achievements and progression unlocked by play.
-- [Local Two-Player Setup](https://alik532ua.github.io/MindStep/local-setup): Configuring a pass-and-play match on one device.
-- [Online Multiplayer](https://alik532ua.github.io/MindStep/online): Creating and joining real-time matches.
-- [Supporters](https://alik532ua.github.io/MindStep/supporters): Credits and people who backed the project.
+- [Play MindStep](https://alik532ua.github.io/MindStep/): The whole game. Single address — every screen below is a client-side route of a single-page application, and only this address returns a real page to a crawler.
+
+## Sections inside the app
+
+Reachable from the game itself, not as separate documents:
+
+- Rules & How to Play: movement rules, traps, scoring and win conditions.
+- Controls & Hotkeys: keyboard, mouse and touch input reference.
+- Settings: board size, themes, language, speech and accessibility options.
+- Rewards: achievements and progression unlocked by play.
+- Local Two-Player Setup and Online Multiplayer: match configuration.
 
 ## Game Modes & Features
 
@@ -30,4 +33,4 @@
 ## Resources
 
 - GitHub Repository: https://github.com/Alik532UA/MindStep
-- [Sitemap](https://alik532ua.github.io/MindStep/sitemap.xml): XML index of public game routes.
+- [Sitemap](https://alik532ua.github.io/MindStep/sitemap.xml): XML index of game routes.
