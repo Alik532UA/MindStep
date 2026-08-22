@@ -28,7 +28,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       # Ті самі гейти, що в deploy.yml. Доти цей пайплайн складався з
       # `npm ci` + `build` + `deploy` — стан, який CI-CD-AND-TOOLS-v8 § 1.6
