@@ -1,7 +1,8 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
-    import { authService, userStore } from "$lib/services/authService";
-    import { userProfileStore } from "$lib/services/auth/userProfileService";
+    import { authService } from "$lib/services/authService";
+    import { userStore } from "$lib/stores/authState.svelte";
+    import { userProfileStore } from "$lib/stores/authState.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
     import PasswordInput from "$lib/components/ui/PasswordInput.svelte";
     import EditableText from "$lib/components/ui/EditableText.svelte";
@@ -45,12 +46,12 @@
 <div class="profile-info">
     <div class="info-row">
         <span class="label">{$t("ui.auth.emailLabel2")}</span>
-        <span class="value">{$userStore?.email}</span>
+        <span class="value">{userStore.user?.email}</span>
     </div>
     <div class="info-row">
         <span class="label">{$t("ui.auth.nicknameLabel")}</span>
         <EditableText
-            value={$userProfileStore?.displayName || "Player"}
+            value={userProfileStore.profile?.displayName || "Player"}
             canEdit={true}
             onRandom={generateRandomPlayerName}
             onchange={handleNameChange}

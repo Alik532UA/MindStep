@@ -8,7 +8,7 @@
     import { logService } from "$lib/services/logService.svelte";
     import { onMount, untrack } from "svelte";
 
-    import { userStore } from "$lib/services/authService";
+    import { userStore } from "$lib/stores/authState.svelte";
     import AuthModal from "$lib/components/modals/AuthModal.svelte";
     import GlobalChatModal from "$lib/components/modals/GlobalChatModal.svelte";
 
@@ -55,7 +55,7 @@
     function handleGlobalChat() {
         logService.action('Click: "Global Chat" (FeedbackModal)');
 
-        if (!$userStore || $userStore.isAnonymous) {
+        if (!userStore.user || userStore.user.isAnonymous) {
             logService.ui(
                 "[FeedbackModal] User not logged in. Redirecting to AuthModal.",
             );

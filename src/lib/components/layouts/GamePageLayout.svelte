@@ -12,7 +12,7 @@
     import { animationService } from "$lib/services/animationService.js";
     import { boardState } from '$lib/stores/boardState.svelte';
     import { replayState } from "$lib/stores/replayState.svelte";
-    import { i18nReady } from "$lib/i18n/init.js";
+    import { i18nReady } from "$lib/i18n/init.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import { logService } from "$lib/services/logService.svelte";
     import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
@@ -54,7 +54,7 @@
     });
 
     // Реактивне формування колонок на основі стану та фільтру
-    const columns = $derived($i18nReady
+    const columns = $derived(i18nReady.ready
         ? layoutState.state.map((col) => ({
               id: col.id,
               label: col.id,

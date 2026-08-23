@@ -1,4 +1,3 @@
-import { writable, get } from 'svelte/store';
 import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { getFirestoreDb } from '../firebaseService';
@@ -6,13 +5,10 @@ import { logService } from "../logService.svelte";
 import { rewardsState } from '$lib/stores/rewardsState.svelte';
 import { versionState } from '$lib/stores/versionState.svelte';
 import { storageService } from '../storage';
+import { userProfileStore, type UserProfile } from '$lib/stores/authState.svelte';
 
-export interface UserProfile {
-    uid: string;
-    displayName: string | null;
-    bestTimeScore: number;
-    isAnonymous: boolean;
-}
+// `UserProfile` оголошений разом зі станом; тут лише ре-експорт для сумісності.
+export type { UserProfile } from '$lib/stores/authState.svelte';
 
 const getInitialProfile = (): UserProfile => {
     if (typeof window === 'undefined') {
@@ -29,7 +25,16 @@ const getInitialProfile = (): UserProfile => {
     };
 };
 
-export const userProfileStore = writable<UserProfile | null>(getInitialProfile());
+/*
+ * Стан живе у `$lib/stores/authState.svelte.ts` (§ 10.4: SDK і реактивний
+ * модуль не змішуються). Тут — мережа: Firestore. Початкове значення
+ * виставляється звідси, бо `getInitialProfile()` читає локальне сховище, а це
+ * теж робота сервісу, не стану.
+ */
+export { userProfileStore } from '$lib/stores/authState.svelte';
+
+// Початкове значення — з локального сховища, один раз на завантаження модуля.
+userProfileStore.profile = getInitialProfile();
 
 class UserProfileService {
     private db: Firestore;
@@ -71,7 +76,7 @@ class UserProfileService {
                     storageService.set('online_playerName', cloudName);
                 }
 
-                userProfileStore.set({
+                userProfileStore.profile = ({
                     uid: user.uid,
                     displayName: cloudName || localName,
                     bestTimeScore: finalBest,
@@ -88,7 +93,7 @@ class UserProfileService {
                 };
                 await setDoc(userRef, initialData);
 
-                userProfileStore.set({
+                userProfileStore.profile = ({
                     uid: user.uid,
                     displayName: localName,
                     bestTimeScore: localBest,
@@ -100,7 +105,7 @@ class UserProfileService {
             const localBest = parseInt(storageService.get('local_best_time_score') || '0');
             const localName = storageService.get('online_playerName');
 
-            userProfileStore.set({
+            userProfileStore.profile = ({
                 uid: user.uid,
                 displayName: localName === 'Player' ? null : localName,
                 bestTimeScore: localBest,
@@ -112,7 +117,7 @@ class UserProfileService {
     async updateNickname(name: string, currentUser: User | null) {
         const nameToSave = (name && name.trim() !== '' && name !== 'Player') ? name : null;
 
-        userProfileStore.update(s => s ? { ...s, displayName: nameToSave } : null);
+        if (userProfileStore.profile) userProfileStore.profile.displayName = nameToSave;
 
         if (nameToSave) {
             storageService.set('online_playerName', nameToSave);
@@ -147,7 +152,7 @@ class UserProfileService {
     }
 
     public resetLocalProfile() {
-        userProfileStore.set({
+        userProfileStore.profile = ({
             uid: 'local',
             displayName: null,
             bestTimeScore: 0,

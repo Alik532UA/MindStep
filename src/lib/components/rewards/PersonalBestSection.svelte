@@ -1,6 +1,6 @@
 <script lang="ts">
     import EditableText from "$lib/components/ui/EditableText.svelte";
-    import { userProfileStore } from "$lib/services/auth/userProfileService";
+    import { userProfileStore } from "$lib/stores/authState.svelte";
     import { authService } from "$lib/services/authService";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte"; // Імпорт
     import { t } from "$lib/i18n/typedI18n";
@@ -19,12 +19,12 @@
         <div class="pb-info">
             <div class="pb-label">{$t("rewards.personalBestTitle")}</div>
             <div class="pb-value">
-                {$userProfileStore?.bestTimeScore || 0}
+                {userProfileStore.profile?.bestTimeScore || 0}
             </div>
             <div class="pb-name">
                 <span class="label">{$t("rewards.leaderboardName")}</span>
                 <EditableText
-                    value={$userProfileStore?.displayName || "Player"}
+                    value={userProfileStore.profile?.displayName || "Player"}
                     canEdit={true}
                     onRandom={() =>
                         `Player ${Math.floor(Math.random() * 1000)}`}

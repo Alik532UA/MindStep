@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import type { TranslationKey } from "$lib/types/i18n";
-    import { i18nReady } from "$lib/i18n/init.js";
+    import { i18nReady } from "$lib/i18n/init.svelte";
     import { gameEventBus } from "$lib/services/gameEventBus";
     import { logService } from "$lib/services/logService.svelte";
     import StyledButton from "$lib/components/ui/StyledButton.svelte";
@@ -63,7 +63,7 @@
                 else gameEventBus.dispatch("CloseModal");
             }}
         >
-            {$i18nReady && btn.textKey
+            {i18nReady.ready && btn.textKey
                 ? $t(btn.textKey as TranslationKey)
                 : btn.text}
         </StyledButton>

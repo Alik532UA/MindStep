@@ -1,5 +1,4 @@
 // speechService.ts: централізований сервіс для озвучення ходів, повідомлень тощо.
-import { writable } from 'svelte/store';
 import { logService } from "$lib/services/logService.svelte";
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
@@ -26,8 +25,6 @@ const speechTranslations: Record<SupportedLanguage, SpeechTranslations> = {
     crh: crhTranslations as SpeechTranslations,
     nl: nlTranslations as SpeechTranslations
 };
-
-const voices = writable<SpeechSynthesisVoice[]>([]);
 
 // Черга повідомлень для озвучення
 interface QueuedUtterance {
@@ -60,7 +57,7 @@ export function clearSpeechQueue(): void {
 
 // Експортуємо функції-обгортки для зворотної сумісності
 export function loadAndGetVoices(): Promise<SpeechSynthesisVoice[]> {
-    return VoiceLoader.loadAndGetVoices(voices);
+    return VoiceLoader.loadAndGetVoices();
 }
 
 export function resetVoicesPromise(): void {

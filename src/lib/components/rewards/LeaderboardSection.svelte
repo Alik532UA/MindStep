@@ -4,7 +4,7 @@
         leaderboardService,
         type LeaderboardEntry,
     } from "$lib/services/leaderboardService";
-    import { userProfileStore } from "$lib/services/auth/userProfileService";
+    import { userProfileStore } from "$lib/stores/authState.svelte";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
     import { t } from "$lib/i18n/typedI18n";
 
@@ -81,7 +81,7 @@
                 </thead>
                 <tbody>
                     {#each leaders as leader, i (leader.uid)}
-                        <tr class:me={leader.uid === $userProfileStore?.uid}>
+                        <tr class:me={leader.uid === userProfileStore.profile?.uid}>
                             <td class="rank">
                                 {#if i === 0}
                                     <NotoEmoji

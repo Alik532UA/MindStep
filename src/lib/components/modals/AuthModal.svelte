@@ -1,23 +1,36 @@
 <script lang="ts">
-    import { authService, userStore } from "$lib/services/authService";
+    import { authService } from "$lib/services/authService";
+    import { userStore } from "$lib/stores/authState.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
     import { t } from "$lib/i18n/typedI18n";
     import UserProfile from "$lib/components/auth/UserProfile.svelte";
     import AuthForms from "$lib/components/auth/AuthForms.svelte";
 
+    /*
+     * Руни, а не legacy-режим (SVELTE-CORE-v8, анти-патерни).
+     *
+     * Цей компонент був ЄДИНИМ у проєкті, що лишався в режимі Svelte 4: голі
+     * `let` як стан і `$:` як похідне. Доки `userStore` був `writable`, це
+     * працювало; після переведення його на `$state` legacy-режим перестав би
+     * бачити зміни, бо `$:` перераховується лише від legacy-залежностей.
+     *
+     * Тобто перехід тут не «заодно», а умова: або обидва в рунах, або обидва в
+     * Svelte 4. Змішувати не можна — і саме таке змішування дало б наймовчазніший
+     * дефект: вікно входу, яке не оновлюється після входу.
+     */
     // Modes: 'auth' (вхід+реєстрація в одному вікні) | 'forgot' (відновлення пароля)
-    let authMode: "auth" | "forgot" = "auth";
-    let isLoading = false;
-    let authError = "";
-    let authInfo = "";
+    let authMode = $state<"auth" | "forgot">("auth");
+    let isLoading = $state(false);
+    let authError = $state("");
+    let authInfo = $state("");
 
-    let deletePassword = "";
-    let newPassword = "";
+    let deletePassword = $state("");
+    let newPassword = $state("");
 
-    let isDeleteMode = false;
-    let isChangePasswordMode = false;
+    let isDeleteMode = $state(false);
+    let isChangePasswordMode = $state(false);
 
-    $: isAuthorized = $userStore && !$userStore.isAnonymous;
+    const isAuthorized = $derived(userStore.user && !userStore.user.isAnonymous);
 
     async function handleLogin(email: string, password: string) {
         if (!email || !password) return;

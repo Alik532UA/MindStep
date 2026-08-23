@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from "$lib/i18n/typedI18n";
     import ChatWidget from "$lib/components/online/ChatWidget.svelte";
-    import { userProfileStore } from "$lib/services/auth/userProfileService";
+    import { userProfileStore } from "$lib/stores/authState.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
 
     // Використовуємо фіксований ID для глобального чату
@@ -23,8 +23,8 @@
     <div class="chat-wrapper">
         <ChatWidget
             roomId={GLOBAL_CHAT_ID}
-            playerId={$userProfileStore?.uid || "anon"}
-            playerName={$userProfileStore?.displayName || "Anonymous"}
+            playerId={userProfileStore.profile?.uid || "anon"}
+            playerName={userProfileStore.profile?.displayName || "Anonymous"}
             playerColor="#4caf50"
             variant="embedded"
         />

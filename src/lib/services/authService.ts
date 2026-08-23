@@ -1,11 +1,18 @@
 import { signInAnonymously, onAuthStateChanged, signOut, type User, type Auth, EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword, sendPasswordResetEmail, deleteUser, updatePassword } from 'firebase/auth';
 import { getFirebaseAuth } from './firebaseService';
+import { currentUserStore } from '$lib/stores/authState.svelte';
 import { logService } from "./logService.svelte";
 import { userProfileService } from './auth/userProfileService';
-import { writable } from 'svelte/store';
 
-export const currentUserStore = writable<User | null>(null);
-export const userStore = currentUserStore;
+/*
+ * Стан живе у `$lib/stores/authState.svelte.ts`, а не тут.
+ *
+ * Тут — мережа: Firebase Auth. Тримати реактивний стан в одному модулі з SDK
+ * заборонено інваріантом `cloud-database.spec.ts` (§ 10.4), і причина не
+ * формальна: такий модуль не підміняється в тесті й не довантажується ліниво.
+ * Ре-експорт лишається, щоб не переписувати шість місць імпорту.
+ */
+export { currentUserStore, userStore } from '$lib/stores/authState.svelte';
 
 class AuthService {
     /**
@@ -39,11 +46,11 @@ class AuthService {
         onAuthStateChanged(this.auth, async (user) => {
             if (user) {
                 logService.init(`[AuthService] User logged in: ${user.uid} (Anon: ${user.isAnonymous})`);
-                currentUserStore.set(user);
+                currentUserStore.user = user;
                 await userProfileService.syncUserProfile(user);
             } else {
                 logService.init('[AuthService] No user logged in. Signing in anonymously...');
-                currentUserStore.set(null);
+                currentUserStore.user = null;
                 await this.signInAnonymously();
             }
         });

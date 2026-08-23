@@ -32,8 +32,6 @@
  * лише у своєму контексті (`game`) і лише поки дію можна перепризначити в
  * налаштуваннях, що й виконує WCAG SC 2.1.4 (HOTKEYS-v8 § 3, шлях 2).
  */
-import { writable } from 'svelte/store';
-import { get } from 'svelte/store';
 import { debugMode } from './debugMode.svelte';
 import { isPlainKey, isTypingTarget } from './keyboard';
 import { createKeySequence } from './keySequence';
@@ -45,7 +43,19 @@ type HotkeyAction = {
     condition?: () => boolean;
 };
 
-const contextStack = writable<string[]>(['global']);
+/*
+ * Стек контекстів — звичайний масив, а не `writable`.
+ *
+ * Store тут не давав нічого: він module-private, ніхто на нього не
+ * підписувався, і всі шість звертань були імперативні — `get()` на читання
+ * та `update()` на зміну. Тобто реактивна обгортка існувала навколо
+ * значення, реактивність якого не використовувалася ніде
+ * (SVELTE-CORE-v8, анти-патерни: `writable` у Svelte-5 коді).
+ *
+ * Якщо стек колись знадобиться в розмітці, правильна заміна — `$state` у
+ * `.svelte.ts`, а не повернення store.
+ */
+let contextStack: string[] = ['global'];
 const hotkeyRegistry = new Map<string, Map<string, HotkeyAction>>();
 
 /*
@@ -117,7 +127,7 @@ function handleKeydown(event: KeyboardEvent) {
         return;
     }
 
-    const stack = get(contextStack);
+    const stack = contextStack;
     // Використовуємо hotkey лог для дебагу натискань
     logService.hotkey(`[hotkeyService] handleKeydown: code=${event.code}, stack=`, stack);
 
@@ -165,30 +175,27 @@ function unregisterContext(context: string) {
 function pushContext(context: string) {
     // Змінено на hotkey
     logService.hotkey(`[hotkeyService] Pushing new context: '${context}'`);
-    contextStack.update(stack => [...stack, context]);
+    contextStack = [...contextStack, context];
 }
 
 function popContext(context?: string) {
-    contextStack.update(stack => {
-        if (stack.length > 1) {
-            const topOfStack = stack[stack.length - 1];
-            if (context && context !== topOfStack) {
-                logService.hotkey(`[hotkeyService] Tried to pop context '${context}' but '${topOfStack}' is on top. Aborting.`);
-                return stack;
-            }
-            const newStack = [...stack];
-            const poppedContext = newStack.pop()!;
-            logService.hotkey(`[hotkeyService] Popping context: '${poppedContext}'`);
-            unregisterContext(poppedContext);
-            return newStack;
-        }
-        return stack;
-    });
+    if (contextStack.length <= 1) return;
+
+    const topOfStack = contextStack[contextStack.length - 1];
+    if (context && context !== topOfStack) {
+        logService.hotkey(`[hotkeyService] Tried to pop context '${context}' but '${topOfStack}' is on top. Aborting.`);
+        return;
+    }
+
+    const newStack = [...contextStack];
+    const poppedContext = newStack.pop()!;
+    logService.hotkey(`[hotkeyService] Popping context: '${poppedContext}'`);
+    unregisterContext(poppedContext);
+    contextStack = newStack;
 }
 
 function getCurrentContext() {
-    const stack = get(contextStack);
-    return stack[stack.length - 1];
+    return contextStack[contextStack.length - 1];
 }
 
 setup();
@@ -200,7 +207,7 @@ const hotkeyService = {
     popContext,
     getCurrentContext,
     get a() {
-        return get(contextStack);
+        return contextStack;
     }
 };
 

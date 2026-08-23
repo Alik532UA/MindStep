@@ -123,12 +123,26 @@ describe('базовий набір ESLint (CODE-QUALITY-v8 § 6.4.1)', () => {
  */
 const DEBT: Readonly<Record<string, number>> = {
 	'@typescript-eslint/no-explicit-any': 166,
-	'@typescript-eslint/no-unused-vars': 121,
+	'@typescript-eslint/no-unused-vars': 119,
 	'svelte/no-navigation-without-resolve': 28,
 	'svelte/require-each-key': 15,
-	'no-restricted-imports': 9,
 	'svelte/prefer-svelte-reactivity': 2
 };
+
+/*
+ * `no-restricted-imports` пішов із мапи 2026-08-23, і це головна зміна цього
+ * файлу за прохід. Було 9 — `writable`/`derived` зі `svelte/store` у дев'яти
+ * місцях Svelte-5 проєкту. Стало 0: п'ять переведено на руни, три виявилися
+ * мертвим або write-only станом, один (`typedI18n`) лишився як законний interop
+ * зі `svelte-i18n` під точковим `eslint-disable` з причиною.
+ *
+ * Рядок із мапи ПРИБИРАЄТЬСЯ, а не ставиться в нуль: інваріант «немає боргу без
+ * записаного числа» працює в обидва боки, тож нуль у мапі означав би «борг є, і
+ * він нульовий» — а його немає. Перша ж поява такого імпорту тепер валить
+ * прогін як НОВЕ правило, а не як зростання старого.
+ *
+ * `no-unused-vars` 121 → 119: два імпорти зникли разом із перенесеним кодом.
+ */
 
 describe('борг ESLint — число, що лише спадає (CODE-QUALITY-v8 § 6.4.3)', () => {
 	let counts: Record<string, number>;

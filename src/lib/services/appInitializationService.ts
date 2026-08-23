@@ -3,7 +3,7 @@ import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
 import { defaultGameSettings } from "$lib/stores/gameSettingsDefaults";
 import { settingsPersistenceService } from "$lib/services/SettingsPersistenceService";
 import { debounce } from "$lib/utils/debounce";
-import { initializeI18n } from "$lib/i18n/init.js";
+import { initializeI18n } from "$lib/i18n/init.svelte";
 import { initializeTestModeSync } from "$lib/services/testModeService.svelte";
 import { rewardsService } from "$lib/services/rewardsService";
 import { logService } from "$lib/services/logService.svelte";

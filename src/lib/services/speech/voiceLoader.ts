@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store';
 import { logService } from "$lib/services/logService.svelte";
 
 // Типи для голосів
@@ -10,8 +9,14 @@ let voicesPromise: Promise<SpeechSynthesisVoice[]> | null = null;
 export class VoiceLoader {
     /**
      * Завантажує та повертає список доступних голосів.
+     *
+     * Параметра-стоку тут раніше був `voicesStore: { set(...) }`, і в нього
+     * писався `writable` зі `speechService`. Той store не читав НІХТО —
+     * `.set()` викликався тричі, підписки не було жодної, і значення
+     * використовувалося виключно через цей проміс. Тобто стан існував, щоб у
+     * нього писали (AI-AGENT-PITFALLS-v8 § 3: існування ≠ досяжність).
      */
-    static loadAndGetVoices(voicesStore: { set: (v: SpeechSynthesisVoice[]) => void }): Promise<SpeechSynthesisVoice[]> {
+    static loadAndGetVoices(): Promise<SpeechSynthesisVoice[]> {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
             return Promise.resolve([]);
         }
@@ -22,20 +27,17 @@ export class VoiceLoader {
             const allVoices = speechSynthesis.getVoices();
             if (allVoices.length) {
                 logService.ui(`[VoiceLoader] Voices already loaded: ${allVoices.length}`);
-                voicesStore.set(allVoices);
                 return resolve(allVoices);
             }
             speechSynthesis.onvoiceschanged = () => {
                 const updatedVoices = speechSynthesis.getVoices();
                 logService.ui(`[VoiceLoader] 'voiceschanged' event fired. Loaded ${updatedVoices.length} voices.`);
-                voicesStore.set(updatedVoices);
                 resolve(updatedVoices);
             };
             setTimeout(() => {
                 const finalCheckVoices = speechSynthesis.getVoices();
                 if (finalCheckVoices.length) {
                     logService.ui(`[VoiceLoader] Fallback check loaded ${finalCheckVoices.length} voices.`);
-                    voicesStore.set(finalCheckVoices);
                     resolve(finalCheckVoices);
                 } else {
                     logService.ui('[VoiceLoader] No voices loaded after fallback.');

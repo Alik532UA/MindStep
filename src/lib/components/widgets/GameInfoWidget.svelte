@@ -2,7 +2,7 @@
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { derivedState } from "$lib/stores/derivedState.svelte";
-  import { i18nReady } from "$lib/i18n/init.js";
+  import { i18nReady } from "$lib/i18n/init.svelte";
   import { fade, slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { playerState } from '$lib/stores/playerState.svelte';
@@ -55,7 +55,7 @@
   let animationKey = $derived(JSON.stringify(displayMessage));
 </script>
 
-{#if $i18nReady && playerState.state}
+{#if i18nReady.ready && playerState.state}
   {#if settings.showGameInfoWidget !== "hidden"}
     <div
       class="game-info-widget"

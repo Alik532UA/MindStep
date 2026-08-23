@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { untrack } from "svelte";
-  import { writable, get } from "svelte/store";
+  import { onDestroy, untrack } from "svelte";
   import ReplayControls from "./ReplayControls.svelte";
   import {
     replayPosition as calculateReplayPosition,
@@ -38,11 +37,23 @@
     }
   });
 
-  // `untrack` — це «так, саме початкове значення». Перегляд запису бере
-  // знімок партії на момент відкриття: якщо `moveHistory` зміниться далі,
-  // перемотування не має стрибати під руками. Без `untrack` компілятор
-  // (справедливо) попереджає, що читання пропа тут одноразове.
-  const replayState = writable({
+  /*
+   * Стан перемотування — `$state`, а не `writable` (SVELTE-CORE-v8, анти-патерни).
+   *
+   * `untrack` лишається й означає те саме, що й раніше: «так, саме ПОЧАТКОВЕ
+   * значення». Перегляд запису бере знімок партії на момент відкриття — якщо
+   * `moveHistory` зміниться далі, перемотування не має стрибати під руками.
+   *
+   * Заміна `writable` на `$state` тут не косметична, і причина не в стилі.
+   * `get(replayState)` віддавав НЕЗМІННИЙ знімок, а `replayAutoPlayState`
+   * тримає його в замиканні `setInterval` і читає `state.replayCurrentStep` на
+   * кожному такті. Тобто автоперемотування рахувало наступний крок від того
+   * самого числа щосекунди: воно робило один крок і зупинялося на ньому,
+   * створюючи вигляд працюючої кнопки. `$state` — проксі, читання з нього живе,
+   * і той самий код тепер справді йде по кроках. Ловить це
+   * `src/lib/utils/replay.test.ts`.
+   */
+  const replayState = $state({
     isReplayMode: true,
     moveHistory: untrack(() => moveHistory),
     boardSize: untrack(() => boardSize),
@@ -51,31 +62,42 @@
     limitReplayPath: true,
   });
 
-  const replayPosition = calculateReplayPosition(replayState);
-  const replayCellVisitCounts = calculateReplayCellVisitCounts(replayState);
-  const replaySegments = calculateReplaySegments(replayState);
-  const replayBlockModeEnabled = calculateReplayBlockModeEnabled(replayState);
+  // Обчислення живуть у `utils/replay.ts` чистими функціями від стану, тож тут
+  // їх досить загорнути в `$derived` — а в тесті вони викликаються напряму.
+  const replayPosition = $derived(calculateReplayPosition(replayState));
+  const replayCellVisitCounts = $derived(calculateReplayCellVisitCounts(replayState));
+  const replaySegments = $derived(calculateReplaySegments(replayState));
+  const replayBlockModeEnabled = $derived(calculateReplayBlockModeEnabled(replayState));
 
   function goToStep(step: number) {
-    replayState.update((s) => ({
-      ...s,
-      replayCurrentStep: Math.max(0, Math.min(step, s.moveHistory.length - 1)),
-    }));
+    replayState.replayCurrentStep = Math.max(
+      0,
+      Math.min(step, replayState.moveHistory.length - 1),
+    );
   }
 
   function toggleAutoPlay(direction: "forward" | "backward") {
-    const currentReplayState = get(replayState);
     replayAutoPlayState.toggleAutoPlay(
       direction,
-      currentReplayState,
-      (updates) => replayState.update(s => ({ ...s, ...updates })),
-      goToStep
+      replayState,
+      (updates) => Object.assign(replayState, updates),
+      goToStep,
     );
   }
 
   function toggleLimitPath() {
-    replayState.update((s) => ({ ...s, limitReplayPath: !s.limitReplayPath }));
+    replayState.limitReplayPath = !replayState.limitReplayPath;
   }
+
+  /*
+   * Зупинка автоперемотування при закритті (SVELTE-CORE-v8 § 2.2).
+   *
+   * Її тут не було: `setInterval` жив у синглтоні `replayAutoPlayState`, і
+   * закриття вікна його не спиняло — таймер смикав `goToStep` уже знищеного
+   * компонента до кінця сеансу. Єдиним, хто його зупиняв, був
+   * `testingService.cancelAllEffects()`, тобто службовий скид.
+   */
+  onDestroy(() => replayAutoPlayState.stop());
 </script>
 
 <!-- FIX: Додано data-testid та структуру меню -->
@@ -94,19 +116,19 @@
   >
     <GameBoard
       {boardSize}
-      visualCellVisitCounts={$replayCellVisitCounts}
+      visualCellVisitCounts={replayCellVisitCounts}
       gameSettings={{
-        blockModeEnabled: $replayBlockModeEnabled,
+        blockModeEnabled: replayBlockModeEnabled,
         blockOnVisitCount: settings.blockOnVisitCount,
       } as any}
       availableMoves={[]}
       showMoves={false}
-      visualPosition={$replayPosition || { row: 0, col: 0 }}
-      showPiece={!!$replayPosition}
+      visualPosition={replayPosition || { row: 0, col: 0 }}
+      showPiece={!!replayPosition}
     >
       {#snippet customLayers()}
         <svg class="replay-path-svg" viewBox="0 0 100 100">
-          {#each $replaySegments as segment, i (i)}
+          {#each replaySegments as segment, i (i)}
             <line
               x1={segment.x1}
               y1={segment.y1}
@@ -122,13 +144,13 @@
   </div>
 
   <ReplayControls
-    limitReplayPath={$replayState.limitReplayPath}
+    limitReplayPath={replayState.limitReplayPath}
     ontoggleLimitPath={toggleLimitPath}
     ongoToStep={goToStep}
     ontoggleAutoPlay={toggleAutoPlay}
-    currentStep={$replayState.replayCurrentStep}
+    currentStep={replayState.replayCurrentStep}
     totalSteps={moveHistory.length}
-    autoPlayDirection={$replayState.autoPlayDirection}
+    autoPlayDirection={replayState.autoPlayDirection}
   />
 
   {#if onClose}

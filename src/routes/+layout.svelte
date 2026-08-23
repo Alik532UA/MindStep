@@ -25,7 +25,7 @@
 	// Тема й мова — для глобальних клавіш `T` і `L` (див. onMount нижче).
 	import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
 	import { locale } from "svelte-i18n";
-	import { i18nReady } from "$lib/i18n/init.js";
+	import { i18nReady } from "$lib/i18n/init.svelte";
 	import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
 	// Imports for Menus
@@ -298,7 +298,7 @@
 		modalStateRune.open("dev-menu-modal");
 	}
 
-	const devMenuItems = $derived($i18nReady
+	const devMenuItems = $derived(i18nReady.ready
 		? [
 				                                                                                                                                {
 				                                                                                                                                        id: "main-menu-link",
@@ -357,7 +357,7 @@
 		{/if}
 
 		<main class:tab-hidden={!uiState.state.isTabVisible}>
-			{#if $i18nReady}
+			{#if i18nReady.ready}
 				{@render children?.()}
 			{:else}
 				<div class="loading-screen">Loading...</div>
@@ -396,7 +396,7 @@
 	{/if}
 
 	<!--
-	  `$i18nReady` тут обов'язковий, а не про акуратність. Монітор монтується з
+	  `i18nReady.ready` тут обов'язковий, а не про акуратність. Монітор монтується з
 	  кореневого layout, тобто ДО того, як `svelte-i18n` отримає початкову
 	  локаль, — і перший же `$t` усередині кидає «Cannot format a message
 	  without first setting the initial locale», що валить увесь застосунок на
@@ -404,7 +404,7 @@
 	  саме e2e-гейт його й знайшов: `top-language-btn` не існує, бо головного
 	  меню на екрані немає взагалі.
 	-->
-	{#if import.meta.env.DEV && $i18nReady}
+	{#if import.meta.env.DEV && i18nReady.ready}
 		<NetworkMonitorWidget />
 	{/if}
 
