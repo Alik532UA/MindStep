@@ -3,8 +3,15 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const basePath =
-  process.env.BASE_PATH || (process.argv.includes("dev") ? "" : "/MindStep");
+/**
+ * SvelteKit чекає літеральний тип (`"" | `/${string}``), а не широкий `string`.
+ * Порожній рядок у dev — валідне значення `base`, тож обидві гілки в типі є.
+ *
+ * @type {"" | `/${string}`}
+ */
+const basePath = /** @type {"" | `/${string}`} */ (
+  process.env.BASE_PATH || (process.argv.includes("dev") ? "" : "/MindStep")
+);
 
 /**
  * Хеші власних інлайн-скриптів `app.html` (SECURITY-v8 § 6.3, § 16).
@@ -31,6 +38,16 @@ const basePath =
  * зібраного сайту з'явиться «Executing inline script violates…», а перевірка
  * `npm run check:build` почервоніє. Перевірено; саме так ця помилка й
  * знайшлася — вона була в першій редакції цього коміту.
+ *
+ * @param {string} templatePath Шлях до шаблону з інлайн-скриптами.
+ * @returns {`sha256-${string}`[]} Літеральний тип, а не `string[]`: `script-src`
+ * у SvelteKit типізований проти нього, і ОДИН широкий елемент розширює цілий
+ * масив директиви — тоді падають і сусідні рядки з адресами, яких ніхто не
+ * чіпав. Видно це стало 2026-08-23, коли конфіг уперше потрапив під
+ * `svelte-check`: він дивиться на `src/`, а конфіг досі імпортували лише
+ * `scripts/` та `e2e/`, які в перевірку не входять. Інваріант
+ * `src/csp-hash.test.ts` імпортує його зі `src/` — і сім латентних
+ * невідповідностей виявилися разом.
  */
 function inlineScriptHashes(templatePath) {
   const template = readFileSync(templatePath, "utf8");
@@ -40,7 +57,9 @@ function inlineScriptHashes(templatePath) {
   ];
   return inline.map(
     (m) =>
-      `sha256-${createHash("sha256").update(m[1].replace(/\r\n/g, "\n")).digest("base64")}`,
+      /** @type {`sha256-${string}`} */ (
+        `sha256-${createHash("sha256").update(m[1].replace(/\r\n/g, "\n")).digest("base64")}`
+      ),
   );
 }
 
