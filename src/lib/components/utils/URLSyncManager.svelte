@@ -1,80 +1,30 @@
 <script lang="ts">
   /**
-   * @file URLSyncManager.svelte
-   * @description Компонент для синхронізації налаштувань гри з URL.
-   * Використовує Svelte 5 runes ($effect).
+   * URL → налаштування, і ЛИШЕ в цей бік.
+   *
+   * Зворотний напрямок (налаштування → URL) належить `urlSyncService`, який
+   * підключений у `routes/game/+layout.svelte`. Доти цей компонент робив те саме
+   * своїм `$effect` — і два писарі писали ті самі поля різними словами:
+   * `board=true` проти `board=1`. Кожен бачив чуже написання як «змінилося» й
+   * переписував через `goto`.
+   *
+   * Заміряно 2026-08-25 у грі вдвох: сторінка гри навігувалася раз на ~2 секунди
+   * без кінця, у консолі щоразу «Navigating away. Heartbeat will stop, allowing
+   * reconnection» — тобто серцебиття присутності зупинялося й починалося по колу,
+   * а налаштування зберігалися в сховище на кожному оберті. Партія при цьому йшла,
+   * тож на око дефекту не було видно ЗОВСІМ.
    */
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
   import { onMount } from 'svelte';
   import { urlSyncService } from '$lib/services/urlSyncService';
 
-  let isInitialized = false;
-
   onMount(() => {
-    // 1. Initial Load (or Route Change): URL -> Settings
+    // Глибоке посилання: параметри з адреси стають налаштуваннями один раз, на
+    // вході в сторінку гри.
     const params = urlSyncService.getParamsFromUrl(page.url);
     if (Object.keys(params).length > 0) {
-        // Оновлюємо налаштування без збереження в localStorage (опціонально)? 
-        // Ні, нехай зберігаються, це очікувана поведінка.
-        gameSettingsState.updateSettings(params);
-    }
-    
-    isInitialized = true;
-  });
-
-  // 2. Settings -> URL
-  $effect(() => {
-    if (!isInitialized) return;
-
-    const settings = gameSettingsState.state;
-    // Отримуємо поточний URL з page store, щоб мати актуальний об'єкт
-    // Але нам треба бути обережними з циклічними оновленнями.
-    // Використовуємо untracked, якщо хочемо уникнути реакції на зміни page.url тут?
-    // Ні, просто читаємо page.url один раз.
-    const currentUrl = page.url; 
-    const url = new URL(currentUrl);
-    let changed = false;
-
-    // Helper to sync boolean/number
-    const syncParam = (key: string, value: any, defaultValue?: any) => {
-        const strVal = String(value);
-        if (url.searchParams.get(key) !== strVal) {
-             if (value === defaultValue) {
-                 if (url.searchParams.has(key)) {
-                     url.searchParams.delete(key);
-                     changed = true;
-                 }
-             } else {
-                 url.searchParams.set(key, strVal);
-                 changed = true;
-             }
-        }
-    };
-
-    // Синхронізуємо конкретні поля
-    syncParam('boardSize', settings.boardSize, 8);
-    
-    // Для showBoard та autoHideBoard
-    if (String(settings.showBoard) !== url.searchParams.get('board')) {
-        url.searchParams.set('board', String(settings.showBoard));
-        changed = true;
-    }
-
-    if (String(settings.autoHideBoard) !== url.searchParams.get('autohide')) {
-        url.searchParams.set('autohide', String(settings.autoHideBoard));
-        changed = true;
-    }
-
-    // Блок-режим
-    if (String(settings.blockModeEnabled) !== url.searchParams.get('block')) {
-        url.searchParams.set('block', String(settings.blockModeEnabled));
-        changed = true;
-    }
-
-    if (changed) {
-        goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+      gameSettingsState.updateSettings(params);
     }
   });
 </script>

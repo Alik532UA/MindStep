@@ -122,9 +122,9 @@ describe('базовий набір ESLint (CODE-QUALITY-v8 § 6.4.1)', () => {
  * Перебір у тілі одного `it` дає той самий звіт і не має цього стану.
  */
 const DEBT: Readonly<Record<string, number>> = {
-	'@typescript-eslint/no-explicit-any': 166,
+	'@typescript-eslint/no-explicit-any': 164,
 	'@typescript-eslint/no-unused-vars': 118,
-	'svelte/no-navigation-without-resolve': 28,
+	'svelte/no-navigation-without-resolve': 27,
 	'svelte/require-each-key': 15,
 	'svelte/prefer-svelte-reactivity': 2
 };

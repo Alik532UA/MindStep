@@ -80,32 +80,39 @@ export const urlSyncService = {
             changed = true;
         }
         
-        // Перевіряємо блок-режим
-        if (settings.blockModeEnabled !== undefined) {
-            const blockVal = settings.blockModeEnabled ? '1' : '0';
-            if (url.searchParams.get('block') !== blockVal) {
-                url.searchParams.set('block', blockVal);
-                changed = true;
-            }
-        }
+        /*
+         * ПОРІВНЮЄМО ЗНАЧЕННЯ, А НЕ НАПИСАННЯ.
+         *
+         * `getParamsFromUrl` читає і `true`, і `1` як істину — тобто написання
+         * рівноправні на вході. А писар порівнював РЯДКИ: побачивши `board=true`,
+         * він вважав це «інакше» й переписував на `board=1`.
+         *
+         * Само по собі нешкідливо. Шкода почалася від другого писаря: той писав
+         * `String(settings.showBoard)`, тобто `true`. Двоє переписували те саме
+         * поле різними словами по колу, кожен раз через `goto` — і сторінка гри
+         * НАВІГУВАЛАСЯ ЩОСЕКУНДИ. Заміряно 2026-08-25 у грі вдвох: у консолі раз
+         * на ~2 с «Navigating away. Heartbeat will stop», тобто серцебиття
+         * присутності зупинялося й починалося без кінця, а налаштування
+         * зберігалися в сховище на кожному колі.
+         *
+         * Другого писаря прибрано (`URLSyncManager.svelte`), але порівняння за
+         * значенням лишається тут: воно робить коло НЕМОЖЛИВИМ, а не лише
+         * малоймовірним.
+         */
+        const flagInUrl = (key: string): boolean | null => {
+            const raw = url.searchParams.get(key);
+            return raw === null ? null : raw === 'true' || raw === '1';
+        };
 
-        // Перевіряємо видимість дошки
-        if (settings.showBoard !== undefined) {
-            const boardVal = settings.showBoard ? '1' : '0';
-            if (url.searchParams.get('board') !== boardVal) {
-                url.searchParams.set('board', boardVal);
-                changed = true;
-            }
-        }
+        const syncFlag = (key: string, value: boolean | undefined) => {
+            if (value === undefined || flagInUrl(key) === value) return;
+            url.searchParams.set(key, value ? '1' : '0');
+            changed = true;
+        };
 
-        // Перевіряємо автоприховування
-        if (settings.autoHideBoard !== undefined) {
-            const autoHideVal = settings.autoHideBoard ? '1' : '0';
-            if (url.searchParams.get('autohide') !== autoHideVal) {
-                url.searchParams.set('autohide', autoHideVal);
-                changed = true;
-            }
-        }
+        syncFlag('block', settings.blockModeEnabled);
+        syncFlag('board', settings.showBoard);
+        syncFlag('autohide', settings.autoHideBoard);
         
         if (changed) {
             const targetUrl = window.location.pathname + url.search;
