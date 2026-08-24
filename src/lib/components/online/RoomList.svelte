@@ -15,6 +15,14 @@
     let { playerName }: Props = $props();
 
     let rooms = $state<RoomSummary[]>([]);
+    /**
+     * Перелік НЕ ПРОЧИТАВСЯ — окремий стан, а не порожній список.
+     *
+     * Доти будь-яка невдача (відмова в правах, обрив мережі) показувала «Кімнат
+     * не знайдено»: людина бачила порожнє лобі при живій кімнаті в сусідньому
+     * вікні й не мала жодної підказки, що читання взагалі не відбулося.
+     */
+    let unavailable = $state(false);
     let isLoading = $state(true);
     let isJoining = $state<string | null>(null);
 
@@ -23,8 +31,10 @@
         try {
             const result = await roomService.getPublicRooms();
             rooms = result.rooms;
+            unavailable = result.unavailable === true;
         } catch (error) {
             logService.error("Failed to fetch rooms:", error);
+            unavailable = true;
         } finally {
             isLoading = false;
         }
@@ -57,6 +67,18 @@
 
     {#if isLoading}
         <div class="loading">{$t("common.loading")}...</div>
+    {:else if unavailable}
+        <!--
+            НЕ ПРОЧИТАЛОСЯ — окремий рядок, а не «кімнат не знайдено».
+
+            Доти будь-яка невдача (відмова в правах, обрив мережі) показувала
+            порожній список, і людина бачила порожнє лобі при живій кімнаті в
+            сусідньому вікні — повідомлення не брехало про факт, але вело до
+            хибного висновку.
+        -->
+        <div class="empty-state" data-testid="rooms-unavailable-text">
+            {$t("onlineMenu.roomsUnavailable")}
+        </div>
     {:else if rooms.length === 0}
         <div class="empty-state">{$t("onlineMenu.noRooms", { lastInfo: "" })}</div>
     {:else}

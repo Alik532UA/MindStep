@@ -3,6 +3,7 @@ export default {
   activeRooms: "Actieve Kamers",
   createRoom: "Kamer Maken",
   refresh: "Verversen",
+  roomsUnavailable: "Kan de lijst met kamers niet lezen. Probeer “Vernieuwen”.",
   roomName: "Kamernaam",
   boardSize: "Bordgrootte",
   turnDuration: "Beurttijd",

@@ -15,6 +15,7 @@ import { uiState } from "$lib/stores/uiState.svelte";
 import { storageService } from "$lib/services/storage";
 
 import { urlSyncService } from "$lib/services/urlSyncService";
+import { authService } from "$lib/services/authService";
 
 const APP_VERSION_KEY = "app_version";
 const VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
@@ -40,6 +41,21 @@ class AppInitializationService {
 
         // 3. Initialize internationalization
         initializeI18n();
+
+        /*
+         * ПІДПИСКА НА СТАН АВТЕНТИФІКАЦІЇ — і доти її не запускав НІХТО.
+         *
+         * `authService.init()` не мав жодного виклику в усьому проєкті. Наслідок
+         * не один: разом із нею не працювали `syncUserProfile` (злиття місцевого
+         * рекорду з хмарним при вході) і `watchUserProfile` (жива підписка на
+         * свій профіль) — тобто хмарна половина профілю оживала лише там, де
+         * хтось окремо кликав вхід.
+         *
+         * Не `await`: ініціалізація застосунку не мусить чекати на мережу. Сама
+         * підписка асинхронна за побудовою, а місця, яким `uid` потрібен ЗАРАЗ,
+         * беруть його через `authService.ensureUser()`.
+         */
+        void authService.init();
 
         // 4. Initialize other services
         initializeTestModeSync();

@@ -65,6 +65,53 @@ class AuthService {
         });
     }
 
+    /** Вхід, що вже триває. Друге очікування чіпляється до нього, а не починає своє. */
+    private pendingSignIn: Promise<User | null> | null = null;
+
+    /**
+     * ДАТИ КОРИСТУВАЧА — цього бракувало екрану онлайну.
+     *
+     * ## Що було не так
+     *
+     * Анонімний вхід тут відбувається НА ВИМОГУ: кожне місце, якому потрібен
+     * `uid`, само перевіряє `getCurrentUser()` і, якщо порожньо, кличе
+     * `signInAnonymously()`. Так робить і створення кімнати, і вхід у неї, і
+     * контролер лобі — а от перелік кімнат не робив, і саме тому падав.
+     *
+     * У продакшні це виглядало як «Кімнат не знайдено» при живій кімнаті в
+     * сусідньому вікні, а в консолі лежало `Missing or insufficient permissions`:
+     * правило `allow list: if signedIn()` відмовляло анонімному запиту, і
+     * відмову ковтав `catch`. Правила при цьому справні — те саме відмовляння
+     * стверджує перевірка `НЕавторизований читає перелік кімнат` у
+     * `npm run check:rules`.
+     *
+     * ## Чому один метод, а не третя копія тієї самої пари рядків
+     *
+     * Бо копій уже три, і четверта розійшлася б із рештою. Тут же межа названа
+     * один раз: `null` означає «увійти не вийшло», і це НЕ те саме, що «даних
+     * немає» — викликач мусить сказати про це різними словами.
+     *
+     * `pendingSignIn` тримає вхід, що вже триває: два одночасні виклики (лобі й
+     * профіль на тій самій сторінці) інакше почали б два входи, а другий отримав
+     * би іншого анонімного користувача.
+     */
+    async ensureUser(): Promise<User | null> {
+        const current = this.auth.currentUser;
+        if (current) return current;
+
+        this.pendingSignIn ??= this.signInAnonymously()
+            .catch((error) => {
+                logService.error('[AuthService:EnsureUser] Анонімний вхід не вдався', error);
+                return null;
+            })
+            .then((user) => {
+                this.pendingSignIn = null;
+                return user;
+            });
+
+        return this.pendingSignIn;
+    }
+
     async signInAnonymously() {
         try {
             const result = await signInAnonymously(this.auth);

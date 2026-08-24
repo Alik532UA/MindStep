@@ -202,7 +202,27 @@ class RoomService {
         };
     }
 
-    async getPublicRooms(): Promise<{ rooms: RoomSummary[], latestCreatedAt?: number }> {
+    /**
+     * Перелік публічних кімнат.
+     *
+     * `unavailable` — це НЕ «кімнат немає». Доти будь-яка невдача поверталася
+     * порожнім списком, і відмова в правах виглядала на екрані точно як порожнє
+     * лобі: «Кімнат не знайдено» при живій кімнаті в сусідньому вікні. Тепер
+     * невдача називається невдачею, а порожнеча — порожнечею.
+     */
+    async getPublicRooms(): Promise<{ rooms: RoomSummary[], latestCreatedAt?: number, unavailable?: boolean }> {
+        /*
+         * СПЕРШУ ВХІД, і лише потім запит: правило `allow list` вимагає
+         * авторизованого, а анонімний вхід тут асинхронний. Без цього рядка
+         * перший запит лобі йшов без користувача й отримував відмову — саме це
+         * й ламало екран онлайну.
+         */
+        const user = await authService.ensureUser();
+        if (!user) {
+            logService.error('[RoomService] Немає користувача — перелік кімнат не читається');
+            return { rooms: [], unavailable: true };
+        }
+
         try {
             const [querySnapshot, statsData] = await roomFirestoreService.getPublicRoomsQuerySnapshot();
             const result = this.processRoomsSnapshot(querySnapshot);
@@ -216,11 +236,13 @@ class RoomService {
             };
         } catch (error) {
             errorHandlerService.handle(error, { context: 'RoomService:GetPublicRooms', showToast: false });
-            return { rooms: [] };
+            return { rooms: [], unavailable: true };
         }
     }
 
-    subscribeToPublicRooms(callback: (data: { rooms: RoomSummary[], latestCreatedAt?: number }) => void): Unsubscribe {
+    subscribeToPublicRooms(
+        callback: (data: { rooms: RoomSummary[], latestCreatedAt?: number, unavailable?: boolean }) => void
+    ): Unsubscribe {
         return roomFirestoreService.subscribeToPublicRooms(
             (snapshot) => {
                 const result = this.processRoomsSnapshot(snapshot);
@@ -228,7 +250,8 @@ class RoomService {
             },
             (error) => {
                 errorHandlerService.handle(error, { context: 'RoomService:SubscribePublicRooms', showToast: false });
-                callback({ rooms: [] });
+                // Та сама межа, що вище: «не прочиталося» ≠ «нікого немає».
+                callback({ rooms: [], unavailable: true });
             }
         );
     }

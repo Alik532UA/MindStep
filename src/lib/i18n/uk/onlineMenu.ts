@@ -3,6 +3,7 @@ export default {
   activeRooms: "Активні кімнати",
   createRoom: "Створити кімнату",
   refresh: "Оновити",
+  roomsUnavailable: "Не вдалося прочитати перелік кімнат. Спробуйте «Оновити».",
   roomName: "Назва кімнати",
   boardSize: "Розмір дошки",
   turnDuration: "Час на хід",

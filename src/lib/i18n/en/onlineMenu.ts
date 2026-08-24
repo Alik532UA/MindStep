@@ -3,6 +3,7 @@ export default {
   activeRooms: "Active Rooms",
   createRoom: "Create Room",
   refresh: "Refresh",
+  roomsUnavailable: "Could not read the room list. Try “Refresh”.",
   roomName: "Room Name",
   boardSize: "Board Size",
   turnDuration: "Turn Duration",

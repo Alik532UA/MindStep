@@ -3,6 +3,7 @@ export default {
   activeRooms: "Faal Odalar",
   createRoom: "Oda Yaratmaq",
   refresh: "Yañılamak",
+  roomsUnavailable: "Odalar cedveli oqulmadı. «Yañart» dep baqıñız.",
   roomName: "Oda Adı",
   boardSize: "Tahta ölçüsi",
   turnDuration: "Nevbet vaqtı",

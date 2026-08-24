@@ -389,6 +389,8 @@ export interface TranslationSchema {
     activeRooms: string;
     createRoom: string;
     refresh: string;
+    /** Перелік НЕ прочитався — це не те саме, що «кімнат немає». */
+    roomsUnavailable: string;
     roomName: string;
     boardSize: string;
     turnDuration: string;
