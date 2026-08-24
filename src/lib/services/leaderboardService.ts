@@ -1,7 +1,7 @@
 // src/lib/services/leaderboardService.ts
 import { logService } from './logService.svelte';
 import { storageService } from './storage';
-import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirestoreDb } from './firebaseService';
 import { authService } from './authService';
 
@@ -36,6 +36,35 @@ export const leaderboardService = {
         if (typeof window === 'undefined') return 0;
         const val = storageService.get(`${LOCAL_BEST_SCORE_KEY_PREFIX}${leaderboardKey}`);
         return val ? parseInt(val, 10) : 0;
+    },
+
+    /**
+     * Прибрати ВСІ свої рядки з таблиці лідерів.
+     *
+     * Потрібне двом речам, і обидві однаково важливі. Перше — перемикач
+     * «показувати мене в таблиці»: правило бази цю згоду не перевіряє (рядок може
+     * написати лише сам власник, тобто порушити її може тільки СВІЙ клієнт), тож
+     * вимикання означає прибрати рядки й більше їх не писати. Друге — видалення
+     * акаунта: доти рекорд видаленого лишався в публічній таблиці назавжди.
+     *
+     * Запитом за `uid`, а не переліком назв: ідентифікатор рядка —
+     * `{uid}_{mode}_{size}`, тобто режимів і розмірів у людини стільки, скільки
+     * вона зіграла. `limit` — умова доступу, а не оптимізація (§ 7.1).
+     */
+    async removeMyEntries(uid: string): Promise<void> {
+        try {
+            const db = getFirestoreDb();
+            const rows = await getDocs(
+                query(collection(db, 'leaderboards'), where('uid', '==', uid), limit(100))
+            );
+            for (const row of rows.docs) {
+                await deleteDoc(row.ref).catch((error: unknown) => {
+                    logService.warn('[Leaderboard] Row not removed', error);
+                });
+            }
+        } catch (error) {
+            logService.error('[Leaderboard] Rows not removed', error);
+        }
     },
 
     /**

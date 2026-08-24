@@ -149,37 +149,37 @@ class UserProfileService {
      *
      * ## Що саме прибирається
      *
-     * `users/{uid}` (рекорд і нікнейм), `rewards/{uid}` (нагороди) і РЯДКИ
-     * ТАБЛИЦІ ЛІДЕРІВ. Останнє тут головне: таблиця публічна, і доти рекорд
-     * видаленого акаунта лишався в ній назавжди — імʼя людини, якої вже немає,
-     * показувалося всім, і прибрати його не міг уже ніхто.
+     * `users/{uid}` (рекорд і нікнейм), його підколекції підписок, `rewards/{uid}`,
+     * публічний профіль `profiles/{uid}` і РЯДКИ ТАБЛИЦІ ЛІДЕРІВ. Останнє тут
+     * головне: таблиця публічна, і доти рекорд видаленого акаунта лишався в ній
+     * назавжди — імʼя людини, якої вже немає, показувалося всім, і прибрати його
+     * не міг уже ніхто.
      *
-     * ## Чому запитом, а не переліком назв
+     * ## Чому кожне — своїм власником
      *
-     * Ідентифікатор рядка — `{uid}_{mode}_{size}`, тобто режимів і розмірів у
-     * людини стільки, скільки вона зіграла. Вгадувати їх переліком означало б
-     * лишати рядки в кожному режимі, який колись додадуть.
-     *
-     * `limit` тут не оптимізація, а умова доступу: правило `leaderboards`
-     * дозволяє перелічувати лише порціями (§ 7.1).
+     * Рядки таблиці прибирає `leaderboardService`, підписки — `friendsService`,
+     * профіль — `profilesService`. Другий екземпляр того самого запиту тут
+     * розійшовся б із першим на наступній правці; а `import()` замість
+     * статичного імпорту рятує від кола `authService → userProfileService →
+     * leaderboardService → authService`.
      *
      * НЕ КИДАЄ на окремому документі: видалення акаунта не мусить зупинятися
      * через один рядок, якого вже немає.
      */
     public async eraseCloudData(uid: string): Promise<void> {
-        const { collection, deleteDoc, getDocs, limit, query, where } = await import(
-            'firebase/firestore'
-        );
+        const [{ leaderboardService }, { eraseFollows }, { removeProfile }] = await Promise.all([
+            import('../leaderboardService'),
+            import('../social/friendsService'),
+            import('../social/profilesService')
+        ]);
 
-        const rows = await getDocs(
-            query(collection(this.db, 'leaderboards'), where('uid', '==', uid), limit(100))
-        );
-        for (const row of rows.docs) {
-            await deleteDoc(row.ref).catch((error: unknown) => {
-                logService.warn('[UserProfileService] Leaderboard row not deleted', error);
-            });
-        }
+        await leaderboardService.removeMyEntries(uid);
+        await eraseFollows(uid);
+        await removeProfile(uid).catch((error: unknown) => {
+            logService.warn('[UserProfileService] Public profile not deleted', error);
+        });
 
+        const { deleteDoc } = await import('firebase/firestore');
         await Promise.all([
             deleteDoc(doc(this.db, 'users', uid)).catch((error: unknown) => {
                 logService.warn('[UserProfileService] User doc not deleted', error);

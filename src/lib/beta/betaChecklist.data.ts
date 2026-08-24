@@ -158,6 +158,81 @@ export const BETA_CHECKS: readonly BetaCheck[] = [
 		}
 	},
 
+	{
+		id: 'menu_8',
+		category: { uk: 'Акаунт і друзі', en: 'Account and friends' },
+		coverage: 'manual',
+		testid: 'auth-friends-btn',
+		text: {
+			uk: 'Увійдіть в акаунт, відкрийте «Друзі», задайте імʼя, аватар і країну, збережіть. Перезавантажте сторінку — усе на місці.',
+			en: 'Sign in, open “Friends”, set a name, avatar and country, then save. Reload the page — everything is still there.'
+		}
+	},
+	{
+		id: 'menu_9',
+		category: { uk: 'Акаунт і друзі', en: 'Account and friends' },
+		coverage: 'manual',
+		testid: 'friends-search-input',
+		text: {
+			uk: 'Знайдіть другого гравця за ТОЧНОЮ поштою й підпишіться. Коли він підпишеться назустріч, в обох з’явиться позначка «взаємно» — саме вона й означає друзів.',
+			en: 'Find the second player by their EXACT email and follow them. When they follow back, both see the “mutual” mark — that is exactly what friends means.'
+		}
+	},
+	{
+		id: 'menu_10',
+		category: { uk: 'Приватність', en: 'Privacy' },
+		coverage: 'manual',
+		negative: true,
+		testid: 'friends-privacy-search-btn',
+		text: {
+			uk: 'Вимкніть «Показувати мене в пошуку» й пошукайте себе з другого пристрою за своєю поштою. Вас НЕ мусить бути видно: межу тримає правило бази, а не екран.',
+			en: 'Turn off “Show me in search” and look for yourself from the second device by your email. You must NOT be found: the boundary is held by the database rule, not the screen.'
+		}
+	},
+	{
+		id: 'menu_11',
+		category: { uk: 'Приватність', en: 'Privacy' },
+		coverage: 'manual',
+		negative: true,
+		testid: 'friends-privacy-follow-btn',
+		text: {
+			uk: 'Вимкніть «Дозволяти підписуватися на мене» й спробуйте підписатися з другого пристрою. Підписка НЕ мусить створитися: мусить бути відмова з підказкою, а не мовчазна кнопка.',
+			en: 'Turn off “Let others follow me” and try to follow from the second device. The follow must NOT be created: it must refuse with a hint, not sit there silently.'
+		}
+	},
+	{
+		id: 'menu_12',
+		category: { uk: 'Приватність', en: 'Privacy' },
+		coverage: 'manual',
+		negative: true,
+		testid: 'friends-privacy-board-btn',
+		text: {
+			uk: 'Вимкніть «Показувати мене в таблиці лідерів». Ваш рядок мусить зникнути з таблиці й НЕ повернутися після наступної партії.',
+			en: 'Turn off “Show me on the leaderboard”. Your row must disappear from the board and must NOT come back after the next game.'
+		}
+	},
+	{
+		id: 'menu_13',
+		category: { uk: 'Вихід і видалення', en: 'Signing out and deleting' },
+		coverage: 'manual',
+		negative: true,
+		testid: 'profile-delete-password',
+		text: {
+			uk: 'Наберіть рекорд, вийдіть з акаунта й увійдіть ІНШИМ. Рекорд НЕ мусить перейти в новий акаунт: вихід стирає місцеве.',
+			en: 'Set a record, sign out and sign in with a DIFFERENT account. The record must NOT move to the new account: signing out clears the local data.'
+		}
+	},
+	{
+		id: 'menu_14',
+		category: { uk: 'Вихід і видалення', en: 'Signing out and deleting' },
+		coverage: 'manual',
+		testid: 'profile-current-password',
+		text: {
+			uk: 'Змініть пароль, увівши поточний. Після цього старий пароль НЕ мусить пускати, а видалення акаунта мусить прибрати ваш рядок із таблиці лідерів і з підписок другого гравця.',
+			en: 'Change the password by entering the current one. Afterwards the old password must NOT work, and deleting the account must remove your row from the leaderboard and from the second player’s follows.'
+		}
+	},
+
 	// ───────────────── Гра проти віртуального гравця ─────────────────
 	{
 		id: 'virtual_1',

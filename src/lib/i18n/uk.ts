@@ -28,8 +28,10 @@ import dndTest from './uk/dndTest';
 import trainingHelp from './uk/trainingHelp';
 import rewards from './uk/rewards';
 import platform from './uk/platform';
+import social from './uk/social';
 
 const translations: TranslationSchema = {
+  social,
   dndTest,
   testMode,
   common,

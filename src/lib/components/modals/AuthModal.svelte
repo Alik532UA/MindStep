@@ -5,6 +5,9 @@
     import { t } from "$lib/i18n/typedI18n";
     import UserProfile from "$lib/components/auth/UserProfile.svelte";
     import AuthForms from "$lib/components/auth/AuthForms.svelte";
+    import FriendsPanel from "$lib/components/social/FriendsPanel.svelte";
+    import StyledButton from "$lib/components/ui/StyledButton.svelte";
+    import { socialState } from "$lib/stores/socialState.svelte";
 
     /*
      * Руни, а не legacy-режим (SVELTE-CORE-v8, анти-патерни).
@@ -31,6 +34,18 @@
 
     let isDeleteMode = $state(false);
     let isChangePasswordMode = $state(false);
+    /**
+     * Чи відкритий екран друзів.
+     *
+     * Стан ЕКРАННИЙ і живе тут, а не в сторі: сховати панель — це не факт про
+     * дані, а вибір людини на цю мить. У сторі він означав би, що після
+     * перезавантаження модалка «пам'ятає» вкладку, якої ніхто не просив.
+     *
+     * Панель не показується одразу: профіль, підписки й приватність — це три
+     * запити до бази, і робити їх тому, хто відкрив вікно заради виходу з
+     * акаунта, не треба.
+     */
+    let showFriends = $state(false);
 
     const isAuthorized = $derived(userStore.user && !userStore.user.isAnonymous);
 
@@ -75,6 +90,10 @@
     }
 
     async function handleLogout() {
+        // Соціальна половина екрана більше не наша: профіль і підписки належали
+        // тому акаунту, з якого щойно вийшли.
+        socialState.reset();
+        showFriends = false;
         await authService.logout();
         modalStateRune.closeModal();
     }
@@ -135,6 +154,23 @@
                 newPassword = "";
             }}
         />
+
+        {#if !isDeleteMode && !isChangePasswordMode}
+            {#if showFriends}
+                <FriendsPanel
+                    uid={userStore.user?.uid ?? ""}
+                    email={userStore.user?.email ?? null}
+                />
+            {:else}
+                <StyledButton
+                    variant="default"
+                    onclick={() => (showFriends = true)}
+                    dataTestId="auth-friends-btn"
+                >
+                    {$t("social.title")}
+                </StyledButton>
+            {/if}
+        {/if}
     {:else}
         <AuthForms
             mode={authMode}

@@ -4,8 +4,28 @@
       "collectionGroup": "rooms",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "isPrivate", "order": "ASCENDING" },
-        { "fieldPath": "lastActivity", "order": "DESCENDING" }
+        {
+          "fieldPath": "isPrivate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastActivity",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "searchableEmailHash",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "privacy.search",
+          "order": "ASCENDING"
+        }
       ]
     }
   ],

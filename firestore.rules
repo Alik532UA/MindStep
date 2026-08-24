@@ -155,6 +155,103 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    /*
+     * ПІДПИСКИ: дві половини одного факту, кожна зі своїм автором.
+     *
+     * `users/{uid}/following/{target}` — «на кого підписаний я»,
+     * `users/{uid}/followers/{who}` — «хто підписаний на мене». Це РІЗНІ питання,
+     * і обидва треба відповідати одним читанням: без дзеркала друге вимагало б
+     * перебрати всіх користувачів, а перелічувати `users` заборонено.
+     *
+     * ДРУГ — ВЗАЄМНА ПІДПИСКА. Односторонню видно лише тому, хто підписався;
+     * «друзі» — це відношення, у якому погодилися обидва, і перевірити його можна
+     * лише подивившись з обох боків. Так само влаштовані сусідні `Slovko` і
+     * `VetCrewGames`.
+     *
+     * ПРАВИЛО, А НЕ ЕКРАН, ТРИМАЄ ЗГОДУ: створити запис у чужих підписниках можна
+     * лише поки той не закрив підписки на себе (`profiles/{uid}.privacy.follow`).
+     * Клієнтський фільтр приховував би кнопку від того, хто дивиться екраном, і не
+     * приховував би нічого від того, хто відкрив консоль.
+     *
+     * `!= false`, а не `== true`: профілю може ще не бути, і його відсутність
+     * означає «можна» — інакше правило вимкнуло б підписки всім, хто не заходив у
+     * налаштування.
+     */
+    match /users/{uid}/following/{target} {
+      allow read: if signedIn();
+      /*
+       * Пише лише власник, і лише ПОЗНАЧКУ ЧАСУ: перелік полів тут не косметика
+       * (§ 4.7). Без нього в документ підписки можна дописати що завгодно — а
+       * читає його інша людина, і показує в себе на екрані.
+       *
+       * Видалити може ще й той, на кого підписані: це «прибери мене зі своїх
+       * підписок», і без цього права відписати нав'язливого підписника було б нічим.
+       */
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && request.resource.data.keys().hasOnly(['at']);
+      allow delete: if signedIn() && (request.auth.uid == uid || request.auth.uid == target);
+    }
+
+    match /users/{uid}/followers/{who} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+                            && request.auth.uid == who
+                            && request.resource.data.keys().hasOnly(['at'])
+                            && (
+                                 !exists(/databases/$(database)/documents/profiles/$(uid))
+                                 || get(/databases/$(database)/documents/profiles/$(uid)).data.get(['privacy', 'follow'], true) != false
+                               );
+      allow delete: if signedIn() && (request.auth.uid == who || request.auth.uid == uid);
+    }
+
+    /*
+     * ПУБЛІЧНИЙ ПРОФІЛЬ: рівно те, що видно іншим, і нічого більше.
+     *
+     * `displayName`, аватар (`значок:колір`), країна двома літерами, перемикачі
+     * приватності — і ХЕШ пошти замість самої пошти. Дозвіл читати документ
+     * означає дозвіл читати всі його поля (правил рівня поля у Firestore не
+     * існує), тож адреси тут немає й бути не може: пошук за точним збігом працює
+     * так само по SHA-256, а витягти з нього адресу неможливо. Той самий висновок,
+     * що в сусідньому `Slovko`.
+     *
+     * ПОШУК — ЛИШЕ СЕРЕД ЗГОДНИХ, і це тримає правило `list`. Запит без
+     * `where('privacy.search', '==', true)` Firestore відкидає цілком: він не може
+     * довести, що всі знайдені документи пройдуть правило. Тобто вимкнений пошук
+     * означає відсутність у знахідках, а не фільтр на клієнті.
+     *
+     * `get` лишається відкритим для авторизованих: за `uid` профіль читає список
+     * підписок і таблиця друзів, а приватного в ньому немає — саме тому пошта тут
+     * хешем.
+     */
+    match /profiles/{uid} {
+      allow get: if signedIn();
+      allow list: if signedIn()
+                  && request.query.limit <= 20
+                  && resource.data.privacy.search == true;
+      /*
+       * ВИДАЛЕННЯ — ОКРЕМИМ дозволом, і це не стиль.
+       *
+       * `allow write` покриває й видалення, а на видаленні `request.resource`
+       * дорівнює null: перевірка `request.resource.data.keys()` у ньому кидає, і
+       * правило відмовляє. Тобто одне правило «write із перевіркою форми»
+       * зробило б профіль таким, що його неможливо прибрати — а прибирати його
+       * треба, і саме при видаленні акаунта. Зловив це гейт, не читання коду.
+       */
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn()
+                   && request.auth.uid == uid
+                   && request.resource.data.keys().hasOnly([
+                        'displayName', 'avatar', 'country', 'searchableEmailHash', 'privacy', 'updatedAt'
+                      ])
+                   && request.resource.data.displayName is string
+                   && request.resource.data.displayName.size() <= 32
+                   && request.resource.data.privacy.keys().hasOnly(['search', 'follow', 'board'])
+                   && request.resource.data.privacy.search is bool
+                   && request.resource.data.privacy.follow is bool
+                   && request.resource.data.privacy.board is bool;
+    }
+
     match /rewards/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
@@ -169,6 +266,24 @@ service cloud.firestore {
       // Перелічувати можна — на цьому стоїть сама таблиця, — але порціями.
       // Без межі один запит вивантажує всю таблицю разом із іменами.
       allow list: if request.query.limit <= 100;
+      /*
+       * ЗГОДУ НА ПОКАЗ (`privacy.board`) правило тут НЕ перевіряє — і це рішення,
+       * а не прогалина.
+       *
+       * Рядок таблиці може написати рівно один користувач: свій власний
+       * (`entryId` починається з його `uid`). Тобто вимкнений перемикач може
+       * порушити тільки СВІЙ КЛІЄНТ — стара вкладка, кеш, застаріла збірка, — а не
+       * сторонній. Перевіряти це правилом означало б `get()` на кожен кінець
+       * партії, тобто платне читання там, де загроза — власна стара вкладка
+       * (CLOUD-DATABASE-v8 § 4.8: правило не читає інших документів).
+       *
+       * Тому вимикання працює інакше: клієнт стирає свій рядок і більше його не
+       * пише. Видалення дозволене тим самим правилом нижче — і завжди, бо інакше
+       * вийти з таблиці не змогла б саме та людина, яка цього захотіла.
+       *
+       * Порівняння: у сусідньому `VetCrewGames` та сама згода стоїть у правилі —
+       * там RTDB, і читання чужого вузла з правила безкоштовне.
+       */
       allow write: if signedIn() && entryId.split('_')[0] == request.auth.uid;
     }
 

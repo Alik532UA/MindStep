@@ -84,6 +84,38 @@ async function fsRead(path, token) {
 	return (await fetch(`${FS}/${path}`, { headers: auth(token) })).status;
 }
 
+/**
+ * ЗАПИТ до колекції — саме ним перевіряються правила `list`.
+ *
+ * `fsRead('profiles?pageSize=5')` перевіряє не те: правило `list` дивиться на
+ * `request.query.limit` і на поля КОЖНОГО документа, тож без справжнього
+ * `structuredQuery` умова «лише ті, хто дозволив пошук» не перевіряється нічим.
+ *
+ * @param {string} collectionId
+ * @param {Array<{path: string, raw: unknown}>} equals рівності через AND
+ * @param {number | null} max `limit` запиту; `null` — запит БЕЗ межі
+ * @param {string | null} token
+ */
+async function fsQuery(collectionId, equals, max, token) {
+	// `raw`, а не `value`: однойменне поле затінило б функцію `value()` вище, і
+	// фільтр поїхав би сирим значенням замість REST-форми.
+	const filters = equals.map(({ path, raw }) => ({
+		fieldFilter: { field: { fieldPath: path }, op: 'EQUAL', value: value(raw) }
+	}));
+	const structuredQuery = {
+		from: [{ collectionId }],
+		...(filters.length === 1 ? { where: filters[0] } : {}),
+		...(filters.length > 1 ? { where: { compositeFilter: { op: 'AND', filters } } } : {}),
+		...(max === null ? {} : { limit: max })
+	};
+	const res = await fetch(`${FS}:runQuery`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', ...auth(token) },
+		body: JSON.stringify({ structuredQuery })
+	});
+	return res.status;
+}
+
 /** RTDB через REST: токен передається параметром, як і в клієнта. */
 async function dbWrite(path, data, token) {
 	const suffix = token ? `&auth=${token}` : '';
@@ -484,6 +516,198 @@ const CASES = [
 		allowed: false,
 		run: () => fsCreate('rewards', guest.uid, { any: 1 }, host.token)
 	},
+	/*
+	 * ПУБЛІЧНИЙ ПРОФІЛЬ, ПОШУК І ПІДПИСКИ.
+	 *
+	 * Головний випадок тут один, і він третій: запит до `profiles` БЕЗ умови
+	 * «лише ті, хто дозволив пошук» мусить відмовити. Саме цим правило
+	 * відрізняється від фільтра на клієнті — той приховує від того, хто дивиться
+	 * екраном, і не приховує нічого від того, хто відкрив консоль.
+	 */
+	{
+		name: 'гість пише СВІЙ публічний профіль',
+		allowed: true,
+		run: () =>
+			fsCreate(
+				'profiles',
+				guest.uid,
+				{
+					displayName: 'Гість',
+					avatar: 'cat:blue',
+					country: 'ua',
+					searchableEmailHash: 'deadbeef',
+					privacy: { search: true, follow: true, board: true },
+					updatedAt: 1
+				},
+				guest.token
+			)
+	},
+	{
+		name: 'читати чужий профіль за uid (список підписок)',
+		allowed: true,
+		run: () => fsRead(`profiles/${guest.uid}`, host.token)
+	},
+	{
+		name: 'пошук за поштою — із умовою згоди й межею',
+		allowed: true,
+		run: () =>
+			fsQuery(
+				'profiles',
+				[
+					{ path: 'searchableEmailHash', raw: 'deadbeef' },
+					{ path: 'privacy.search', raw: true }
+				],
+				20,
+				host.token
+			)
+	},
+	{
+		name: 'пошук БЕЗ умови згоди на пошук',
+		allowed: false,
+		run: () =>
+			fsQuery('profiles', [{ path: 'searchableEmailHash', raw: 'deadbeef' }], 20, host.token)
+	},
+	{
+		name: 'пошук без межі',
+		allowed: false,
+		run: () =>
+			fsQuery(
+				'profiles',
+				[
+					{ path: 'searchableEmailHash', raw: 'deadbeef' },
+					{ path: 'privacy.search', raw: true }
+				],
+				null,
+				host.token
+			)
+	},
+	{
+		name: 'ЧУЖИЙ публічний профіль',
+		allowed: false,
+		run: () =>
+			fsCreate(
+				'profiles',
+				`${host.uid}`,
+				{ displayName: 'Не я', privacy: { search: true, follow: true, board: true } },
+				guest.token
+			)
+	},
+	{
+		name: 'у профілі поле, якого схема не знає',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`profiles/${guest.uid}`,
+				{
+					displayName: 'Гість',
+					role: 'admin',
+					privacy: { search: true, follow: true, board: true }
+				},
+				guest.token
+			)
+	},
+	{
+		name: 'перемикач приватності НЕ булевий',
+		allowed: false,
+		run: () =>
+			fsUpdate(
+				`profiles/${guest.uid}`,
+				{ displayName: 'Гість', privacy: { search: 'yes', follow: true, board: true } },
+				guest.token
+			)
+	},
+	{
+		name: 'господар пише свій профіль (для випадків про підписки)',
+		allowed: true,
+		run: () =>
+			fsCreate(
+				'profiles',
+				host.uid,
+				{
+					displayName: 'Господар',
+					privacy: { search: true, follow: true, board: true },
+					updatedAt: 1
+				},
+				host.token
+			)
+	},
+	{
+		// Дзеркало пише САМ підписник: ключ — його `uid`, і правило це вимагає.
+		name: 'гість додає себе в підписники господаря',
+		allowed: true,
+		run: () => fsCreate(`users/${host.uid}/followers`, guest.uid, { at: 1 }, guest.token)
+	},
+	{
+		name: 'гість пише свою підписку',
+		allowed: true,
+		run: () => fsCreate(`users/${guest.uid}/following`, host.uid, { at: 1 }, guest.token)
+	},
+	{
+		name: 'у записі підписки поле, якого схема не знає',
+		allowed: false,
+		run: () =>
+			fsCreate(`users/${guest.uid}/following`, 'someone', { at: 1, note: 'привіт' }, guest.token)
+	},
+	{
+		/*
+		 * ЧУЖУ ПІДПИСКУ НЕ СТВОРИТИ, і це не дрібниця: без цього правила будь-хто
+		 * дописував би собі підписників, а взаємність — це і є друзі. Тобто
+		 * «дружба» ставала б односторонньою заявою.
+		 */
+		name: 'записати чужу підписку за нього',
+		allowed: false,
+		run: () => fsCreate(`users/${host.uid}/following`, guest.uid, { at: 1 }, guest.token)
+	},
+	{
+		name: 'записати себе чужим підписником від третьої особи',
+		allowed: false,
+		run: () => fsCreate(`users/${guest.uid}/followers`, host.uid, { at: 1 }, guest.token)
+	},
+	{
+		name: 'господар закриває підписки на себе',
+		allowed: true,
+		run: () =>
+			fsUpdate(
+				`profiles/${host.uid}`,
+				{
+					displayName: 'Господар',
+					privacy: { search: true, follow: false, board: true },
+					updatedAt: 2
+				},
+				host.token
+			)
+	},
+	{
+		// ГОЛОВНИЙ ВИПАДОК приватності підписок: згоду тримає правило, а не екран.
+		name: 'підписатися на того, хто закрив підписки',
+		allowed: false,
+		run: () => fsCreate(`users/${host.uid}/followers`, 'stranger-uid', { at: 1 }, guest.token)
+	},
+	{
+		// Прибрати себе з чужих підписників можна ЗАВЖДИ: інакше людина, яка щойно
+		// закрила підписки, замкнула б наявних підписників назавжди.
+		name: 'зняти свою підписку при закритих підписках',
+		allowed: true,
+		run: () => fsDelete(`users/${host.uid}/followers/${guest.uid}`, guest.token)
+	},
+	{
+		// «Прибери мене зі своїх підписок»: без цього права відписати наполегливого
+		// підписника було б нічим.
+		name: 'той, на кого підписані, знімає чужу підписку на себе',
+		allowed: true,
+		run: () => fsDelete(`users/${guest.uid}/following/${host.uid}`, host.token)
+	},
+	{
+		name: 'чужий публічний профіль прибрати не можна',
+		allowed: false,
+		run: () => fsDelete(`profiles/${host.uid}`, guest.token)
+	},
+	{
+		name: 'гість прибирає СВІЙ публічний профіль (видалення акаунта)',
+		allowed: true,
+		run: () => fsDelete(`profiles/${guest.uid}`, guest.token)
+	},
+
 	{
 		name: 'чужий рекорд leaderboards/{uid}_{mode}_{size}',
 		allowed: false,

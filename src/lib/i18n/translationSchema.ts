@@ -735,6 +735,46 @@ export interface TranslationSchema {
       resetSent: string;
     };
   };
+  /**
+   * ДРУЗІ, ПУБЛІЧНИЙ ПРОФІЛЬ І ПРИВАТНІСТЬ.
+   *
+   * Окрема група, а не частина `ui.auth`: там вхід і пароль, тобто доступ до
+   * акаунта, а тут те, що видно ІНШИМ. Розділення не косметичне — рядки про
+   * приватність мусять читатися разом, бо разом вони й пояснюють, що саме
+   * ховається.
+   */
+  social: {
+    title: string;
+    profileTitle: string;
+    nameLabel: string;
+    avatarLabel: string;
+    countryLabel: string;
+    countryNone: string;
+    save: string;
+    saved: string;
+    searchTitle: string;
+    searchHint: string;
+    searchPlaceholder: string;
+    searchBtn: string;
+    nobody: string;
+    follow: string;
+    unfollow: string;
+    removeFollower: string;
+    followingTitle: string;
+    followingNone: string;
+    followersTitle: string;
+    followersNone: string;
+    mutual: string;
+    privacyTitle: string;
+    privacyHint: string;
+    privacySearch: string;
+    privacyFollow: string;
+    privacyBoard: string;
+    privacyOn: string;
+    privacyOff: string;
+    errorNotAllowed: string;
+    errorOther: string;
+  };
   updateNotification: {
     title: string;
     description: string;
