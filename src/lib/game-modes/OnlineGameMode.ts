@@ -1,7 +1,7 @@
 import { BaseGameMode } from './BaseGameMode';
 import type { Player } from '$lib/models/player';
 import { logService } from "$lib/services/logService.svelte";
-import { createOnlinePlayers } from '$lib/utils/playerFactory';
+import { createOnlinePlayers, orderOnlineSeats } from '$lib/utils/playerFactory';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { boardState } from '$lib/stores/boardState.svelte';
 import { playerState } from '$lib/stores/playerState.svelte';
@@ -276,7 +276,9 @@ export class OnlineGameMode extends BaseGameMode {
         logService.GAME_MODE('[OnlineGameMode] Я господар. Починаю партію.');
         const playersConfig = this.getPlayersConfiguration();
         const finalSize = newSize || gameSettingsState.state.boardSize || 4;
-        await this.stateSync!.startMatch(playersConfig, finalSize);
+        await this.stateSync!.startMatch(playersConfig, finalSize, {
+          playerIds: this.getSeatIds()
+        });
       } else {
         logService.GAME_MODE('[OnlineGameMode] Я гість. Чекаю, доки господар почне партію.');
       }
@@ -383,6 +385,20 @@ export class OnlineGameMode extends BaseGameMode {
 
   async handleNoMoves(playerType: 'human' | 'computer'): Promise<void> {
     await super.handleNoMoves(playerType);
+  }
+
+  /**
+   * Підписи місць — `auth.uid` у тому самому порядку, що й склад.
+   *
+   * Хід підписано `auth.uid` (інакше правило `moves` його не пропустить), а в
+   * складі лежать номери місць. Без цього списку перепрогін не має чим зіставити
+   * одне з одним — і мовчки відкидає кожен хід.
+   */
+  private getSeatIds(): string[] | undefined {
+    if (!this.roomData) return undefined;
+    return orderOnlineSeats(Object.values(this.roomData.players), this.roomData.hostId).map(
+      (player) => player.id
+    );
   }
 
   getPlayersConfiguration(): Player[] {

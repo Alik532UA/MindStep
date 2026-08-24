@@ -122,6 +122,23 @@ export function createTrainingPlayers(): Player[] {
 /**
  * Створює гравців для режиму Online
  */
+/**
+ * ПОРЯДОК МІСЦЬ: господар перший, далі як прийшли.
+ *
+ * Окремою функцією, бо цей порядок потрібен ДВІЧІ й мусить збігатися: за ним
+ * будується склад (`createOnlinePlayers`) і за ним же — список підписів
+ * (`MatchSetup.playerIds`). Дві копії того самого сортування розійшлися б при
+ * першій же правці, а розбіжність тут означає, що хід зараховується не тому
+ * гравцеві — тобто партію, у якій обидва бачать різне.
+ */
+export function orderOnlineSeats(onlinePlayers: OnlinePlayer[], hostId?: string): OnlinePlayer[] {
+    return [...onlinePlayers].sort((a, b) => {
+        if (a.id === hostId) return -1;
+        if (b.id === hostId) return 1;
+        return 0;
+    });
+}
+
 export function createOnlinePlayers(onlinePlayers?: OnlinePlayer[], hostId?: string): Player[] {
     if (!onlinePlayers || onlinePlayers.length === 0) {
         // Fallback, якщо даних немає (не повинно траплятися в реальній грі)
@@ -131,13 +148,7 @@ export function createOnlinePlayers(onlinePlayers?: OnlinePlayer[], hostId?: str
         ];
     }
 
-    // Сортуємо гравців: Хост завжди перший (ID 1), Гість другий (ID 2)
-    // Це важливо для синхронізації черги ходів
-    const sortedPlayers = [...onlinePlayers].sort((a, b) => {
-        if (a.id === hostId) return -1;
-        if (b.id === hostId) return 1;
-        return 0;
-    });
+    const sortedPlayers = orderOnlineSeats(onlinePlayers, hostId);
 
     return sortedPlayers.map((p, index) => {
         return createPlayer({

@@ -143,6 +143,22 @@ export function initialState(setup: MatchSetup): ReplayedState {
  * `rejected` існує не для гри, а для діагностики: тихо проігнорований хід — це
  * саме той клас дефекту, через який доводиться дивитися в базу руками.
  */
+/**
+ * ПРАВИЛА ПАРТІЇ = опис партії поверх місцевих налаштувань.
+ *
+ * Законність ходу залежить від `blockModeEnabled`, `blockOnVisitCount` і розміру
+ * дошки — і всі три лежать в описі партії, який написав господар. Місцеві
+ * налаштування дають решту полів (мова, звук, показ дошки): на законність вони
+ * не впливають, але тип їх вимагає.
+ *
+ * Названо окремо, бо це і є та межа, на якій тримається «сервер для узгодження
+ * не потрібен». Доти в перепрогін ішов ЛОКАЛЬНИЙ стан налаштувань, тобто той
+ * самий журнал у двох браузерах міг згорнутися в різні дошки.
+ */
+export function rulesOf(setup: MatchSetup, local: GameSettingsState): GameSettingsState {
+	return { ...local, ...setup.settings };
+}
+
 export function replayMatch(
 	setup: MatchSetup,
 	moves: readonly MatchMove[],
@@ -150,7 +166,21 @@ export function replayMatch(
 ): ReplayedState {
 	const engine = new GameEngine(settings);
 	const state = initialState(setup);
-	const byId = new Map(setup.players.map((player, index) => [String(player.id), index]));
+	/*
+	 * ПІДПИС ХОДУ — це `auth.uid`, а не номер місця.
+	 *
+	 * Правило `moves` вимагає `by == request.auth.uid`, тож інакше й бути не може:
+	 * підпис, який можна поставити чужим імʼям, нічого не стверджує. Опис партії
+	 * тому й везе `playerIds` — те саме імʼя для кожного місця.
+	 *
+	 * Запасний варіант по `player.id` лишається для памʼятного журналу перевірок і
+	 * для кімнат, створених до появи `playerIds`, — там місце й людина збігаються.
+	 */
+	const byId = new Map(
+		setup.playerIds?.length === setup.players.length
+			? setup.playerIds.map((id, index) => [id, index] as const)
+			: setup.players.map((player, index) => [String(player.id), index] as const)
+	);
 
 	// Порядок ЗАДАЄМО самі. Покладатися на порядок, у якому приїхали документи,
 	// означало б грати ту саму партію в різній послідовності на різних пристроях.

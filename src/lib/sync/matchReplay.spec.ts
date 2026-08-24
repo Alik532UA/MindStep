@@ -11,7 +11,7 @@ vi.mock('$lib/services/logService.svelte', () => ({
 }));
 
 const { MemoryMatchLog, moveKey } = await import('./matchLog');
-const { replayMatch, initialState, initialCellFromSeed } = await import('./matchReplay');
+const { replayMatch, initialState, initialCellFromSeed, rulesOf } = await import('./matchReplay');
 const { GameEngine } = await import('$lib/logic/GameEngine');
 
 import type { MatchMove, MatchSetup } from './matchLog';
@@ -114,6 +114,133 @@ function legalMove(
 	}
 	throw new Error('немає жодного законного ходу — дошка не роздана');
 }
+
+/**
+ * ПІДПИС ХОДУ Й НОМЕР МІСЦЯ — РІЗНІ РЕЧІ, і на цьому онлайн стояв мертвий.
+ *
+ * Правило `moves` вимагає `by == request.auth.uid`, тож хід підписано довгим
+ * рядком автентифікації. А `MatchSetup.players` — це склад для рушія, і `id`
+ * там номер місця: 1, 2. Перепрогін будував зіставлення з номерів місць і
+ * шукав у ньому `auth.uid` — не знаходив НІКОЛИ й відкидав кожен хід.
+ *
+ * Ось як це виглядало для гравця: натиск нічого не робить, дошка не рухається,
+ * помилок немає, ходи справно лежать у базі. Заміряно 2026-08-25 на живій
+ * кімнаті: три ходи в журналі, `applied = 0`.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): прибрати гілку
+ * `setup.playerIds` у `replayMatch` — обидві перевірки нижче червоніють, а
+ * `applied` стає нулем.
+ */
+describe('підпис ходу зіставляється з місцем', () => {
+	const HOST_UID = 'fuVEIXPINgxC6kU0yqV4VvEkjRfo';
+	const GUEST_UID = 'kV1Qf0tFptvA2uLX1S6oePKPXYuE';
+
+	/** Рівно та форма, яку записує господар у живій кімнаті. */
+	const online = () =>
+		setup({
+			players: [player(1, 'Lucas'), player(2, 'William')],
+			playerIds: [HOST_UID, GUEST_UID]
+		});
+
+	it('хід, підписаний auth.uid, зараховується', () => {
+		const cfg = settings();
+		const description = online();
+		const first = legalMove(initialState(description), cfg, 1, HOST_UID);
+
+		const replayed = replayMatch(description, [first], cfg);
+
+		expect(replayed.applied, 'хід від того, чия черга, мусить застосуватися').toBe(1);
+		expect(replayed.rejected, 'відкидати тут нема чого').toEqual([]);
+		expect(replayed.playerState.currentPlayerIndex, 'черга мусить перейти суперникові').toBe(1);
+	});
+
+	/**
+	 * Чужий підпис лишається нічим. Інакше «зіставлення за uid» відкрило б рівно
+	 * ту дірку, заради якої підпис і потрібен: будь-хто дописав би хід у журнал.
+	 */
+	it('хід від стороннього не означає нічого', () => {
+		const cfg = settings();
+		const description = online();
+		const stranger = legalMove(initialState(description), cfg, 1, 'сторонній-uid');
+
+		const replayed = replayMatch(description, [stranger], cfg);
+
+		expect(replayed.applied).toBe(0);
+		expect(replayed.rejected).toHaveLength(1);
+	});
+
+	/**
+	 * Кімнати, створені до появи `playerIds`, читаються далі — там підписом було
+	 * саме число місця.
+	 */
+	it('старий опис без підписів працює по номерах місць', () => {
+		const cfg = settings();
+		const description = setup();
+		const first = legalMove(initialState(description), cfg, 1, ME);
+
+		expect(replayMatch(description, [first], cfg).applied).toBe(1);
+	});
+});
+
+/**
+ * ПРАВИЛА ПАРТІЇ ЖИВУТЬ В ОПИСІ, А НЕ В НАЛАШТУВАННЯХ ГРАВЦЯ.
+ *
+ * Це і є та межа, на якій тримається «сервер для узгодження не потрібен». У
+ * перепрогін ішов ЛОКАЛЬНИЙ стан налаштувань — тобто той самий журнал у двох
+ * браузерах згортався в різні дошки, щойно в когось інакший режим блокування.
+ *
+ * Заміряно 2026-08-25 у грі вдвох: після перезавантаження сторінки господар
+ * відкинув хід гостя, який гість застосував. Двоє з одного журналу побачили
+ * різну чергу — і жодного повідомлення про це не було.
+ *
+ * Зворотний експеримент (§ 1.1): передати в `replayMatch` голі місцеві
+ * налаштування замість `rulesOf(...)` — «двоє з різними налаштуваннями бачать
+ * те саме» червоніє.
+ */
+describe('правила беруться з опису партії', () => {
+	const blocking = () =>
+		setup({
+			boardSize: 3,
+			settings: { blockModeEnabled: true, blockOnVisitCount: 0, boardSize: 3 }
+		});
+
+	it('двоє з різними налаштуваннями бачать те саме', () => {
+		const description = blocking();
+
+		// Двоє гравців із протилежними місцевими налаштуваннями блокування.
+		const mine = rulesOf(description, settings({ blockModeEnabled: true, blockOnVisitCount: 0 }));
+		const theirs = rulesOf(description, settings({ blockModeEnabled: false, blockOnVisitCount: 9 }));
+
+		// Журнал будуємо за правилами партії — інакше «законний хід» уже залежав би
+		// від того, чиїми очима ми на нього дивимося.
+		const start = initialState(description);
+		const first = legalMove(start, mine, 1, ME);
+		const afterFirst = replayMatch(description, [first], mine);
+		const second = legalMove(afterFirst, mine, 2, OPPONENT);
+
+		const journal = [first, second];
+
+		expect(shape(replayMatch(description, journal, theirs))).toBe(
+			shape(replayMatch(description, journal, mine))
+		);
+		expect(replayMatch(description, journal, theirs).applied, 'обидва ходи мусять застосуватися').toBe(2);
+	});
+
+	it('опис перекриває місцеве саме в тому, від чого залежить хід', () => {
+		const rules = rulesOf(blocking(), settings({ blockModeEnabled: false, blockOnVisitCount: 9 }));
+
+		expect(rules.blockModeEnabled, 'режим блокування — з опису').toBe(true);
+		expect(rules.blockOnVisitCount, 'поріг блокування — з опису').toBe(0);
+		expect(rules.boardSize, 'розмір дошки — з опису').toBe(3);
+	});
+
+	it('решта налаштувань лишається місцевою', () => {
+		const rules = rulesOf(blocking(), settings({ showBoard: false, speechEnabled: true }));
+
+		expect(rules.showBoard, 'показ дошки нікого, крім мене, не стосується').toBe(false);
+		expect(rules.speechEnabled).toBe(true);
+	});
+});
 
 describe('партія відтворюється із зерна', () => {
 	it('перевірка жива: початкова клітинка в межах дошки', () => {

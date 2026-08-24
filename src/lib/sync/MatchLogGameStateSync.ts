@@ -12,7 +12,7 @@ import { getFirestoreDb } from '$lib/services/firebaseService';
 import { logService } from '$lib/services/logService.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
 import { FirestoreMatchLog } from './FirestoreMatchLog';
-import { replayMatch, initialState } from './matchReplay';
+import { replayMatch, initialState, rulesOf } from './matchReplay';
 import { segmentOf, type MatchLog, type MatchMove, type MatchSetup, type MatchSnapshot } from './matchLog';
 import type {
 	IGameStateSync,
@@ -125,7 +125,13 @@ export class MatchLogGameStateSync implements IGameStateSync {
 	async startMatch(
 		players: Player[],
 		boardSize: number,
-		options: { seed?: number; startCell?: { row: number; col: number }; startTurnIndex?: number } = {}
+		options: {
+			seed?: number;
+			startCell?: { row: number; col: number };
+			startTurnIndex?: number;
+			/** Підписи місць — `auth.uid` кожного гравця в порядку `players`. */
+			playerIds?: string[];
+		} = {}
 	): Promise<void> {
 		if (!this.#log) return;
 		const settings = gameSettingsState.state;
@@ -149,6 +155,11 @@ export class MatchLogGameStateSync implements IGameStateSync {
 				...player,
 				score: options.startCell ? player.score : 0
 			})),
+			/*
+			 * БЕЗ ЦЬОГО РЯДКА ПАРТІЯ НЕ ЙДЕ ВЗАГАЛІ: перепрогін не зіставить підпис
+			 * ходу (`auth.uid`) з місцем і відкине геть усі ходи, не сказавши нічого.
+			 */
+			...(options.playerIds ? { playerIds: options.playerIds } : {}),
 			settings: {
 				blockModeEnabled: settings.blockModeEnabled,
 				blockOnVisitCount: settings.blockOnVisitCount,
@@ -180,7 +191,13 @@ export class MatchLogGameStateSync implements IGameStateSync {
 		await this.startMatch(current.playerState.players, board.boardSize, {
 			seed: this.#snapshot.setup.seed,
 			startCell: { row: board.playerRow ?? 0, col: board.playerCol ?? 0 },
-			startTurnIndex: next
+			startTurnIndex: next,
+			/*
+			 * Підписи ПЕРЕНОСЯТЬСЯ, а не збираються заново: склад відрізка той самий,
+			 * а зібрані заново вони залежали б від поточного списку кімнати — і той,
+			 * хто вийшов між відрізками, зсунув би місця решті.
+			 */
+			...(this.#snapshot.setup.playerIds ? { playerIds: this.#snapshot.setup.playerIds } : {})
 		});
 	}
 
@@ -213,7 +230,39 @@ export class MatchLogGameStateSync implements IGameStateSync {
 		const setup = this.#snapshot.setup;
 		if (!setup) return null;
 
-		const replayed = replayMatch(setup, this.#snapshot.moves, gameSettingsState.state);
+		/*
+		 * ПРАВИЛА БЕРУТЬСЯ З ОПИСУ ПАРТІЇ, А НЕ З МОЇХ НАЛАШТУВАНЬ.
+		 *
+		 * Законність ходу залежить від `blockModeEnabled`, `blockOnVisitCount` і
+		 * розміру дошки. Доти сюди йшов ЛОКАЛЬНИЙ стан налаштувань — тобто той
+		 * самий журнал у двох браузерах міг згорнутися в різні дошки, і вся
+		 * властивість «сервер для узгодження не потрібен» трималася лише на тому,
+		 * що налаштування випадково збігаються.
+		 *
+		 * Заміряно 2026-08-25 у грі вдвох: після перезавантаження сторінки господар
+		 * відкинув хід гостя, який гість застосував, — двоє з одного журналу
+		 * побачили різну чергу. Решта полів `GameSettingsState` (мова, звук,
+		 * показ дошки) на законність не впливають і лишаються місцевими.
+		 */
+		const replayed = replayMatch(setup, this.#snapshot.moves, rulesOf(setup, gameSettingsState.state));
+
+		/*
+		 * ВІДКИНУТИЙ ХІД МУСИТЬ БУТИ ЧУТНИМ.
+		 *
+		 * Один-два — це нормальна робота правил: хід позачергово, хід у заблоковану
+		 * клітинку. А от коли відкинуто ВСЕ, це вже не про правила, а про те, що
+		 * перепрогін не впізнає підписів — саме так виглядав дефект, за якого дошка
+		 * не рухалася жодного разу й не було ні помилки, ні попередження.
+		 */
+		if (replayed.rejected.length > 0) {
+			const all = replayed.applied === 0;
+			const signatures = [...new Set(replayed.rejected.map((move) => move.by))].join(', ');
+			logService[all ? 'error' : 'state'](
+				`[MatchLog] перепрогін відкинув ${replayed.rejected.length} ` +
+					`${all ? 'ходів — УСІ до одного' : 'хід(ів)'}; підписи: ${signatures}; ` +
+					`місця: ${(setup.playerIds ?? setup.players.map((p) => String(p.id))).join(', ')}`
+			);
+		}
 
 		return {
 			boardState: replayed.boardState,
