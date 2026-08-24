@@ -14,6 +14,14 @@
         isLoading?: boolean;
         deletePassword?: string;
         newPassword?: string;
+        /**
+         * Поточний пароль — для повторної автентифікації перед зміною.
+         *
+         * Firebase вимагає свіжого входу, і доти цього поля не було зовсім: на
+         * сесії, старшій за кілька хвилин, зміна пароля просто відмовляла, а на
+         * екрані це виглядало як «кнопка не працює».
+         */
+        currentPassword?: string;
         onlogout: () => void;
         ontoggleChangePassword: () => void;
         ontoggleDeleteAccount: () => void;
@@ -28,6 +36,7 @@
         isLoading = false,
         deletePassword = $bindable(""),
         newPassword = $bindable(""),
+        currentPassword = $bindable(""),
         onlogout,
         ontoggleChangePassword,
         ontoggleDeleteAccount,
@@ -83,6 +92,13 @@
     <!-- CHANGE PASSWORD VIEW -->
     <div class="change-password-zone">
         <PasswordInput
+            id="current-password"
+            label={$t("ui.auth.currentPasswordLabel")}
+            testId="profile-current-password"
+            autocomplete="current-password"
+            bind:value={currentPassword}
+        />
+        <PasswordInput
             id="new-password"
             label={$t("ui.auth.newPasswordLabel")}
             testId="profile-new-password"
@@ -93,7 +109,7 @@
             <StyledButton
                 variant="primary"
                 onclick={onchangePassword}
-                disabled={isLoading || !newPassword}
+                disabled={isLoading || !newPassword || !currentPassword}
             >
                 {isLoading
                     ? $t("common.loading")

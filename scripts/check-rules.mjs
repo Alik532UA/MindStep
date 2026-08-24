@@ -489,6 +489,38 @@ const CASES = [
 		allowed: false,
 		run: () => fsCreate('leaderboards', `${guest.uid}_timed_4`, { score: 999 }, host.token)
 	},
+
+	/*
+	 * ПРИБИРАННЯ ЗА СОБОЮ — те, чого доти не було зовсім: рекорд видаленого
+	 * акаунта лишався в публічній таблиці назавжди, разом з іменем людини, якої
+	 * вже немає, і прибрати його не міг ніхто.
+	 */
+	{
+		name: 'гість пише СВІЙ рекорд',
+		allowed: true,
+		run: () =>
+			fsCreate('leaderboards', `${guest.uid}_timed_5`, { uid: guest.uid, score: 42 }, guest.token)
+	},
+	{
+		name: 'гість прибирає СВІЙ рекорд (видалення акаунта)',
+		allowed: true,
+		run: () => fsDelete(`leaderboards/${guest.uid}_timed_5`, guest.token)
+	},
+	{
+		name: 'прибрати ЧУЖИЙ рекорд',
+		allowed: false,
+		run: () => fsDelete(`leaderboards/${host.uid}_timed_4`, guest.token)
+	},
+	{
+		name: 'гість прибирає свій документ users/{uid}',
+		allowed: true,
+		run: () => fsDelete(`users/${guest.uid}`, guest.token)
+	},
+	{
+		name: 'прибрати ЧУЖИЙ документ users/{uid}',
+		allowed: false,
+		run: () => fsDelete(`users/${host.uid}`, guest.token)
+	},
 	{
 		name: 'довільна нова колекція в чужому проєкті',
 		allowed: false,

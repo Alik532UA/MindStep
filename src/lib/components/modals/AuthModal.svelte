@@ -26,6 +26,8 @@
 
     let deletePassword = $state("");
     let newPassword = $state("");
+    /** Поточний пароль: без нього Firebase не дає змінити пароль на старій сесії. */
+    let currentPassword = $state("");
 
     let isDeleteMode = $state(false);
     let isChangePasswordMode = $state(false);
@@ -88,15 +90,24 @@
     }
 
     async function handleChangePassword() {
-        if (!newPassword || newPassword.length < 6) {
+        if (!newPassword || newPassword.length < 6 || !currentPassword) {
             return;
         }
         isLoading = true;
-        const success = await authService.changePassword(newPassword);
+        authError = "";
+        const success = await authService.changePassword(
+            newPassword,
+            currentPassword,
+        );
         isLoading = false;
         if (success) {
             isChangePasswordMode = false;
             newPassword = "";
+            currentPassword = "";
+        } else {
+            // Найчастіша причина — не той поточний пароль. Мовчазна невдача тут
+            // виглядала б як кнопка, що нічого не робить.
+            authError = $t("ui.auth.authFailed");
         }
     }
 </script>
@@ -109,6 +120,7 @@
             {isChangePasswordMode}
             bind:deletePassword
             bind:newPassword
+            bind:currentPassword
             {isLoading}
             onlogout={handleLogout}
             ondeleteAccount={handleDeleteAccount}

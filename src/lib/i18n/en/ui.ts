@@ -34,6 +34,7 @@ export default {
     emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Password",
+    currentPasswordLabel: "Current password",
     newPasswordLabel: "New Password",
     saveBtn: "Register and Save",
     loginBtn: "Login",

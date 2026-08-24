@@ -144,6 +144,52 @@ class UserProfileService {
         }
     }
 
+    /**
+     * Прибрати ХМАРНІ дані гравця — перед видаленням самого користувача.
+     *
+     * ## Що саме прибирається
+     *
+     * `users/{uid}` (рекорд і нікнейм), `rewards/{uid}` (нагороди) і РЯДКИ
+     * ТАБЛИЦІ ЛІДЕРІВ. Останнє тут головне: таблиця публічна, і доти рекорд
+     * видаленого акаунта лишався в ній назавжди — імʼя людини, якої вже немає,
+     * показувалося всім, і прибрати його не міг уже ніхто.
+     *
+     * ## Чому запитом, а не переліком назв
+     *
+     * Ідентифікатор рядка — `{uid}_{mode}_{size}`, тобто режимів і розмірів у
+     * людини стільки, скільки вона зіграла. Вгадувати їх переліком означало б
+     * лишати рядки в кожному режимі, який колись додадуть.
+     *
+     * `limit` тут не оптимізація, а умова доступу: правило `leaderboards`
+     * дозволяє перелічувати лише порціями (§ 7.1).
+     *
+     * НЕ КИДАЄ на окремому документі: видалення акаунта не мусить зупинятися
+     * через один рядок, якого вже немає.
+     */
+    public async eraseCloudData(uid: string): Promise<void> {
+        const { collection, deleteDoc, getDocs, limit, query, where } = await import(
+            'firebase/firestore'
+        );
+
+        const rows = await getDocs(
+            query(collection(this.db, 'leaderboards'), where('uid', '==', uid), limit(100))
+        );
+        for (const row of rows.docs) {
+            await deleteDoc(row.ref).catch((error: unknown) => {
+                logService.warn('[UserProfileService] Leaderboard row not deleted', error);
+            });
+        }
+
+        await Promise.all([
+            deleteDoc(doc(this.db, 'users', uid)).catch((error: unknown) => {
+                logService.warn('[UserProfileService] User doc not deleted', error);
+            }),
+            deleteDoc(doc(this.db, 'rewards', uid)).catch((error: unknown) => {
+                logService.warn('[UserProfileService] Rewards doc not deleted', error);
+            })
+        ]);
+    }
+
     public clearLocalUserData() {
         logService.init('[UserProfileService] Clearing local user data...');
         storageService.remove('local_best_time_score');

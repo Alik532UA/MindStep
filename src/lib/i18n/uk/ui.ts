@@ -34,6 +34,7 @@ export default {
     emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Пароль",
+    currentPasswordLabel: "Поточний пароль",
     newPasswordLabel: "Новий пароль", // New
     saveBtn: "Зареєструватися та зберегти",
     loginBtn: "Увійти",

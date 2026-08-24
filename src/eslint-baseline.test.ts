@@ -123,7 +123,7 @@ describe('базовий набір ESLint (CODE-QUALITY-v8 § 6.4.1)', () => {
  */
 const DEBT: Readonly<Record<string, number>> = {
 	'@typescript-eslint/no-explicit-any': 166,
-	'@typescript-eslint/no-unused-vars': 119,
+	'@typescript-eslint/no-unused-vars': 118,
 	'svelte/no-navigation-without-resolve': 28,
 	'svelte/require-each-key': 15,
 	'svelte/prefer-svelte-reactivity': 2
@@ -142,6 +142,12 @@ const DEBT: Readonly<Record<string, number>> = {
  * прогін як НОВЕ правило, а не як зростання старого.
  *
  * `no-unused-vars` 121 → 119: два імпорти зникли разом із перенесеним кодом.
+ *
+ * 119 → 118 (2026-08-24): `clearLocalUserData` і `resetLocalProfile` перестали
+ * бути мертвими — їх нарешті кличе вихід з акаунта. Доти обидва були написані й
+ * не покликані жодним рядком, тобто рекорд і нагороди лишалися в браузері після
+ * виходу й уливалися в НАСТУПНИЙ акаунт. Тобто число тут спало не від прибирання
+ * коду, а від закриття дірки.
  */
 
 describe('борг ESLint — число, що лише спадає (CODE-QUALITY-v8 § 6.4.3)', () => {

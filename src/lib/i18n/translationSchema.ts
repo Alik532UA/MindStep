@@ -705,6 +705,8 @@ export interface TranslationSchema {
       emailLabel2: string;
       emailLabel: string;
       passwordLabel: string;
+      /** Поточний пароль — для повторної автентифікації перед зміною. */
+      currentPasswordLabel: string;
       newPasswordLabel: string;
       saveBtn: string;
       loginBtn: string;

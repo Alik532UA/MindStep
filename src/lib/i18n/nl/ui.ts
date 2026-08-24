@@ -34,6 +34,7 @@ export default {
     emailLabel2: "E-mail:",
     emailLabel: "E-mail",
     passwordLabel: "Wachtwoord",
+    currentPasswordLabel: "Huidig wachtwoord",
     newPasswordLabel: "Nieuw Wachtwoord",
     saveBtn: "Registreren en Opslaan",
     loginBtn: "Inloggen",

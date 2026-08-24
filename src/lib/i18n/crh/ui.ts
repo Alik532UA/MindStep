@@ -34,6 +34,7 @@ export default {
     emailLabel2: "Email:",
     emailLabel: "Email",
     passwordLabel: "Parol",
+    currentPasswordLabel: "Şimdiki parol",
     newPasswordLabel: "Yañı Parol",
     saveBtn: "Qayd ol ve Saqla",
     loginBtn: "Kir",

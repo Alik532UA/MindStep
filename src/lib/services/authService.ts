@@ -1,8 +1,9 @@
-import { signInAnonymously, onAuthStateChanged, signOut, type User, type Auth, EmailAuthProvider, linkWithCredential, signInWithEmailAndPassword, sendPasswordResetEmail, deleteUser, updatePassword } from 'firebase/auth';
+import { signInAnonymously, onAuthStateChanged, signOut, type User, type Auth, EmailAuthProvider, GoogleAuthProvider, linkWithCredential, signInWithEmailAndPassword, sendPasswordResetEmail, deleteUser, updatePassword, reauthenticateWithCredential, reauthenticateWithPopup } from 'firebase/auth';
 import { getFirebaseAuth } from './firebaseService';
 import { currentUserStore } from '$lib/stores/authState.svelte';
 import { logService } from "./logService.svelte";
 import { userProfileService } from './auth/userProfileService';
+import { rewardsState } from '$lib/stores/rewardsState.svelte';
 
 /*
  * Стан живе у `$lib/stores/authState.svelte.ts`, а не тут.
@@ -99,12 +100,47 @@ class AuthService {
         }
     }
 
+    /**
+     * ПОВТОРНА АВТЕНТИФІКАЦІЯ перед незворотною дією.
+     *
+     * Firebase вимагає свіжого входу для зміни пароля й видалення акаунта, і
+     * відмовляє з `auth/requires-recent-login`. Доти цього не було зовсім: обидві
+     * дії кликалися прямо, і на сесії, старшій за кілька хвилин, вони просто
+     * відмовляли — а на екрані це виглядало як «не працює кнопка».
+     *
+     * Спосіб той самий, яким людина входила: пароль або вікно Google. Сусідній
+     * `Slovko` розгалужується так само, і саме звідти взято форму.
+     */
+    private async reauthenticate(user: User, password?: string): Promise<void> {
+        const byGoogle = user.providerData.some((p) => p.providerId === 'google.com');
+        if (password && user.email) {
+            await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+        } else if (byGoogle) {
+            await reauthenticateWithPopup(user, new GoogleAuthProvider());
+        }
+    }
+
+    /**
+     * Видалити акаунт: підтвердити вхід, прибрати ДАНІ, аж тоді користувача.
+     *
+     * ## Порядок не переставляється
+     *
+     * Після `deleteUser()` токена немає, а правила Firestore вимагають
+     * `request.auth != null` усюди, де лежать дані гравця. Тобто все, що не
+     * прибрано ДО, лишається в базі назавжди — і прибрати це не зможе вже ніхто,
+     * включно з самою людиною. Доти прибирання не було жодного: рекорд у публічній
+     * таблиці лідерів переживав видалення акаунта й далі показувався всім.
+     */
     async deleteAccount(password?: string) {
         const user = this.auth.currentUser;
         if (!user) return false;
         try {
-            // Для видалення може знадобитися ре-автентифікація, але тут спрощена версія
+            await this.reauthenticate(user, password);
+            await userProfileService.eraseCloudData(user.uid);
             await deleteUser(user);
+            // Місцеве стирається ПІСЛЯ успіху: інакше невдале видалення лишало б
+            // людину з акаунтом, але без рекорду на цьому пристрої.
+            userProfileService.clearLocalUserData();
             return true;
         } catch (e) {
             logService.error('[AuthService] Delete error', e);
@@ -112,10 +148,12 @@ class AuthService {
         }
     }
 
-    async changePassword(newPass: string) {
+    /** Змінити пароль. `current` потрібен для повторної автентифікації. */
+    async changePassword(newPass: string, current?: string) {
         const user = this.auth.currentUser;
         if (!user) return false;
         try {
+            await this.reauthenticate(user, current);
             await updatePassword(user, newPass);
             return true;
         } catch (e) {
@@ -129,8 +167,31 @@ class AuthService {
         return userProfileService.updateNickname(name, user);
     }
 
+    /**
+     * Вийти з акаунта — і НЕ лишити в браузері нічого, що набрала людина.
+     *
+     * ## Чому місцеве стирається
+     *
+     * `syncUserProfile` зливає місцевий рекорд із хмарним через `Math.max`, а
+     * нагороди — обʼєднанням. Доти вихід не стирав нічого, тож послідовність
+     * «вийти → увійти іншим акаунтом» ПЕРЕНОСИЛА рекорд і нагороди в той акаунт:
+     * рахунок можна було переписати з чужого, не знаючи ні пароля, ні пошти.
+     *
+     * Метод очищення при цьому в проєкті БУВ (`clearLocalUserData`) — і його не
+     * кликав жоден рядок. Саме тому це не «додано прибирання», а закрито дірку,
+     * яка виглядала як реалізована функція.
+     *
+     * ## Порядок: стерти ДО виходу
+     *
+     * `onAuthStateChanged` після виходу одразу входить анонімно й кличе
+     * `syncUserProfile` вже під новим `uid`. Якби місцеве стиралося після, той
+     * синк устиг би прочитати старий рекорд і записати його новому анонімові.
+     */
     async logout() {
         try {
+            userProfileService.clearLocalUserData();
+            userProfileService.resetLocalProfile();
+            rewardsState.reset();
             await signOut(this.auth);
         } catch (error) {
             logService.error('[AuthService:Logout] Firebase:', error);
