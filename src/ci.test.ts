@@ -14,6 +14,27 @@ const DIR = '.github/workflows';
 const files = existsSync(DIR) ? readdirSync(DIR).filter((f) => /\.ya?ml$/.test(f)) : [];
 
 /**
+ * ВМІСТ WORKFLOW ЧИТАЄТЬСЯ ЛИШЕ ЧЕРЕЗ ЦЕ, і `\r\n` тут нормалізується.
+ *
+ * Без нормалізації розбір кроків нижче не працює ВЗАГАЛІ: у JavaScript `.` не
+ * збігається з `\r` — це термінатор рядка, — а `$` без прапорця `m` стоїть
+ * перед `\n`, але не перед `\r`. Тому `/^(\s+)- name: (.*)$/` на рядку
+ * «      - name: Install dependencies\r» не збігається жодного разу.
+ *
+ * Наслідок був такий: у CI чекаут із `\n`, і розбір бачив усі кроки; на
+ * Windows-чекауті цього репозиторію файли лежать із `\r\n` — і той самий розбір
+ * бачив НУЛЬ. Тобто `npm run test:report` локально червонів на тому, що в CI
+ * зелене, а це гірше за відсутню перевірку: вона привчає не дивитися на червоне.
+ *
+ * Зловила це рівно перевірка живості нижче, і саме для цього вона й стоїть.
+ *
+ * Нормалізація на МЕЖІ, а не в розборі: наступна регулярка без `m`, яку тут
+ * допишуть, наступила б на те саме.
+ */
+const readWorkflow = (file: string): string =>
+	readFileSync(`${DIR}/${file}`, 'utf8').replace(/\r\n/g, '\n');
+
+/**
  * Рядки-коментарі відрізаються перед пошуком.
  *
  * Перевірка читає текст файлу, а не розібраний YAML, — і через це вважала
@@ -35,7 +56,7 @@ const withoutComments = (yaml: string): string =>
 		.filter((line) => !/^\s*#/.test(line))
 		.join('\n');
 
-const sourceOf = (file: string): string => withoutComments(readFileSync(`${DIR}/${file}`, 'utf8'));
+const sourceOf = (file: string): string => withoutComments(readWorkflow(file));
 const all = files.map(sourceOf).join('\n');
 const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
 	scripts?: Record<string, string>;
@@ -208,7 +229,7 @@ describe('гейти не ховають один одного (CI-CD-AND-TOOLS-
 	// Свій перелік файлів, а не спільний `all`: назва файлу потрібна в тексті
 	// помилки, а склеєний вміст її втрачає.
 	const gates = files.flatMap((file) =>
-		stepsOf(readFileSync(`${DIR}/${file}`, 'utf8'))
+		stepsOf(readWorkflow(file))
 			.filter((s) => INDEPENDENT_GATE.test(s.body) && !BUILD_DEPENDENT.test(s.body))
 			.map((s) => ({ ...s, file }))
 	);
@@ -271,7 +292,7 @@ describe('гейти не ховають один одного (CI-CD-AND-TOOLS-
 describe('install у CI не глушить перевірку peer-залежностей', () => {
 	it('жоден workflow не кличе npm із --legacy-peer-deps', () => {
 		const offenders = files.filter((file) =>
-			/--legacy-peer-deps/.test(readFileSync(`${DIR}/${file}`, 'utf8'))
+			/--legacy-peer-deps/.test(readWorkflow(file))
 		);
 		expect(
 			offenders,
@@ -329,7 +350,7 @@ describe('версія Node узгоджена в трьох місцях (§ 2.
 
 		const ciMajors = files
 			.flatMap((file) => [
-				...readFileSync(`${DIR}/${file}`, 'utf8').matchAll(/node-version:\s*["']?v?(\d+)/g)
+				...readWorkflow(file).matchAll(/node-version:\s*["']?v?(\d+)/g)
 			])
 			.map((m) => Number(m[1]));
 		expect(

@@ -169,6 +169,14 @@ export default ts.config(
 			'.read_for_AI/',
 			'playwright-report/',
 			'test-results/',
+			/*
+			 * Тут лежить КОПІЯ зібраного сайту, яку `lighthouserc.cjs` кладе під
+			 * префіксом base, щоб абсолютні шляхи SPA-фолбека сходилися. Це той
+			 * самий мініфікований код, що в `build/`, тобто перевіряти його
+			 * безглуздо: після одного прогону Lighthouse `npm run lint` давав
+			 * помилки в чанках Vite.
+			 */
+			'.lighthouseci/',
 			'static/'
 		]
 	},
