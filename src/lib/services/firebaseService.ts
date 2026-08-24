@@ -79,6 +79,28 @@ export function getFirestoreDb(): Firestore {
 export function getRealtimeDb(): Database {
     if (rtdb) return rtdb;
     const firebaseApp = initializeFirebase();
+
+    /*
+     * ВІДСУТНЯ АДРЕСА RTDB — це не «типове значення», а зламаний онлайн.
+     *
+     * SDK у такому разі виводить адресу з `projectId` і йде на
+     * `https://<projectId>-default-rtdb.firebaseio.com` — тобто в американську
+     * базу, якої в цього проєкту немає: справжня живе в `europe-west1`. Далі
+     * політика безпеки додає своє: `connect-src` дозволяє
+     * `wss://*.firebasedatabase.app`, але не `*.firebaseio.com`, тож і сокет, і
+     * запасне довге опитування блокуються.
+     *
+     * Заміряно в продакшні: змінної не було в збірці CI, і присутність із
+     * перепідключенням не працювали ЖОДНОГО разу — мовчки, бо SDK не скаржиться
+     * на «не ту» адресу, він просто йде за нею.
+     */
+    if (!firebaseConfig.databaseURL) {
+        logService.error(
+            '[FirebaseService] Немає VITE_FIREBASE_DATABASE_URL — SDK піде на типову адресу ' +
+                'firebaseio.com замість europe-west1, і CSP її заблокує. Онлайн не працюватиме.'
+        );
+    }
+
     rtdb = getDatabase(firebaseApp);
     if (USE_EMULATOR) {
         logService.init('[FirebaseService] Connecting to Realtime DB Emulator (127.0.0.1:9000)');

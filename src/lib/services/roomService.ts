@@ -325,6 +325,16 @@ class RoomService {
     }
 
     async getRoom(roomId: string): Promise<Room | null> {
+        /*
+         * СПЕРШУ ВХІД — та сама причина, що в переліку кімнат: `allow get`
+         * вимагає авторизованого, а анонімний вхід тут асинхронний. Без цього
+         * рядка сторінка кімнати, відкрита з першої секунди (або з посилання),
+         * читала кімнату без користувача й отримувала відмову — а далі
+         * `roomData` лишалася порожньою, роль не визначалася, і ХОДИ МОВЧКИ НЕ
+         * ПРАЦЮВАЛИ: `handlePlayerMove` виходить на `myPlayerIndex === -1` без
+         * жодного повідомлення.
+         */
+        await authService.ensureUser();
         try {
             return await roomFirestoreService.getRoomDocSimple(roomId);
         } catch (error) {
