@@ -16,7 +16,12 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getDatabase, type Database, connectDatabaseEmulator } from 'firebase/database';
+import {
+    getDatabase,
+    forceWebSockets,
+    type Database,
+    connectDatabaseEmulator
+} from 'firebase/database';
 import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 import type { Analytics } from 'firebase/analytics';
 import { logService } from "./logService.svelte";
@@ -100,6 +105,29 @@ export function getRealtimeDb(): Database {
                 'firebaseio.com замість europe-west1, і CSP її заблокує. Онлайн не працюватиме.'
         );
     }
+
+    /*
+     * ЛИШЕ ВЕБСОКЕТ — інакше RTDB не з'єднується під нашою політикою безпеки.
+     *
+     * RTDB починає з'єднання НЕ з вебсокета, а з довгого опитування, і робить
+     * його вставлянням тега `<script src=".../.lp?...">` через `document.write`.
+     * Тобто це підвантаження стороннього скрипта, і воно потрапляє під
+     * `script-src`, а не під `connect-src`. У нашій політиці `connect-src`
+     * дозволяє `wss://*.firebasedatabase.app`, але `script-src` не дозволяє
+     * НІЧОГО з цього домену — і початковий транспорт блокувався щоразу.
+     *
+     * Заміряно в продакшні 2026-08-25, уже з правильною адресою бази: в консолі
+     * лежав рядок «Loading the script … violates … script-src» на кожній спробі
+     * плюс «[Violation] Avoid using document.write()» зі стеку
+     * `establishConnection_ → BrowserPollConnection`. До вебсокета справа не
+     * доходила ніколи: SDK підвищує транспорт лише ПІСЛЯ вдалого опитування.
+     *
+     * Чому не розширити `script-src`. Бо це дозвіл виконувати будь-який скрипт
+     * із того домену — рівно те, від чого політика й захищає. Запасний транспорт
+     * при цьому не втрачається: він і так був заблокований, тобто його ніколи не
+     * існувало в бойовій збірці.
+     */
+    forceWebSockets();
 
     rtdb = getDatabase(firebaseApp);
     if (USE_EMULATOR) {
