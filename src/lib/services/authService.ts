@@ -49,9 +49,17 @@ class AuthService {
                 logService.init(`[AuthService] User logged in: ${user.uid} (Anon: ${user.isAnonymous})`);
                 currentUserStore.user = user;
                 await userProfileService.syncUserProfile(user);
+                /*
+                 * ЖИВА ПІДПИСКА — після першого злиття, і на КОЖНУ зміну
+                 * користувача заново: `uid` став іншим, а слухач, що його
+                 * переживе, читав би документ попереднього акаунта. Знімає
+                 * попередню сам `watchUserProfile` (див. його докблок).
+                 */
+                userProfileService.watchUserProfile(user.uid);
             } else {
                 logService.init('[AuthService] No user logged in. Signing in anonymously...');
                 currentUserStore.user = null;
+                userProfileService.stopWatching();
                 await this.signInAnonymously();
             }
         });
@@ -79,6 +87,70 @@ class AuthService {
             return false;
         }
     }
+
+    /**
+     * ВХІД ЧЕРЕЗ GOOGLE — ПРИВʼЯЗКОЮ до наявного входу, а не окремим входом.
+     *
+     * ## Чому `linkWithPopup`, а не `signInWithPopup`
+     *
+     * Анонімний `uid` уже має рекорд, нагороди й публічний профіль. Звичайний
+     * вхід дав би НОВИЙ `uid`, тобто тихо загубив би все це — рівно та помилка,
+     * яку сусідній `Slovko` описує в себе в коді як пройдений шлях.
+     *
+     * ## Коли акаунт Google уже прив'язаний до іншого користувача
+     *
+     * Firebase кидає `auth/credential-already-in-use`. Тоді єдиний правильний
+     * шлях — зайти в ТОЙ акаунт, і ми це й робимо: `signInWithCredential` із тим
+     * самим підтвердженням, яке Firebase поклав у помилку. Показувати вікно
+     * Google удруге означало б попросити людину підтвердити те, що вона
+     * підтвердила секунду тому, а частина браузерів друге вікно вже заблокує як
+     * не викликане кліком.
+     *
+     * ЦІНА НАЗВАНА: у цьому другому випадку `uid` міняється, і анонімний доробок
+     * лишається під старим. Інакше було б гірше — «не вдалося» на кнопці, яка не
+     * має жодного іншого способу спрацювати.
+     *
+     * ## Провайдер може бути вимкнений у консолі
+     *
+     * Тоді Firebase відповідає `auth/operation-not-allowed`, і це не поломка
+     * коду: увімкнути Google — крок у Firebase Console. Викличник розрізняє цей
+     * код і показує зрозумілу підказку замість загального «не вдалося».
+     */
+    async loginWithGoogle(): Promise<boolean> {
+        try {
+            const { GoogleAuthProvider, linkWithPopup, signInWithCredential, signInWithPopup } =
+                await import('firebase/auth');
+            const provider = new GoogleAuthProvider();
+            const user = this.auth.currentUser;
+
+            if (!user) {
+                await signInWithPopup(this.auth, provider);
+                return true;
+            }
+
+            try {
+                await linkWithPopup(user, provider);
+                return true;
+            } catch (error) {
+                const code = (error as { code?: string }).code ?? '';
+                if (code !== 'auth/credential-already-in-use') throw error;
+
+                const credential = GoogleAuthProvider.credentialFromError(
+                    error as Parameters<typeof GoogleAuthProvider.credentialFromError>[0]
+                );
+                if (!credential) throw error;
+                await signInWithCredential(this.auth, credential);
+                return true;
+            }
+        } catch (e) {
+            logService.error('[AuthService] Google auth error', e);
+            this.lastError = (e as { code?: string }).code ?? '';
+            return false;
+        }
+    }
+
+    /** Код останньої невдачі входу — щоб екран міг назвати причину. */
+    lastError = '';
 
     async loginEmailPassword(email: string, pass: string) {
         try {

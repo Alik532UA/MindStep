@@ -212,6 +212,25 @@ export const BETA_CHECKS: readonly BetaCheck[] = [
 		}
 	},
 	{
+		id: 'menu_15',
+		category: { uk: 'Акаунт і друзі', en: 'Account and friends' },
+		coverage: 'manual',
+		testid: 'auth-google',
+		text: {
+			uk: 'Увійдіть через Google, маючи анонімний рекорд. Рекорд мусить лишитися: вхід привʼязується до наявного гравця, а не створює нового. Якщо провайдер у консолі вимкнений — мусить бути зрозуміла підказка, а не «не вдалося».',
+			en: 'Sign in with Google while holding an anonymous record. The record must stay: the sign-in links to the existing player instead of creating a new one. If the provider is disabled in the console, a clear hint must appear instead of a generic failure.'
+		}
+	},
+	{
+		id: 'menu_16',
+		category: { uk: 'Акаунт і друзі', en: 'Account and friends' },
+		coverage: 'manual',
+		text: {
+			uk: 'Увійдіть тим самим акаунтом на двох пристроях і поставте рекорд на першому. На другому — з відкритою сторінкою — рекорд мусить оновитися САМ, без перезавантаження.',
+			en: 'Sign in with the same account on two devices and set a record on the first. On the second, with the page open, the record must update BY ITSELF, without a reload.'
+		}
+	},
+	{
 		id: 'menu_13',
 		category: { uk: 'Вихід і видалення', en: 'Signing out and deleting' },
 		coverage: 'manual',

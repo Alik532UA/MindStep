@@ -35,6 +35,8 @@ export default {
     emailLabel: "Email",
     passwordLabel: "Parol",
     currentPasswordLabel: "Şimdiki parol",
+    googleBtn: "Google ile kir",
+    googleOff: "Google ile kirüv daa açılmadı. Email qullan.",
     newPasswordLabel: "Yañı Parol",
     saveBtn: "Qayd ol ve Saqla",
     loginBtn: "Kir",

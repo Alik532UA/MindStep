@@ -35,6 +35,8 @@ export default {
     emailLabel: "Email",
     passwordLabel: "Пароль",
     currentPasswordLabel: "Поточний пароль",
+    googleBtn: "Увійти через Google",
+    googleOff: "Вхід через Google ще не ввімкнений. Скористайтеся поштою.",
     newPasswordLabel: "Новий пароль", // New
     saveBtn: "Зареєструватися та зберегти",
     loginBtn: "Увійти",

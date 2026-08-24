@@ -707,6 +707,10 @@ export interface TranslationSchema {
       passwordLabel: string;
       /** Поточний пароль — для повторної автентифікації перед зміною. */
       currentPasswordLabel: string;
+      /** Кнопка входу через Google. */
+      googleBtn: string;
+      /** Провайдер Google ще не ввімкнений у консолі Firebase. */
+      googleOff: string;
       newPasswordLabel: string;
       saveBtn: string;
       loginBtn: string;

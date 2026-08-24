@@ -35,6 +35,8 @@ export default {
     emailLabel: "E-mail",
     passwordLabel: "Wachtwoord",
     currentPasswordLabel: "Huidig wachtwoord",
+    googleBtn: "Inloggen met Google",
+    googleOff: "Inloggen met Google is nog niet ingeschakeld. Gebruik e-mail.",
     newPasswordLabel: "Nieuw Wachtwoord",
     saveBtn: "Registreren en Opslaan",
     loginBtn: "Inloggen",

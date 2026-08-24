@@ -72,6 +72,30 @@
         else authError = $t("ui.auth.authFailed");
     }
 
+    /**
+     * Вхід через Google.
+     *
+     * `loginWithGoogle` прив'язує акаунт до наявного анонімного входу, тож
+     * рекорд і нагороди не гинуть (див. `authService`). Окремий текст на
+     * `auth/operation-not-allowed`: це не поломка, а вимкнений провайдер у
+     * консолі Firebase, і «не вдалося» тут відправило б шукати проблему в себе.
+     */
+    async function handleGoogle() {
+        isLoading = true;
+        authError = "";
+        authInfo = "";
+        const success = await authService.loginWithGoogle();
+        isLoading = false;
+        if (success) {
+            modalStateRune.closeModal();
+        } else {
+            authError =
+                authService.lastError === "auth/operation-not-allowed"
+                    ? $t("ui.auth.googleOff")
+                    : $t("ui.auth.authFailed");
+        }
+    }
+
     async function handleForgot(email: string) {
         if (!email) return;
         isLoading = true;
@@ -180,6 +204,7 @@
             onlogin={handleLogin}
             onregister={handleRegister}
             onforgot={handleForgot}
+            ongoogle={handleGoogle}
             onmode={setAuthMode}
         />
     {/if}

@@ -160,6 +160,21 @@ const config = {
           "https://www.google-analytics.com",
           "https://www.google.com",
         ],
+        /*
+         * FRAME-SRC — для вікна входу через Google.
+         *
+         * Без цієї директиви кадри падають під `default-src: 'self'`, а
+         * `signInWithPopup` відкриває `{authDomain}/__/auth/handler` і тримає
+         * службовий кадр на тому ж домені. Симптом при цьому НЕ схожий на CSP:
+         * вікно відкривається й одразу закривається, а в коді видно лише
+         * `auth/popup-closed-by-user` — тобто виглядає, ніби людина сама
+         * передумала (SECURITY-v8 § 6.2).
+         */
+        "frame-src": [
+          "self",
+          "https://*.firebaseapp.com",
+          "https://accounts.google.com",
+        ],
         "object-src": ["none"],
         "base-uri": ["self"],
         "form-action": ["self"],

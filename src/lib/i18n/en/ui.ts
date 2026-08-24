@@ -35,6 +35,8 @@ export default {
     emailLabel: "Email",
     passwordLabel: "Password",
     currentPasswordLabel: "Current password",
+    googleBtn: "Sign in with Google",
+    googleOff: "Google sign-in is not enabled yet. Use email instead.",
     newPasswordLabel: "New Password",
     saveBtn: "Register and Save",
     loginBtn: "Login",

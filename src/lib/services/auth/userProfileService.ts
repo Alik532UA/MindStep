@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, type Firestore } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { getFirestoreDb } from '../firebaseService';
 import { logService } from "../logService.svelte";
@@ -38,6 +38,8 @@ userProfileStore.profile = getInitialProfile();
 
 class UserProfileService {
     private db: Firestore;
+    /** Зняття живої підписки. `null` — її немає. */
+    private unwatch: (() => void) | null = null;
 
     constructor() {
         this.db = getFirestoreDb();
@@ -112,6 +114,69 @@ class UserProfileService {
                 isAnonymous: user.isAnonymous
             });
         }
+    }
+
+    /**
+     * ЖИВА ПІДПИСКА на свій документ — рекорд із другого пристрою доїжджає САМ.
+     *
+     * ## Що було не так
+     *
+     * `syncUserProfile` кликався рівно один раз — на зміну стану входу. Тобто
+     * рекорд, поставлений на телефоні, зʼявлявся на ноутбуці лише при наступному
+     * відкритті сторінки: «синхронізація між пристроями» означала «наступного
+     * разу». Сусідній `Slovko` тримає живий `onSnapshot` саме з цієї причини.
+     *
+     * ## Злиття МАКСИМУМОМ, а не заміною
+     *
+     * Прийшло більше — беремо хмарне; місцеве більше — відсилаємо своє. Максимум
+     * ІДЕМПОТЕНТНИЙ: підписка спрацьовує й на власний запис, і повторне злиття
+     * того самого не міняє нічого. Сума на цьому місці давала б рекорд, який
+     * росте від самого факту синхронізації.
+     *
+     * ## Одна підписка на застосунок
+     *
+     * Друга давала б два злиття на кожну зміну й два записи назад, тож попередня
+     * знімається тут же. Повертається зняття — його кличе `authService` при зміні
+     * користувача: слухач, що переживе вихід з акаунта, читав би чужий документ.
+     *
+     * НАГОРОДИ тут не слухаються: вони лише додаються, злиття їх обʼєднує, і
+     * різниця «побачив нову нагороду зараз чи при наступному відкритті» не варта
+     * другого слухача. Межа названа, щоб її не шукали як дефект.
+     */
+    watchUserProfile(uid: string): () => void {
+        this.stopWatching();
+
+        const userRef = doc(this.db, 'users', uid);
+        this.unwatch = onSnapshot(
+            userRef,
+            (snap) => {
+                if (!snap.exists()) return;
+                const cloudBest = (snap.data().bestTimeScore as number) || 0;
+                const localBest = parseInt(storageService.get('local_best_time_score') || '0');
+
+                if (cloudBest > localBest) {
+                    storageService.set('local_best_time_score', cloudBest.toString());
+                    if (userProfileStore.profile) userProfileStore.profile.bestTimeScore = cloudBest;
+                    logService.info('[UserProfileService] Best score arrived from another device');
+                } else if (localBest > cloudBest) {
+                    // Своє більше — відсилаємо. Інакше рекорд, поставлений офлайн,
+                    // лишився б лише на цьому пристрої.
+                    void setDoc(userRef, { bestTimeScore: localBest }, { merge: true }).catch(
+                        (error: unknown) =>
+                            logService.warn('[UserProfileService] Best score not sent', error)
+                    );
+                }
+            },
+            (error) => logService.error('[UserProfileService] Live sync failed', error)
+        );
+
+        return () => this.stopWatching();
+    }
+
+    /** Зняти підписку. Кличе `authService` на кожній зміні користувача. */
+    stopWatching(): void {
+        this.unwatch?.();
+        this.unwatch = null;
     }
 
     async updateNickname(name: string, currentUser: User | null) {

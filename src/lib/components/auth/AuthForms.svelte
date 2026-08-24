@@ -12,6 +12,7 @@
         onlogin: (email: string, password: string) => void;
         onregister: (email: string, password: string) => void;
         onforgot: (email: string) => void;
+        ongoogle: () => void;
         onmode: (m: "auth" | "forgot") => void;
     }
 
@@ -23,6 +24,7 @@
         onlogin,
         onregister,
         onforgot,
+        ongoogle,
         onmode
     }: Props = $props();
 
@@ -106,6 +108,27 @@
                     {$t("ui.auth.registerBtn")}
                 </StyledButton>
             </div>
+
+            <!--
+                GOOGLE — окремою кнопкою під поштою, а не над нею.
+
+                Пошта тут головна: вона працює без жодного налаштування в консолі
+                Firebase, а Google вимагає ввімкненого провайдера. Поставити його
+                першим означало б зробити головним шлях, який у новому проєкті
+                типово вимкнений.
+
+                Кнопка НЕ в `<form>`-потоці: `type="button"` не дає їй надіслати
+                форму входу поштою, а `onclick` веде свій шлях.
+            -->
+            <StyledButton
+                variant="default"
+                type="button"
+                onclick={ongoogle}
+                disabled={loading}
+                dataTestId="auth-google"
+            >
+                {$t("ui.auth.googleBtn")}
+            </StyledButton>
         </form>
     {/if}
 </div>
