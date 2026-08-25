@@ -1,1 +1,0 @@
-{"version":3,"file":"22.JK6UfB0f.js","sources":["../../../../../../src/routes/test-main-menu-v2/+page.svelte"],"sourcesContent":["<script lang=\"ts\">\n  import MainMenuV2 from \"$lib/components/MainMenuV2.svelte\";\n</script>\n\n<MainMenuV2 />"],"names":["MainMenuV2","$$anchor"],"mappings":"mHAAA,CAICA,EAAUC,EAAA,EAAA,CAFH"}
