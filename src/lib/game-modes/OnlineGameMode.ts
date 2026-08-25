@@ -344,6 +344,50 @@ export class OnlineGameMode extends BaseGameMode {
     }
 
     /*
+     * НЕМОЖЛИВИЙ ХІД ЗАВЕРШУЄ ПАРТІЮ, а не тихо зникає.
+     *
+     * Скарга автора: в онлайні хід за межі дошки натискається й не робиться, і
+     * гра не завершується — а в соло й у місцевій грі завершується. Так і було, і
+     * причина в тому, що онлайн ходив ІНШИМ шляхом: місцева гра питає рушій і на
+     * відмову йде в `onPlayerMoveFailure` (фігура вилітає за край, партія
+     * закінчується «вийшов за межі»), а онлайн рушія не питав узагалі — дописував
+     * хід у журнал, а вже перепрогін його відкидав. Відкинутий хід нічого не
+     * означає: дошка стоїть, черга не йде, партія триває вічно.
+     *
+     * Тому перевірка тут, ПЕРЕД записом, і далі той самий шлях, що в місцевій грі:
+     * правило «вийшов за межі — програв» однакове в усіх режимах, і тепер воно
+     * буквально один код, а не два.
+     *
+     * У журнал такий хід НЕ дописується. Він і не потрібен там: перепрогін усе
+     * одно відкинув би його, а стерти запис правила не дають — тобто в кожному
+     * наступному перепрогоні він лежав би мертвим рядком. Суперник дізнається про
+     * кінець партії тим самим шляхом, яким дізнається про «суперник вийшов»:
+     * подія `GameOver` їде в бічний документ (`OnlineGameEventManager`).
+     */
+    if (!this.engine) this.initEngine();
+    const bState = boardState.state;
+    const sState = scoreState.state;
+    const uState = uiState.state;
+    if (this.engine && bState && sState && uState && bState.playerRow !== null) {
+      this.engine.updateSettings(gameSettingsState.state);
+      const probe = this.engine.performMove(
+        { ...bState, ...pState, ...sState, ...uState },
+        direction,
+        distance,
+        pState.currentPlayerIndex,
+        'online'
+      );
+      if (!probe.success) {
+        logService.GAME_MODE(
+          `[OnlineGameMode] Хід неможливий (${probe.reason}) — партія завершується`
+        );
+        await this.onPlayerMoveFailure(probe.reason, direction, distance);
+        onEndCallback?.();
+        return;
+      }
+    }
+
+    /*
      * КЛІК НЕ ЗМІНЮЄ ДОШКУ. Він дописує хід у журнал, а дошка ворухнеться, коли
      * хід приїде назад перепрогоном.
      *
