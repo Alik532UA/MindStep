@@ -240,20 +240,55 @@ class RoomService {
         }
     }
 
+    /**
+     * ЖИВИЙ перелік публічних кімнат: кімната з'являється сама, без кнопки.
+     *
+     * ## Чому вхід тут очікується, а не просто «є»
+     *
+     * Правило `allow list` вимагає авторизованого, а анонімний вхід асинхронний.
+     * Підписка, відкрита раніше за вхід, отримує відмову ПЕРШИМ ЖЕ знімком — і на
+     * екрані це виглядає як «перелік не прочитався» при живій кімнаті в сусідньому
+     * вікні. Той самий дефект уже був у `getPublicRooms`, і причина була та сама.
+     *
+     * ## Чому прапорець скасування, а не просто `await`
+     *
+     * Функція мусить віддати «відписатися» ОДРАЗУ: людина може піти з екрана
+     * раніше, ніж повернеться вхід. Без прапорця слухач відкрився б уже після
+     * того, як екран зник, і читав би базу далі — за рахунок власника проєкту й із
+     * викликом у знищений компонент.
+     */
     subscribeToPublicRooms(
         callback: (data: { rooms: RoomSummary[], latestCreatedAt?: number, unavailable?: boolean }) => void
     ): Unsubscribe {
-        return roomFirestoreService.subscribeToPublicRooms(
-            (snapshot) => {
-                const result = this.processRoomsSnapshot(snapshot);
-                callback(result);
-            },
-            (error) => {
-                errorHandlerService.handle(error, { context: 'RoomService:SubscribePublicRooms', showToast: false });
-                // Та сама межа, що вище: «не прочиталося» ≠ «нікого немає».
+        let stop: Unsubscribe | null = null;
+        let cancelled = false;
+
+        void authService.ensureUser().then((user) => {
+            if (cancelled) return;
+            if (!user) {
+                logService.error('[RoomService] Немає користувача — живий перелік не відкривається');
                 callback({ rooms: [], unavailable: true });
+                return;
             }
-        );
+
+            stop = roomFirestoreService.subscribeToPublicRooms(
+                (snapshot) => {
+                    const result = this.processRoomsSnapshot(snapshot);
+                    callback(result);
+                },
+                (error) => {
+                    errorHandlerService.handle(error, { context: 'RoomService:SubscribePublicRooms', showToast: false });
+                    // Та сама межа, що вище: «не прочиталося» ≠ «нікого немає».
+                    callback({ rooms: [], unavailable: true });
+                }
+            );
+        });
+
+        return () => {
+            cancelled = true;
+            stop?.();
+            stop = null;
+        };
     }
 
     async joinRoom(roomId: string, playerName: string): Promise<string> {
