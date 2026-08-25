@@ -1,4 +1,5 @@
 import { boardState } from '$lib/stores/boardState.svelte';
+import { isShowingResults } from './matchFinished';
 import { playerState } from '$lib/stores/playerState.svelte';
 import { scoreState } from '$lib/stores/scoreState.svelte';
 import { gameSettingsState } from '$lib/stores/gameSettingsState.svelte';
@@ -123,13 +124,34 @@ export class GameStateReconciler {
                 return;
             }
 
-            uiState.update(s => ({ ...s, isGameOver: false }));
             const currentGameOver = gameOverState.state;
             const currentModal = modalStateRune.state;
-            
-            // FIX: Не закриваємо модалку автоматично, якщо це вікно результатів.
-            // Воно має закриватися тільки за дією користувача.
-            if (currentGameOver.isGameOver && currentModal.dataTestId !== 'game-over-modal') {
+            const showingResults = isShowingResults({
+                uiOver: uiState.state.isGameOver,
+                resultsOver: currentGameOver.isGameOver,
+                openModalTestId: currentModal.dataTestId
+            });
+
+            /*
+             * ЧУЖИЙ ПЕРЕЗАПУСК НЕ «РОЗЗАВЕРШУЄ» МОЮ ПАРТІЮ.
+             *
+             * Доти цей рядок стояв беззастережно, і саме він робив із «суперник пішов
+             * у лобі» подію моєї партії: спільна ознака «завершено» зникала з бази
+             * (перезапуск її чистить), тут прапорець ставав `false`, а далі сторож
+             * присутності бачив «партія триває, суперника немає» й накривав мої
+             * результати вікном перепідключення.
+             *
+             * Поки в мене відкрите вікно результатів, партія для мене завершена — і
+             * чиїсь дії в іншій кімнаті цього не змінюють. Закриє його людина сама:
+             * «Грати ще раз» або «Вийти».
+             */
+            if (!showingResults) {
+                uiState.update(s => ({ ...s, isGameOver: false }));
+            }
+
+            // Не закриваємо модалку автоматично, якщо це вікно результатів:
+            // воно має закриватися тільки за дією користувача.
+            if (currentGameOver.isGameOver && !showingResults) {
                 logService.GAME_MODE('[Reconciler] Clearing local GameOver state');
                 gameOverState.resetGameOverState();
                 modalService.closeAllModals();

@@ -7,6 +7,8 @@ import { timeService } from '$lib/services/timeService';
 import ReconnectionModal from '$lib/components/modals/ReconnectionModal.svelte';
 import { reconnectionState } from '$lib/stores/reconnectionState.svelte';
 import { uiState } from '$lib/stores/uiState.svelte';
+import { gameOverState } from '$lib/stores/gameOverState.svelte';
+import { isMatchFinished } from './matchFinished';
 import { ensureNumber } from "$lib/utils/timeUtils";
 
 type DisconnectHandler = (playerId: string, disconnectStartedAt: number) => void;
@@ -54,7 +56,34 @@ export class OnlinePresenceManager {
             const currentModal = modalStateRune.state;
             const hasPlayers = state.players.length > 0;
             const isReconnectionModalOpen = currentModal.isOpen && currentModal.dataTestId === 'reconnection-modal';
-            const isGameOver = uiState.state.isGameOver;
+            /*
+             * ПАРТІЯ ЗАВЕРШЕНА — ЦЕ ДВА ДЖЕРЕЛА, А НЕ ОДНЕ.
+             *
+             * Скарга автора: один гравець натиснув «Грати ще раз», а другий побачив,
+             * ніби суперник на мить пропав і повернувся, вікно результатів зникло, і
+             * далі він стояв на екрані гри, у якій уже не можна грати.
+             *
+             * Ось звідки це бралося. Той, хто натиснув, іде в лобі — його присутності
+             * в грі більше немає. Сторож нижче на це відкриває вікно перепідключення
+             * через `showModal`, а воно ВИТІСНЯЄ те, що стояло: захист «не закривати
+             * вікно результатів» у `GameStateReconciler` тут не спрацьовує, бо ніхто
+             * нічого не закривав.
+             *
+             * Не спрацьовував і цей сторож, хоч і мусив: він питав лише
+             * `uiState.isGameOver`, а це прапорець, який реконсилятор перемикає з
+             * СИГНАЛУ З МЕРЕЖІ — щойно спільна ознака «партія завершена» зникає з
+             * бази (а перезапуск її й чистить), у другого гравця локально стає
+             * «партія триває».
+             *
+             * Тому питаємо ще й `gameOverState`: це МІЙ результат, він не залежить від
+             * того, що зробив сусід зі своєю кімнатою. Плюс сам факт відкритого вікна
+             * результатів — на випадок, коли стан уже скинули, а вікно ще стоїть.
+             */
+            const isGameOver = isMatchFinished({
+                uiOver: uiState.state.isGameOver,
+                resultsOver: gameOverState.state.isGameOver,
+                openModalTestId: currentModal.isOpen ? currentModal.dataTestId : null
+            });
 
             if (isGameOver) {
                 if (isReconnectionModalOpen) {
