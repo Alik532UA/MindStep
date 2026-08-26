@@ -115,11 +115,15 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
-      # Два файли, а не каталог: `tests/e2e/virtual/` — це десять важких
+      # Три файли, а не каталог: `tests/e2e/virtual/` — це десять важких
       # наборів, а `tests/e2e/online/` потребує емулятора Firebase. Перелік
       # явний саме тому — щоб було видно, що саме гейт і покриває.
-      - name: Runtime invariants (unique data-testid, html lang)
-        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts
+      #
+      # `a11y.spec.ts` — гейт axe (ACCESSIBILITY-v8 § 10, `GATE-A11Y-AXE`).
+      # Доти жодна перевірка проєкту не рахувала контраст, не бачила порядку
+      # заголовків і не міряла ARIA на зібраному DOM.
+      - name: Runtime invariants (unique data-testid, html lang, axe)
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts
 
       - name: Upload Playwright report
         if: failure()

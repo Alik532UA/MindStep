@@ -20,10 +20,25 @@
     <!-- Slot for the toggle button which needs to be positioned relative to this panel -->
     {@render toggle()}
 
+    <!--
+        `inert`, а не `aria-hidden` (ACCESSIBILITY-v8 § 3, WCAG 4.1.2).
+
+        Згорнуте меню не зникає — воно їде за екран `transform: translateX(-100%)`
+        у `FlexibleMenu.svelte`. Кнопки всередині лишаються справжніми `<button>`,
+        тобто лишаються В ОБХОДІ TAB. Разом з `aria-hidden="true"` це давало
+        найгірший із можливих станів: людина з клавіатури проходить крізь пʼять
+        кнопок, яких не видно на екрані, а читалка про них МОВЧИТЬ, бо їх
+        приховано від дерева доступності. Фокус просто зникає.
+
+        `inert` знімає піддерево і з обходу Tab, і з дерева доступності одним
+        атрибутом — тобто робить те, чого `aria-hidden` зробити не може за
+        визначенням. Знайшов це гейт axe (`aria-hidden-focus`) на семи сторінках
+        із девʼяти.
+    -->
     <div
         class="menu-grid {isVertical ? 'vertical' : 'horizontal'}"
         data-testid="{position}-menu-list"
-        aria-hidden={!isOpen}
+        inert={!isOpen}
     >
         {#each [0, 1, 2, 3, 4] as i (i)}
             <div
