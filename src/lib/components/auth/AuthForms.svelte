@@ -184,7 +184,7 @@
         font-size: 0.9em;
     }
     .auth-info {
-        color: var(--success-color, #22c55e);
+        color: var(--positive-score-color, #22c55e);
         text-align: center;
         margin: 0;
         font-size: 0.9em;

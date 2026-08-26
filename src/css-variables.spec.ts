@@ -435,3 +435,103 @@ describe('light-dark() (UI-UX-v8 § 1.5.1.3, GATE-CSS-VARS)', () => {
 		).toEqual([]);
 	});
 });
+
+/* -------------------------------------------------------------------------
+ * Запасне значення в КОЛІРНІЙ властивості — колір, який не бачить тему.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * UI-UX-v8 § 1.6 + § 1.5 — четвертий клас GATE-CSS-VARS, і він виріс із межі
+ * першого.
+ *
+ * ## Чому перший клас цього не ловить, і чому це правильно
+ *
+ * Перевірка вище червоніє лише на `var(--x)` БЕЗ запасного значення: із
+ * запасним поведінка визначена, тож це не дефект, а свідомий типовий варіант.
+ * Так і є — доки змінна десь оголошена. Коли її немає НІДЕ, «запасне значення»
+ * перестає бути запасним: воно стає ЄДИНИМ, тобто звичайним літералом, який
+ * лише виглядає як токен теми.
+ *
+ * У колірній властивості це не косметика. Літерал заморожений під ту тему, у
+ * якій його писали, і в протилежній дає пару, якої не було в жодній.
+ *
+ * ## Що це коштувало тут (заміряно 2026-08-27, 11 змінних, 25 вживань)
+ *
+ * | Місце | Було | У світлій темі |
+ * |---|---|---|
+ * | `MenuButton.primary` (центральна кнопка меню) | `color: var(--text-color, #fff)` на `var(--control-bg, #444)` | білий текст на `#e0e1e6` — **1.31:1**, тобто напис зникає |
+ * | `ErrorBoundary` і `+error.svelte`, `.action-btn.secondary` | `background: var(--bg-tertiary, #2d3748)` + `color: var(--text-primary)` | темний текст на темному тлі — **1.03:1** на екрані аварії |
+ * | `MenuButton.primary.active` | `var(--primary-color, #ffaa00)` + `var(--black, #000)` | помаранчевий із чорним у ВСІХ шести стилях однаково |
+ *
+ * Жодна з цих змінних не оголошена ніде: `--text-color`, `--text-muted`,
+ * `--success-color`, `--accent-text`, `--bg-tertiary`, `--warning-color`,
+ * `--primary-color`, `--input-bg`, `--time-bar-color`, `--black`,
+ * `--background-alt`. Це імена з чужого дизайн-токен-набору, які приїхали
+ * разом зі скопійованим CSS.
+ *
+ * ## Що зроблено замість того, щоб оголосити їх
+ *
+ * Кожне вживання переведене на токен, який у палітрі ВЖЕ Є, зі збереженням
+ * того самого літерала запасним: `var(--text-color, #fff)` →
+ * `var(--text-primary, #fff)`. Оголосити одинадцять нових імен означало б
+ * подвоїти половину палітри синонімами; запасне значення при цьому лишається
+ * на місці — воно потрібне екрану аварії, який мусить малюватися й тоді, коли
+ * `app.css` не приїхав.
+ *
+ * ## Межа правила названа
+ *
+ * Правило стосується лише КОЛІРНИХ властивостей. `var(--unified-radius, 18px)`
+ * без оголошення дає ту саму геометрію в кожній темі — там літерал і є
+ * відповіддю, а не замороженим вибором.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): повернути в
+ * `MenuButton.svelte` рядок `color: var(--text-color, #fff)` — перевірка
+ * називає змінну, файл і рядок.
+ */
+
+/** Властивості, значення яких — колір. */
+const COLOR_PROPERTY =
+	/(^|[;{\s])(color|background|background-color|border(?:-\w+)?-color|outline-color|fill|stroke|caret-color|text-decoration-color|column-rule-color|accent-color)\s*:\s*([^;}]+)/g;
+
+type FallbackOnly = { at: string; variable: string; declaration: string };
+
+const fallbackOnly: FallbackOnly[] = [];
+
+for (const file of files.filter((f) => STYLE_FILE.test(f))) {
+	const css = cssSideOf(readFileSync(file, 'utf8'), file);
+	css.split('\n').forEach((line, index) => {
+		for (const property of line.matchAll(COLOR_PROPERTY)) {
+			const value = property[3];
+			for (const use of value.matchAll(/var\(\s*(--[a-zA-Z][\w-]*)\s*,[^)]*\)/g)) {
+				if (declared.has(use[1])) continue;
+				fallbackOnly.push({
+					at: `${file}:${index + 1}`,
+					variable: use[1],
+					declaration: `${property[2]}: ${value.trim().slice(0, 60)}`
+				});
+			}
+		}
+	});
+}
+
+describe('колірні властивості не залежать від неоголошених змінних (UI-UX-v8 § 1.6)', () => {
+	it('перевірка жива: колірні властивості в джерелах знайдено', () => {
+		let found = 0;
+		for (const file of files.filter((f) => STYLE_FILE.test(f))) {
+			const css = cssSideOf(readFileSync(file, 'utf8'), file);
+			found += [...css.matchAll(COLOR_PROPERTY)].length;
+		}
+		expect(found, 'жодної колірної властивості — регулярка зламана').toBeGreaterThan(100);
+	});
+
+	it('запасне значення не лишається єдиним', () => {
+		const bad = fallbackOnly.map((f) => `${f.at}: ${f.variable} у «${f.declaration}»`);
+		expect(
+			bad,
+			'змінної немає в жодній темі, тож «запасне» значення стає ЄДИНИМ — ' +
+				'звичайним літералом, замороженим під ту тему, у якій його писали. ' +
+				'У протилежній темі це дає пару, якої не було в жодній ' +
+				`(заміряно: білий текст на #e0e1e6 — 1.31:1):\n${bad.join('\n')}`
+		).toEqual([]);
+	});
+});

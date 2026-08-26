@@ -24,7 +24,7 @@
 
 <style>
   .test-mode-widget {
-    background: var(--background-alt, #1e1e1e);
+    background: var(--bg-secondary, #1e1e1e);
     border-radius: var(--unified-border-radius, 12px);
     padding: 0.5rem;
     display: flex;
@@ -35,7 +35,7 @@
   .test-mode-widget-title {
     font-weight: 700;
     text-align: center;
-    color: var(--text-color, #fff);
+    color: var(--text-primary, #fff);
     margin-bottom: 0.25rem;
   }
   .test-mode-divider {

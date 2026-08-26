@@ -166,8 +166,8 @@
     }
 
     .room-id-chip.copied {
-        border-color: var(--success-color, #4caf50);
-        color: var(--success-color, #4caf50);
+        border-color: var(--positive-score-color, #4caf50);
+        color: var(--positive-score-color, #4caf50);
         background: rgba(76, 175, 80, 0.1);
     }
 

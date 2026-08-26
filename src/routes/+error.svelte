@@ -322,7 +322,7 @@ ${stack ? `\nStack:\n${stack}` : ""}
     }
 
     .action-btn.secondary {
-        background: var(--bg-tertiary, #2d3748);
+        background: var(--control-bg, #2d3748);
         color: var(--text-primary, #ffffff);
     }
 

@@ -166,7 +166,7 @@
     }
 
     .kick-btn {
-        background: var(--warning-color, #ff9800);
+        background: var(--warning-action-bg, #ff9800);
         color: white;
     }
 
@@ -190,7 +190,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: var(--time-bar-color, #ffb300);
+        background: var(--warning-action-bg, #ffb300);
         opacity: 0.6;
         animation: pulse 1.5s infinite ease-in-out;
     }

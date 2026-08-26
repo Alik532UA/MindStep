@@ -68,7 +68,7 @@
     }
 
     .menu-button.active {
-        color: var(--primary-color, #ffaa00);
+        color: var(--text-accent, #ffaa00);
     }
 
     .icon-wrapper {
@@ -83,7 +83,7 @@
     /* Primary (Central) Button Styling */
     .menu-button.primary {
         background: var(--control-bg, #444);
-        color: var(--text-color, #fff);
+        color: var(--text-primary, #fff);
         border-radius: 50%;
         width: 64px; /* Fixed size for the FAB */
         height: 64px;
@@ -96,8 +96,8 @@
     }
 
     .menu-button.primary.active {
-        background: var(--primary-color, #ffaa00);
-        color: var(--black, #000);
+        background: var(--control-selected, #ffaa00);
+        color: var(--control-selected-text, #000);
     }
 
     .menu-button.primary:hover {

@@ -214,7 +214,7 @@
         gap: 0.4rem;
         margin: 0;
         font-size: 0.8rem;
-        color: var(--warning-color, #f59e0b);
+        color: var(--warning-action-bg, #f59e0b);
         white-space: pre-line;
     }
     :global(.warning-icon) {

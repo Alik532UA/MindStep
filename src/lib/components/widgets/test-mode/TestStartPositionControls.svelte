@@ -103,7 +103,7 @@
     }
     .test-mode-group-title {
         font-weight: 500;
-        color: var(--text-muted, #aaa);
+        color: var(--text-secondary, #aaa);
         border-bottom: var(--global-border-width) solid
             var(--border-color, #444);
         padding-bottom: 0.125rem;
@@ -134,7 +134,7 @@
     }
     .test-mode-row-btn.active {
         background: var(--control-selected);
-        color: var(--accent-text, #000000);
+        color: var(--control-selected-text, #000000);
         border-color: var(--control-selected);
     }
     .test-mode-manual-coords {
@@ -151,13 +151,13 @@
     }
     .test-mode-input-group label {
         font-size: 0.7rem;
-        color: var(--text-muted, #aaa);
+        color: var(--text-secondary, #aaa);
     }
     .test-mode-input {
         width: 100%;
-        background: var(--input-bg, #111);
+        background: var(--control-bg, #111);
         border: var(--global-border-width) solid var(--input-border, #555);
-        color: var(--text-color, #fff);
+        color: var(--text-primary, #fff);
         border-radius: 12px;
         padding: 0.1rem 0;
         text-align: center;
