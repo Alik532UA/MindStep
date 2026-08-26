@@ -25,6 +25,7 @@ export default {
   sKeySetting: "'S' düğmesi içün areket",
   keyConflict: "Qarışıq! Bir düğmege birqaç areket tayin etilgen.",
   removeKey: "Düğmeni çetleştir",
+  addKey: "Tuş qoşmaq",
   pressKey: "Klavışnı basıñız",
   actions: {
     'up-left': "Yuqarı-solğa",

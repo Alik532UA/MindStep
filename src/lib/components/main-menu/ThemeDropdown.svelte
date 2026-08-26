@@ -42,6 +42,7 @@
                 class="theme-btn"
                 data-theme="light"
                 onclick={() => selectTheme(style, "light")}
+                aria-label={`${$t("settings.themeLight")} — ${$t(`mainMenu.themeName.${style}` as TranslationKey)}`}
                 data-testid={`theme-${style}-light-btn`}
             >
                 <NotoEmoji name="sun" size="20px" />
@@ -53,6 +54,7 @@
                 class="theme-btn"
                 data-theme="dark"
                 onclick={() => selectTheme(style, "dark")}
+                aria-label={`${$t("settings.themeDark")} — ${$t(`mainMenu.themeName.${style}` as TranslationKey)}`}
                 data-testid={`theme-${style}-dark-btn`}
             >
                 <NotoEmoji name="crescent_moon" size="20px" />

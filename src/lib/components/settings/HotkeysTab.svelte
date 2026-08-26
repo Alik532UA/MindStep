@@ -100,6 +100,7 @@
               {:else}
                 <button
                   class="add-key-btn"
+                  aria-label={$t("controlsPage.addKey")}
                   onclick={() => listenForKey(action, -1)}>+</button
                 >
               {/if}

@@ -75,24 +75,28 @@
             class="test-mode-dir-btn"
             class:active={manualDirection === "up-left"}
             onclick={() => handleDirection("up-left")}
+            aria-label={$t("tooltips.up-left")}
             data-testid="test-mode-dir-btn-up-left">↖</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "up"}
             onclick={() => handleDirection("up")}
+            aria-label={$t("tooltips.up")}
             data-testid="test-mode-dir-btn-up">↑</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "up-right"}
             onclick={() => handleDirection("up-right")}
+            aria-label={$t("tooltips.up-right")}
             data-testid="test-mode-dir-btn-up-right">↗</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "left"}
             onclick={() => handleDirection("left")}
+            aria-label={$t("tooltips.left")}
             data-testid="test-mode-dir-btn-left">←</button
         >
         <div class="placeholder"></div>
@@ -100,24 +104,28 @@
             class="test-mode-dir-btn"
             class:active={manualDirection === "right"}
             onclick={() => handleDirection("right")}
+            aria-label={$t("tooltips.right")}
             data-testid="test-mode-dir-btn-right">→</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down-left"}
             onclick={() => handleDirection("down-left")}
+            aria-label={$t("tooltips.down-left")}
             data-testid="test-mode-dir-btn-down-left">↙</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down"}
             onclick={() => handleDirection("down")}
+            aria-label={$t("tooltips.down")}
             data-testid="test-mode-dir-btn-down">↓</button
         >
         <button
             class="test-mode-dir-btn"
             class:active={manualDirection === "down-right"}
             onclick={() => handleDirection("down-right")}
+            aria-label={$t("tooltips.down-right")}
             data-testid="test-mode-dir-btn-down-right">↘</button
         >
     </div>

@@ -25,6 +25,7 @@ export default {
   sKeySetting: "Actie voor 'S'-toets",
   keyConflict: "Conflict! Meerdere acties toegewezen aan dezelfde toets.",
   removeKey: "Toets verwijderen",
+  addKey: "Toets toevoegen",
   pressKey: "Druk op een toets",
   actions: {
     'up-left': "Schuin omhoog-links",

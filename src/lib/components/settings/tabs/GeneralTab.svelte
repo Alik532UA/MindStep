@@ -59,6 +59,7 @@
               class="language-button"
               class:active={settings.language === lang.code}
               onclick={() => selectLang(lang.code)}
+              aria-label={$t(`mainMenu.lang.${lang.code}` as TranslationKey)}
             >
               <div class="lang-flag-wrapper">
                 <lang.component />
@@ -75,6 +76,7 @@
               class="theme-btn"
               data-theme="light"
               onclick={() => selectTheme(style, "light")}
+              aria-label={`${$t("settings.themeLight")} — ${$t(`mainMenu.themeName.${style}` as TranslationKey)}`}
             >
               <NotoEmoji name="sun" size="20px" />
             </button>
@@ -85,6 +87,7 @@
               class="theme-btn"
               data-theme="dark"
               onclick={() => selectTheme(style, "dark")}
+              aria-label={`${$t("settings.themeDark")} — ${$t(`mainMenu.themeName.${style}` as TranslationKey)}`}
             >
               <NotoEmoji name="crescent_moon" size="20px" />
             </button>

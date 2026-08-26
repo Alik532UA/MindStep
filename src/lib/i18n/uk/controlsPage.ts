@@ -25,6 +25,7 @@ export default {
   sKeySetting: "Дія для клавіші 'S' / 'І'",
   keyConflict: "Конфлікт! Декілька дій призначено на одну клавішу.",
   removeKey: "Видалити клавішу",
+  addKey: "Додати клавішу",
   pressKey: "Натисніть клавішу",
   actions: {
     'up-left': "Вгору-ліворуч",

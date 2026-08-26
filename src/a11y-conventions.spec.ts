@@ -57,6 +57,64 @@ interface Offender {
 }
 
 /**
+ * Розбір `<button …>` — з урахуванням `{ … }` і лапок у значеннях атрибутів.
+ *
+ * ## ЧОМУ НЕ РЕГУЛЯРКА
+ *
+ * Доти тут стояло `/<button\b([^>]*)>([\s\S]*?)<\/button\s*>/`. `[^>]*`
+ * зупиняється на ПЕРШОМУ `>` — а в Svelte найчастіший атрибут кнопки це
+ * `onclick={() => …}`, і стрілка містить `>`. Тобто розбір різав атрибути
+ * посеред обробника, і все, що йшло далі, потрапляло у «вміст кнопки»:
+ * `data-testid="…"`, `class:active={…}`, самі назви функцій. Літери там є
+ * завжди — отже кнопка вважалася підписаною.
+ *
+ * Заміряно на цьому дереві: 58 кнопок зі 110 мали `>` в атрибутах, тобто гейт
+ * не дивився на БІЛЬШІСТЬ кнопок проєкту. Він звітував нуль порушень; точний
+ * розбір знайшов 16 — серед них кнопка перезапуску на екрані аварії
+ * (`ErrorBoundary`), єдиний працездатний елемент керування в момент, коли все
+ * інше зламалося.
+ *
+ * Це рівно той клас, який AI-AGENT-PITFALLS-v8 § 1 називає найдорожчим:
+ * перевірка є, вона правильна на вигляд, і вона дивиться не туди. Гірше за
+ * відсутню, бо на неї посилаються як на доказ.
+ *
+ * ## Що робить сканер
+ *
+ * Іде по символах від `<button`, тримає глибину `{}` і стан лапок; закриває
+ * тег лише на `>`, що стоїть поза виразом і поза рядком.
+ */
+interface ParsedButton {
+	attrs: string;
+	body: string;
+	index: number;
+}
+
+function parseButtons(src: string): ParsedButton[] {
+	const out: ParsedButton[] = [];
+	for (let i = 0; i < src.length; i++) {
+		if (!/^<button[\s>]/.test(src.slice(i, i + 8))) continue;
+		let j = i + 7;
+		let depth = 0;
+		let quote: string | null = null;
+		for (; j < src.length; j++) {
+			const c = src[j];
+			if (quote) {
+				if (c === quote) quote = null;
+				continue;
+			}
+			if (c === '"' || c === "'") quote = c;
+			else if (c === '{') depth++;
+			else if (c === '}') depth--;
+			else if (c === '>' && depth === 0) break;
+		}
+		const close = src.indexOf('</button', j);
+		if (close === -1) continue;
+		out.push({ attrs: src.slice(i + 7, j), body: src.slice(j + 1, close), index: i });
+	}
+	return out;
+}
+
+/**
  * Видимий текст кнопки. Теги знімаються (їхній вміст — це вже інший елемент
  * або іконка), вирази `{…}` знімаються окремо: `{label}` — це назва, яку
  * приносить проп, і кнопка з нею підписана.
@@ -66,8 +124,7 @@ function findOffenders(): Offender[] {
 	for (const file of svelteFiles(ROOT)) {
 		if (SKIP.some((s) => file.startsWith(s))) continue;
 		const src = readFileSync(file, 'utf8');
-		for (const m of src.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button\s*>/g)) {
-			const [, attrs, body] = m;
+		for (const { attrs, body, index } of parseButtons(src)) {
 			if (/\baria-label(ledby)?\b/.test(attrs)) continue;
 
 			const withoutTags = body.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]*>/g, '');
@@ -79,7 +136,7 @@ function findOffenders(): Offender[] {
 
 			out.push({
 				file,
-				line: src.slice(0, m.index).split('\n').length,
+				line: src.slice(0, index).split('\n').length,
 				body: body.replace(/\s+/g, ' ').trim().slice(0, 60)
 			});
 		}
@@ -100,6 +157,28 @@ describe('перевірка жива', () => {
 			.map((f) => readFileSync(f, 'utf8').match(/<button\b/g)?.length ?? 0)
 			.reduce((a, b) => a + b, 0);
 		expect(total, 'жодного <button> — регулярка перестала збігатися').toBeGreaterThan(30);
+	});
+
+	/**
+	 * Канарка на САМ РОЗБІР, а не на його результат.
+	 *
+	 * Попередній розбір ділив тег регуляркою `[^>]*` і зупинявся на `>` усередині
+	 * `onclick={() => …}`. Помітити це по результату не можна було ніяк: гейт
+	 * лишався зеленим, бо все, що після зрізу, вважалося текстом кнопки.
+	 */
+	it('розбір не спотикається на стрілці в onclick', () => {
+		const parsed = parseButtons('<button onclick={() => go()} class="x">×</button>');
+		expect(parsed.length, 'кнопку не знайдено зовсім').toBe(1);
+		expect(parsed[0].attrs).toContain('onclick={() => go()}');
+		expect(parsed[0].attrs).toContain('class="x"');
+		expect(parsed[0].body.trim(), 'у вміст кнопки затекли атрибути').toBe('×');
+	});
+
+	it('розбір бачить aria-label, що містить вираз зі стрілкою поруч', () => {
+		const parsed = parseButtons(
+			'<button onclick={() => f()} aria-label={$t("a.b")}><Icon /></button>'
+		);
+		expect(parsed[0].attrs).toContain('aria-label=');
 	});
 });
 

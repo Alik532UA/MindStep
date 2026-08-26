@@ -75,6 +75,7 @@
           />
           <button
             class="remove-player-btn"
+            aria-label={$t("localGame.removePlayer")}
             use:customTooltip={$t("localGame.removePlayer")}
             onclick={() => handleRemovePlayer(player.id, player.name)}
             disabled={state.players.length <= 2}

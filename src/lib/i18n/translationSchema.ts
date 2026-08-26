@@ -31,6 +31,7 @@ export interface TranslationSchema {
     sKeySetting: string;
     keyConflict: string;
     removeKey: string;
+    addKey: string;
     pressKey: string;
     actions: {
       'up-left': string;

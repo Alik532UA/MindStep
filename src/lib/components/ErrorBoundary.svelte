@@ -111,7 +111,12 @@ ${stack ? `\nStack:\n${stack}` : ""}
                         <span class="compact-message">{error instanceof Error ? error.message : String(error)}</span>
                     {/if}
                 </div>
-                <button class="compact-reset" onclick={() => reset()} title="Спробувати ще раз">🔄</button>
+                <button
+                    class="compact-reset"
+                    onclick={() => reset()}
+                    aria-label="Спробувати ще раз"
+                    title="Спробувати ще раз">🔄</button
+                >
             </div>
         {:else}
             <!-- Error Page -->
