@@ -369,3 +369,69 @@ describe('версія Node узгоджена в трьох місцях (§ 2.
 		).toBe(enginesMajor);
 	});
 });
+
+/**
+ * Артефакт збірки не комітиться (CI-CD-AND-TOOLS-v8 § 1.5).
+ *
+ * ## Що саме тут зламалося
+ *
+ * Єдина машинна перевірка цього правила — `git diff --exit-code` ПІСЛЯ збірки:
+ * якщо `npm run build` змінив хоч один відстежуваний файл, значить у репозиторії
+ * лежить те, що мусить народжуватися з джерел.
+ *
+ * Крок був у `ci.yml` і `deploy-dev.yml`. У `deploy.yml` — тому самому, що
+ * викладає в ПРОДАКШН, — лишився тільки коментар, який його описує; сам крок
+ * зник, а коментар приліпився до наступного (`Lighthouse Audit`). Читалося це
+ * як «перевірка є»: рівно той хибно-зелений, що й «скрипт існує й у CI не
+ * викликається».
+ *
+ * ## Чому перевірка саме така
+ *
+ * Пара «є `npm run build` — є `git diff --exit-code` після нього», а не
+ * «в кожному workflow мусить бути `git diff`»: workflow без збірки цього кроку
+ * не потребує, і вимагати від нього означало б червоніти без порушення.
+ *
+ * Порядок перевіряється теж. `git diff` ПЕРЕД збіркою доводить лише те, що
+ * чекаут чистий, — це не те саме твердження, і воно завжди істинне.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): прибрати крок із
+ * `deploy.yml` — перевірка називає файл і job.
+ */
+describe('збірка не лишає слідів у репозиторії (CI-CD-AND-TOOLS-v8 § 1.5)', () => {
+	/** Кроки job у порядку появи; коментарі вже відрізані. */
+	const jobsWithBuild = files.flatMap((file) => {
+		const steps = stepsOf(sourceOf(file));
+		const jobs = [...new Set(steps.map((s) => s.job))];
+		return jobs
+			.map((job) => ({ file, job, steps: steps.filter((s) => s.job === job) }))
+			.filter((entry) => entry.steps.some((s) => /run:\s*npm run build\b/.test(s.body)));
+	});
+
+	it('розбір живий: job зі збіркою знайдено', () => {
+		expect(
+			jobsWithBuild.length,
+			'у workflow немає жодного job із `npm run build` — або розбір зламався, ' +
+				'або збірки в CI немає; обидва випадки червоні'
+		).toBeGreaterThan(0);
+	});
+
+	it('після кожної збірки стоїть git diff --exit-code', () => {
+		const offenders: string[] = [];
+		for (const { file, job, steps } of jobsWithBuild) {
+			const build = steps.findIndex((s) => /run:\s*npm run build\b/.test(s.body));
+			const diff = steps.findIndex((s) => /git diff --exit-code/.test(s.body));
+			if (diff === -1) {
+				offenders.push(`${file} → ${job}: збірка є, «git diff --exit-code» немає`);
+			} else if (diff < build) {
+				offenders.push(
+					`${file} → ${job}: «git diff» стоїть ПЕРЕД збіркою — це доводить лише чистий чекаут`
+				);
+			}
+		}
+		expect(
+			offenders,
+			'артефакт збірки в репозиторії видно лише цим кроком: ' +
+				`ні типи, ні lint, ні тести його не бачать:\n${offenders.join('\n')}`
+		).toEqual([]);
+	});
+});
