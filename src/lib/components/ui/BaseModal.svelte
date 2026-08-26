@@ -2,6 +2,7 @@
   import { fade, scale } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import { trapFocus } from '$lib/actions/trapFocus';
+  import { acceptsShortcut } from '$lib/services/keyboard';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -38,8 +39,26 @@
     }
   }
 
+  /*
+   * Захисти беруться з `services/keyboard`, а не пишуться тут удруге.
+   *
+   * Доти стояло `e.key === 'Escape'` без жодного захисту — тобто `Ctrl+Escape`
+   * (у Windows це виклик меню «Пуск») закривав ще й вікно, а `Alt+Escape` і
+   * `Meta+Escape` разом із ним. HOTKEYS-v8 § 2 вимагає перевіряти модифікатори
+   * саме тому: комбінація належить системі, і застосунок не має на неї
+   * реагувати.
+   *
+   * `acceptsShortcut` пропускає `Escape` навіть із поля вводу — і це та сама
+   * причина, з якої обробник живе на вікні: панель, відкриту клавішею, інакше
+   * не закрити зсередини.
+   *
+   * `e.code`, а не `e.key`: у решті проєкту скорочення читаються з `code`
+   * (HK-EVENT-CODE), і два різні джерела для однієї клавіші — це рівно те
+   * розходження, заради усунення якого модуль `keyboard.ts` і виділявся.
+   */
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && onclose) {
+    if (!acceptsShortcut(e)) return;
+    if (e.code === 'Escape' && onclose) {
       onclose();
     }
   }
