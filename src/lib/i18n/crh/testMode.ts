@@ -3,7 +3,7 @@ export default {
   increaseSize: "Panelni büyüt",
   random: "Tesadüfiy",
   manual: "Qolnen",
-  set: "✔️",
+  set: "Tasdiqla",
   title: "Test rejimi",
   startPosition: "Başlanğıç pozitsiyası",
   x: "X",

@@ -3,7 +3,7 @@ export default {
   increaseSize: "Збільшити панель",
   random: "Випадковий",
   manual: "Ручний",
-  set: "✔️",
+  set: "Підтвердити",
   title: "Тестовий режим",
   startPosition: "Стартова позиція",
   x: "X",

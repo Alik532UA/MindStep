@@ -6,6 +6,7 @@
         type ComputerMoveMode,
     } from "$lib/stores/testModeState.svelte";
     import { logService } from "$lib/services/logService.svelte";
+    import { Check } from "lucide-svelte";
 
     const tState = $derived(testModeState.state);
     let manualDirection = $state<string | null>(null);
@@ -136,8 +137,10 @@
         <button
             class="test-mode-square-btn"
             onclick={setManualMoveProperties}
+            aria-label={$t("testMode.set")}
+            title={$t("testMode.set")}
             data-testid="test-mode-set-move-dist-btn"
-            >{$t("testMode.set")}</button
+            ><Check size={16} aria-hidden="true" /></button
         >
     </div>
 </div>

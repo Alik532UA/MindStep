@@ -3,7 +3,7 @@ export default {
   increaseSize: "Enlarge panel",
   random: "Random",
   manual: "Manual",
-  set: "✔️",
+  set: "Confirm",
   title: "Test Mode",
   startPosition: "Start Position",
   x: "X",

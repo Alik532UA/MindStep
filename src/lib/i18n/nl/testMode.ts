@@ -3,7 +3,7 @@ export default {
   increaseSize: "Paneel vergroten",
   random: "Willekeurig",
   manual: "Handmatig",
-  set: "✔️",
+  set: "Bevestig",
   title: "Testmodus",
   startPosition: "Startpositie",
   x: "X",

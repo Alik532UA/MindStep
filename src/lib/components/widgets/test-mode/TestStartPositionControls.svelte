@@ -5,6 +5,7 @@
         testModeState,
         type PositionMode,
     } from "$lib/stores/testModeState.svelte";
+    import { Check } from "lucide-svelte";
 
     const tState = $derived(testModeState.state);
     let manualX = $state(0);
@@ -85,8 +86,10 @@
             <button
                 class="test-mode-square-btn"
                 onclick={setManualStartPosition}
+                aria-label={$t("testMode.set")}
+                title={$t("testMode.set")}
                 data-testid="test-mode-set-start-pos-btn"
-                >{$t("testMode.set")}</button
+                ><Check size={16} aria-hidden="true" /></button
             >
         </div>
     {/if}
