@@ -4,6 +4,7 @@
  */
 
 import { loadAndGetVoices, filterVoicesByLang } from '$lib/services/speechService';
+import { VoiceLoader } from '$lib/services/speech/voiceLoader';
 import { locale } from 'svelte-i18n';
 import { logService } from "$lib/services/logService.svelte";
 import { gameSettingsState } from './gameSettingsState.svelte';
@@ -40,14 +41,26 @@ class VoiceStateRune {
                 });
             }
 
-            if (currentLocale !== 'en') {
-                const enVoices = filterVoicesByLang(allVoices, 'en');
-                const mainVoiceURIs = new Set(mainVoices.map((v: Voice) => v.voiceURI));
-                const onlyEn = enVoices.filter((v: Voice) => !mainVoiceURIs.has(v.voiceURI));
-                this._availableVoices = [...mainVoices, ...onlyEn];
-            } else {
-                this._availableVoices = mainVoices;
-            }
+            /*
+             * `dedupeByURI` — ОДИН механізм на всі повтори, а не два.
+             *
+             * Доти тут стояв власний `Set` над `mainVoices`, і він прибирав
+             * лише ті англійські голоси, що вже були в основному переліку.
+             * Повторів УСЕРЕДИНІ одного переліку він не бачив — а саме вони й
+             * приходять від `getVoices()` на пристроях Apple, де той самий
+             * голос трапляється в списку кілька разів. Далі keyed `{#each}` у
+             * `VoiceList.svelte` кидав `each_key_duplicate`, і вкладка голосу
+             * не працювала цілком (див. докблок `VoiceLoader.dedupeByURI`).
+             *
+             * Тепер повтори прибираються один раз, на фінальному переліку, і
+             * порядок «спершу мовні, потім англійські» це зберігає: фільтр
+             * лишає ПЕРШЕ входження.
+             */
+            const merged =
+                currentLocale !== 'en'
+                    ? [...mainVoices, ...filterVoicesByLang(allVoices, 'en')]
+                    : mainVoices;
+            this._availableVoices = VoiceLoader.dedupeByURI(merged);
 
             this.checkDefaultVoice();
         } catch (error) {

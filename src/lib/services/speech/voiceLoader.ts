@@ -53,6 +53,49 @@ export class VoiceLoader {
     }
 
     /**
+     * Прибирає повтори за `voiceURI`, лишаючи ПЕРШЕ входження.
+     *
+     * ## Навіщо, якщо список приходить від браузера
+     *
+     * Саме тому. `speechSynthesis.getVoices()` НЕ обіцяє унікальності
+     * `voiceURI`, і на пристроях Apple той самий голос приходить у списку по
+     * кілька разів. У Chrome під Windows цього не буває — тобто дефект
+     * відтворюється лише на частині пристроїв, і саме на тій, де його не
+     * побачить розробник.
+     *
+     * ## Що ламалося
+     *
+     * `VoiceList.svelte` малює перелік через `{#each … (voice.voiceURI)}`.
+     * Svelte 5 на повторному ключі КИДАЄ `each_key_duplicate` — і кидає його не
+     * лише в dev: у зібраному застосунку це `Error("https://svelte.dev/e/…")`,
+     * тобто виняток без жодного тексту. Його перехоплює `svelte:boundary`, і
+     * людина бачить сторінку «Упс! Щось пішло не так» без причини. Тобто
+     * вкладка голосу на Apple не працювала ЦІЛКОМ.
+     *
+     * ## Чому лишається ПЕРШЕ входження, а не останнє
+     *
+     * Не зі смаку: `speechService` шукає голос через
+     * `allVoices.find(v => v.voiceURI === …)`, тобто бере перший збіг. Лишити
+     * перше — означає, що перелік на екрані показує саме той голос, який
+     * справді заговорить.
+     *
+     * ## Чому нічого не втрачається
+     *
+     * `voiceURI` — ЄДИНЕ, що зберігається в налаштуваннях
+     * (`selectedVoiceURI`), і єдине, за чим голос потім знаходять. Два записи з
+     * однаковим `voiceURI` для решти застосунку нерозрізнимі: який із них не
+     * натисни, у сховище піде той самий рядок і заговорить той самий голос.
+     */
+    static dedupeByURI<T extends { voiceURI: string }>(voices: T[]): T[] {
+        const seen = new Set<string>();
+        return voices.filter((voice) => {
+            if (seen.has(voice.voiceURI)) return false;
+            seen.add(voice.voiceURI);
+            return true;
+        });
+    }
+
+    /**
      * Фільтрує голоси за кодом мови.
      */
     static filterVoicesByLang(voiceList: SpeechSynthesisVoice[], langCode: string): SpeechSynthesisVoice[] {

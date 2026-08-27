@@ -74,15 +74,19 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
-      # Ті самі три файли, що і в `deploy.yml`: решта `tests/e2e/` або важка
+      # Ті самі чотири файли, що і в `deploy.yml`: решта `tests/e2e/` або важка
       # (`virtual/`), або потребує емулятора Firebase (`online/`).
       #
       # `a11y.spec.ts` — гейт axe (ACCESSIBILITY-v8 § 10, `GATE-A11Y-AXE`).
       # Поріг у ньому — база, що лише спадає, а не літеральний нуль: axe-core
       # додає правила в мінорних версіях, і нуль червонів би від Dependabot-PR
       # без жодної зміни коду.
-      - name: Runtime invariants (unique data-testid, html lang, focus, axe)
-        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts
+      # `voice-tab.spec.ts` — регресія по дефекту, який відтворювався лише на
+      # пристроях Apple: `getVoices()` віддавав той самий `voiceURI` кілька
+      # разів, і keyed `{#each}` валив вкладку голосу цілком. Перевірка
+      # підставляє саме цю форму списку, тож не залежить від голосів раннера.
+      - name: Runtime invariants (unique data-testid, html lang, focus, axe, voice tab)
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts
 
       - name: Upload Playwright report
         if: failure()
