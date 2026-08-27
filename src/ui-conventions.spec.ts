@@ -218,3 +218,165 @@ describe('сторінки не містять сирого <svg> (UI-UX-v8 § 3
 		).toEqual([]);
 	});
 });
+
+/* ------------------------------------------------------------------------ *
+ * 5. Кнопка без жодного стану — натискання без відгуку
+ * ------------------------------------------------------------------------ */
+
+/**
+ * UI-ELEMENTS-v8 § 1, ACCESSIBILITY-v8 § 3.
+ *
+ * ## Привід — скарга на кнопку «Скинути до стандартних»
+ *
+ * «Немає візуального зворотного зв'язку: користувач не розуміє, що кнопка була
+ * натиснута». У стилях `.reset-button` було рівно `padding`, `background`,
+ * `border-radius`, `font-weight` і `cursor: pointer`. Ні `:hover`, ні `:active`,
+ * ні `:focus-visible` — тобто натискання не малювало нічого, а той, хто ходить
+ * Tab-ом, не бачив навіть, де він стоїть.
+ *
+ * ## Чому це перевірка, а не одноразова правка
+ *
+ * Заміряно на цьому дереві: 55 класів виглядають кнопкою, і девʼять із них не
+ * мають ЖОДНОГО зі трьох станів. Тобто це не одна кнопка, а спосіб їх писати:
+ * поки станів немає в спільному місці, кожна нова кустарна кнопка народжується
+ * без відгуку, і побачити це можна лише пальцем.
+ *
+ * Правильна відповідь — `StyledButton`, де всі три стани описані ОДИН раз
+ * (`styled-button.css`): `:active` дає `translateY(1px)`, `:hover` — підйом і
+ * `brightness(1.1)`, `:focus-visible` — рамку 3px. Саме туди й переведено
+ * кнопку скидання.
+ *
+ * ## Чому решта вісім лишаються в переліку, а не полагоджені разом
+ *
+ * Кожна з них — окремий екран із власними розмірами й формою (`×` видалення
+ * гравця, квадратна кнопка тестового режиму, посилання в тексті правил).
+ * Переписати їх наосліп — це вісім візуальних змін без жодного ока на
+ * результаті. Тому вони названі рядками: борг видимий і вимірний, а нова
+ * кустарна кнопка без відгуку тепер валить прогін.
+ *
+ * ## Межа перевірки названа
+ *
+ * Дивиться лише на класи, у чиїй назві є `btn`/`button` і в чиєму правилі є
+ * `cursor: pointer` або пара `padding` + `background`. Стан шукається В УСІХ
+ * файлах, а не лише в тому, де клас оголошено: `.control-btn` описаний у
+ * `direction-controls.css`, а `:hover` для нього — у файлі теми, і це законно.
+ *
+ * ## Поріг — ХОЧА Б ОДИН стан, і межу треба знати
+ *
+ * Вимагати всі три означало б червоніти на кнопці-посиланні, якій підйом і тінь
+ * не потрібні за задумом. Ціна цього вибору названа: прибрати
+ * `.styled-button:active` зі спільного файлу — і перевірка ЛИШИТЬСЯ ЗЕЛЕНОЮ, бо
+ * `:hover` і `:focus-visible` для того самого класу лежать поруч. Перевірено
+ * прогоном, а не припущено. Тобто гейт стереже появу кнопки БЕЗ ВІДГУКУ ВЗАГАЛІ,
+ * а не повноту трійки станів; повноту тримає те, що всі три описані один раз і в
+ * одному місці.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): дописати в будь-який
+ * компонент клас виду `.brand-new-btn { padding: 8px; background: red; cursor:
+ * pointer; }` — перевірка називає його разом із файлом.
+ */
+
+/** Правило CSS у будь-якому файлі джерел. */
+type CssRule = { file: string; selector: string; body: string };
+
+function cssRules(): CssRule[] {
+	const out: CssRule[] = [];
+	for (const file of walk(ROOT)) {
+		if (!/\.(css|svelte)$/.test(file)) continue;
+		const source = readFileSync(file, 'utf8');
+		const css = file.endsWith('.css')
+			? source
+			: [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]).join('\n');
+		const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, ' ');
+		for (const block of withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+			out.push({
+				file,
+				selector: block[1].trim().replace(/\s+/g, ' '),
+				body: block[2]
+			});
+		}
+	}
+	return out;
+}
+
+const RULES = cssRules();
+const INTERACTION_STATE = /:hover|:active|:focus-visible/;
+
+const classesOf = (selector: string): string[] =>
+	[...selector.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]);
+
+/** Правило виглядає описом кнопки, а не контейнера. */
+const looksLikeButton = (rule: CssRule): boolean =>
+	/cursor\s*:\s*pointer/.test(rule.body) ||
+	(/padding\s*:/.test(rule.body) && /background/.test(rule.body));
+
+const buttonClasses = new Map<string, CssRule>();
+for (const rule of RULES) {
+	if (!looksLikeButton(rule)) continue;
+	if (/:hover|:active|:focus|:disabled|::/.test(rule.selector)) continue;
+	for (const cls of classesOf(rule.selector)) {
+		if (!/btn|button/i.test(cls)) continue;
+		if (!buttonClasses.has(cls)) buttonClasses.set(cls, rule);
+	}
+}
+
+const withoutState = [...buttonClasses.keys()].filter(
+	(cls) => !RULES.some((r) => INTERACTION_STATE.test(r.selector) && classesOf(r.selector).includes(cls))
+);
+
+/**
+ * Класи без жодного стану, які лишаються такими СВІДОМО. Перелік іменований,
+ * кінцевий і лише скорочується; рядок прибирається разом із виправленням.
+ *
+ * Два з них — не кнопки, а контейнери, які потрапили сюди через назву; вони не
+ * потребують станів і названі саме тому, щоб наступний читач не «лагодив» їх.
+ */
+const KNOWN_WITHOUT_FEEDBACK: Readonly<Record<string, string>> = {
+	'button-group-container': 'контейнер групи, а не кнопка (назва вводить в оману)',
+	'modal-action-buttons': 'контейнер рядка кнопок у модалці, а не кнопка',
+	'add-player-btn': 'екран локальної гри — переписати на StyledButton разом із рештою трьох',
+	'start-game-btn': 'екран локальної гри — той самий прохід',
+	'player-type-btn': 'екран локальної гри — той самий прохід',
+	'remove-player-btn': 'екран локальної гри, кнопка «×» — потрібен свій розмір',
+	'custom-dropdown-btn': 'кнопка вибору теми в головному меню',
+	'inline-link-button': 'посилання в тексті правил — вигляд тексту, а не кнопки',
+	'test-mode-square-btn': 'панель тестового режиму, лише dev'
+};
+
+describe('кнопка має відгук на натискання (UI-ELEMENTS-v8 § 1)', () => {
+	it('перевірка жива: класи-кнопки знайдено', () => {
+		expect(
+			buttonClasses.size,
+			'жодного класу, що виглядає кнопкою — розбір CSS зламався'
+		).toBeGreaterThan(30);
+	});
+
+	it('перевірка жива: у більшості кнопок стани Є', () => {
+		// Без цього рядка зламаний пошук станів дав би «усі без відгуку», і
+		// перелік винятків розрісся б до всього проєкту.
+		expect(
+			buttonClasses.size - withoutState.length,
+			'стани не знайдено ні в кого — регулярка станів зламана'
+		).toBeGreaterThan(20);
+	});
+
+	it('жодна кнопка без hover/active/focus-visible не зʼявилася поза переліком', () => {
+		const unlisted = withoutState
+			.filter((cls) => !(cls in KNOWN_WITHOUT_FEEDBACK))
+			.map((cls) => `.${cls} → ${buttonClasses.get(cls)?.file}`);
+		expect(
+			unlisted,
+			'натискання без відгуку не видно ніяк, окрім пальцем; ' +
+				'усі три стани описані один раз у styled-button.css — ' +
+				`беріть StyledButton замість власної кнопки:\n${unlisted.join('\n')}`
+		).toEqual([]);
+	});
+
+	it('перелік винятків не містить уже полагоджених класів', () => {
+		const stale = Object.keys(KNOWN_WITHOUT_FEEDBACK).filter((cls) => !withoutState.includes(cls));
+		expect(
+			stale,
+			`клас уже має стани або зник — приберіть рядок із переліку:\n${stale.join('\n')}`
+		).toEqual([]);
+	});
+});

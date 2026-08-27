@@ -58,5 +58,6 @@ export default {
     'distance-8': "Mesafe 8"
   },
   distanceSelection: "Mesafeni sayla",
-  resetToDefaults: "Standartlarğa qaytar"
+  resetToDefaults: "Standartlarğa qaytar",
+  resetDone: "Qısqa yollar standartlarğa qaytarıldı"
 };

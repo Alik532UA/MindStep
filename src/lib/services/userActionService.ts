@@ -16,6 +16,7 @@ import ReplayViewer from '$lib/components/ReplayViewer.svelte';
 import { gameEventBus } from './gameEventBus';
 import { modalService } from './modalService';
 import { navigateToGame } from './uiService';
+import { notificationService } from './notificationService';
 
 let lastMoveTimestamp: number = 0;
 const MOVE_COOLDOWN_MS = 250; // Чверть секунди для запобігання деренчанню
@@ -304,8 +305,30 @@ export const userActionService = {
     gameSettingsState.toggleSpeech();
   },
 
+  /**
+   * Скидання гарячих клавіш до стандартних.
+   *
+   * ## Чому тут є тост, а не тільки зміна стану
+   *
+   * Дія ІДЕМПОТЕНТНА: якщо призначення вже стандартні — а це найчастіший стан, —
+   * після натискання на екрані не змінюється НІЧОГО. Тобто навіть правильно
+   * підсвічена кнопка лишає людину без відповіді на питання «воно спрацювало?».
+   *
+   * Тост тут — не окраса, а єдиний спосіб відрізнити «скинуто» від «клік не
+   * дійшов». Той самий механізм, що вже підтверджує надсилання відгуку
+   * (`feedbackService`), тож нового нічого не заводиться.
+   *
+   * Підтвердження живе в СЕРВІСІ, а не в компоненті: наступний виклик цієї дії
+   * (з іншого екрана, з гарячої клавіші) отримає його даром, а не забуде.
+   */
   resetKeybindings(): void {
     gameSettingsState.resetKeybindings();
+    logService.action('[UserAction] Keybindings reset to defaults');
+    notificationService.show({
+      type: 'success',
+      messageKey: 'controlsPage.resetDone',
+      duration: 3000
+    });
   },
 
   setGameModePreset(preset: GameModePreset): void {

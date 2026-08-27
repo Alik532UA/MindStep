@@ -65,6 +65,7 @@ export interface TranslationSchema {
     };
     distanceSelection: string;
     resetToDefaults: string;
+    resetDone: string;
   };
   dndTest: {
     setRed: string;

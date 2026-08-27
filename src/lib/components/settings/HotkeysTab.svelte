@@ -7,6 +7,7 @@
   import { userActionService } from "$lib/services/userActionService";
   import { modalStateRune } from "$lib/stores/modalState.svelte";
   import KeybindingButton from "./KeybindingButton.svelte";
+  import StyledButton from "$lib/components/ui/StyledButton.svelte";
   import { actionGroups } from "$lib/config/hotkeyConfig";
 
   let listeningFor = $state<{ action: KeybindingAction; index: number } | null>(null);
@@ -115,9 +116,35 @@
     {#if conflicts.size > 0}
       <p class="conflict-warning">{$t("controlsPage.keyConflict")}</p>
     {/if}
-    <button class="reset-button" onclick={userActionService.resetKeybindings}>
-      {$t("controlsPage.resetToDefaults")}
-    </button>
+    <!--
+      `StyledButton`, а не власна кнопка — і це не косметика.
+
+      Доти тут стояв `<button class="reset-button">`, у якого в стилях були лише
+      `padding`, `background` і `cursor: pointer`. Ні `:hover`, ні `:active`, ні
+      `:focus-visible` — тобто натискання не давало ЖОДНОГО відгуку: людина не
+      бачила, що кнопка спрацювала, а той, хто ходить Tab-ом, не бачив навіть,
+      де він стоїть.
+
+      Усі три стани вже описані один раз у `styled-button.css`
+      (`:active` — `translateY(1px)`, `:hover` — підйом і `brightness(1.1)`,
+      `:focus-visible` — рамка 3px). Дописувати їх тут четвертим місцем означало
+      б четвертий набір, який розійдеться з рештою; варіант `warning` дає ще й
+      ті самі кольори, які ця кнопка й так вживала (`--warning-action-bg/-text`).
+
+      Обгортка потрібна, бо `.styled-button` — `width: 100%`: `inline-block`
+      стискає її до вмісту, і кнопка лишається такою ж, як була. Клас на
+      обгортці, а не переданий у компонент: scoped-стиль Svelte не доїжджає до
+      елемента, який малює інший компонент.
+    -->
+    <div class="reset-button-wrapper">
+      <StyledButton
+        variant="warning"
+        onclick={userActionService.resetKeybindings}
+        dataTestId="hotkeys-reset-btn"
+      >
+        {$t("controlsPage.resetToDefaults")}
+      </StyledButton>
+    </div>
   </div>
 </div>
 
@@ -198,14 +225,8 @@
     margin-bottom: 1rem;
   }
 
-  .reset-button {
-    padding: 0.75rem 1.5rem;
-    background: var(--warning-action-bg);
-    color: var(--warning-action-text);
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
+  .reset-button-wrapper {
+    display: inline-block;
   }
 
   .press-key-hint {

@@ -58,5 +58,6 @@ export default {
     'distance-8': "Distance 8"
   },
   distanceSelection: "Distance Selection",
-  resetToDefaults: "Reset to Defaults"
+  resetToDefaults: "Reset to Defaults",
+  resetDone: "Hotkeys reset to defaults"
 };

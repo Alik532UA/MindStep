@@ -58,5 +58,6 @@ export default {
     'distance-8': "Відстань 8"
   },
   distanceSelection: "Вибір відстані",
-  resetToDefaults: "Скинути до стандартних"
+  resetToDefaults: "Скинути до стандартних",
+  resetDone: "Гарячі клавіші скинуто до стандартних"
 };
