@@ -41,6 +41,18 @@
     --control-selected-text: #2c001e;
     --confirm-btn-text: #fff;
     --no-moves-btn-text: #222;
+
+    /* Перенесено з другого блоку `[data-theme="dark"]`, який стояв нижче в
+       цьому ж файлі. Токени не перетиналися, тож перенос дослівний: обчислені
+       значення до й після ідентичні (доведено знімком). */
+    --confirm-action-bg: #43a047;
+    --confirm-action-text: #ffffff;
+    --warning-action-bg: #ffb300;
+    --warning-action-text: #2c001e;
+    --info-action-bg: #a259e6;
+    --info-action-text: #ffffff;
+    --disabled-bg: #3f0037;
+    --disabled-text: #77216f;
 }
 
 /* Стилі для стрілок у Purple темі */
@@ -83,14 +95,14 @@
     --info-action-text: #ffffff;
     --disabled-bg: #e0c3fc; --disabled-text: #9370db;
 }
-[data-style="purple"][data-theme="dark"] {
-    --confirm-action-bg: #43a047;
-    --confirm-action-text: #ffffff;
-    --warning-action-bg: #ffb300;
-    --warning-action-text: #2c001e;
-    --info-action-bg: #a259e6;
-    --info-action-text: #ffffff;
-    --disabled-bg: #3f0037; --disabled-text: #77216f;
-}
 
-/* Темна тема не змінювати! */
+/*
+   Темна тема не змінювати!
+
+   Підтверджено автором 2026-08-28: баклажанова палітра лишається, і саме вона
+   стане «звичайною» темою, коли зʼявиться третя. Нова, глибша темна робиться
+   окремим блоком, а ця не переписується.
+
+   Блок теми тепер ОДИН на комбінацію стиль×тема (був другий, нижче в цьому
+   файлі) — інваріант `src/theme-tokens.spec.ts` це тримає.
+*/
