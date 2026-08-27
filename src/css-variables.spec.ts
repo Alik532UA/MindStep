@@ -535,3 +535,138 @@ describe('колірні властивості не залежать від н�
 		).toEqual([]);
 	});
 });
+
+/* -------------------------------------------------------------------------
+ * Токен палітри без жодного споживача — оголошення, яке нічого не малює.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Зворотний бік першого класу цього файлу.
+ *
+ * Перевірка вище йде від ВЖИВАННЯ до оголошення: `var(--x)` мусить десь бути
+ * оголошений. Ця — навпаки: токен, оголошений у шарі палітри, мусить хтось
+ * споживати. Обидва напрямки потрібні, і другий стає дорогим саме зараз.
+ *
+ * ## Чому це не косметика, а множник
+ *
+ * Заміряно 2026-08-28: із 73 токенів палітри **15 не має жодного споживача** —
+ * пʼята частина. Пʼять із них оголошені в БАЗІ Й УСІХ ШЕСТИ файлах тем:
+ * `--cell-blocked`, `--confirm-btn-text`, `--disabled-text`,
+ * `--no-moves-btn-hover`, `--no-moves-btn-text`.
+ *
+ * Проєкт додає третю тему. Без цього гейта вона додасть ще **30 оголошень, які
+ * не малюють нічого** — і кожне з них вимагатиме колірного рішення, витраченого
+ * даремно.
+ *
+ * ## Чому частина з них мертві, і це не «зайвий токен»
+ *
+ * `--no-moves-btn-text` і `--confirm-btn-text` мертві не тому, що не потрібні, а
+ * тому, що CSS вписав літерали замість них: `[data-style="gray"] .no-moves-btn`
+ * має `color: #232323`, а `[data-style="orange"]` — `#202124`. Тобто палітра
+ * оголошує токен на кожен стиль, а компонент його ІГНОРУЄ, і колір тексту
+ * кнопки не залежить від теми взагалі.
+ *
+ * Правильний вихід для них — не видалення, а підключення (`var(--no-moves-btn-text)`).
+ * Це змінює вигляд у частині тем, тож робиться окремо, а не разом із темою.
+ *
+ * ## Форма — ратчет, а не заборона
+ *
+ * Усі 15 записані нижче з місцем оголошення. Список лише СКОРОЧУЄТЬСЯ: новий
+ * мертвий токен валить прогін, а прибраний мусить піти й із переліку.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): дописати
+ * `--brand-new-token: #f00;` у `base/variables.css` — перевірка називає токен і
+ * файл.
+ */
+const PALETTE_FILES = [
+	'src/lib/css/base/variables.css',
+	...['gray', 'blue', 'green', 'orange', 'purple', 'wood'].map(
+		(s) => `src/lib/css/themes/${s}.css`
+	)
+];
+
+/**
+ * Токени палітри без споживача. Перелік іменований і кінцевий.
+ *
+ * Пʼять перших — оголошені в базі й усіх шести темах; саме вони й помножилися б
+ * на третю тему. Решта — залишки: `--font-family`, `--text-shadow` і
+ * `--modal-bg` не спожиті ніде, а `--modal-bg` при цьому оголошений у чотирьох
+ * місцях.
+ */
+const KNOWN_DEAD_TOKENS: readonly string[] = [
+	'--arrow-color',
+	'--button-text-color',
+	'--cell-blocked',
+	'--confirm-btn-text',
+	'--crown-shadow',
+	'--debug-btn-bg',
+	'--debug-btn-hover',
+	'--disabled-text',
+	'--font-family',
+	'--modal-bg',
+	'--modal-body-color',
+	'--modal-header-color',
+	'--no-moves-btn-hover',
+	'--no-moves-btn-text',
+	'--text-shadow'
+];
+
+describe('токени палітри мають споживача (UI-UX-v8 § 16, зворотний бік)', () => {
+	const declaredIn = new Map<string, string[]>();
+	for (const file of PALETTE_FILES) {
+		for (const m of stripComments(readFileSync(file, 'utf8')).matchAll(/(--[\w-]+)\s*:/g)) {
+			declaredIn.set(m[1], [...(declaredIn.get(m[1]) ?? []), file]);
+		}
+	}
+
+	/**
+	 * Споживачі — будь-де в `src/`, окрім самих файлів палітри й перевірок.
+	 * Аліас усередині палітри (`--accent-color: var(--control-selected)`) теж
+	 * робить токен живим, тож палітра читається й на вживання.
+	 */
+	const consumed = new Set<string>();
+	for (const file of walk(ROOT)) {
+		if (!/\.(css|svelte|html|ts|js)$/.test(file)) continue;
+		if (/\.(spec|test)\.ts$/.test(file)) continue;
+		const source = stripComments(readFileSync(file, 'utf8'));
+		for (const m of source.matchAll(/var\(\s*(--[\w-]+)/g)) consumed.add(m[1]);
+		for (const m of source.matchAll(/setProperty\(\s*['"`](--[\w-]+)/g)) consumed.add(m[1]);
+	}
+
+	const dead = [...declaredIn.keys()].filter((t) => !consumed.has(t)).sort();
+
+	it('перевірка жива: шар палітри прочитано з обох боків', () => {
+		expect(declaredIn.size, 'токенів палітри не знайдено').toBeGreaterThan(50);
+		expect(consumed.size, 'жодного var(--x) у джерелах — сканер шукає не там').toBeGreaterThan(
+			50
+		);
+	});
+
+	it('перевірка жива: більшість токенів палітри жива', () => {
+		// Без цього рядка зламаний пошук споживачів оголосив би мертвими всі 73,
+		// і перелік винятків розрісся б до цілої палітри.
+		expect(
+			declaredIn.size - dead.length,
+			'живих токенів майже немає — регулярка споживачів зламана'
+		).toBeGreaterThan(40);
+	});
+
+	it('новий токен без споживача не зʼявився', () => {
+		const unexpected = dead
+			.filter((t) => !KNOWN_DEAD_TOKENS.includes(t))
+			.map((t) => `${t} — оголошено в ${declaredIn.get(t)?.length} файлах, спожито 0 разів`);
+		expect(
+			unexpected,
+			'оголошення, яке нічого не малює; на третій темі кожне таке множиться на шість:\n' +
+				unexpected.join('\n')
+		).toEqual([]);
+	});
+
+	it('перелік мертвих токенів не застарів', () => {
+		const revived = KNOWN_DEAD_TOKENS.filter((t) => !dead.includes(t));
+		expect(
+			revived,
+			`токен уже спожитий або прибраний — приберіть рядок із переліку:\n${revived.join('\n')}`
+		).toEqual([]);
+	});
+});
