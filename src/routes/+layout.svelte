@@ -114,7 +114,15 @@
 		 * виходить, поки фокус у полі, і не реагує на `Ctrl+T`.
 		 */
 		hotkeyService.register("global", "KeyT", () => {
-			const next = appSettingsState.state.theme === "dark" ? "light" : "dark";
+			/*
+			 * ЦИКЛ ІЗ ТРЬОХ, а не перемикач. Тем стало три (2026-08-28), і
+			 * порядок тут той самий, що в пікері зліва праворуч: сонце →
+			 * назва → місяць. Людина, яка звикла до вигляду списку, не мусить
+			 * вгадувати, куди веде клавіша.
+			 */
+			const order = ["light", "normal", "dark"] as const;
+			const current = appSettingsState.state.theme as (typeof order)[number];
+			const next = order[(order.indexOf(current) + 1) % order.length];
 			logService.ui(`Зміна теми клавішею: ${next}`);
 			appSettingsState.updateSettings({ theme: next });
 		});

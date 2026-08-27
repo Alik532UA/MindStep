@@ -33,6 +33,51 @@
 }
 
 /* Дерев'яний стиль - Темна тема */
+/*
+   НОВА ЗВИЧАЙНА тема стилю «wood».
+
+   Темна лишається дослівно тією, що була — за мапінгом автора. Ця тема стоїть
+   МІЖ світлою й темною.
+
+   Зсув t=0.54 підібраний РОЗВʼЯЗУВАЧЕМ, а не на око: при рівній середині
+   (t=0.5) поверхні сідають на L≈0.5, і проти такої пари 4.5:1 не дає ЖОДЕН
+   колір тексту — чорний тримає одну поверхню й провалює другу, білий навпаки.
+   Тому взято найближчий до середини зсув, за якого розвʼязок існує.
+*/
+[data-style="wood"][data-theme="normal"] {
+    --bg-primary: linear-gradient(120deg, #7c7166 0%, #66584e 100%);
+    --bg-secondary: #7c7166;
+    --text-primary: #fff8f1;
+    --text-secondary: #fff9f2;
+    --text-accent: #fff9f5;
+    --border-color: #8e6745;
+    --shadow-color: rgba(89, 63, 37, 0.28);
+    --cell-light: #7d6146;
+    --cell-dark: #553a24;
+    --cell-blocked: #9a7a54;
+    --piece-color: #a5855e;
+    --piece-shadow: rgba(89, 63, 37, 0.3);
+    --control-bg: #6f6052;
+    --control-hover: #7d6146;
+    --control-selected: #a08059;
+    --control-selected-text: #241d15;
+    --confirm-btn-bg: #69472e;
+    --confirm-btn-hover: #a08059;
+    --confirm-btn-text: #f9f4eb;
+    --no-moves-btn-bg: #6f6052;
+    --no-moves-btn-hover: #7d6146;
+    --no-moves-btn-text: #a38e78;
+    --arrow-color: #a38e78;
+    --confirm-action-bg: #739663;
+    --confirm-action-text: #2c251d;
+    --warning-action-bg: #e5c960;
+    --warning-action-text: #5c554b;
+    --info-action-bg: #b18153;
+    --info-action-text: #2a231b;
+    --disabled-bg: #6f6052;
+    --disabled-text: #7c5c3b;
+}
+
 [data-style="wood"][data-theme="dark"] {
     --bg-primary: linear-gradient(120deg, #231407 0%, #0d0502 100%);
     --bg-secondary: #231407;

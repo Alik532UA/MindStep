@@ -13,6 +13,7 @@ export default {
   theme: "Tema",
   themeDark: "Qaranlıq",
   themeLight: "Aydın",
+  themeNormal: "Standart",
   style: "Stil",
   stylePurple: "Menekşe",
   styleGreen: "Yeşil",

@@ -33,7 +33,8 @@
 }
 
 /* Сірий стиль - Темна тема */
-[data-style="gray"][data-theme="dark"] {
+/* Була темною до 2026-08-28; значення НЕ змінені, змінена лише назва теми. */
+[data-style="gray"][data-theme="normal"] {
     --bg-primary: linear-gradient(120deg, #23272f 0%, #43464e 100%);
     --bg-secondary: #23272f;
     --text-primary: #fff;
@@ -66,6 +67,55 @@
     --disabled-text: #b0b0b0;
     --toggle-off-bg: #23272f;
 }
+
+/*
+   НОВА ТЕМНА тема стилю «gray».
+
+   Нинішня темна стала «звичайною» (normal) — за мапінгом автора: те, що люди
+   бачать сьогодні, лишається дослівно й лише отримує нову назву. Ця тема
+   глибша за неї.
+
+   Виведена зсувом світлості в OKLCH від пари світла↔звичайна: t=0.62, тобто
+   на 45% ДАЛІ за звичайну по тій самій осі. Відтінок і насиченість
+   інтерполюються по короткій дузі, насиченість затискається під sRGB.
+
+   Кольори тексту потім підтягнуті розвʼязувачем під 4.5:1 (графіка — 3:1)
+   проти власних поверхонь; поверхні не чіпалися.
+*/
+[data-style="gray"][data-theme="dark"] {
+    --bg-primary: linear-gradient(120deg, #0c0f16 0%, #1e2027 100%);
+    --bg-secondary: #0c0f16;
+    --text-primary: #fff;
+    --text-secondary: #b0b0b0;
+    --text-accent: #e0e0e0;
+    --border-color: #b0b0b0;
+    --shadow-color: rgba(67, 70, 78, 0.18);
+    --cell-light: #3b3f47;
+    --cell-dark: #1e2027;
+    --cell-blocked: #5b5b5b;
+    --piece-color: #b0b0b0;
+    --piece-shadow: rgba(176, 176, 176, 0.3);
+    --control-bg: #1e2027;
+    --control-hover: #5b5b5b;
+    --control-selected: #757575;
+    --control-selected-text: #010206;
+    --confirm-btn-bg: #5b5b5b;
+    --confirm-btn-hover: #757575;
+    --no-moves-btn-bg: #1e2027;
+    --no-moves-btn-hover: #5b5b5b;
+    --confirm-btn-text: #fff;
+    --no-moves-btn-text: #fff;
+    --confirm-action-bg: #02550f;
+    --confirm-action-text: #ffffff;
+    --warning-action-bg: #865c03;
+    --warning-action-text: #dbe1ec;
+    --info-action-bg: #4a5d68;
+    --info-action-text: #cdd2dd;
+    --disabled-bg: #1e2027;
+    --disabled-text: #b0b0b0;
+    --toggle-off-bg: #0c0f16;
+}
+
 
 /* Gray ефекти */
 [data-style="gray"] .modal-window .modal-content,

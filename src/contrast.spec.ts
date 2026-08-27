@@ -47,7 +47,7 @@ import { KNOWN_CONTRAST_DEBT, CONTRAST_SKIPS } from './contrast-baseline';
  */
 
 const STYLES = ['gray', 'blue', 'green', 'orange', 'purple', 'wood'] as const;
-const THEMES = ['light', 'dark'] as const;
+const THEMES = ['light', 'normal', 'dark'] as const;
 const BASE = 'src/lib/css/base/variables.css';
 const THEME_DIR = 'src/lib/css/themes';
 
@@ -83,7 +83,8 @@ function blockVars(css: string, match: (selector: string) => boolean): Record<st
 
 const baseCss = strip(readFileSync(BASE, 'utf8'));
 const rootTokens = blockVars(baseCss, (s) => s === ':root');
-const darkTokens = blockVars(baseCss, (s) => s === '[data-theme="dark"]');
+// Базовий темний шар оголошений СПИСКОМ селекторів — він покриває й `normal`.
+const darkTokens = blockVars(baseCss, (s) => /^\[data-theme="dark"\],?\s*(\[data-theme="normal"\])?$/.test(s));
 
 /**
  * Каскад для пари (стиль, тема): `:root` → `[data-theme="dark"]` → блок стилю.
@@ -94,7 +95,9 @@ function tokensFor(style: string, theme: Theme): Record<string, string> {
 	const themeCss = strip(readFileSync(`${THEME_DIR}/${style}.css`, 'utf8'));
 	return {
 		...rootTokens,
-		...(theme === 'dark' ? darkTokens : {}),
+		// `normal` бере ТОЙ САМИЙ базовий темний шар, що й `dark`: у `app.html`
+		// вона оголошує `color-scheme: dark`, і базовий блок у CSS один на обидві.
+		...(theme === 'light' ? {} : darkTokens),
 		...blockVars(themeCss, (s) => s === `[data-style="${style}"][data-theme="${theme}"]`)
 	};
 }
@@ -139,7 +142,13 @@ function resolveValue(
 	if (lightDark) {
 		const args = splitArgs(lightDark[1]);
 		if (args.length !== 2) return null;
-		return resolveValue(theme === 'dark' ? args[1] : args[0], tokens, theme, depth + 1);
+		/*
+		 * Тем три, а `light-dark()` двоаргументна. `normal` оголошує
+		 * `color-scheme: dark` (`app.html`), тож браузер віддає їй ДРУГИЙ
+		 * аргумент — так само, як темній. Без цього рядка розвʼязувач брав би
+		 * світлий і мовчки міряв не те.
+		 */
+		return resolveValue(theme === 'light' ? args[0] : args[1], tokens, theme, depth + 1);
 	}
 
 	const use = /^var\(\s*(--[\w-]+)\s*(?:,([\s\S]+))?\)$/.exec(v);

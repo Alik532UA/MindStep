@@ -34,6 +34,52 @@
 }
 
 /* Синя тема - Темна */
+/*
+   НОВА ЗВИЧАЙНА тема стилю «blue».
+
+   Темна лишається дослівно тією, що була — за мапінгом автора. Ця тема стоїть
+   МІЖ світлою й темною.
+
+   Зсув t=0.5 підібраний РОЗВʼЯЗУВАЧЕМ, а не на око: при рівній середині
+   (t=0.5) поверхні сідають на L≈0.5, і проти такої пари 4.5:1 не дає ЖОДЕН
+   колір тексту — чорний тримає одну поверхню й провалює другу, білий навпаки.
+   Тому взято найближчий до середини зсув, за якого розвʼязок існує.
+*/
+[data-style="blue"][data-theme="normal"] {
+    --bg-primary: linear-gradient(120deg, #727e8d 0%, #6a778c 100%);
+    --bg-secondary: #727e8d;
+    --text-primary: #0b131f;
+    --text-secondary: #01122f;
+    --text-accent: #001133;
+    --border-color: #4375c1;
+    --shadow-color: rgba(42, 92, 167, 0.22);
+    --cell-light: #4c658f;
+    --cell-dark: #273552;
+    --cell-blocked: #7285a3;
+    --piece-color: #5480bb;
+    --piece-shadow: rgba(42, 92, 167, 0.3);
+    --control-bg: #6e82a1;
+    --control-hover: #597297;
+    --control-selected: #4375c1;
+    --control-selected-text: #f6fffc;
+    --confirm-btn-bg: #284780;
+    --confirm-btn-hover: #4c6ba2;
+    --no-moves-btn-bg: #67768f;
+    --no-moves-btn-hover: #4c658f;
+    --arrow-color: #788393;
+    --confirm-btn-text: #ffffff;
+    --no-moves-btn-text: #eaf3fb;
+    --confirm-action-bg: #47a74b;
+    --confirm-action-text: #2d2d2d;
+    --warning-action-bg: #ffba01;
+    --warning-action-text: #151e31;
+    --info-action-bg: #4375c1;
+    --info-action-text: #ffffff;
+    --disabled-bg: #6e82a1;
+    --disabled-text: #597297;
+    --toggle-off-bg: #101a2c;
+}
+
 [data-style="blue"][data-theme="dark"] {
     --bg-primary: linear-gradient(120deg, #101a2c 0%, #1a2236 100%);
     --bg-secondary: #101a2c;

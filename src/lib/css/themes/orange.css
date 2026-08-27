@@ -33,7 +33,8 @@
 }
 
 /* Помаранчевий стиль - Темна тема */
-[data-style="orange"][data-theme="dark"] {
+/* Була темною до 2026-08-28; значення НЕ змінені, змінена лише назва теми. */
+[data-style="orange"][data-theme="normal"] {
     --bg-primary: linear-gradient(120deg, #ff6f00 0%, #e65100 100%);
     --bg-secondary: #ff6f00;
     --text-primary: #fff;
@@ -65,6 +66,54 @@
     --disabled-bg: #e65100;
     --disabled-text: #ffd180;
 }
+
+/*
+   НОВА ТЕМНА тема стилю «orange».
+
+   Нинішня темна стала «звичайною» (normal) — за мапінгом автора: те, що люди
+   бачать сьогодні, лишається дослівно й лише отримує нову назву. Ця тема
+   глибша за неї.
+
+   Виведена зсувом світлості в OKLCH від пари світла↔звичайна: t=0.62, тобто
+   на 45% ДАЛІ за звичайну по тій самій осі. Відтінок і насиченість
+   інтерполюються по короткій дузі, насиченість затискається під sRGB.
+
+   Кольори тексту потім підтягнуті розвʼязувачем під 4.5:1 (графіка — 3:1)
+   проти власних поверхонь; поверхні не чіпалися.
+*/
+[data-style="orange"][data-theme="dark"] {
+    --bg-primary: linear-gradient(120deg, #863701 0%, #782701 100%);
+    --bg-secondary: #863701;
+    --text-primary: #fff;
+    --text-secondary: #ffd180;
+    --text-accent: #ffb14c;
+    --border-color: #ffa726;
+    --shadow-color: rgba(255, 167, 38, 0.18);
+    --cell-light: #884403;
+    --cell-dark: #782701;
+    --cell-blocked: #875504;
+    --piece-color: #ffa726;
+    --piece-shadow: rgba(255, 167, 38, 0.5);
+    --control-bg: #782701;
+    --control-hover: #875504;
+    --control-selected: #926804;
+    --control-selected-text: #fff2e8;
+    --confirm-btn-bg: #875504;
+    --confirm-btn-hover: #926804;
+    --confirm-btn-text: #6d3a00;
+    --no-moves-btn-bg: #782701;
+    --no-moves-btn-hover: #875504;
+    --no-moves-btn-text: #fff;
+    --confirm-action-bg: #026718;
+    --confirm-action-text: #cecece;
+    --warning-action-bg: #865c03;
+    --warning-action-text: #e2e2e2;
+    --info-action-bg: #117194;
+    --info-action-text: #eaeaea;
+    --disabled-bg: #782701;
+    --disabled-text: #ffd180;
+}
+
 
 /* Загальні стилі для Orange, що визначають "підняття" елементів */
 [data-style="orange"] .game-board,

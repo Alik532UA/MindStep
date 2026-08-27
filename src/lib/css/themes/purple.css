@@ -21,7 +21,8 @@
     --confirm-btn-text: #fff;
 }
 
-[data-style="purple"][data-theme="dark"] {
+/* Була темною до 2026-08-28; значення НЕ змінені, змінена лише назва теми. */
+[data-style="purple"][data-theme="normal"] {
     --bg-primary: linear-gradient(135deg, #2c001e 0%, #77216f 60%, #e95420 100%);
     --bg-secondary: rgba(60,0,50,0.92);
     --modal-content-bg: #3f0037;
@@ -72,6 +73,55 @@
     --disabled-bg: #3f0037;
     --disabled-text: #77216f;
 }
+
+/*
+   НОВА ТЕМНА тема стилю «purple».
+
+   Нинішня темна стала «звичайною» (normal) — за мапінгом автора: те, що люди
+   бачать сьогодні, лишається дослівно й лише отримує нову назву. Ця тема
+   глибша за неї.
+
+   Виведена зсувом світлості в OKLCH від пари світла↔звичайна: t=0.62, тобто
+   на 45% ДАЛІ за звичайну по тій самій осі. Відтінок і насиченість
+   інтерполюються по короткій дузі, насиченість затискається під sRGB.
+
+   Кольори тексту потім підтягнуті розвʼязувачем під 4.5:1 (графіка — 3:1)
+   проти власних поверхонь; поверхні не чіпалися.
+*/
+[data-style="purple"][data-theme="dark"] {
+    --bg-primary: linear-gradient(135deg, #13000b 0%, #40003b 60%, #7d2301 100%);
+    --bg-secondary: rgba(27, 0, 21, 0.92);
+    --modal-content-bg: #1c0018;
+    --modal-bg: #13000b;
+    --text-primary: #fff;
+    --text-secondary: #f0e8f2;
+    --text-accent: #ffb300;
+    --text-shadow: 0 2px 16px #e95420cc;
+    --control-selected: #7d2301;
+    --control-bg: #40003b;
+    --border-color: #e9542080;
+    --shadow-color: #e9542033;
+    --cell-light: #331332;
+    --cell-dark: #270e26;
+    --confirm-btn-bg: #7d2301;
+    --no-moves-btn-bg: #865c03;
+    --control-selected-text: #d99dbf;
+    --confirm-btn-text: #fff;
+    --no-moves-btn-text: #222;
+    --control-hover: #580152;
+    --confirm-btn-hover: #6d1d00;
+    --piece-color: #f8ae02;
+    --piece-shadow: rgba(0, 0, 0, 0.55);
+    --confirm-action-bg: #02550f;
+    --confirm-action-text: #ffffff;
+    --warning-action-bg: #865c03;
+    --warning-action-text: #ffd5ec;
+    --info-action-bg: #5c0094;
+    --info-action-text: #ffffff;
+    --disabled-bg: #1c0018;
+    --disabled-text: #77216f;
+}
+
 
 /* Стилі для стрілок у Purple темі */
 [data-style="purple"] .control-btn,

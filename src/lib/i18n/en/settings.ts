@@ -13,6 +13,7 @@ export default {
   theme: "Theme",
   themeDark: "Dark",
   themeLight: "Light",
+  themeNormal: "Standard",
   style: "Style",
   stylePurple: "Purple",
   styleGreen: "Green",

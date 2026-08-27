@@ -30,7 +30,7 @@ import { readFileSync } from 'node:fs';
 const BASE = 'src/lib/css/base/variables.css';
 const THEME_DIR = 'src/lib/css/themes';
 const STYLES = ['gray', 'blue', 'green', 'orange', 'purple', 'wood'] as const;
-const THEMES = ['light', 'dark'] as const;
+const THEMES = ['light', 'normal', 'dark'] as const;
 
 const strip = (source: string): string => source.replace(/\/\*[\s\S]*?\*\//g, ' ');
 
@@ -46,7 +46,8 @@ function blockVars(css: string, match: (selector: string) => boolean): Record<st
 
 const baseCss = strip(readFileSync(BASE, 'utf8'));
 const rootTokens = blockVars(baseCss, (s) => s === ':root');
-const darkBaseTokens = blockVars(baseCss, (s) => s === '[data-theme="dark"]');
+// Базовий темний шар оголошений СПИСКОМ селекторів — він покриває й `normal`.
+const darkBaseTokens = blockVars(baseCss, (s) => /^\[data-theme="dark"\],?\s*(\[data-theme="normal"\])?$/.test(s));
 const styleCss = Object.fromEntries(
 	STYLES.map((style) => [style, strip(readFileSync(`${THEME_DIR}/${style}.css`, 'utf8'))])
 ) as Record<(typeof STYLES)[number], string>;
@@ -142,7 +143,11 @@ const KNOWN_ASYMMETRY: Readonly<Record<string, readonly string[]>> = {
 	 * замість того щоб приходити нічиєю специфічності.
 	 */
 	purple: [
+		// Обидві теми поза світлою не оголошують ці два МЕРТВІ токени; ключі
+		// оновлені 2026-08-28, коли нинішня темна стала «звичайною».
+		'normal:--cell-blocked',
 		'dark:--cell-blocked',
+		'normal:--no-moves-btn-hover',
 		'dark:--no-moves-btn-hover',
 		'light:--modal-bg',
 		'light:--text-shadow'

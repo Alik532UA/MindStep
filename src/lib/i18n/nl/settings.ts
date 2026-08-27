@@ -13,6 +13,7 @@ export default {
   theme: "Thema",
   themeDark: "Donker",
   themeLight: "Licht",
+  themeNormal: "Standaard",
   style: "Stijl",
   stylePurple: "Paars",
   styleGreen: "Groen",

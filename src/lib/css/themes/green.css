@@ -32,7 +32,8 @@
 }
 
 /* Зелений стиль - Темна тема */
-[data-style="green"][data-theme="dark"] {
+/* Була темною до 2026-08-28; значення НЕ змінені, змінена лише назва теми. */
+[data-style="green"][data-theme="normal"] {
     --bg-primary: linear-gradient(120deg, #1b4022 0%, #2e7d32 100%);
     --bg-secondary: #1b4022;
     --text-primary: #fff;
@@ -64,6 +65,55 @@
     --disabled-bg: #245c36; --disabled-text: #81c784;
     --toggle-off-bg: #1b4022;
 }
+
+/*
+   НОВА ТЕМНА тема стилю «green».
+
+   Нинішня темна стала «звичайною» (normal) — за мапінгом автора: те, що люди
+   бачать сьогодні, лишається дослівно й лише отримує нову назву. Ця тема
+   глибша за неї.
+
+   Виведена зсувом світлості в OKLCH від пари світла↔звичайна: t=0.62, тобто
+   на 45% ДАЛІ за звичайну по тій самій осі. Відтінок і насиченість
+   інтерполюються по короткій дузі, насиченість затискається під sRGB.
+
+   Кольори тексту потім підтягнуті розвʼязувачем під 4.5:1 (графіка — 3:1)
+   проти власних поверхонь; поверхні не чіпалися.
+*/
+[data-style="green"][data-theme="dark"] {
+    --bg-primary: linear-gradient(120deg, #001f07 0%, #004108 100%);
+    --bg-secondary: #001f07;
+    --text-primary: #fff;
+    --text-secondary: #b2f7b8;
+    --text-accent: #43a047;
+    --border-color: #43a047;
+    --shadow-color: rgba(67,160,71,0.18);
+    --cell-light: #005824;
+    --cell-dark: #004108;
+    --cell-blocked: #004a0b;
+    --piece-color: #43a047;
+    --piece-shadow: rgba(67,160,71,0.5);
+    --control-bg: #002e12;
+    --control-hover: #02550f;
+    --control-selected: #46884f;
+    --control-selected-text: #001103;
+    --confirm-btn-bg: #02550f;
+    --confirm-btn-hover: #46884f;
+    --no-moves-btn-bg: #002e12;
+    --no-moves-btn-hover: #004a0b;
+    --confirm-btn-text: #1b4022;
+    --no-moves-btn-text: #1b4022;
+    --confirm-action-bg: #026718;
+    --confirm-action-text: #b0dab5;
+    --warning-action-bg: #865202;
+    --warning-action-text: #b7e1bc;
+    --info-action-bg: #00668a;
+    --info-action-text: #b9e3bd;
+    --disabled-bg: #002e12;
+    --disabled-text: #81c784;
+    --toggle-off-bg: #001f07;
+}
+
 
 /* Спеціальні ефекти для GREEN стилю */
 [data-style="green"] .cell.piece {

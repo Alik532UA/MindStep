@@ -11,7 +11,7 @@ export type AppSettingsState = AppSettings;
 
 export const defaultAppSettings: AppSettingsState = {
     language: 'uk',
-    theme: 'dark',
+    theme: 'normal',
     style: 'gray',
 };
 
@@ -67,7 +67,9 @@ class AppSettingsStateRune {
                 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
                 const handleSystemThemeChange = (e: MediaQueryListEvent) => {
                     if (!storageService.get('theme')) {
-                        this.updateSettings({ theme: e.matches ? 'dark' : 'light' });
+                        // Системна перевага дає ПАРУ, а тем три: темна сторона
+                        // пари — `normal`, бо саме вона є типовим виглядом.
+                        this.updateSettings({ theme: e.matches ? 'normal' : 'light' });
                     }
                 };
                 mediaQuery.addEventListener('change', handleSystemThemeChange);

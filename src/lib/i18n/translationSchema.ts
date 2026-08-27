@@ -581,6 +581,7 @@ export interface TranslationSchema {
     theme: string;
     themeDark: string;
     themeLight: string;
+    themeNormal: string;
     style: string;
     stylePurple: string;
     styleGreen: string;

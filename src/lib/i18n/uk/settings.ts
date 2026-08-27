@@ -13,6 +13,7 @@ export default {
   theme: "Тема",
   themeDark: "Темна",
   themeLight: "Світла",
+  themeNormal: "Звичайна",
   style: "Стиль",
   stylePurple: "Фіолетова",
   styleGreen: "Зелена",

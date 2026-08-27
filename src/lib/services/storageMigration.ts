@@ -15,6 +15,8 @@ export function migrateStorage(): void {
     // Прохід самозавершний — коли переносити нічого, він нічого й не робить.
     migrateFlexibleMenuKeys();
 
+    migrateThemeToThreeThemes();
+
     // Якщо міграція вже була проведена, нічого не робимо
     if (storageService.get(MIGRATION_KEY)) return;
 
@@ -77,4 +79,50 @@ export function migrateFlexibleMenuKeys(): void {
         localStorage.removeItem(oldKey);
         logService.init(`[StorageMigration] Migrated: ${oldKey} -> ${PREFIX}${oldKey}`);
     }
+}
+
+/**
+ * Збережене `theme: 'dark'` → `'normal'` для чотирьох стилів із шести.
+ *
+ * ## Чому міграція ПО-СТИЛЮ, а не одним рядком
+ *
+ * З 2026-08-28 тем три, і мапінг НЕ однорідний (рішення автора):
+ *
+ * | стиль | нинішній темний вигляд | що з ним стало |
+ * |---|---|---|
+ * | purple, green, gray, orange | став «звичайним» | `dark` → `normal` |
+ * | blue, wood | лишився темним | `dark` лишається `dark` |
+ *
+ * Тобто людина, яка відкриє гру після оновлення, побачить РІВНО те, що бачила
+ * вчора; нова, глибша темна (або новий стандарт для blue/wood) лишається
+ * свідомим вибором, а не сюрпризом.
+ *
+ * Одним рядком це зробити не можна: `dark → normal` для всіх забрало б у тих,
+ * хто обрав темний blue або wood, саму темну тему.
+ *
+ * ## Чому прапорець окремий від `migrated_to_v5`
+ *
+ * Той прапорець уже стоїть майже в усіх браузерах — тобто гілка під ним не
+ * виконається. Ця міграція мусить пройти в кожного, тож має власний ключ і
+ * стоїть ДО перевірки старого прапорця.
+ */
+const THEME_MIGRATION_KEY = 'migrated_theme_three';
+
+/** Стилі, у яких нинішній темний вигляд отримав назву «звичайний». */
+const DARK_BECAME_NORMAL = ['purple', 'green', 'gray', 'orange'];
+
+function migrateThemeToThreeThemes(): void {
+    if (storageService.get(THEME_MIGRATION_KEY)) return;
+
+    const theme = storageService.get('theme');
+    const style = storageService.get('style');
+
+    if (theme === 'dark' && style !== null && DARK_BECAME_NORMAL.includes(style)) {
+        storageService.set('theme', 'normal');
+        logService.init(
+            `[StorageMigration] Тема dark → normal для стилю ${style}: вигляд не змінюється, змінюється лише назва`
+        );
+    }
+
+    storageService.set(THEME_MIGRATION_KEY, 'true');
 }

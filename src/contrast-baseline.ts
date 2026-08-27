@@ -1,9 +1,19 @@
 /**
  * Борг контрасту палітри — рядки, які лише ЗНИКАЮТЬ (ACCESSIBILITY-v8 § 6).
  *
- * Заміряно 2026-08-27 розвʼязувачем із `contrast.spec.ts`: дванадцять комбінацій
- * (шість стилів × дві теми), пари беруться з правил CSS, які оголошують і тло, і
- * колір тексту, і в яких ОБИДВА боки — токени теми.
+ * Перезаміряно 2026-08-28: **вісімнадцять** комбінацій (шість стилів × ТРИ
+ * теми). Пари беруться з правил CSS, які оголошують і тло, і колір тексту, і в
+ * яких ОБИДВА боки — токени теми.
+ *
+ * ## Що змінилося з появою третьої теми
+ *
+ * Двадцять чотири рядки ПЕРЕЇХАЛИ з `X/dark` на `X/normal` для purple, green,
+ * gray і orange: їхня нинішня темна тема стала «звичайною», значення дослівно ті
+ * самі, тож і борг той самий — лише під новою назвою.
+ *
+ * Шість НОВИХ блоків (нові темні для чотирьох стилів, нові звичайні для blue й
+ * wood) не додали ЖОДНОГО рядка: вони виведені генератором, у якому 4.5:1
+ * (графіка — 3:1) є умовою приймання, а не побажанням.
  *
  * ЩО ЦЕ ЗА ЧИСЛА. Поріг 4.5:1 — WCAG 1.4.3 для звичайного тексту. Виняток один
  * і названий у самому гейті: `--cell-dark -> --piece-color` — це фігура гри на
@@ -41,14 +51,11 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
 	'blue/dark --info-action-bg -> --info-action-text',
 	'blue/light --cell-dark -> --piece-color',
 	'blue/light --confirm-action-bg -> --confirm-action-text',
-	'gray/dark --confirm-action-bg -> --confirm-action-text',
 	'gray/light --bg-secondary -> --text-accent',
 	'gray/light --cell-dark -> --piece-color',
 	'gray/light --confirm-action-bg -> --confirm-action-text',
 	'gray/light --text-accent -> --bg-secondary',
-	'green/dark --bg-secondary -> --text-accent',
-	'green/dark --cell-dark -> --piece-color',
-	'green/dark --text-accent -> --bg-secondary',
+	'gray/normal --confirm-action-bg -> --confirm-action-text',
 	'green/light --bg-secondary -> --text-accent',
 	'green/light --bg-secondary -> --text-secondary',
 	'green/light --cell-dark -> --piece-color',
@@ -56,12 +63,9 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
 	'green/light --control-selected -> --control-selected-text',
 	'green/light --info-action-bg -> --info-action-text',
 	'green/light --text-accent -> --bg-secondary',
-	'orange/dark --bg-secondary -> --text-accent',
-	'orange/dark --bg-secondary -> --text-primary',
-	'orange/dark --bg-secondary -> --text-secondary',
-	'orange/dark --cell-dark -> --piece-color',
-	'orange/dark --control-bg -> --text-primary',
-	'orange/dark --text-accent -> --bg-secondary',
+	'green/normal --bg-secondary -> --text-accent',
+	'green/normal --cell-dark -> --piece-color',
+	'green/normal --text-accent -> --bg-secondary',
 	'orange/light --bg-secondary -> --text-accent',
 	'orange/light --bg-secondary -> --text-secondary',
 	'orange/light --cell-dark -> --piece-color',
@@ -70,13 +74,19 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
 	'orange/light --info-action-bg -> --info-action-text',
 	'orange/light --text-accent -> --bg-secondary',
 	'orange/light --warning-action-bg -> --warning-action-text',
-	'purple/dark --confirm-action-bg -> --confirm-action-text',
-	'purple/dark --info-action-bg -> --info-action-text',
+	'orange/normal --bg-secondary -> --text-accent',
+	'orange/normal --bg-secondary -> --text-primary',
+	'orange/normal --bg-secondary -> --text-secondary',
+	'orange/normal --cell-dark -> --piece-color',
+	'orange/normal --control-bg -> --text-primary',
+	'orange/normal --text-accent -> --bg-secondary',
 	'purple/light --bg-secondary -> --text-accent',
 	'purple/light --cell-dark -> --piece-color',
 	'purple/light --confirm-action-bg -> --confirm-action-text',
 	'purple/light --control-selected -> --control-selected-text',
 	'purple/light --text-accent -> --bg-secondary',
+	'purple/normal --confirm-action-bg -> --confirm-action-text',
+	'purple/normal --info-action-bg -> --info-action-text',
 	'wood/dark --bg-secondary -> --text-accent',
 	'wood/dark --text-accent -> --bg-secondary',
 	'wood/light --bg-secondary -> --text-accent',
@@ -98,4 +108,4 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
  *
  * Числа заміряні 2026-08-27. Зростання означає, що з-під гейта пішли нові пари.
  */
-export const CONTRAST_SKIPS = { alpha: 16, notColor: 48 } as const;
+export const CONTRAST_SKIPS = { alpha: 32, notColor: 72 } as const;
