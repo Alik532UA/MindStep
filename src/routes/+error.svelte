@@ -116,18 +116,40 @@ ${stack ? `\nStack:\n${stack}` : ""}
                                 .stack}</pre>
                     </div>
                 {/if}
-
-                <!-- Кнопка копіювання -->
-                <button
-                    class="copy-btn"
-                    class:success={copySuccess}
-                    onclick={copyError}
-                    data-testid="copy-error-btn"
-                >
-                    {copyButtonText}
-                </button>
             </div>
         {/if}
+
+        <!--
+            ЗВІТ — ОДИН НА ОБИДВА РЕЖИМИ.
+
+            Доти повідомлення, стек і кнопка копіювання жили всередині
+            `{#if isDev}`, тобто у продакшні екран не казав ні користувачеві, ні
+            розробникові нічого. Та сама зміна, з тієї самої причини, що й у
+            `components/ErrorBoundary.svelte` — обидва екрани показують те, що
+            стало не так, і обидва мусять це вміти передати.
+        -->
+        <details class="report" data-testid="error-report-panel">
+            <summary>Технічні деталі для звіту</summary>
+            <p class="report-hint">
+                Скопіюйте цей текст і надішліть разом зі скаргою — без нього
+                причину доведеться шукати навмання.
+            </p>
+            <button
+                class="copy-btn"
+                class:success={copySuccess}
+                onclick={copyError}
+                data-testid="copy-error-btn"
+            >
+                {copyButtonText}
+            </button>
+            <!--
+                Поле ПОРУЧ, а не замість кнопки: відмова буфера обміну не мусить
+                зʼїдати звіт (BETA-CHECKLIST-v8 `BETA-REPORT-FALLBACK`).
+            -->
+            <textarea class="report-text" readonly rows="8" data-testid="error-report-textarea"
+                >{getErrorText()}</textarea
+            >
+        </details>
 
         <!-- Кнопки навігації (завжди показуємо) -->
         <div class="action-buttons">
@@ -287,6 +309,59 @@ ${stack ? `\nStack:\n${stack}` : ""}
 
     .copy-btn.success {
         background: linear-gradient(135deg, #27ae60, #2ecc71);
+    }
+
+    /* === Звіт (обидва режими) === */
+    .report {
+        text-align: left;
+        margin: 1.5rem 0;
+        border: var(--global-border-width, 1px) solid
+            var(--border-color, rgba(255, 255, 255, 0.15));
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+    }
+
+    .report summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-secondary, #a0a0a0);
+    }
+
+    .report-hint {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--text-secondary, #a0a0a0);
+        margin: 0.75rem 0;
+    }
+
+    .report-text {
+        display: block;
+        width: 100%;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        box-sizing: border-box;
+        /*
+         * Тло — ТОКЕН, а не зашитий темний прошарок.
+         *
+         * Перша редакція мала `rgba(0, 0, 0, 0.3)`, як сусідні блоки dev-режиму.
+         * У них це працює, бо dev-секцію бачать лише на темній темі; тут ні:
+         * заміряно в браузері на зібраному сайті зі `data-theme="light"` —
+         * темний текст `#23272f` на темному прошарку давав 1.40:1. Тобто я
+         * повторив рівно той дефект, який цієї ж ночі лагодив в інших місцях
+         * (див. четвертий клас `GATE-CSS-VARS`).
+         *
+         * Літерали лишаються запасними: цей екран мусить малюватися й тоді, коли
+         * `app.css` не приїхав.
+         */
+        background: var(--control-bg, rgba(0, 0, 0, 0.3));
+        color: var(--text-primary, #ffffff);
+        border: var(--global-border-width, 1px) solid
+            var(--border-color, rgba(255, 255, 255, 0.15));
+        border-radius: 8px;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        resize: vertical;
     }
 
     /* === Action Buttons === */
