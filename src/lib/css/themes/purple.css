@@ -42,6 +42,24 @@
     --confirm-btn-text: #fff;
     --no-moves-btn-text: #222;
 
+    /*
+       Чотири токени, які темний purple доти брав із ЗАГАЛЬНОГО
+       `[data-theme="dark"]`, тобто з чужої родини. Заміряні споживачі:
+       `--control-hover` 18, `--piece-shadow` 8, `--confirm-btn-hover` 2,
+       `--piece-color` 1. Найдорожчий — синій `#1976d2` у вісімнадцяти місцях.
+
+       Виведені зсувом світлості в OKLCH від власних кольорів цієї теми
+       (відтінок і насиченість збережені), пороги перевірені числом:
+         --control-hover     #97408d  білий текст 6.12:1  (від --control-bg #77216f)
+         --confirm-btn-hover #d24102  білий текст 4.67:1  (від --confirm-btn-bg #e95420)
+         --piece-color       #f8ae02  на --cell-dark 6.22:1  (від --text-accent #ffb300)
+       `--piece-shadow` чорна навмисно: тонована тінь на темному тлі невидима.
+    */
+    --control-hover: #97408d;
+    --confirm-btn-hover: #d24102;
+    --piece-color: #f8ae02;
+    --piece-shadow: rgba(0, 0, 0, 0.55);
+
     /* Перенесено з другого блоку `[data-theme="dark"]`, який стояв нижче в
        цьому ж файлі. Токени не перетиналися, тож перенос дослівний: обчислені
        значення до й після ідентичні (доведено знімком). */
@@ -67,6 +85,10 @@
 [data-style="purple"][data-theme="light"] {
     --bg-primary: linear-gradient(120deg, #f3e8ff 0%, #e0c3fc 100%);
     --bg-secondary: #f8f0ff;
+    /* Доти приходив нічиєю специфічності з блоку `[data-style="purple"]`
+       (`#fef6e4` — вершкове з Ubuntu-гами). Тепер оголошено явно й у
+       фіолетовій гамі: 15.15:1 із `--text-primary`. */
+    --modal-content-bg: #fcf1ff;
     --text-primary: #2d1436;
     --text-secondary: #6d3a7c;
     --text-accent: #a259e6;
