@@ -19,9 +19,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const auth = { currentUser: null as { uid: string } | null };
 const signInAnonymously = vi.fn();
 
+/**
+ * Слухач `onAuthStateChanged` тримається тут, щоб перевірка могла ВИКЛИКАТИ
+ * його так, як це робить Firebase: із проігнорованим поверненим промісом.
+ */
+let authListener: ((user: unknown) => unknown) | null = null;
+const onAuthStateChanged = vi.fn((_auth: unknown, cb: (user: unknown) => unknown) => {
+	authListener = cb;
+	return () => {};
+});
+
 vi.mock('firebase/auth', () => ({
 	signInAnonymously: (...args: unknown[]) => signInAnonymously(...args),
-	onAuthStateChanged: vi.fn(() => () => {}),
+	onAuthStateChanged: (a: unknown, cb: (user: unknown) => unknown) => onAuthStateChanged(a, cb),
 	signOut: vi.fn(),
 	EmailAuthProvider: { credential: vi.fn() },
 	GoogleAuthProvider: vi.fn(),
@@ -106,5 +116,71 @@ describe('authService.ensureUser', () => {
 
 		signInAnonymously.mockResolvedValue({ user: { uid: 'uid-later' } });
 		expect(await authService.ensureUser()).toEqual({ uid: 'uid-later' });
+	});
+});
+
+/**
+ * Слухач автентифікації не лишає відхилення без споживача.
+ *
+ * ## Привід — справжній лог із консолі
+ *
+ *     127.0.0.1:9099/…/accounts:signUp  net::ERR_CONNECTION_REFUSED
+ *     [ERROR] [AuthService:SignInAnonymously] auth/network-request-failed
+ *     [ERROR] [UnhandledRejection] auth/network-request-failed
+ *     Uncaught (in promise) FirebaseError
+ *
+ * Ланцюг: `init()` віддає `onAuthStateChanged` ASYNC зворотний виклик, а
+ * Firebase повернутий проміс ВІДКИДАЄ. Доти в тілі стояла
+ * `await this.signInAnonymously()`, яка логує й перекидає далі — тобто
+ * відхилення не мало споживача за побудовою. Далі
+ * `window.onunhandledrejection` кликав `errorHandlerService.handle`, а той
+ * типово малює тост: гравець без мережі бачив «Сталася помилка. Спробуйте
+ * пізніше.» на сім секунд, хоч гра працює офлайн.
+ *
+ * ## Чому це перевіряється саме так
+ *
+ * Проміс зворотного виклику навмисно НЕ очікується — так само, як його не
+ * очікує Firebase. Далі `await Promise.resolve()` дає мікрозадачам
+ * прокрутитися; якби всередині лишалося відхилення, воно стало б
+ * неперехопленим саме тут.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1): повернути
+ * `await this.signInAnonymously()` у слухач — Vitest падає з
+ * `Unhandled Rejection` замість зеленого прогону.
+ */
+describe('слухач автентифікації', () => {
+	beforeEach(() => {
+		auth.currentUser = null;
+		signInAnonymously.mockReset();
+		onAuthStateChanged.mockClear();
+		authListener = null;
+	});
+
+	it('невдалий вхід у слухачі не стає неперехопленим відхиленням', async () => {
+		const failure = Object.assign(new Error('network down'), {
+			code: 'auth/network-request-failed'
+		});
+		signInAnonymously.mockRejectedValue(failure);
+
+		await authService.init();
+		expect(authListener, 'слухача не зареєстровано — перевіряти нічого').not.toBeNull();
+
+		// Виклик БЕЗ await — рівно так, як це робить Firebase.
+		authListener?.(null);
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(signInAnonymously).toHaveBeenCalledTimes(1);
+	});
+
+	it('слухач і сторонній виклик входять РАЗ, а не двічі', async () => {
+		signInAnonymously.mockResolvedValue({ user: { uid: 'uid-anon' } });
+
+		await authService.init();
+		authListener?.(null);
+		const fromElsewhere = await authService.ensureUser();
+
+		expect(signInAnonymously).toHaveBeenCalledTimes(1);
+		expect(fromElsewhere).toEqual({ uid: 'uid-anon' });
 	});
 });

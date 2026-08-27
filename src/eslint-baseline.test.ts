@@ -122,7 +122,7 @@ describe('базовий набір ESLint (CODE-QUALITY-v8 § 6.4.1)', () => {
  * Перебір у тілі одного `it` дає той самий звіт і не має цього стану.
  */
 const DEBT: Readonly<Record<string, number>> = {
-	'@typescript-eslint/no-explicit-any': 164,
+	'@typescript-eslint/no-explicit-any': 163,
 	'@typescript-eslint/no-unused-vars': 118,
 	'svelte/no-navigation-without-resolve': 27,
 	'svelte/require-each-key': 15,
@@ -142,6 +142,11 @@ const DEBT: Readonly<Record<string, number>> = {
  * прогін як НОВЕ правило, а не як зростання старого.
  *
  * `no-unused-vars` 121 → 119: два імпорти зникли разом із перенесеним кодом.
+ *
+ * `no-explicit-any` 164 → 163 (2026-08-28): `catch (error: any)` в
+ * `authService.signInAnonymously` став `catch (error: unknown)`. Знадобилося не
+ * для числа: класифікатор `isOffline` читає `error.code`, і саме `unknown`
+ * змушує звузити тип перед читанням, а `any` пропустив би описку в назві поля.
  *
  * 119 → 118 (2026-08-24): `clearLocalUserData` і `resetLocalProfile` перестали
  * бути мертвими — їх нарешті кличе вихід з акаунта. Доти обидва були написані й

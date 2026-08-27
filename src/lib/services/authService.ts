@@ -35,6 +35,38 @@ class AuthService {
      */
     private authInstance: Auth | null = null;
 
+    /**
+     * Чи це «мережі немає», а не «застосунок зламався».
+     *
+     * ## Навіщо розрізняти
+     *
+     * Анонімний вхід тут ОПОРТУНІСТИЧНИЙ: він відкриває хмарні речі (рекорд у
+     * таблиці, кімнати), а сама гра працює офлайн — це PWA, і офлайн-гра є
+     * заявленою метою. Тобто невдалий анонімний вхід без мережі не змінює для
+     * гравця НІЧОГО, і повідомляти йому про це нема про що.
+     *
+     * Доти будь-яка невдача входу доїжджала до `errorHandlerService` через
+     * неперехоплене відхилення й малювала червоний тост «Сталася помилка.
+     * Спробуйте пізніше.» на сім секунд. У продакшні це бачив кожен, хто
+     * відкривав гру без мережі; у розробці — кожен, хто не підняв емулятор
+     * (`VITE_USE_FIREBASE_EMULATOR=true` йде на `127.0.0.1:9099`, і без
+     * емулятора це `ERR_CONNECTION_REFUSED`).
+     *
+     * ## Чому саме перелік кодів, а не «ковтати все»
+     *
+     * `auth/invalid-api-key`, `auth/operation-not-allowed` та решта — це
+     * зламана конфігурація, і вона МУСИТЬ лишатися помилкою: інакше перший
+     * невірний ключ стане невидимим. Тут названо рівно те, що означає
+     * «з'єднання не відбулося».
+     */
+    private static isOffline(error: unknown): boolean {
+        const code = (error as { code?: string } | null)?.code;
+        if (code === 'auth/network-request-failed' || code === 'auth/timeout') return true;
+        // Браузер сам знає, що мережі немає — тоді будь-яка відмова входу
+        // очікувана, яким би кодом вона не називалася.
+        return typeof navigator !== 'undefined' && navigator.onLine === false;
+    }
+
     private get auth(): Auth {
         // `getFirebaseAuth()` мемоізований, тож повторні звертання безкоштовні.
         if (!this.authInstance) {
@@ -60,7 +92,22 @@ class AuthService {
                 logService.init('[AuthService] No user logged in. Signing in anonymously...');
                 currentUserStore.user = null;
                 userProfileService.stopWatching();
-                await this.signInAnonymously();
+                /*
+                 * `ensureUser`, а НЕ `signInAnonymously` — і це виправлення
+                 * неперехопленого відхилення, а не стилістика.
+                 *
+                 * Цей зворотний виклик `async`, а `onAuthStateChanged` повернутий
+                 * проміс ВІДКИДАЄ. Тобто `signInAnonymously`, яка логує й
+                 * перекидає далі, лишала відхилення без жодного споживача:
+                 * `Uncaught (in promise) FirebaseError` у консолі плюс
+                 * `window.onunhandledrejection`, який малює червоний тост.
+                 *
+                 * `ensureUser` віддає `null` замість кидати (це покрито
+                 * перевіркою «невдалий вхід віддає null, а не кидає») і заодно
+                 * дедуплікує вхід через `pendingSignIn`: доти слухач і контролер
+                 * лобі могли почати два входи одночасно.
+                 */
+                await this.ensureUser();
             }
         });
     }
@@ -101,7 +148,14 @@ class AuthService {
 
         this.pendingSignIn ??= this.signInAnonymously()
             .catch((error) => {
-                logService.error('[AuthService:EnsureUser] Анонімний вхід не вдався', error);
+                // Той самий поділ, що в `signInAnonymously`: без мережі це
+                // очікуваний стан, а не помилка застосунку. Друге логування тут
+                // навмисне — воно називає МІСЦЕ, а не подію.
+                if (AuthService.isOffline(error)) {
+                    logService.warn('[AuthService:EnsureUser] мережі немає — користувача немає', error);
+                } else {
+                    logService.error('[AuthService:EnsureUser] Анонімний вхід не вдався', error);
+                }
                 return null;
             })
             .then((user) => {
@@ -116,8 +170,18 @@ class AuthService {
         try {
             const result = await signInAnonymously(this.auth);
             return result.user;
-        } catch (error: any) {
-            logService.error('[AuthService:SignInAnonymously] Firebase:', error);
+        } catch (error: unknown) {
+            /*
+             * Рівень залежить від причини, бо `logService.errorCount` веде
+             * службове табло й звіт тестувальника. Доти будь-який офлайн
+             * піднімав лічильник, тобто сигнал «щось зламалося» починав означати
+             * «хтось був без мережі».
+             */
+            if (AuthService.isOffline(error)) {
+                logService.warn('[AuthService:SignInAnonymously] мережі немає — граємо без входу', error);
+            } else {
+                logService.error('[AuthService:SignInAnonymously] Firebase:', error);
+            }
             throw error;
         }
     }
