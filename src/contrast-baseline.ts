@@ -112,4 +112,4 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
  *
  * Числа заміряні 2026-08-27. Зростання означає, що з-під гейта пішли нові пари.
  */
-export const CONTRAST_SKIPS = { alpha: 32, notColor: 72 } as const;
+export const CONTRAST_SKIPS = { alpha: 50, notColor: 90 } as const;

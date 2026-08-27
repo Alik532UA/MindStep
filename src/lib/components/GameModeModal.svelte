@@ -8,7 +8,6 @@
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import GameModeButton from "./game-modes/GameModeButton.svelte";
   import NotoEmoji from "./NotoEmoji.svelte";
-  import { Users } from 'lucide-svelte';
 
   import { showGameInfoModal } from "$lib/utils/uiHelpers";
 
@@ -83,7 +82,7 @@
 {/snippet}
 
 {#snippet usersIcon()}
-  <Users size="100%" />
+  <NotoEmoji name="busts_in_silhouette" size="100%" />
 {/snippet}
 
 <div class="game-mode-buttons" bind:this={buttonsNode}>
@@ -150,7 +149,8 @@
 
   .divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--border-color, rgba(255, 255, 255, 0.15));
+    opacity: 0.4;
     margin: 8px 0;
   }
 </style>

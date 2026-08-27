@@ -52,15 +52,18 @@
         align-items: center;
         gap: 16px;
         padding: 16px 24px;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
+        background: var(--menu-bg, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
         border-radius: 16px;
-        color: #fff;
+        color: var(--text-primary);
+        box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.15));
         cursor: pointer;
         text-align: left;
         transition:
             transform 0.2s,
-            background 0.2s;
+            background 0.2s,
+            filter 0.2s,
+            box-shadow 0.2s;
         font-size: 1.2rem;
         font-weight: 600;
         backdrop-filter: blur(4px);
@@ -75,8 +78,19 @@
     }
 
     .menu-item:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: var(--menu-bg, rgba(255, 255, 255, 0.2));
+        filter: brightness(1.08);
         transform: scale(1.02);
+    }
+
+    .menu-item:active {
+        transform: scale(0.98);
+        filter: brightness(0.95);
+    }
+
+    .menu-item:focus-visible {
+        outline: 3px solid var(--control-selected, #a259e6);
+        outline-offset: 2px;
     }
 
     .menu-icon {
