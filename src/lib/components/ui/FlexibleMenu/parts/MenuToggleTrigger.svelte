@@ -43,10 +43,12 @@
 </button>
 
 <style>
-    /* Copied and adapted styles from FlexibleMenu.svelte */
-    :global(:root) {
-        --menu-bg: rgba(30, 30, 30, 0.6);
-    }
+    /*
+      Блок `:global(:root)` прибраний: у ньому лишався єдиний токен `--menu-bg`,
+      і той переїхав у палітру (`base/variables.css`). Зашите тут значення
+      робило смугу меню темною й у СВІТЛИХ темах, а специфічність збігалася з
+      палітрою — тобто переможця обирав порядок склеювання.
+    */
 
     .toggle-trigger {
         background: transparent;

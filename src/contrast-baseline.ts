@@ -15,6 +15,15 @@
  * wood) не додали ЖОДНОГО рядка: вони виведені генератором, у якому 4.5:1
  * (графіка — 3:1) є умовою приймання, а не побажанням.
  *
+ * ## purple/light закритий ЦІЛКОМ (2026-08-28)
+ *
+ * Пʼять рядків пішли: `--text-accent` в обидва боки, `--control-selected`,
+ * `--confirm-action-bg` і `--cell-dark -> --piece-color`. Корінь був один — ОДИН
+ * колір `#a259e6` виконував чотири ролі одночасно (акцент тексту, вибране
+ * керування, фігура гри, кнопка підтвердження), тож коли клітинка дошки теж
+ * фіолетова, фігура зливалася з нею: 1.16:1. Роль фігури тепер має власне
+ * значення.
+ *
  * ЩО ЦЕ ЗА ЧИСЛА. Поріг 4.5:1 — WCAG 1.4.3 для звичайного тексту. Виняток один
  * і названий у самому гейті: `--cell-dark -> --piece-color` — це фігура гри на
  * клітинці дошки, тобто не текст, і WCAG 1.4.11 просить для неї 3:1.
@@ -80,11 +89,6 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
 	'orange/normal --cell-dark -> --piece-color',
 	'orange/normal --control-bg -> --text-primary',
 	'orange/normal --text-accent -> --bg-secondary',
-	'purple/light --bg-secondary -> --text-accent',
-	'purple/light --cell-dark -> --piece-color',
-	'purple/light --confirm-action-bg -> --confirm-action-text',
-	'purple/light --control-selected -> --control-selected-text',
-	'purple/light --text-accent -> --bg-secondary',
 	'purple/normal --confirm-action-bg -> --confirm-action-text',
 	'purple/normal --info-action-bg -> --info-action-text',
 	'wood/dark --bg-secondary -> --text-accent',

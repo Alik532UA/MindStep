@@ -40,6 +40,19 @@
   --modal-overlay-bg: rgba(0, 0, 0, 0.45);
   --modal-overlay-bg-glass: rgba(0, 0, 0, 0.8);
   --modal-overlay-blur: 8px;
+  /*
+    Тло смуги меню (`FlexibleMenu`). ТУТ, а не в компоненті.
+
+    Доти воно було зашите `rgba(30, 30, 30, 0.6)` у двох компонентах через
+    `:global(:root)` — тобто смуга завжди темна, а текст кнопки бере
+    `--text-secondary`, який у СВІТЛІЙ темі темний. Заміряно на purple/light:
+    `#6d3a7c` на `rgb(28,28,28)` — 2.07:1. І це не про фіолетовий: так було в
+    усіх трьох світлих темах.
+
+    Плюс два оголошення в `:global(:root)` мали ту саму специфічність, що це, —
+    тобто переможця обирав порядок склеювання. Обидва прибрані.
+  */
+  --menu-bg: rgba(255, 255, 255, 0.72);
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.1);
   --positive-score-color: #4CAF50;
@@ -137,6 +150,7 @@
 */
 [data-theme="dark"],
 [data-theme="normal"] {
+  --menu-bg: rgba(30, 30, 30, 0.6);
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
   --text-primary: #e0e0e0;

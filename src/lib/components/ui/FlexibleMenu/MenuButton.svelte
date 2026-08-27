@@ -90,9 +90,15 @@
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
+    /*
+      Головна кнопка «Грати» брала зашитий `#4caf50` із білим текстом — 2.78:1,
+      і жоден гейт цього не бачив: пара «літерал + літерал» під токенну
+      перевірку не підпадає. Тепер вона йде за темою й лікується разом з усією
+      палітрою.
+    */
     [data-testid="menu-item-play"].primary {
-        background: #4caf50; /* Green */
-        color: white;
+        background: var(--confirm-action-bg, #4caf50);
+        color: var(--confirm-action-text, #fff);
     }
 
     .menu-button.primary.active {

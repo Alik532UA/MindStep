@@ -70,7 +70,8 @@
 <style>
     /* Global vars should be defined in app.css or layout, but fallback here */
     :global(:root) {
-        --menu-bg: rgba(30, 30, 30, 0.6);
+        /* `--menu-bg` тепер у палітрі (`base/variables.css`): зашите тут
+           значення робило смугу темною й у світлих темах. */
         --menu-height: 80px;
         --menu-border-radius: 16px;
         --menu-drop-shadow: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.3));

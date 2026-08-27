@@ -141,17 +141,17 @@
     --modal-content-bg: #fcf1ff;
     --text-primary: #2d1436;
     --text-secondary: #6d3a7c;
-    --text-accent: #a259e6;
+    --text-accent: #9247d4;  /* на панелі 3.70 -> 4.64:1 */
     --border-color: #a259e6;
     --shadow-color: rgba(162,89,230,0.10);
     --cell-light: #b48ad6;
     --cell-dark: #8c5fb2;
     --cell-blocked: #b39ddb;
-    --piece-color: #a259e6;
+    --piece-color: #3a0060;  /* фігура на клітинці 1.16 -> 3.26:1 */
     --piece-shadow: rgba(162,89,230,0.3);
     --control-bg: #e0c3fc;
     --control-hover: #a259e6;
-    --control-selected: #a259e6;
+    --control-selected: #994fdc;  /* білий текст 4.11 -> 4.66:1 */
     --confirm-btn-bg: #a259e6;
     --confirm-btn-hover: #7c3aed;
     --no-moves-btn-bg: #f3e8ff;
@@ -159,7 +159,7 @@
     --control-selected-text: #fff;
     --confirm-btn-text: #fff;
     --no-moves-btn-text: #222;
-    --confirm-action-bg: #4caf50;
+    --confirm-action-bg: #1b8627;  /* білий текст 2.78 -> 4.68:1 */
     --confirm-action-text: #ffffff;
     --warning-action-bg: #ffb300;
     --warning-action-text: #442c2e;
