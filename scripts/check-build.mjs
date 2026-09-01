@@ -13,6 +13,7 @@
  * пасток), описаний біля самого правила.
  */
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { checkGeo } from "./check-geo.mjs";
@@ -261,6 +262,192 @@ if (!existsSync(robotsPath)) {
     console.log(
       `check-build: SDK бази поза критичним шляхом (${preloaded.size} передзавантажених файлів)`,
     );
+  }
+}
+
+/*
+ * Бюджет критичного шляху: КОД і ДАНІ окремими числами
+ * (PERFORMANCE-v8 § 1.1 `PERF-BUDGET-CODE-VS-DATA`, § 10.1, `GATE-BUNDLE-BUDGET`).
+ *
+ * ЧОГО БРАКУВАЛО. Бюджету не було зовсім — ні тут, ні в `lighthouserc.cjs`.
+ * § 1 пакета ставить стелю «initial JS ≤ 150 КБ gzip», але поки її ніхто не
+ * міряє, вона нічим не відрізняється від відсутньої: важка бібліотека потрапляє
+ * в головний бандл не рішенням, а поступово, і кожен окремий крок виглядає
+ * дешевим.
+ *
+ * ЧОМУ ДВА ЧИСЛА, А НЕ ОДНЕ. § 1.1 — правило ревізії 8.12: одне сумарне число
+ * рахує разом із кодом і ДАНІ, що їдуть у бандл модулем, і тоді поріг червоніє
+ * від доданого контенту, а не від доданого коду. У цьому проєкті дані — це
+ * словники i18n: чотири мови, і кожна важить як половина критичного шляху.
+ * Сьогодні їх там немає (`svelte-i18n` реєструє їх лінивими імпортами), і
+ * перевірка нижче це ДОВОДИТЬ, а не припускає: статичний `import` словника в
+ * кореневий layout заштовхав би ~15 КБ gzip чистого тексту в перший кадр, і
+ * жодна наявна перевірка цього не побачила б.
+ *
+ * ЧОМУ ПОРІГ ІЗ ЗАПАСОМ ~10 %, А НЕ 60 %. Бюджет із запасом у півтора раза не
+ * ловить нічого, крім катастрофи, — а тоді він і не потрібен. Числа заміряні на
+ * цій збірці; піднімати їх можна лише разом із причиною в тілі коміту.
+ *
+ * ЧОМУ JS І CSS ОКРЕМО. Одне число сховало б, ЩО саме виросло, а лікуються вони
+ * протилежно: JS — розділенням чанків, CSS — прибиранням дубльованих правил.
+ *
+ * Зворотний експеримент (AI-AGENT-PITFALLS-v8 § 1.1) описаний біля кожної з
+ * трьох канарок нижче.
+ */
+{
+  const entryPath = join(BUILD, "index.html");
+  const entryHtml = existsSync(entryPath)
+    ? readFileSync(entryPath, "utf8")
+    : "";
+
+  /*
+   * Критичний шлях — рівно те, на що посилається початковий HTML: `<script>`,
+   * `modulepreload` і `<link rel="stylesheet">`. Адреси беруться від `/_app/`,
+   * а не від `base`: у `dev` він порожній, у збірці `/MindStep`, і зашитий
+   * префікс дав би нуль знахідок саме тоді, коли префікс змінять.
+   */
+  const critical = [
+    ...new Set(
+      [...entryHtml.matchAll(/(?:href|src)="([^"]+)"/g)]
+        .map((m) => m[1])
+        .filter((p) => p.includes("/_app/"))
+        .map((p) => p.slice(p.indexOf("/_app/") + 1)),
+    ),
+  ]
+    .map((rel) => join(BUILD, rel))
+    .filter((file) => existsSync(file));
+
+  const js = critical.filter((f) => f.endsWith(".js"));
+  const css = critical.filter((f) => f.endsWith(".css"));
+
+  const gzipKb = (files) =>
+    files.reduce((sum, f) => sum + gzipSync(readFileSync(f)).length, 0) / 1024;
+
+  /*
+   * Маркер реєстру — рядок, що зустрічається ЛИШЕ в ньому. § 10.1 називає й
+   * причину: без перевірки на існування зникнення маркера з бандла читалося б
+   * як «даних не стало», тобто винесення словників у окремий чанк тихо
+   * звільнило б увесь бюджет. Тут зникнення маркера — це помилка гейта.
+   */
+  const DATA_MARKERS = [
+    {
+      marker: "Чому фігура одна? Де фігура комп'ютера?",
+      what: "словник uk (src/lib/i18n/uk/faq.ts)",
+    },
+    {
+      marker: "Why is there only one piece? Where is the computer's piece?",
+      what: "словник en (src/lib/i18n/en/faq.ts)",
+    },
+  ];
+
+  const bundleJs = [];
+  {
+    const stack = [join(BUILD, "_app")];
+    while (stack.length > 0) {
+      const dir = stack.pop();
+      if (!existsSync(dir)) continue;
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) stack.push(full);
+        else if (entry.endsWith(".js")) bundleJs.push(full);
+      }
+    }
+  }
+
+  const dataChunks = new Set();
+  for (const { marker, what } of DATA_MARKERS) {
+    const carriers = bundleJs.filter((f) =>
+      readFileSync(f, "utf8").includes(marker),
+    );
+    // Перша канарка: маркер зник із бандла — перевірка мертва, а не «даних
+    // немає». Зворотний експеримент: змінити рядок у словнику, не змінивши
+    // маркер, — гейт падає з цим повідомленням, а не мовчить.
+    if (carriers.length === 0) {
+      fail(
+        "bundle",
+        `маркер реєстру не знайдений у бандлі («${what}») — перевірка бюджету даних мертва`,
+      );
+      continue;
+    }
+    for (const carrier of carriers) {
+      if (critical.includes(carrier)) dataChunks.add(carrier);
+    }
+  }
+
+  const dataKb = gzipKb([...dataChunks]);
+  const jsKb = gzipKb(js);
+  const cssKb = gzipKb(css);
+  const codeKb = jsKb - dataKb;
+
+  /*
+   * Стелі. `CODE` — на код критичного шляху без даних; `DATA` просторіша
+   * навмисно (§ 1.1: подвоєння контенту має бути ВИДНО, а не заблоковано), але
+   * сьогодні дані на критичний шлях не потрапляють зовсім, тож будь-яке
+   * ненульове число тут — новина.
+   */
+  const CODE_BUDGET_KB = 118;
+  const CSS_BUDGET_KB = 23;
+  const DATA_BUDGET_KB = 8;
+
+  // Друга канарка: нуль файлів критичного шляху означає, що розбір HTML не
+  // спрацював, а не що бандл невагомий.
+  if (js.length === 0 || css.length === 0) {
+    fail(
+      "bundle",
+      `критичний шлях розібрано неповністю: ${js.length} .js і ${css.length} .css — бюджет нічим міряти`,
+    );
+  } else {
+    console.log(
+      `check-build: критичний шлях — код ${codeKb.toFixed(1)} КБ gzip ` +
+        `(бюджет ${CODE_BUDGET_KB}) · CSS ${cssKb.toFixed(1)} КБ (бюджет ${CSS_BUDGET_KB}) · ` +
+        `дані ${dataKb.toFixed(1)} КБ (стеля ${DATA_BUDGET_KB}), файлів ${js.length} + ${css.length}`,
+    );
+    if (codeKb > CODE_BUDGET_KB) {
+      fail(
+        "bundle",
+        `код критичного шляху ${codeKb.toFixed(1)} КБ gzip проти бюджету ${CODE_BUDGET_KB}`,
+      );
+    }
+    if (cssKb > CSS_BUDGET_KB) {
+      fail(
+        "bundle",
+        `CSS критичного шляху ${cssKb.toFixed(1)} КБ gzip проти бюджету ${CSS_BUDGET_KB}`,
+      );
+    }
+    if (dataKb > DATA_BUDGET_KB) {
+      fail(
+        "bundle",
+        `словники i18n доїхали в перший кадр: ${dataKb.toFixed(1)} КБ gzip у ` +
+          `${dataChunks.size} чанках. Це контент, а не код — його місце в лінивому імпорті`,
+      );
+    }
+  }
+
+  /*
+   * Третя канарка, і вона ж — умова застосовності § 1.1. Реєстрів-файлів
+   * (`*.data.json`, `*.index.json`) у проєкті немає, тому дані рахуються за
+   * маркерами словників. Щойно такий файл з'явиться, поділ доведеться робити за
+   * ним — і гейт про це скаже, а не порахує контент як код.
+   */
+  {
+    const registries = [];
+    const stack = ["src"];
+    while (stack.length > 0) {
+      const dir = stack.pop();
+      if (!existsSync(dir)) continue;
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) stack.push(full);
+        else if (/\.(data|index)\.json$/.test(entry)) registries.push(norm(full));
+      }
+    }
+    if (registries.length > 0) {
+      fail(
+        "bundle",
+        `у проєкті з'явилися реєстри даних (${registries.join(", ")}) — ` +
+          "поділ бюджету код/дані має рахувати їх окремим числом (PERFORMANCE-v8 § 10.1)",
+      );
+    }
   }
 }
 
