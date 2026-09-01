@@ -7,7 +7,7 @@
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    aria-label="Copy State"
+    aria-hidden="true"
     {...$$restProps}
 >
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>

@@ -2,7 +2,7 @@
     class="multicolor-svg"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 58 58"
-    aria-label="Підтримати проєкт"
+    aria-hidden="true"
     {...$$restProps}
 >
     <g>

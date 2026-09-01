@@ -5,7 +5,7 @@
     width="32"
     height="32"
     viewBox="0 0 512 512"
-    aria-label="Boxing Glove"
+    aria-hidden="true"
     {...$$restProps}
 >
     <g>

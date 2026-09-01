@@ -3,7 +3,7 @@
     height="22"
     viewBox="0 0 24 24"
     fill="none"
-    aria-label="Підтвердити хід"
+    aria-hidden="true"
     {...$$restProps}
 >
     <path

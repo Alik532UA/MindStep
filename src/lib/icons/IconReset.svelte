@@ -4,7 +4,7 @@
     height="20"
     viewBox="0 0 20 20"
     fill="none"
-    aria-label="Скидання"
+    aria-hidden="true"
     {...$$restProps}
 >
     <path

@@ -3,7 +3,7 @@
     height="32"
     viewBox="0 0 24 24"
     fill="currentColor"
-    aria-label="Інструкція"
+    aria-hidden="true"
     {...$$restProps}
 >
     <path

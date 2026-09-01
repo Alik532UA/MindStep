@@ -3,7 +3,7 @@
     height="64"
     viewBox="0 0 16 16"
     fill="currentColor"
-    aria-label="Очистити кеш"
+    aria-hidden="true"
     {...$$restProps}
 >
     <path

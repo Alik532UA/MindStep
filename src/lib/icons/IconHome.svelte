@@ -4,7 +4,7 @@
     viewBox="0 0 547.596 547.596"
     width="32"
     height="32"
-    aria-label="Головне меню"
+    aria-hidden="true"
     {...$$restProps}
 >
     <g>

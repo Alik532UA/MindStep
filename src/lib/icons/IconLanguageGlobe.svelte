@@ -3,7 +3,7 @@
     height="32"
     viewBox="0 0 32 32"
     fill="currentColor"
-    aria-label="Мова"
+    aria-hidden="true"
     {...$$restProps}
 >
     <circle cx="16" cy="16" r="16" fill="#e0e0e0" />

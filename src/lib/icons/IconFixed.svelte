@@ -4,7 +4,7 @@
     viewBox="0 0 1024 1024"
     width="22"
     height="22"
-    aria-label="Fixed"
+    aria-hidden="true"
     {...$$restProps}
 >
     <path
