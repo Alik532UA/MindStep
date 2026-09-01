@@ -101,6 +101,7 @@ export interface TranslationSchema {
     mainMenu: string;
     player: string;
     penaltyInfoTitle: string;
+    boardLabel: string;
     penaltyHint: string;
     bonusInfoTitle: string;
     bonusHint: string;
@@ -224,6 +225,8 @@ export interface TranslationSchema {
   localGame: {
     pickColor: string;
     openPalette: string;
+    pickPlayerColor: string;
+    playerNamePlaceholder: string;
     title: string;
     playerManagerTitle: string;
     addPlayer: string;
@@ -442,6 +445,7 @@ export interface TranslationSchema {
       empty: string;
       send: string;
       collapse: string;
+      expand: string;
     };
     errors: {
       fetchFailed: string;
@@ -640,6 +644,7 @@ export interface TranslationSchema {
     gratitudeText: string;
     callToAction: string;
     supportButton: string;
+    qrAlt: string;
   };
   testMode: {
     decreaseSize: string;
@@ -683,6 +688,13 @@ export interface TranslationSchema {
     dndEditInstruction: string;
     moveMenuItems: string;
     resetMenuLayout: string;
+    columnStyleFixed: string;
+    columnStyleFlexible: string;
+    stepper: {
+      decrease: string;
+      increase: string;
+      drag: string;
+    };
     feedback: {
       title: string;
       typeImprovement: string;
@@ -700,6 +712,7 @@ export interface TranslationSchema {
       success: string;
       error: string;
       selectType: string;
+      rewardPlaceholder: string;
     };
     auth: {
       titleSave: string;

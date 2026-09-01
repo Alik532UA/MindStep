@@ -1,6 +1,8 @@
 export default {
   pickColor: "Обрати колір {color}",
   openPalette: "Відкрити палітру кольорів",
+  pickPlayerColor: 'Обрати колір гравця',
+  playerNamePlaceholder: "Ім'я гравця",
   title: "Налаштування локальної гри",
   playerManagerTitle: "Менеджер гравців",
   addPlayer: "Додати гравця",

@@ -7,6 +7,13 @@ export default {
   dndEditInstruction: "Menu editing mode: Drag and drop blocks to rearrange them as you like.",
   moveMenuItems: "Move menu items",
   resetMenuLayout: "Reset menu layout",
+  columnStyleFixed: 'Fixed column mode',
+  columnStyleFlexible: 'Flexible column mode',
+  stepper: {
+    decrease: 'Decrease',
+    increase: 'Increase',
+    drag: 'Drag to change'
+  },
   feedback: {
     title: "Feedback",
     typeImprovement: "Suggest improvement",
@@ -23,7 +30,8 @@ export default {
     submit: "Submit",
     success: "Thank you! Your feedback has been received.",
     error: "Submission failed. Please try again later.",
-    selectType: "Select feedback type:"
+    selectType: "Select feedback type:",
+    rewardPlaceholder: 'For example: “Defence master” — win a game without losing a single point...'
   },
   auth: {
     titleSave: "Save Progress",

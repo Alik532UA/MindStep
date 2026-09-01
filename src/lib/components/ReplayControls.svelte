@@ -32,14 +32,16 @@
       dataTestId="replay-prev-step-btn"
       onclick={() => ongoToStep(currentStep - 1)}
       disabled={currentStep === 0}
-      title="Previous Step">«</StyledButton
+      aria-label={$t("replay.prev")}
+      tooltip={$t("replay.prev")}>«</StyledButton
     >
     <StyledButton
       shape="circle"
       variant={autoPlayDirection === "backward" ? "primary" : "menu"}
       dataTestId="replay-play-backward-btn"
       onclick={() => ontoggleAutoPlay("backward")}
-      title="Pop Play Backward"
+      aria-label={$t("replay.playBackward")}
+      tooltip={$t("replay.playBackward")}
     >
       {#if autoPlayDirection === "backward"}❚❚{:else}◀{/if}
     </StyledButton>
@@ -48,7 +50,8 @@
       variant={autoPlayDirection === "forward" ? "primary" : "menu"}
       dataTestId="replay-play-forward-btn"
       onclick={() => ontoggleAutoPlay("forward")}
-      title="Pop Play Forward"
+      aria-label={$t("replay.play")}
+      tooltip={$t("replay.play")}
     >
       {#if autoPlayDirection === "forward"}❚❚{:else}▶{/if}
     </StyledButton>
@@ -58,7 +61,8 @@
       dataTestId="replay-next-step-btn"
       onclick={() => ongoToStep(currentStep + 1)}
       disabled={currentStep >= totalSteps - 1}
-      title="Next Step">»</StyledButton
+      aria-label={$t("replay.next")}
+      tooltip={$t("replay.next")}>»</StyledButton
     >
     <div class="step-counter" data-testid="replay-step-count">
       {$t("replay.step", { current: currentStep + 1, total: totalSteps })}

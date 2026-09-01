@@ -69,8 +69,8 @@
     class="color-preview"
     style="background-color: {currentValue}"
     onclick={toggleDropdown}
-    use:customTooltip={"Обрати колір"}
-    aria-label="Обрати колір гравця"
+    use:customTooltip={$t("localGame.pickPlayerColor")}
+    aria-label={$t("localGame.pickPlayerColor")}
     data-testid="{dataTestId}-btn"
   ></button>
 

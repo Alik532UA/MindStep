@@ -54,7 +54,7 @@
     >
       <img
         src="{base}/svg/qrcode-monobank.svg"
-        alt="Monobank QR Code"
+        alt={$t("supportersPage.qrAlt")}
         class="qr-code-image"
         loading="lazy"
         width="250"

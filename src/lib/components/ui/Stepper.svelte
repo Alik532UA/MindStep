@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { t } from "$lib/i18n/typedI18n";
     import { scrubbable } from "$lib/actions/scrubbable";
 
     interface Props {
@@ -42,7 +43,7 @@
         class="stepper-btn"
         onclick={() => !disabled && ondecrement?.()}
         data-testid={decreaseTestId}
-        aria-label="Decrease"
+        aria-label={$t("ui.stepper.decrease")}
         {disabled}
     >
         -
@@ -62,7 +63,7 @@
                 onChange: handleScrubChange,
                 disabled: disabled,
             }}
-            title="Drag to change"
+            title={$t("ui.stepper.drag")}
         >
             {value}
         </div>
@@ -77,7 +78,7 @@
         class="stepper-btn"
         onclick={() => !disabled && onincrement?.()}
         data-testid={increaseTestId}
-        aria-label="Increase"
+        aria-label={$t("ui.stepper.increase")}
         {disabled}
     >
         +

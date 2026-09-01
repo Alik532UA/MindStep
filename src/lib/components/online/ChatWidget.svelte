@@ -96,7 +96,7 @@
             class="chat-fab"
             class:unread={hasUnread}
             onclick={toggleChat}
-            aria-label="Toggle Chat"
+            aria-label={isOpen ? $t("onlineMenu.chat.collapse") : $t("onlineMenu.chat.expand")}
             data-testid="chat-toggle-btn"
         >
             {#if isOpen}

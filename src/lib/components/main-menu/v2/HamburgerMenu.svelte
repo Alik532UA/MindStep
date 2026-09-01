@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { t } from "$lib/i18n/typedI18n";
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { logService } from "$lib/services/logService.svelte";
     import { modalStateRune } from "$lib/stores/modalState.svelte";
@@ -21,7 +22,7 @@
     class="hamburger-btn"
     onclick={openMenu}
     data-testid="hamburger-menu-btn"
-    aria-label="Menu"
+    aria-label={$t("mainMenu.menu")}
 >
     <SvgIcons name="hamburger-menu" width="32px" height="32px" />
 </button>

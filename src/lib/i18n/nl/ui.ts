@@ -7,6 +7,13 @@ export default {
   dndEditInstruction: "Menu bewerken: Sleep blokken om ze naar wens te rangschikken.",
   moveMenuItems: "Menu-items verplaatsen",
   resetMenuLayout: "Menu-indeling resetten",
+  columnStyleFixed: 'Vaste kolommodus',
+  columnStyleFlexible: 'Flexibele kolommodus',
+  stepper: {
+    decrease: 'Verlagen',
+    increase: 'Verhogen',
+    drag: 'Sleep om te wijzigen'
+  },
   feedback: {
     title: "Feedback",
     typeImprovement: "Verbetering voorstellen",
@@ -23,7 +30,8 @@ export default {
     submit: "Verzenden",
     success: "Bedankt! Uw feedback is ontvangen.",
     error: "Verzenden mislukt. Probeer het later opnieuw.",
-    selectType: "Selecteer type:"
+    selectType: "Selecteer type:",
+    rewardPlaceholder: 'Bijvoorbeeld: “Verdedigingsmeester” — win een spel zonder ook maar één punt te verliezen...'
   },
   auth: {
     titleSave: "Voortgang Opslaan",

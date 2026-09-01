@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n/typedI18n";
   import { gameSettingsState } from "$lib/stores/gameSettingsState.svelte";
   import SimpleModalContent from "$lib/components/modals/SimpleModalContent.svelte";
   import { modalStateRune } from "$lib/stores/modalState.svelte";
@@ -121,7 +122,7 @@
         onkeydown={handleBoardWrapperKeyDown}
         role="button"
         tabindex="0"
-        aria-label="Ігрове поле"
+        aria-label={$t("gameBoard.boardLabel")}
         transition:slideAndScale={{ duration: 500, easing: quintOut }}
         onoutroend={onBoardOutroEnd}
         data-testid="board-container"

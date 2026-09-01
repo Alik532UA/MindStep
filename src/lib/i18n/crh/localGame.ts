@@ -1,6 +1,8 @@
 export default {
   pickColor: "{color} tüsüni sayla",
   openPalette: "Tüs paletini aç",
+  pickPlayerColor: 'Oyunçı tüsüni sayla',
+  playerNamePlaceholder: 'Oyunçı adı',
   title: "Yerli Oyun Sozlamaları",
   playerManagerTitle: "Oyunçı Meneceri",
   addPlayer: "Oyunçı Qoş",

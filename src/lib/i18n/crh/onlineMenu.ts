@@ -54,7 +54,8 @@ export default {
     placeholder: "Bir şey yazıñız...",
     empty: "Çat boş",
     send: "Mesajnı yiber",
-    collapse: "Çatnı yıq"
+    collapse: "Çatnı yıq",
+    expand: 'Subetni aç'
   },
   errors: {
     fetchFailed: "Odalar listesi yüklenemedi",

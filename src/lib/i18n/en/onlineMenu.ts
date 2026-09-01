@@ -54,7 +54,8 @@ export default {
     placeholder: "Type a message...",
     empty: "Chat is empty",
     send: "Send message",
-    collapse: "Collapse chat"
+    collapse: "Collapse chat",
+    expand: 'Expand chat'
   },
   errors: {
     fetchFailed: "Failed to fetch rooms",

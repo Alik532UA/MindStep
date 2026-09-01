@@ -7,6 +7,13 @@ export default {
   dndEditInstruction: "Menüni düzenleme kipi: Blokları sürükleyip istediğiniz gibi yerleştirin.",
   moveMenuItems: "Menü ögelerini taşı",
   resetMenuLayout: "Menü yerleşimin sıfırla",
+  columnStyleFixed: 'Sabit sutun kipi',
+  columnStyleFlexible: 'Egilgen sutun kipi',
+  stepper: {
+    decrease: 'Eksilt',
+    increase: 'Arttır',
+    drag: 'Deñiştirmek içün tart'
+  },
   feedback: {
     title: "Keri bildirim",
     typeImprovement: "Yahşılaştıruv teklif et",
@@ -23,7 +30,8 @@ export default {
     submit: "Yollamaq",
     success: "Sağ oluñız! Fikiriñiz alındı.",
     error: "Yollanıp olamadı. Lütfen, birazdan tekrar deñeñiz.",
-    selectType: "Muracaat türüni saylañız:"
+    selectType: "Muracaat türüni saylañız:",
+    rewardPlaceholder: 'Meselâ: «Qorçalav ustası» — bir de nokta ğayıp etmeden oyunnı qazanmaq...'
   },
   auth: {
     titleSave: "İlerlemeyi Saqla",

@@ -65,7 +65,7 @@
           <input
             type="text"
             class="player-name-input"
-            placeholder="Ім'я гравця"
+            placeholder={$t("localGame.playerNamePlaceholder")}
             value={player.name}
             oninput={(e) =>
               handleUpdatePlayer(player.id, {

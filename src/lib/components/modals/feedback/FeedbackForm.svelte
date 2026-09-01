@@ -60,7 +60,7 @@
                 bind:value={textContent}
                 class="glass-input textarea-resize"
                 rows="5"
-                placeholder="Наприклад: 'Майстер захисту' - виграти гру, не втративши жодного очка..."
+                placeholder={$t("ui.feedback.rewardPlaceholder")}
             ></textarea>
         </div>
     {/if}

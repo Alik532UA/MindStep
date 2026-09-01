@@ -23,7 +23,7 @@
         <button
             data-testid="settings-expander-column-style-fixed-btn"
             class="settings-expander__square-btn"
-            aria-label="Fixed mode"
+            aria-label={$t("ui.columnStyleFixed")}
             onclick={() => (columnStyleState.state = "fixed")}
             class:active={styleMode === "fixed"}
         >
@@ -32,7 +32,7 @@
         <button
             data-testid="settings-expander-column-style-editing-btn"
             class="settings-expander__square-btn"
-            aria-label="Flexible mode"
+            aria-label={$t("ui.columnStyleFlexible")}
             onclick={() => (columnStyleState.state = "flexible")}
             class:active={styleMode === "flexible"}
         >
@@ -42,7 +42,7 @@
             data-testid="settings-expander-reset-layout-btn"
             class="settings-expander__square-btn"
             use:blurOnClick
-            aria-label="Скинути положення меню"
+            aria-label={$t("ui.resetMenuLayout")}
             use:customTooltip={$t("ui.resetMenuLayout")}
             onclick={() => layoutState.reset()}
         >

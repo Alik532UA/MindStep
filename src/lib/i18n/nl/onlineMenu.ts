@@ -52,7 +52,8 @@ export default {
     placeholder: "Typ een bericht...",
     empty: "Chat is leeg",
     send: "Bericht verzenden",
-    collapse: "Chat inklappen"
+    collapse: "Chat inklappen",
+    expand: 'Chat uitklappen'
   },
   errors: {
     fetchFailed: "Ophalen van kamers mislukt",
