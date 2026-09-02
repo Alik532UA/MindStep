@@ -7,6 +7,8 @@ export default {
   dndEditInstruction: "Режим редагування меню: перетягуйте блоки, щоб розташувати їх у зручному для вас порядку.",
   moveMenuItems: "Рухати елементи меню",
   resetMenuLayout: "Скинути розташування меню",
+  collapseMenu: "Згорнути меню",
+  expandMenu: "Розгорнути меню",
   columnStyleFixed: 'Фіксований режим колонок',
   columnStyleFlexible: 'Гнучкий режим колонок',
   stepper: {

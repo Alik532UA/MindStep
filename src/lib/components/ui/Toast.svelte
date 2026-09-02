@@ -65,7 +65,7 @@
     <button
         class="close-btn"
         onclick={remove}
-        aria-label={$t('modal.close' as TranslationKey) || 'Закрити'}
+        aria-label={$t("modal.close")}
         data-testid="toast-close-btn"
     >
         <X size={16} />

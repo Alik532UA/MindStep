@@ -3,6 +3,7 @@ export default {
   player: "Speler",
   penaltyInfoTitle: "Informatie over strafpunten",
   boardLabel: 'Speelbord',
+  cellLabel: "Cel {row}, {col}",
   penaltyHint: "Om strafpunten te vermijden, maak geen zet die precies het omgekeerde is van de laatste zet van de computer (d.w.z. ga niet terug naar de cel waar het net vandaan kwam).",
   bonusInfoTitle: "Huidige Speler Score",
   bonusHint: "Bonuspunten worden toegekend voor:\n• Zetten met een afstand groter dan 1 cel (1 punt per extra cel)\n• Springen over geblokkeerde cellen (1 punt per overgesprongen cel)\n\nVoorbeeld: zet afstand 3 met springen over 2 geblokkeerde cellen = 4 bonuspunten (2 voor afstand + 2 voor springen)",

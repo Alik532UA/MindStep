@@ -3,6 +3,7 @@ export default {
   player: "Player",
   penaltyInfoTitle: "Penalty Information",
   boardLabel: 'Game board',
+  cellLabel: "Cell {row}, {col}",
   penaltyHint: "To avoid penalty points, do not make a move that is the mirror of the computer's last move (i.e., don't return to the cell it just came from).",
   bonusInfoTitle: "Current Player Score",
   bonusHint: "Bonus points are awarded for:\n• Moves with distance greater than 1 cell (1 point per additional cell)\n• Jumping over blocked cells (1 point per jumped cell)\n\nExample: move distance 3 with jumping over 2 blocked cells = 4 bonus points (2 for distance + 2 for jumping)",

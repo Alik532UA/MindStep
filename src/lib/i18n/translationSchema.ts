@@ -102,6 +102,7 @@ export interface TranslationSchema {
     player: string;
     penaltyInfoTitle: string;
     boardLabel: string;
+    cellLabel: string;
     penaltyHint: string;
     bonusInfoTitle: string;
     bonusHint: string;
@@ -688,6 +689,8 @@ export interface TranslationSchema {
     dndEditInstruction: string;
     moveMenuItems: string;
     resetMenuLayout: string;
+    collapseMenu: string;
+    expandMenu: string;
     columnStyleFixed: string;
     columnStyleFlexible: string;
     stepper: {

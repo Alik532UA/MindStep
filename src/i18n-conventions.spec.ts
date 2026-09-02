@@ -42,7 +42,25 @@ const SKIP = [
 	'src/routes/test/',
 	'src/routes/test-error/',
 	'src/routes/+error.svelte',
-	'src/lib/components/ErrorBoundary.svelte'
+	'src/lib/components/ErrorBoundary.svelte',
+	/*
+	 * Табло діагностики — той самий клас виключення, що й екран помилки, і воно
+	 * заміряне, а не припущене. `LogCopyButton` стоїть у layout ПОЗА
+	 * `ErrorBoundary` навмисно (перехоплювач при падінні заміняє дітей своєю
+	 * сторінкою, тобто прибрав би табло рівно тоді, коли звіт найпотрібніший) і
+	 * показує себе сам — у `dev`, за `?debug=1` і за службовим жестом `V`.
+	 *
+	 * Тобто воно малюється ДО того, як `svelte-i18n` отримає початкову локаль, і
+	 * перший `$t` там кидає «Cannot format a message without first setting the
+	 * initial locale» — без перехоплювача це біла сторінка. Прогнано 2026-09-02:
+	 * переклад цієї назви поклав застосунок цілком, e2e впав із «top-language-btn
+	 * не існує». Той самий симптом уже описаний у `+layout.svelte` для
+	 * `NetworkMonitorWidget`.
+	 *
+	 * Кнопка, яка мусить працювати, коли не працює решта, не має залежати від
+	 * підсистеми, яка сама могла не піднятися.
+	 */
+	'src/lib/components/widgets/LogCopyButton.svelte'
 ];
 
 const CYRILLIC = /[Ѐ-ӿ]/;
@@ -186,6 +204,60 @@ const withoutExpressions = (value: string): string => value.replace(/\{[^}]*\}/g
 const HAS_LETTER = /\p{L}/u;
 const isHardcoded = (value: string): boolean => HAS_LETTER.test(withoutExpressions(value));
 
+/**
+ * Третій різновид того самого дефекту — літерал ВСЕРЕДИНІ виразу:
+ *
+ *     aria-label={isOpen ? "Згорнути меню" : "Розгорнути меню"}
+ *
+ * Формально це вираз, тобто перевірка літералів вище його не бачить, — а
+ * результат той самий: назва однією мовою для всіх чотирьох. Саме так це й
+ * знайшлося: `MenuToggleTrigger` пройшов повз перший гейт і був виявлений лише
+ * прогоном у браузері.
+ *
+ * Розбір: із виразу спершу вирізаються виклики `$t(...)` (їхній аргумент — ключ,
+ * а не текст), і те, що лишилося в лапках і містить літеру, — зашитий текст.
+ * Ключ на кшталт `"ui.collapseMenu"` після вирізання `$t(...)` не лишається,
+ * тож хибних спрацювань на правильній формі немає.
+ *
+ * ВИРАЗ БЕРЕТЬСЯ ЗІ ЗВІРКОЮ ДУЖОК, а не регуляркою `\{[^}]*\}`. Перша версія
+ * робила саме так і дала три хибні спрацювання на єдиній формі:
+ * `$t("localGame.pickColor", { color })` містить `}` усередині, тож вираз
+ * обрізався на ньому, виклик `$t` ставав неповним і його ключ читався як
+ * зашитий текст. Це той самий клас, що вже ловився в `a11y-conventions.spec.ts`:
+ * `[^>]*` зупиняється на першому `>`, а в атрибутах Svelte він трапляється
+ * постійно.
+ */
+const EXPRESSION_START = new RegExp(`(?<![\\w-])(${NAMING_ATTRIBUTES.join('|')})=\\{`, 'g');
+
+/** Вміст `{…}`, що починається на `from` (індексі відкривної дужки), зі звіркою дужок. */
+function balanced(text: string, from: number): { body: string; end: number } | null {
+	let depth = 0;
+	for (let i = from; i < text.length; i += 1) {
+		if (text[i] === '{') depth += 1;
+		else if (text[i] === '}') {
+			depth -= 1;
+			if (depth === 0) return { body: text.slice(from + 1, i), end: i };
+		}
+	}
+	return null;
+}
+
+/**
+ * У шаблонному рядку `${…}` — це КОД, а не текст: `` `${a} — ${nameOf(s)}` ``
+ * не містить жодного зашитого слова. Без цього кроку перевірка давала три хибні
+ * спрацювання на `ThemePicker`, приймаючи `nameOf(style)` за текст.
+ */
+const withoutInterpolation = (value: string): string => value.replace(/\$\{[^}]*\}/g, '');
+
+const literalsInExpression = (expression: string): string[] =>
+	[
+		...expression
+			.replace(/\$?t\(\s*(['"`])[^'"`]*\1[\s\S]*?\)/g, '')
+			.matchAll(/(['"`])([^'"`]*)\1/g)
+	]
+		.map((m) => (m[1] === '`' ? withoutInterpolation(m[2]) : m[2]))
+		.filter((value) => HAS_LETTER.test(value));
+
 function findLiteralNames(files: string[]): Hit[] {
 	const out: Hit[] = [];
 	for (const file of files) {
@@ -204,6 +276,18 @@ function findLiteralNames(files: string[]): Hit[] {
 				text: `${m[1]}="${m[2].slice(0, 40)}"`
 			});
 		}
+
+		for (const m of template.matchAll(EXPRESSION_START)) {
+			const expression = balanced(template, m.index + m[0].length - 1);
+			if (!expression) continue;
+			for (const literal of literalsInExpression(expression.body)) {
+				out.push({
+					file,
+					line: template.slice(0, m.index).split('\n').length,
+					text: `${m[1]}={… «${literal.slice(0, 40)}» …}`
+				});
+			}
+		}
 	}
 	return out;
 }
@@ -221,6 +305,33 @@ describe('I18N-v8 § 2 — доступна назва теж із словни�
 			[...good.matchAll(LITERAL_ATTRIBUTE)].filter((m) => isHardcoded(m[2])).length,
 			'вираз, порожній alt або пробіл у placeholder — не порушення'
 		).toBe(0);
+	});
+
+	it('літерал усередині виразу теж видно', () => {
+		const literals = (markup: string): string[] =>
+			[...markup.matchAll(EXPRESSION_START)].flatMap((m) => {
+				const expression = balanced(markup, m.index + m[0].length - 1);
+				return expression ? literalsInExpression(expression.body) : [];
+			});
+
+		expect(
+			literals('<button aria-label={isOpen ? "Згорнути меню" : "Розгорнути меню"}>'),
+			'зашитий текст у тернарнику не знайдено'
+		).toEqual(['Згорнути меню', 'Розгорнути меню']);
+
+		expect(
+			literals(
+				'<button aria-label={isOpen ? $t("ui.collapseMenu") : $t(\'ui.expandMenu\')} title={item.label ?? item.tooltip}>'
+			),
+			'ключ у $t(…) і звернення до поля — не зашитий текст'
+		).toEqual([]);
+
+		// Канарка на звірку дужок: `{ color }` усередині виклику обрізав вираз і
+		// перетворював ключ на «зашитий текст» (три хибні спрацювання).
+		expect(
+			literals('<button aria-label={$t("localGame.pickColor", { color })}>'),
+			'вираз обрізано на внутрішній дужці — ключ прочитався як текст'
+		).toEqual([]);
 	});
 
 	it('назва для читалки й підказка не зашиті в розмітку', () => {

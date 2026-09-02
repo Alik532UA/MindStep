@@ -7,6 +7,8 @@ export default {
   dndEditInstruction: "Menu editing mode: Drag and drop blocks to rearrange them as you like.",
   moveMenuItems: "Move menu items",
   resetMenuLayout: "Reset menu layout",
+  collapseMenu: "Collapse menu",
+  expandMenu: "Expand menu",
   columnStyleFixed: 'Fixed column mode',
   columnStyleFlexible: 'Flexible column mode',
   stepper: {

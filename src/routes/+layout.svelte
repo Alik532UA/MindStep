@@ -355,7 +355,20 @@
 
 <ErrorBoundary>
 	<div class="app">
-		{#if import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__)}
+		<!--
+			`i18nReady.ready` тут обов'язковий — з тієї самої причини, що й у
+			`NetworkMonitorWidget` нижче. Меню монтується разом із кореневим layout,
+			тобто ДО того, як `svelte-i18n` отримає початкову локаль, і перший `$t`
+			усередині (кнопка розгортання) кидає «Cannot format a message without
+			first setting the initial locale» — застосунок їде на сторінку помилки
+			цілком. Заміряно 2026-09-02: щойно назва кнопки розгортання пішла у
+			словник, e2e впав із «top-language-btn не існує», бо головного меню на
+			екрані не було взагалі.
+
+			Видимої різниці немає: `items` уже були `i18nReady.ready ? […] : []`, тож
+			доти тут малювалася порожня оболонка меню.
+		-->
+		{#if i18nReady.ready && (import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__))}
 			<FlexibleMenu
 				items={devMenuItems}
 				position="left"
@@ -372,7 +385,7 @@
 			{/if}
 		</main>
 
-		{#if import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__)}
+		{#if i18nReady.ready && (import.meta.env.DEV || (typeof window !== 'undefined' && (window as any).__playwright_test__))}
 			<FlexibleMenu
 				items={menuItems}
 				position="right"

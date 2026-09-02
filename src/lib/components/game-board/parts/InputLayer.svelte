@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n/typedI18n";
   interface Props {
     boardSize: number;
     oncellRightClick?: (data: { event: MouseEvent; row: number; col: number }) => void;
@@ -70,8 +71,8 @@
           data-row={rowIdx}
           data-col={colIdx}
           role="gridcell"
-          aria-label={`Клітинка ${rowIdx + 1}, ${colIdx + 1}`}
-          title={`Клітинка ${rowIdx + 1}, ${colIdx + 1}`}
+          aria-label={$t("gameBoard.cellLabel", { row: rowIdx + 1, col: colIdx + 1 })}
+          title={$t("gameBoard.cellLabel", { row: rowIdx + 1, col: colIdx + 1 })}
           tabindex="0"
         ></button>
       {/each}

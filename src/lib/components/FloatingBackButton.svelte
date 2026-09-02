@@ -33,8 +33,8 @@
 <button
   data-testid="floating-back-btn"
   class="floating-back-btn"
-  aria-label={$t("ui.goBack") || "Повернутися назад"}
-  use:customTooltip={$t("ui.goBack") || "Повернутися назад"}
+  aria-label={$t("ui.goBack")}
+  use:customTooltip={$t("ui.goBack")}
   onclick={handleClick}
   in:fly={{ x: -100, duration: 600, delay: 100, easing: quintOut }}
   out:fly={{ x: -100, duration: 300, easing: quintOut }}

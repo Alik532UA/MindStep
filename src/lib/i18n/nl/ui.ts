@@ -7,6 +7,8 @@ export default {
   dndEditInstruction: "Menu bewerken: Sleep blokken om ze naar wens te rangschikken.",
   moveMenuItems: "Menu-items verplaatsen",
   resetMenuLayout: "Menu-indeling resetten",
+  collapseMenu: "Menu inklappen",
+  expandMenu: "Menu uitklappen",
   columnStyleFixed: 'Vaste kolommodus',
   columnStyleFlexible: 'Flexibele kolommodus',
   stepper: {

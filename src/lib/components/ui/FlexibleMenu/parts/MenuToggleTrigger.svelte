@@ -1,6 +1,7 @@
 <script lang="ts">
     import SvgIcons from "$lib/components/SvgIcons.svelte";
     import { customTooltip } from "$lib/actions/customTooltip";
+    import { t } from "$lib/i18n/typedI18n";
     import type { MenuPosition } from "../FlexibleMenu.types";
 
     interface Props {
@@ -31,9 +32,9 @@
 <button
     class="toggle-trigger position-{position}"
     onclick={onToggle}
-    aria-label={isOpen ? "Згорнути меню" : "Розгорнути меню"}
+    aria-label={isOpen ? $t("ui.collapseMenu") : $t("ui.expandMenu")}
     data-testid="{position}-menu-toggle-btn"
-    use:customTooltip={isOpen ? "Згорнути" : "Розгорнути"}
+    use:customTooltip={isOpen ? $t("ui.collapseMenu") : $t("ui.expandMenu")}
 >
     <div class="toggle-visual">
         <div class="toggle-icon {isOpen ? 'open' : 'closed'}">

@@ -12,6 +12,30 @@
 
     let { item, dataTestId = "" }: Props = $props();
 
+    /**
+     * Доступна назва кнопки — `label`, а якщо його немає, то `tooltip`; `id`
+     * НІКОЛИ.
+     *
+     * Доти тут стояло `item.label || item.id`, і в кнопок без `label` назвою
+     * ставав машинний ідентифікатор: читалка вимовляла «main-menu-link, кнопка»,
+     * «test-mode-btn, кнопка», «dev-clear-cache-btn, кнопка». Заміряно в браузері
+     * 2026-09-02 — п'ять кнопок із п'яти в лівому меню.
+     *
+     * Найгірше те, що людська назва в кожної з них БУЛА: у `tooltip` («Тестовий
+     * режим», «Очистити кеш») — і йшла у візуальну підказку поруч. Тобто той,
+     * хто дивиться, читав назву, а той, хто слухає, отримував ідентифікатор із
+     * коду.
+     *
+     * Жоден гейт цього не бачив і не міг: axe перевіряє, що назва Є
+     * (`button-name`), а `a11y-conventions.spec.ts` шукає ВІДСУТНІЙ `aria-label`.
+     * Назва, яка є й нікуди не годиться, лежить рівно між ними.
+     *
+     * `id` лишається останнім запасом, щоб кнопка без обох полів не стала
+     * безіменною зовсім — але тоді це видно в дереві доступності як явний
+     * дефект, а не як мовчазна норма.
+     */
+    const accessibleName = $derived(item.label ?? item.tooltip ?? item.id);
+
     function handleClick(e: MouseEvent) {
         logService.action(`[MenuButton] Clicked: id=${item.id}, dataTestId=${dataTestId}`);
         if (item.onClick) {
@@ -27,7 +51,7 @@
         ? 'primary'
         : ''}"
     onclick={handleClick}
-    aria-label={item.label || item.id}
+    aria-label={accessibleName}
     type="button"
     data-testid={dataTestId}
     use:customTooltip={item.tooltip || item.label}

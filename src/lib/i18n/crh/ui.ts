@@ -7,6 +7,8 @@ export default {
   dndEditInstruction: "Menüni düzenleme kipi: Blokları sürükleyip istediğiniz gibi yerleştirin.",
   moveMenuItems: "Menü ögelerini taşı",
   resetMenuLayout: "Menü yerleşimin sıfırla",
+  collapseMenu: "Menüni qapat",
+  expandMenu: "Menüni aç",
   columnStyleFixed: 'Sabit sutun kipi',
   columnStyleFlexible: 'Egilgen sutun kipi',
   stepper: {

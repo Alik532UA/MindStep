@@ -3,6 +3,7 @@ export default {
   player: "Oyunçı",
   penaltyInfoTitle: "Ceza aqqında malümat",
   boardLabel: 'Oyun tahtası',
+  cellLabel: "Kare {row}, {col}",
   penaltyHint: "Ceza ballarını almamaq içün, kompyuterniñ soñki areketiniñ keri areketini yapmañız (yani, onıñ endi kelgen ücresine qaytmañız).",
   bonusInfoTitle: "Mevcut Oyuncu Skoru",
   bonusHint: "Bonus ballar şunlar içün berile:\n• 1 ücreden çoq mesafeli areketler (her ek ücre 1 bal)\n• Bloklanğan ücreler üzerinden atlama (her atlanğan ücre 1 bal)\n\nMisal: 2 bloklanğan ücre üzerinden atlama ile 3 mesafeli areket = 4 bonus bal (mesafe içün 2 + atlama içün 2)",
