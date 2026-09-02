@@ -66,6 +66,48 @@ async function fsCreate(path, docId, data, token) {
 	return res.status;
 }
 
+/**
+ * ЗАПИС ІЗ СЕРВЕРНИМ ЧАСОМ — через `documents:commit` (CLOUD-DATABASE-v8 § 3.3.1,
+ * `CDB-GATE-SERVER-TIME`).
+ *
+ * ЧОМУ НЕ `fsCreate`. Правило `request.resource.data.createdAt == request.time`
+ * НЕ задовольняє жодне число, надіслане клієнтом, — і саме тому воно там
+ * стоїть: інакше позначку часу можна підставити будь-яку. Сентинел «постав час
+ * запиту» існує лише як `FieldTransform` і лише в `:commit`; звичайний
+ * `createDocument` його не приймає.
+ *
+ * Ціна незнання цього названа в каноні прямо: без такого запиту ПОЗИТИВНІ
+ * випадки виглядають забороненими, гейт червоніє на правильному правилі, і
+ * «виправляють» саме те правило, яке працює.
+ *
+ * @param {string} path колекція
+ * @param {string} docId
+ * @param {object} data поля-літерали
+ * @param {string[]} serverTimeFields поля, які ставить СЕРВЕР
+ * @param {string|null} token
+ */
+async function fsCommitWithServerTime(path, docId, data, serverTimeFields, token) {
+	const res = await fetch(`${FS}:commit`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', ...auth(token) },
+		body: JSON.stringify({
+			writes: [
+				{
+					update: {
+						name: `projects/${PROJECT}/databases/(default)/documents/${path}/${docId}`,
+						fields: fields(data)
+					},
+					updateTransforms: serverTimeFields.map((fieldPath) => ({
+						fieldPath,
+						setToServerValue: 'REQUEST_TIME'
+					}))
+				}
+			]
+		})
+	});
+	return res.status;
+}
+
 /** PATCH без маски = перезапис документа. Саме так пише клієнтський `setDoc`. */
 async function fsUpdate(path, data, token) {
 	const res = await fetch(`${FS}/${path}`, {
@@ -306,9 +348,36 @@ const CASES = [
 		run: () => dbWrite(`status/${ROOM}/${host.uid}`, { state: 'online', last_changed: SERVER_TIME }, host.token)
 	},
 	{
-		name: 'відгук від неавторизованого відвідувача',
+		/*
+		 * ЧОМУ ЦЕЙ ВИПАДОК ІДЕ ЧЕРЕЗ `:commit`, А НЕ `createDocument`.
+		 *
+		 * Правило вимагає `createdAt == request.time`, і літеральне число цю умову
+		 * не задовольняє НІКОЛИ (CLOUD-DATABASE-v8 § 3.3.1). Тобто той самий
+		 * випадок, надісланий звичайним `fsCreate`, показав би 403 — і виглядало б
+		 * це як зламане правило, хоча зламаний був би запит.
+		 */
+		name: 'відгук від неавторизованого відвідувача (час ставить сервер)',
 		allowed: true,
-		run: () => fsCreate('feedback/bug/entries', 'probe', { type: 'bug', text: 'проба' }, null)
+		run: () =>
+			fsCommitWithServerTime(
+				'feedback/bug/entries',
+				'probe',
+				{ type: 'bug', text: 'проба' },
+				['createdAt'],
+				null
+			)
+	},
+	{
+		name: 'повідомлення чату від автора (час ставить сервер)',
+		allowed: true,
+		run: () =>
+			fsCommitWithServerTime(
+				`rooms/${ROOM}/messages`,
+				'msg-ok',
+				{ senderId: host.uid, senderName: 'Господар', text: 'привіт' },
+				['createdAt'],
+				host.token
+			)
 	},
 	{
 		name: 'лічильники general/* — застосунок їх пише',
@@ -500,7 +569,78 @@ const CASES = [
 		name: 'відгук із текстом на межі мегабайта',
 		allowed: false,
 		run: () =>
-			fsCreate('feedback/bug/entries', 'too-long', { type: 'bug', text: 'я'.repeat(4001) }, null)
+			fsCommitWithServerTime(
+				'feedback/bug/entries',
+				'too-long',
+				{ type: 'bug', text: 'я'.repeat(4001) },
+				['createdAt'],
+				null
+			)
+	},
+	{
+		/*
+		 * ГОЛОВНИЙ НЕГАТИВНИЙ ВИПАДОК ЦІЄЇ ТРІЙКИ, і найтихіший із них.
+		 *
+		 * Позначка часу — не метадані: відгуки дивляться з консолі за нею, а чат
+		 * читається `orderBy('createdAt', 'desc')`. Число, підставлене клієнтом,
+		 * прикріплює запис до верху назавжди, і сліду про це не лишається ніде.
+		 */
+		name: 'відгук із власною позначкою часу',
+		allowed: false,
+		run: () =>
+			fsCreate(
+				'feedback/bug/entries',
+				'fake-time',
+				{ type: 'bug', text: 'х', createdAt: 4000000000000 },
+				null
+			)
+	},
+	{
+		name: 'повідомлення чату з власною позначкою часу',
+		allowed: false,
+		run: () =>
+			fsCreate(
+				`rooms/${ROOM}/messages`,
+				'msg-fake-time',
+				{ senderId: host.uid, senderName: 'Господар', text: 'х', createdAt: 4000000000000 },
+				host.token
+			)
+	},
+	{
+		name: 'повідомлення чату із зайвим полем',
+		allowed: false,
+		run: () =>
+			fsCommitWithServerTime(
+				`rooms/${ROOM}/messages`,
+				'msg-extra',
+				{ senderId: host.uid, senderName: 'Господар', text: 'х', pinned: true },
+				['createdAt'],
+				host.token
+			)
+	},
+	{
+		name: 'повідомлення чату з текстом без межі',
+		allowed: false,
+		run: () =>
+			fsCommitWithServerTime(
+				`rooms/${ROOM}/messages`,
+				'msg-too-long',
+				{ senderId: host.uid, senderName: 'Господар', text: 'я'.repeat(1001) },
+				['createdAt'],
+				host.token
+			)
+	},
+	{
+		name: 'повідомлення чату від чужого імені',
+		allowed: false,
+		run: () =>
+			fsCommitWithServerTime(
+				`rooms/${ROOM}/messages`,
+				'msg-impostor',
+				{ senderId: host.uid, senderName: 'Господар', text: 'х' },
+				['createdAt'],
+				guest.token
+			)
 	},
 	{
 		name: 'чужа присутність (RTDB)',

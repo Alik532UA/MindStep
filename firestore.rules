@@ -408,10 +408,36 @@ service cloud.firestore {
         allow write: if signedIn() && playerId == request.auth.uid;
       }
 
-      /** Чат кімнати: автор повідомлення — той, хто пише. Правити не можна. */
+      /**
+       * Чат кімнати: автор повідомлення — той, хто пише. Правити не можна.
+       *
+       * ЩО ТУТ БУЛО ЛИШЕ ОДНЕ ПРАВИЛО, І ЧОГО ЙОМУ БРАКУВАЛО. Умова про автора
+       * стояла з початку й вона правильна. Але окрім автора не перевірялося
+       * НІЧОГО: ні перелік ключів, ні довжина тексту, ні позначка часу — тобто
+       * учасник кімнати міг дописати документ будь-якого розміру з будь-якими
+       * полями (CLOUD-DATABASE-v8 § 12.1, `CDB-ABUSE-COST`).
+       *
+       * Найтихіший із трьох — час. `createdAt` не просто метадані: чат читається
+       * `orderBy('createdAt', 'desc')`, тож підставлена дата в майбутньому
+       * прикріплює повідомлення до верху назавжди, і жодного сліду про це не
+       * лишається. `serverTimestamp()` у клієнті розкривається в сентинел
+       * «час запиту», і `request.time` — єдине, з чим його можна звірити.
+       *
+       * Гейт перевіряє це через `documents:commit` із `setToServerValue:
+       * REQUEST_TIME` (§ 3.3.1): літеральний час клієнта цю умову не задовольняє
+       * НІКОЛИ, тож без такого запиту позитивний випадок виглядав би забороненим.
+       */
       match /messages/{messageId} {
         allow read: if signedIn();
-        allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+        allow create: if signedIn()
+                      && request.resource.data.senderId == request.auth.uid
+                      && request.resource.data.keys().hasOnly(
+                           ['senderId', 'senderName', 'text', 'createdAt'])
+                      && request.resource.data.keys().hasAll(
+                           ['senderId', 'senderName', 'text', 'createdAt'])
+                      && request.resource.data.createdAt == request.time
+                      && request.resource.data.text.size() <= 1000
+                      && request.resource.data.senderName.size() <= 60;
         allow update, delete: if false;
       }
 
@@ -441,7 +467,7 @@ service cloud.firestore {
        * і довжина кожного текстового поля.
        */
       allow create: if type in ['bug', 'improvement', 'other', 'reward_suggestion']
-                    && request.resource.data.keys().hasAll(['type'])
+                    && request.resource.data.keys().hasAll(['type', 'createdAt'])
                     && request.resource.data.keys().hasOnly(
                          ['type', 'page', 'text', 'actualResult', 'expectedResult',
                           'context', 'createdAt', 'status', 'id'])
@@ -453,7 +479,17 @@ service cloud.firestore {
                     && (!('actualResult' in request.resource.data)
                         || request.resource.data.actualResult.size() <= 4000)
                     && (!('expectedResult' in request.resource.data)
-                        || request.resource.data.expectedResult.size() <= 4000);
+                        || request.resource.data.expectedResult.size() <= 4000)
+                    /*
+                     * ЧАС СТАВИТЬ СЕРВЕР, а не той, хто надсилає форму
+                     * (CLOUD-DATABASE-v8 § 3.3.1). Поле `createdAt` стояло в
+                     * переліку дозволених ключів і не перевірялося ніяк, тож у
+                     * теку відгуків можна було покласти запис із довільною
+                     * датою — зокрема далеко в майбутньому, щоб він завжди
+                     * лежав першим. `feedbackService` пише саме
+                     * `serverTimestamp()`, тож умова нічого не ламає.
+                     */
+                    && request.resource.data.createdAt == request.time;
       allow read, update, delete: if false;
     }
 
