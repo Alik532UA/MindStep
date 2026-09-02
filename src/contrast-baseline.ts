@@ -33,23 +33,57 @@
  * стилів наосліп — саме те, що канон (UI-UX-v8 § 1.5.1.1) називає ціною
  * «обережного» проходу: пара, якої не було ні в одній темі.
  *
+ * ## orange/light закритий ЦІЛКОМ (2026-09-02)
+ *
+ * Вісім рядків пішли — усі, що були в цій комбінації. Причина в них справді була
+ * одна, і саме та, яку називав попередній запис: помаранчевий у ролі тла ЗАВЖДИ
+ * світлий, тож білий текст на ньому не проходить ніколи. Відповідь при цьому не
+ * вигадувалася — вона вже стояла в СУСІДНІЙ темі того самого стилю: `orange/normal`
+ * тримає `#222` на всіх трьох кнопках дії. Світлій темі бракувало саме цього.
+ *
+ * Що змінилося (заміряно кожне; поверхні не чіпалися):
+ *
+ * | Токен | Було | Стало | Проти чого |
+ * |---|---|---|---|
+ * | `--confirm-action-text` | `#ffffff` 2.78 | `#222222` **5.72** | `#4caf50` |
+ * | `--warning-action-text` | `#ffffff` 2.16 | `#222222` **7.38** | `#ff9800` |
+ * | `--info-action-text` | `#ffffff` 2.63 | `#222222` **6.05** | `#03a9f4` |
+ * | `--control-selected-text` | `#fff` 2.16 | `#3a1d00` **7.19** | `#ff9800` |
+ * | `--text-secondary` | `#ff9800` 1.97 | `#9c4a00` **5.64** | `#fff3e0` |
+ * | `--text-accent` | `#ffa726` 1.77 | `#a63c00` **5.86** | `#fff3e0` |
+ * | `--piece-color` | `#ffa726` 1.21 | `#5b2200` **5.33** | `#ff8a26` (клітинка) |
+ *
+ * `--control-selected-text` не взяв `#6d3a00` зі сусідньої теми навмисно: на
+ * `#ff9800` він дає **4.32**, тобто трохи НЕ дотягує до 4.5. Це рівно той випадок,
+ * проти якого канон застерігає в § 1.5.1.1 — «схоже на правильне» тут гірше за
+ * заміряне.
+ *
+ * Фігура гри отримала власне значення — те саме рішення, що вже прийняте для
+ * purple: доти вона була `#ffa726` на клітинці `#ff8a26`, тобто **1.21:1**, і на
+ * темних клітинках її практично не було видно. Разом із нею перефарбована тінь
+ * (`--piece-shadow`), інакше навколо темної фігури лишалося світло-помаранчеве
+ * сяйво.
+ *
  * ЩО ВИДНО З ГРУПУВАННЯ, і з чого варто починати:
  *
  * | Пара токенів | Комбінацій | Найгірше |
  * |---|---|---|
- * | `--cell-dark -> --piece-color` | 8 | 1.07:1 (green/light) — фігуру майже не видно на клітинці |
- * | `--bg-secondary` ↔ `--text-accent` | 14 | 1.44:1 (orange/dark) |
- * | `--confirm-action-bg -> --confirm-action-text` | 8 | 2.78:1 — білий на `#4caf50`, той самий випадок, що бачить axe |
- * | `--control-selected -> --control-selected-text` | 3 | 2.16:1 (orange/light) |
- * | `--info-action-bg -> --info-action-text` | 4 | 2.63:1 |
- * | `--bg-secondary -> --text-secondary` | 3 | 1.95:1 (orange/dark) |
- * | `--warning-action-bg -> --warning-action-text` | 2 | 2.16:1 |
+ * | `--confirm-action-bg -> --confirm-action-text` | 6 | білий на `#4caf50` — той самий випадок, що бачить axe |
+ * | `--cell-dark -> --piece-color` | 6 | 1.07:1 (green/light) — фігуру майже не видно на клітинці |
+ * | `--bg-secondary` ↔ `--text-accent` | 12 | 1.44:1 (orange/normal) |
+ * | `--info-action-bg -> --info-action-text` | 3 | 2.63:1 |
+ * | `--bg-secondary -> --text-secondary` | 2 | 1.95:1 (orange/normal) |
+ * | `--control-selected -> --control-selected-text` | 1 | |
+ * | `--warning-action-bg -> --warning-action-text` | 1 | |
  * | `--bg-secondary -> --text-primary` | 1 | 2.79:1 |
  * | `--control-bg -> --text-primary` | 1 | 3.79:1 |
  *
- * `orange` — найдорожчий стиль: у нього дев'ять рядків із сорока семи, і в обох
- * темах. Причина одна на всі: помаранчевий у ролі тла ЗАВЖДИ світлий, тож білий
- * текст на ньому не проходить ніколи — там потрібен темний.
+ * **Чому `orange/normal` НЕ закритий разом зі світлою.** Там дефект не в тексті, а
+ * в поверхні: `--bg-secondary: #ff6f00` — середній за світлістю, і на ньому не
+ * проходить НІ білий (2.79), ні світло-помаранчевий (1.44). Прохідний варіант
+ * лишається один — темний текст (`#2b1200` дає 6.33), а це вже інший вигляд теми,
+ * тобто рішення про палітру, а не звірка чисел. Саме таке рішення канон
+ * (UI-UX-v8 § 1.5.1.1) і просить не приймати механічно.
  *
  * Рядок ПРИБИРАЄТЬСЯ, коли пара полагоджена. Гейт звіряє множини на рівність в
  * обидва боки: борг, що скоротився й не прибраний із цього файлу, теж червоний
@@ -75,14 +109,6 @@ export const KNOWN_CONTRAST_DEBT: readonly string[] = [
 	'green/normal --bg-secondary -> --text-accent',
 	'green/normal --cell-dark -> --piece-color',
 	'green/normal --text-accent -> --bg-secondary',
-	'orange/light --bg-secondary -> --text-accent',
-	'orange/light --bg-secondary -> --text-secondary',
-	'orange/light --cell-dark -> --piece-color',
-	'orange/light --confirm-action-bg -> --confirm-action-text',
-	'orange/light --control-selected -> --control-selected-text',
-	'orange/light --info-action-bg -> --info-action-text',
-	'orange/light --text-accent -> --bg-secondary',
-	'orange/light --warning-action-bg -> --warning-action-text',
 	'orange/normal --bg-secondary -> --text-accent',
 	'orange/normal --bg-secondary -> --text-primary',
 	'orange/normal --bg-secondary -> --text-secondary',
