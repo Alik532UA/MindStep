@@ -1,7 +1,7 @@
 import { logService } from "./logService.svelte";
 import { storageService } from "./storage";
 import { base } from "$app/paths";
-import { STORAGE_PREFIX } from '$lib/config/storage';
+import { ownCacheNames, ownRegistrations } from "./ownScope";
 
 /**
  * Текст підтвердження свідомо НЕ через i18n.
@@ -52,11 +52,8 @@ export const maintenanceService = {
                 try {
                     const cacheNames = await caches.keys();
                     // Той самий префікс, що й у сховища — з єдиного джерела.
-                    const CACHE_PREFIX = STORAGE_PREFIX;
                     await Promise.all(
-                        cacheNames
-                            .filter(name => name.startsWith(CACHE_PREFIX))
-                            .map(name => caches.delete(name))
+                        ownCacheNames(cacheNames).map(name => caches.delete(name))
                     );
                     logService.info('[Maintenance] Project-specific caches cleared.');
                 } catch (e) {
@@ -79,16 +76,15 @@ export const maintenanceService = {
              *
              * Порівняння як АДРЕСИ, а не рядка: `scope` завжди абсолютний
              * (`https://host/MindStep/`), а `base` — шлях (`/MindStep`), тож
-             * пряме `startsWith(base)` не збіглося б ніколи.
+             * пряме `startsWith(base)` не збіглося б ніколи. Сам фільтр живе в
+             * `ownScope.ts`: доти він був копією тут, а другий виклик
+             * `getRegistrations()` (критичне оновлення) фільтра не мав зовсім.
              */
             if ('serviceWorker' in navigator) {
                 try {
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    const scopePrefix = new URL(`${base || ''}/`, window.location.origin).href;
                     await Promise.all(
-                        registrations
-                            .filter((registration) => registration.scope.startsWith(scopePrefix))
-                            .map((registration) => registration.unregister())
+                        ownRegistrations(registrations).map((registration) => registration.unregister())
                     );
                     logService.info('[Maintenance] Own service worker registrations removed.');
                 } catch (e) {

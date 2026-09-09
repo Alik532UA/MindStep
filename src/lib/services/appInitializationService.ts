@@ -13,6 +13,7 @@ import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
 import { uiState } from "$lib/stores/uiState.svelte";
 import { storageService } from "$lib/services/storage";
+import { ownCacheNames, ownRegistrations } from "$lib/services/ownScope";
 
 import { urlSyncService } from "$lib/services/urlSyncService";
 import { authService } from "$lib/services/authService";
@@ -172,24 +173,35 @@ class AppInitializationService {
     }
 
     /**
-     * Виконує повне очищення кешу та перезавантаження
+     * Виконує повне очищення кешу та перезавантаження.
+     *
+     * ЛИШЕ СВОЄ — за `scope` реєстрації і за префіксом імені кешу
+     * (`ownScope.ts`, DEBUGGING § `DBG-HARD-RESET`). Доти обидва цикли нижче
+     * ходили по всьому origin: `getRegistrations()` і `caches.keys()` не знають
+     * нічого про підшлях, тож критичне оновлення MindStep знімало service
+     * worker і витирало кеші кожного сусіднього проєкту на
+     * `alik532ua.github.io`. Симптом у сусіда — сайт раптово перестав
+     * працювати офлайн, і причина в чужому репозиторії.
+     *
+     * `maintenanceService.hardReset()` фільтрував правильно з самого початку —
+     * розійшлися саме тому, що фільтр був копією, а не спільним модулем.
      */
     public async performHardReload() {
-        logService.init("[AppInitializationService] Performing Hard Reload: clearing SW and Caches...");
-        
+        logService.init("[AppInitializationService] Performing Hard Reload: clearing own SW and Caches...");
+
         try {
-            // 1. Unregister all service workers
+            // 1. Unregister own service workers
             if ("serviceWorker" in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for (const registration of registrations) {
+                for (const registration of ownRegistrations(registrations)) {
                     await registration.unregister();
                 }
             }
 
-            // 2. Clear all caches
+            // 2. Clear own caches
             if ("caches" in window) {
                 const keys = await caches.keys();
-                for (const key of keys) {
+                for (const key of ownCacheNames(keys)) {
                     await caches.delete(key);
                 }
             }

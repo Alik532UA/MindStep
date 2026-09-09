@@ -1,6 +1,7 @@
 <script lang="ts">
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
+	import { ownRegistrations } from "$lib/services/ownScope";
 	import { initAnalytics, trackPageView } from "$lib/services/analyticsService";
 	import { webVitals } from "$lib/controllers/webVitals.svelte";
 	import { versionState } from "$lib/stores/versionState.svelte";
@@ -138,10 +139,18 @@
 			locale.set(next);
 		});
 
-		// Remove old 'sw.js' service worker to fix 404 errors during migration to 'service-worker.js'
+		/*
+		 * Прибирання старого `sw.js` після переїзду на `service-worker.js`.
+		 *
+		 * Фільтр за `scope` (`ownRegistrations`) обов'язковий: сусідні проєкти
+		 * на `alik532ua.github.io` теж мають `sw.js`, і без фільтра ця гілка
+		 * знімала ЧУЖУ реєстрацію, а потім перезавантажувала свою сторінку —
+		 * тобто ламала сусіда й нічого не лікувала в себе
+		 * (STORAGE-NAMESPACE § 1, `ownScope.ts`).
+		 */
 		if ("serviceWorker" in navigator) {
 			navigator.serviceWorker.getRegistrations().then((registrations) => {
-				for (const registration of registrations) {
+				for (const registration of ownRegistrations(registrations)) {
 					if (
 						registration.active &&
 						registration.active.scriptURL.endsWith("/sw.js")
