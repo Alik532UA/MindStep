@@ -81,22 +81,46 @@ class AppInitializationService {
         logService.init("[AppInitializationService] Initialization complete.");
     }
 
+    /**
+     * Обробник тримається полем, а не лишається анонімним
+     * (SVELTE-CORE-v9 § 2.2.2, `SC-LISTENER-CLEANUP`).
+     *
+     * Доти тут стояла анонімна функція, тобто зняти цей обробник було
+     * НЕМОЖЛИВО в принципі — а `cleanup()`, який кличе `+layout.svelte` при
+     * знищенні, знімав лише інтервал версії. Кожен повторний виклик
+     * `initialize()` (перемонтування кореневого layout, HMR, скидання станів у
+     * тестовому режимі) додавав ще один обробник до попереднього, і кожен із
+     * них далі писав у `uiState`.
+     */
+    private visibilityHandler: (() => void) | null = null;
+
     private setupVisibilityListener() {
         if (typeof document === 'undefined') return;
 
-        document.addEventListener('visibilitychange', () => {
+        // Повторна ініціалізація не має додавати другий обробник.
+        this.teardownVisibilityListener();
+
+        this.visibilityHandler = () => {
             const isVisible = document.visibilityState === 'visible';
             logService.ui(`[AppInitializationService] Visibility changed: ${document.visibilityState}`);
-            
+
             uiState.update(s => ({
                 ...s,
                 isTabVisible: isVisible
             }));
-        });
+        };
+        document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    private teardownVisibilityListener() {
+        if (typeof document === 'undefined' || !this.visibilityHandler) return;
+        document.removeEventListener('visibilitychange', this.visibilityHandler);
+        this.visibilityHandler = null;
     }
 
     public cleanup() {
         this.stopPeriodicVersionCheck();
+        this.teardownVisibilityListener();
     }
 
     private startPeriodicVersionCheck() {
