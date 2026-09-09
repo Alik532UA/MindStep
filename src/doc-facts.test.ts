@@ -94,8 +94,22 @@ const BUILD_ARTIFACTS = new Set([
 	'workbox-config.js'
 ]);
 
+/**
+ * Імена, які не є файлами ЦЬОГО репозиторію й ніколи ними не стануть.
+ *
+ * Перелік поіменний, а не за шаблоном: `action.yml` — маніфест чужої дії
+ * GitHub, і саме про нього йдеться в `CI-ACTION-RUNTIME`. Шаблон «будь-який
+ * .yml» пропустив би справжню згадку власного workflow.
+ */
+const NOT_OURS: Record<string, string> = {
+	'action.yml': 'маніфест дії GitHub усередині чужого репозиторію (CI-ACTION-RUNTIME)'
+};
+
 /** Шляхи в ІНШІ репозиторії: тут їх не існує, і це не дефект. */
 const OTHER_REPO = /^(sveltekit-canon|product_criteria)\//;
+
+/** Усе під `build/` — артефакт, а не файл репозиторію. */
+const BUILD_DIR = /^build\//;
 
 describe('перевірка жива', () => {
 	it('документи знайдено', () => {
@@ -122,6 +136,7 @@ describe('GATE-DOC-NUMBERS: шляхи в документах резолвят�
 			for (const match of read(doc).matchAll(TOKEN)) {
 				const token = match[1];
 				if (BUILD_ARTIFACTS.has(token) || OTHER_REPO.test(token)) continue;
+				if (BUILD_DIR.test(token) || token in NOT_OURS) continue;
 				if (files.includes(token)) continue;
 				const candidates = files.filter((file) => file.endsWith(`/${token}`));
 				if (candidates.length === 0) problems.push(`${doc}: \`${token}\` — не резолвиться`);
@@ -190,7 +205,12 @@ describe('GATE-DOC-NUMBERS: `npm run X` у прозі існує (PIT-DOC-FACTS)
 	const OTHER_REPO_SCRIPTS: Record<string, RegExp> = {
 		// Набір прапорів генерується в `VetCrewGames` із `country-flag-icons`;
 		// тут того пакета в залежностях немає (`countries.ts`).
-		'sync:flags': /сусід/i
+		//
+		// Альтернативи перелічені, бо сказати це можна двома способами, і обидва
+		// однаково зрозумілі читачеві: «у сусідньому VetCrewGames» і «скрипта,
+		// якого в цьому проєкті немає». Вимагати одного слова означало б
+		// вимагати формулювання, а не змісту.
+		'sync:flags': /сусід|у цьому проєкті нема|в цьому проєкті нема/i
 	};
 
 	it('кожен названий у прозі npm-скрипт існує', () => {
@@ -234,11 +254,23 @@ describe('версія пакета інструкцій названа одна
 	 * половинчасте оновлення (шапка на v9, посилання на v8) — рівно той стан,
 	 * у якому агент читає стандарт минулої ревізії й вважає, що читає поточний.
 	 */
+	/**
+	 * Рахуються лише ЖИВІ посилання — у лапках або в markdown-посиланні.
+	 *
+	 * У цих документах лапки означають «це існує зараз», і та сама умова
+	 * потрібна тут: розділ «нові інваріанти» цитує старий шлях як опис дефекту
+	 * («вів у selection_criteria/v8 при шапці на v9»), і без цієї межі гейт
+	 * читав би ЗГАДКУ ПРО ПОРУШЕННЯ як порушення — той самий клас, що вже
+	 * ловився в `ci.test.ts`.
+	 */
+	// `[^\s`)]*` навмисно забороняє пробіли: інакше вираз перестрибнув би цілий
+	// абзац від випадкової дужки до згадки в прозі — і саме це й сталося на
+	// першому прогоні.
+	const LIVE_REFERENCE = /[`(][^\s`)]*selection_criteria\/(v\d+)/g;
+
 	const versions = new Map<string, Set<string>>();
 	for (const doc of present) {
-		const found = new Set(
-			[...read(doc).matchAll(/selection_criteria\/(v\d+)/g)].map((match) => match[1])
-		);
+		const found = new Set([...read(doc).matchAll(LIVE_REFERENCE)].map((match) => match[1]));
 		if (found.size) versions.set(doc, found);
 	}
 
