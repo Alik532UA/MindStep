@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
+import { readFileSync, readdirSync } from 'node:fs';
 import crh from './lib/i18n/crh';
 import en from './lib/i18n/en';
 import nl from './lib/i18n/nl';
@@ -133,5 +134,99 @@ describe('словники: паритет ключів (I18N-v8 § 7.1)', () =>
 		expect(drift, `${locale}: підстановка, якої немає в перекладі, лишає в реченні дірку`).toEqual(
 			[]
 		);
+	});
+});
+
+/**
+ * ПАРИТЕТ МІРЯЄТЬСЯ ПО ВСІХ ФАЙЛАХ ЛОКАЛІ, А НЕ ПО ІМПОРТОВАНОМУ МОДУЛЮ
+ * (I18N-v9 § 7.1.1, `I18N-LAZY-CHUNK-PARITY`, HIGH, `GATE-I18N-PARITY`).
+ *
+ * ## Другий бік того самого рішення
+ *
+ * Словники вище імпортуються, а не читаються з диску — навмисно: перевірити
+ * треба саме те, що поїде в бандл (докблок на початку файлу). Але в цього
+ * рішення є ціна, і вона названа там же: **файл на диску може існувати й не
+ * бути підключеним до агрегатора.** Тоді паритет зелений, а сторінка показує
+ * ключі замість тексту — і жоден із чотирьох інваріантів вище цього не бачить,
+ * бо для них того файлу просто не існує.
+ *
+ * v9 називає цей клас `I18N-LAZY-CHUNK-PARITY`: у `VetCrewGames` це був
+ * лінивий чанк словника, який випав із паритету. Тут лінивих чанків немає,
+ * форма інша — каталог `src/lib/i18n/<lang>/` і агрегатор `<lang>.ts` поруч, —
+ * але механізм пропуску той самий: паритет бачить лише те, що імпортоване.
+ *
+ * ## Чому обидва боки
+ *
+ * Файл без імпорту — текст, якого не буде на екрані. Імпорт без файлу не
+ * збереться взагалі, тож його ловить `svelte-check`; але третій випадок —
+ * ФАЙЛ, ІМПОРТОВАНИЙ НЕ В СВОЮ локаль (`uk/settings` в `en.ts` після
+ * копіювання агрегатора) — не ловить ніхто: типи збігаються, ключі збігаються,
+ * а мова ні. Тому імпорти звіряються ще й на префікс каталогу.
+ *
+ * Заміряно 2026-09-10: 28 файлів × 4 локалі, усі підключені, жодного чужого.
+ *
+ * ## Зворотний експеримент (AI-AGENT-PITFALLS § 1.1) — прогнано
+ *
+ * Вирішальний прогін — СИМЕТРИЧНИЙ пропуск, бо саме він і є класом: файл
+ * `probeFeature.ts` створено в усіх чотирьох каталогах і не підключено ні до
+ * одного агрегатора. Чотири перевірки паритету вище лишилися ЗЕЛЕНИМИ (для них
+ * тих файлів не існує), а новий інваріант назвав усі чотири локалі. Асиметричний
+ * пропуск (прибрати `import social from './uk/social'`) паритет ловить
+ * побічно — через «зайві ключі» в решті локалей, — і саме тому він доказом не
+ * є: симетричний не ловить ніхто.
+ */
+describe('кожен файл локалі підключений до свого агрегатора (I18N-LAZY-CHUNK-PARITY)', () => {
+	const DIR = 'src/lib/i18n';
+	const LOCALE_NAMES = Object.keys(LOCALES);
+
+	/** Файли фіч на диску: `<lang>/<feature>.ts`. */
+	const onDisk = Object.fromEntries(
+		LOCALE_NAMES.map((locale) => [
+			locale,
+			readdirSync(`${DIR}/${locale}`)
+				.filter((name) => name.endsWith('.ts'))
+				.map((name) => name.replace(/\.ts$/, ''))
+		])
+	);
+
+	/** Імпорти з агрегатора разом із каталогом, з якого вони взяті. */
+	const imported = Object.fromEntries(
+		LOCALE_NAMES.map((locale) => [
+			locale,
+			[
+				...readFileSync(`${DIR}/${locale}.ts`, 'utf8').matchAll(
+					/from\s+'\.\/([a-z]+)\/([A-Za-z0-9_]+)'/g
+				)
+			].map((match) => ({ dir: match[1], feature: match[2] }))
+		])
+	);
+
+	it('перевірка жива: файли й агрегатори прочитано', () => {
+		for (const locale of LOCALE_NAMES) {
+			expect(onDisk[locale].length, `${locale}: у каталозі немає файлів фіч`).toBeGreaterThan(5);
+			expect(
+				imported[locale].length,
+				`${locale}: в агрегаторі не знайдено імпортів — регулярка застаріла`
+			).toBeGreaterThan(5);
+		}
+	});
+
+	it.each(LOCALE_NAMES)('%s: кожен файл на диску імпортований агрегатором', (locale) => {
+		const features = imported[locale].map((entry) => entry.feature);
+		const orphans = onDisk[locale].filter((feature) => !features.includes(feature));
+		expect(
+			orphans,
+			`${locale}: файл є, тексту на екрані не буде — паритет його не бачить зовсім:\n${orphans.join(', ')}`
+		).toEqual([]);
+	});
+
+	it.each(LOCALE_NAMES)('%s: агрегатор не тягне файли чужої локалі', (locale) => {
+		const foreign = imported[locale]
+			.filter((entry) => entry.dir !== locale)
+			.map((entry) => `${entry.dir}/${entry.feature}`);
+		expect(
+			foreign,
+			`${locale}.ts імпортує з чужого каталогу — типи й ключі збіглися б, а мова ні:\n${foreign.join(', ')}`
+		).toEqual([]);
 	});
 });
