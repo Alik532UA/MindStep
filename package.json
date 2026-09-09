@@ -2,13 +2,15 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.962",
+  "version": "0.5.963",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "test": "node scripts/robust-test.js",
+    "test:unit": "vitest run",
+    "test:e2e": "node scripts/robust-test.js",
     "test:online": "firebase emulators:exec \"playwright test tests/e2e/online\"",
     "test:report": "vitest run --reporter=default --reporter=json --outputFile.json=test-reports/test-results.json",
     "dev": "vite dev",

@@ -6,15 +6,15 @@
 # AGENTS.md — MindStep
 
 > **Спершу прочитай [PROJECT-CONTEXT.md](PROJECT-CONTEXT.md).** Там персональний
-> шар пакета v8: базові параметри, прийняті рішення, свідомі відхилення, локальні
+> шар пакета v9: базові параметри, прийняті рішення, свідомі відхилення, локальні
 > пастки й перелік того, що тут **не** перевіряється автоматично. Цей файл —
 > коротка витримка для щоденної роботи.
 >
-> Загальні стандарти живуть у `sveltekit-canon/selection_criteria/v8`. Тут — лише
+> Загальні стандарти живуть у `sveltekit-canon/selection_criteria/v9`. Тут — лише
 > те, що специфічне для цього репозиторію.
 >
 > `STACK-RULES-svelte.md` у корені — легасі: він датований 2026-03-24 і дублює
-> те, що вже є в пакеті v8. При розбіжності перемагає пакет.
+> те, що вже є в пакеті v9. При розбіжності перемагає пакет.
 
 ## Що це
 
@@ -39,7 +39,7 @@
   (`STORAGE_PREFIX`). Origin спільний із шістьма сусідніми проєктами.
 - **i18n:** типізований, власна `translationSchema.ts` + `typedI18n.ts`.
   Словники — `.ts`, не JSON.
-- **Логування:** `src/lib/services/logService.ts`. `console.log` заборонений.
+- **Логування:** `src/lib/services/logService.svelte.ts`. `console.log` заборонений.
 
 ## 🔥 Онлайн-партія: журнал ходів, а не поле стану
 
@@ -80,7 +80,7 @@ rooms/{id}/presence/{playerId} присутність
 `MatchLogGameStateSync.ts`. Тести — `matchReplay.spec.ts`: двоє учасників в
 одному процесі, без мережі й ключів.
 
-Повний стандарт — `sveltekit-canon/selection_criteria/v8/platform/CLOUD-DATABASE-v8.md`.
+Повний стандарт — `sveltekit-canon/selection_criteria/v9/platform/CLOUD-DATABASE-v9.md`.
 
 ## Локальні пастки
 
@@ -109,7 +109,7 @@ rooms/{id}/presence/{playerId} присутність
 ## Діагностика
 
 `logService` має об'єкт `logConfig` із прапорцями за темами (`score`, `ai` тощо).
-Для дебагу редагуй прапорці всередині `logService.ts`, щоб бачити лише потрібне.
+Для дебагу редагуй прапорці всередині `logService.svelte.ts`, щоб бачити лише потрібне.
 **Після виправлення бага поверни `logConfig` у початковий стан.**
 
 Окремий помічник — `npm run diagnose`.
