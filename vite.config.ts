@@ -56,12 +56,39 @@ export default defineConfig(({ mode }) => {
 			}),
 			VitePWA({
 				filename: 'service-worker.js',
-				registerType: 'autoUpdate',
+				/*
+				 * `prompt`, а не `autoUpdate` (VERSIONING-v9 § 4.4, § 4.5
+				 * `VER-OPEN-TAB-SURVIVES`, HIGH).
+				 *
+				 * Тут стояло `autoUpdate` разом із `skipWaiting: true` і
+				 * `clientsClaim: true`. Обидва прапорці означають одне: новий
+				 * воркер не чекає, а забирає ВЖЕ ВІДКРИТУ вкладку під себе.
+				 * Далі `cleanupOutdatedCaches` прибирає з передкешу старі
+				 * чанки, і сторінка, яка тримає їхні адреси, отримує 404 на
+				 * перший же перехід. SvelteKit це витягує повним
+				 * перезавантаженням (`native_navigation` після
+				 * `updated.check()`), тобто екран не білий — але партія,
+				 * налаштування й позиція в грі зникають без жодного запитання.
+				 *
+				 * Друге, гірше: `ReloadPrompt.svelte` змонтований у
+				 * `+layout.svelte` і показує пропозицію «оновитися» по
+				 * `needRefresh`. При `skipWaiting` воркер НЕ чекає ніколи, тож
+				 * `needRefresh` не ставало `true` жодного разу — тобто готовий
+				 * UI із двома кнопками був мертвим кодом, а рішення про
+				 * оновлення ухвалював воркер.
+				 *
+				 * Тепер новий воркер стоїть у `waiting`, людина бачить
+				 * пропозицію, і `updateServiceWorker(true)` застосовує її
+				 * повним перезавантаженням — коли вона сама цього захоче.
+				 *
+				 * Інваріант, що тримає це: `src/stale-build.test.ts` (джерела)
+				 * і `scripts/check-build.mjs` (зібраний `service-worker.js` —
+				 * доказ, що генератор справді не вставив `skipWaiting()`).
+				 */
+				registerType: 'prompt',
 				manifest,
 				injectRegister: false,
 				workbox: {
-					clientsClaim: true,
-					skipWaiting: true,
 					cleanupOutdatedCaches: true,
 					globPatterns: isDev
 						? [] 

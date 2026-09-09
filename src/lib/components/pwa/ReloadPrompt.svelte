@@ -2,6 +2,7 @@
   import { useRegisterSW } from 'virtual:pwa-register/svelte';
   // `onMount` і `createEventDispatcher` імпортувалися сюди й не вживалися
   // жодного разу — жодної події цей компонент не надсилає.
+  import { onDestroy } from "svelte";
   import { logService } from "$lib/services/logService.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import StyledButton from "$lib/components/ui/StyledButton.svelte";
@@ -9,11 +10,19 @@
   // Інтервал перевірки оновлень (наприклад, кожні 15 хвилин)
   const CHECK_INTERVAL = 15 * 60 * 1000;
 
+  /*
+   * Ідентифікатор інтервалу тримається, щоб зняти його при знищенні
+   * (SVELTE-CORE-v9 § 2.2.2, `SC-LISTENER-CLEANUP`). Доти `setInterval` жив
+   * без пари: на SPA-навігації переживав компонент, а `r.update()` продовжував
+   * ходити по мережі від кожного зайвого монтування.
+   */
+  let updateCheckId: ReturnType<typeof setInterval> | null = null;
+
   const { needRefresh, updateServiceWorker, offlineReady } = useRegisterSW({
     onRegistered(r) {
       logService.info('[PWA] Service Worker registered');
       if (r) {
-        setInterval(() => {
+        updateCheckId = setInterval(() => {
           logService.info('[PWA] Checking for updates and validating version...');
           r.update();
         }, CHECK_INTERVAL);
@@ -22,6 +31,11 @@
     onRegisterError(error) {
       logService.error('[PWA] Service Worker registration failed', error);
     },
+  });
+
+  onDestroy(() => {
+    if (updateCheckId !== null) clearInterval(updateCheckId);
+    updateCheckId = null;
   });
 
   const close = () => {

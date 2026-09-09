@@ -533,6 +533,74 @@ if (checked === 0) {
 }
 
 // ---------------------------------------------------------------------------
+// VERSIONING-v9 § 4.5 (`VER-OPEN-TAB-SURVIVES`, HIGH) — service worker не
+// забирає відкриту вкладку.
+//
+// `src/stale-build.test.ts` тримає це у КОНФІГУ (`vite.config.ts`), і цього
+// мало: `skipWaiting()` у воркер вставляє генератор, а генератор читає ще й
+// власні типові значення й `injectManifest`-режим. Тобто конфіг може бути
+// чистим, а артефакт — ні; судити треба по тому, що поїде на хостинг
+// (AI-AGENT-PITFALLS § 2).
+//
+// Зворотний експеримент: повернути `skipWaiting: true` у `vite.config.ts` і
+// перезібрати — падає саме цей рядок, із назвою прапорця.
+{
+  const worker = join(BUILD, "service-worker.js");
+  if (!existsSync(worker)) {
+    fail(
+      "service-worker.js",
+      `${norm(worker)} не згенерований — або PWA вимкнено, або перевірка дивиться не туди`,
+    );
+  } else {
+    const source = readFileSync(worker, "utf8");
+
+    /*
+     * `skipWaiting()` САМ ПО СОБІ не є порушенням, і це найтонше місце
+     * перевірки. У режимі `prompt` плагін вставляє у воркер обробник
+     *
+     *     self.addEventListener("message", e => {
+     *       e.data && "SKIP_WAITING" === e.data.type && self.skipWaiting()
+     *     })
+     *
+     * — тобто воркер чекає, доки сторінка не попросить, а просить її людина
+     * кнопкою в `ReloadPrompt`. Це рівно те, чого вимагає § 4.4.
+     *
+     * Заборонений безумовний виклик: `skipWaiting()` у тілі воркера або в
+     * обробнику `install`. Тому обробник повідомлення вирізається, і лише
+     * після цього шукається виклик. Канарка нижче стежить, щоб вирізання не
+     * з'їло весь файл разом із перевіркою.
+     */
+    const ON_MESSAGE = /self\.addEventListener\(\s*["']message["'][\s\S]{0,200}?skipWaiting\(\)\s*\}\s*\)/g;
+    const unconditional = source.replace(ON_MESSAGE, "");
+    if (unconditional.length < source.length * 0.5) {
+      fail(
+        "service-worker.js",
+        "вирізання обробника SKIP_WAITING з'їло пів файлу — регулярка застаріла, перевірка нижче мертва",
+      );
+    }
+
+    for (const [pattern, subject, why] of [
+      [
+        /\bskipWaiting\s*\(/,
+        unconditional,
+        "воркер не чекає й підмінює версію під відкритою сторінкою; " +
+          "у режимі prompt виклик допустимий лише в обробнику повідомлення SKIP_WAITING",
+      ],
+      [/\bclientsClaim\s*\(/, source, "новий воркер забирає вкладки, що вже працюють"],
+      [
+        /\.addAll\s*\(/,
+        source,
+        "передкеш одним запитом: одна 404 валить установку воркера цілком",
+      ],
+    ]) {
+      if (pattern.test(subject)) {
+        fail("service-worker.js", `${pattern.source} у зібраному воркері — ${why}`);
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // SEO-v8 § 7.5 — артефакти AI-пошуку (llms.txt і групи robots.txt).
 //
 // Розбір живе в `check-geo`, бо він робить власний парсер `robots.txt`:
