@@ -184,7 +184,7 @@ describe('CI', () => {
  * Перший гейт у job `if` не потребує: до нього ще ніщо не падало.
  */
 const INDEPENDENT_GATE =
-	/npm run check(?![:\w])|npm run check:(worker|i18n)\b|npm run lint(?![:\w])|npm (run )?test(?!:(e2e|watch))(:\w+)?(?!\S)|npm audit\b|npm run validate-content\b/;
+	/npm run check(?![:\w])|npm run check:(worker|i18n|tests)\b|npm run lint(?![:\w])|npm (run )?test(?!:(e2e|watch))(:\w+)?(?!\S)|npm audit\b|npm run validate-content\b/;
 /** Виглядає гейтом, але залежить від збірки чи браузерів. */
 const BUILD_DEPENDENT = /check:build|check:bundle|check:rules|playwright|lhci|npm run build/;
 
@@ -432,6 +432,188 @@ describe('збірка не лишає слідів у репозиторії (C
 			offenders,
 			'артефакт збірки в репозиторії видно лише цим кроком: ' +
 				`ні типи, ні lint, ні тести його не бачать:\n${offenders.join('\n')}`
+		).toEqual([]);
+	});
+});
+
+/**
+ * Мажор дії — з переліку перевірених, а не з номера релізу
+ * (CI-CD-AND-TOOLS-v9 § 1.9, `CI-ACTION-RUNTIME`, `GATE-CI-PIPELINE`).
+ *
+ * ## Чому номер релізу нічого не каже
+ 
+ * GitHub виводить із експлуатації РАНТАЙМ дії (`runs.using` в її `action.yml`),
+ * а не її версію. `node16` уже прибраний, `node20` наступний — і попередження
+ * «uses node20 which is deprecated» приходить від дії, у якої мажор може бути
+ * найсвіжішим. Канон заміряв це на двох: `upload-artifact@v5` і
+ * `configure-pages@v5` стояли на `node20` при найновішому на той час мажорі.
+ *
+ * Тобто «підняти мажор» — не відповідь: підняти можна лише туди, де рантайм
+ * справді новий, і перевірити це можна лише подивившись в `action.yml`
+ * потрібного тега. Мережі в прогоні немає, тож перевірка тримає ПЕРЕЛІК
+ * мажорів, які людина вже подивилася — а не намагається дізнатися це сама.
+ *
+ * ## Що це дає
+ *
+ * Нова дія або новий мажор наявної не проїжджають мовчки: прогін червоніє з
+ * назвою й вимагає одного разу відкрити `action.yml` і дописати рядок. Саме
+ * цього й бракувало — правило § 1.9 існувало, а гейта, який його ловить, не
+ * було в жодному з семи проєктів (звірка 8.12).
+ *
+ * Зворотний експеримент (§ 1.1): підняти `actions/checkout@v7` на `@v8` —
+ * перевірка червоніє з назвою дії й обома мажорами.
+ */
+describe('рантайм кожної дії CI перевірений людиною (§ 1.9)', () => {
+	/**
+	 * Дія → мажори, чий `runs.using` подивилися очима.
+	 *
+	 * Значення — саме перелік, а не «не нижче»: рантайм не монотонний за
+	 * версією, і `@v5` на `node24` при `@v4` на `node20` — звичайна річ.
+	 * Дата поруч — коли дивилися.
+	 */
+	const VERIFIED: Record<string, { majors: string[]; checked: string }> = {
+		'actions/checkout': { majors: ['v7'], checked: '2026-09-10' },
+		'actions/setup-node': { majors: ['v7'], checked: '2026-09-10' },
+		'actions/setup-java': { majors: ['v5'], checked: '2026-09-10' },
+		'actions/upload-artifact': { majors: ['v7'], checked: '2026-09-10' },
+		// Не з `actions/`: власний рантайм, дивиться той самий `action.yml`.
+		'peaceiris/actions-gh-pages': { majors: ['v4'], checked: '2026-09-10' }
+	};
+
+	/** `uses: owner/name@vN` → пари. Локальні дії (`./…`) не мають рантайму GitHub. */
+	const used = files.flatMap((file) =>
+		[...sourceOf(file).matchAll(/uses:\s*([\w-]+\/[\w.-]+)@(v\d+)/g)].map((match) => ({
+			file,
+			action: match[1],
+			major: match[2]
+		}))
+	);
+
+	it('розбір живий: дії у workflow знайдено', () => {
+		expect(
+			used.length,
+			'жодного `uses:` у workflow — або розбір зламався, або дій справді немає'
+		).toBeGreaterThan(3);
+	});
+
+	it('кожна дія й мажор є в переліку перевірених', () => {
+		const unknown = used
+			.filter(({ action, major }) => !VERIFIED[action]?.majors.includes(major))
+			.map(
+				({ file, action, major }) =>
+					`${file}: ${action}@${major}` +
+					(VERIFIED[action]
+						? ` (перевірено лише ${VERIFIED[action].majors.join(', ')})`
+						: ' (дії немає в переліку зовсім)')
+			);
+		expect(
+			[...new Set(unknown)],
+			'відкрити `action.yml` цього тега, подивитися `runs.using` і дописати рядок у ' +
+				`VERIFIED — номер релізу про рантайм не каже нічого:\n${[...new Set(unknown)].join('\n')}`
+		).toEqual([]);
+	});
+
+	it('у переліку немає дій, які більше не використовуються', () => {
+		const stale = Object.keys(VERIFIED).filter(
+			(action) => !used.some((entry) => entry.action === action)
+		);
+		expect(
+			stale,
+			`ці рядки VERIFIED застаріли — дію прибрали з workflow:\n${stale.join('\n')}`
+		).toEqual([]);
+	});
+});
+
+/**
+ * Вивантажується та збірка, яку перевіряв гейт
+ * (CI-CD-AND-TOOLS-v9 § 1.10, `CI-DEPLOY-ORDER`, HIGH, `GATE-CI-PIPELINE`).
+ *
+ * ## Що сталося в сусіда
+ *
+ * В `adoptananimal` між кроком збірки й вивантаженням стояв E2E з ВЛАСНОЮ
+ * збіркою. Він перезаписав `build/` іншим `BASE_PATH`, і на хостинг поїхав
+ * артефакт, якого не бачив жоден гейт: 229 сторінок із canonical на чужий
+ * корінь. Усі перевірки при цьому були зелені — вони дивилися на попередній
+ * вміст того самого каталогу.
+ *
+ * ## Чому саме порядок, а не «є крок перевірки»
+ *
+ * `npm run check:build` може стояти й бути зеленим — він читає `build/` у той
+ * момент, коли його кличуть. Твердження «вивантажено перевірене» — про
+ * ПОСЛІДОВНІСТЬ: остання команда, що пише в `build/`, мусить бути тією самою
+ * збіркою, після якої відпрацювали гейти.
+ *
+ * Крок `Preserve dev folder` — законний виняток і названий явно: він
+ * розпаковує з гілки публікації підкаталог `build/dev/`, тобто дописує
+ * прев'ю-збірку поруч, не торкаючись жодного файлу, який перевіряв гейт. Без
+ * нього кожен деплой у продакшн зносив би прев'ю.
+ *
+ * Зворотний експеримент (§ 1.1): переставити крок `Check built output` перед
+ * `Build` — перевірка червоніє й називає обидва кроки.
+ */
+describe('на хостинг їде перевірена збірка (§ 1.10)', () => {
+	/** Команди, які пишуть у `build/` цілком. */
+	const REBUILDS = /npm run build\b|vite build\b|npm run test:e2e\b|node scripts\/robust-test/;
+	/** Дописує в `build/`, не переписуючи перевіреного — виняток названий. */
+	const APPENDS_ONLY = /tar -x -C build\//;
+	/** Крок, що забирає вміст `build/` назовні. */
+	const PUBLISHES = /actions-gh-pages|upload-pages-artifact|publish_dir/;
+
+	const jobs = files.flatMap((file) => {
+		const steps = stepsOf(sourceOf(file));
+		return [...new Set(steps.map((s) => s.job))].map((job) => ({
+			file,
+			job,
+			steps: steps.filter((s) => s.job === job)
+		}));
+	});
+
+	const publishing = jobs.filter(({ steps }) => steps.some((s) => PUBLISHES.test(s.body)));
+
+	it('розбір живий: job із викладанням знайдено', () => {
+		expect(
+			publishing.length,
+			'жоден workflow не викладає `build/` — або розбір зламався, або деплою немає'
+		).toBeGreaterThan(0);
+	});
+
+	it('між збіркою й викладанням ніщо не переписує build/', () => {
+		const offenders: string[] = [];
+		for (const { file, job, steps } of publishing) {
+			const publish = steps.findIndex((s) => PUBLISHES.test(s.body));
+			const builds = steps
+				.map((step, index) => ({ step, index }))
+				.filter(({ step }) => REBUILDS.test(step.body) && !APPENDS_ONLY.test(step.body));
+			if (builds.length === 0) {
+				offenders.push(`${file} → ${job}: викладання є, а збірки в цьому job немає`);
+				continue;
+			}
+			const last = builds[builds.length - 1];
+			const verifiers = steps
+				.map((step, index) => ({ step, index }))
+				.filter(({ step }) => /check:build|check:bundle/.test(step.body));
+			for (const verifier of verifiers) {
+				if (verifier.index < last.index) {
+					offenders.push(
+						`${file} → ${job}: «${verifier.step.name}» стоїть ПЕРЕД останнім записом у build/ ` +
+							`(«${last.step.name}») — перевірено не той артефакт, що поїде`
+					);
+				}
+				if (verifier.index > publish) {
+					offenders.push(
+						`${file} → ${job}: «${verifier.step.name}» стоїть ПІСЛЯ викладання — ` +
+							'артефакт уже на хостингу'
+					);
+				}
+			}
+			if (verifiers.length === 0) {
+				offenders.push(`${file} → ${job}: збірка викладається без жодного гейта над build/`);
+			}
+		}
+		expect(
+			offenders,
+			'вивантажується той вміст `build/`, який лишила ОСТАННЯ команда, що в нього писала:\n' +
+				offenders.join('\n')
 		).toEqual([]);
 	});
 });
