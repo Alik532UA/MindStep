@@ -380,3 +380,141 @@ describe('кнопка має відгук на натискання (UI-ELEMENT
 		).toEqual([]);
 	});
 });
+
+/* ------------------------------------------------------------------------ *
+ * У кожного мета-тега один власник (SEO-v9 § 4.4, `SEO-HEAD-SINGLE-OWNER`)
+ * ------------------------------------------------------------------------ */
+
+/**
+ * `<svelte:head>` ДОПИСУЄ до `<head>`, а не заміщує в ньому — HIGH.
+ *
+ * У сусідньому `adoptananimal` це коштувало двохсот сторінок із логотипом
+ * замість фотографії: макет ставив `og:image`, сторінка ставила свій, у
+ * документі опинялися ДВА теги, і який із них візьме краулер — не вирішує
+ * ніхто.
+ *
+ * ## Чому потрібні саме два шари
+ *
+ * `+layout.ts` вимикає SSR для всього застосунку, тож у `build/` немає нічого
+ * зі `<svelte:head>`: уся розмітка для краулерів живе в `app.html`. Отже
+ * перевірка над `build/` (вона є, у `scripts/check-build.mjs`) бачить лише
+ * половину — дубль, зроблений `app.html` сам собі. Другу половину, тег зі
+ * `<svelte:head>` поверх уже наявного в `app.html`, видно ЛИШЕ в джерелах, і
+ * саме її тримає ця перевірка.
+ *
+ * Проєкт уже наступав на це рівно один раз, і в правильний бік: сторінка
+ * `/beta-test-checklists` мусить бути `noindex`, а `app.html` несе
+ * `robots: index, follow`. Замість другого тега вона ПРАВИТЬ наявний через
+ * `$effect` і повертає значення на виході — з докблоком, який пояснює чому.
+ * Тобто рішення в проєкті є, а гейта над ним не було.
+ *
+ * ## Що вважається дублем
+ *
+ * `<title>` не вважається: Svelte підмінює його як властивість документа, а не
+ * додає другий вузол. Мета-тег із `name` або `property`, який уже є в
+ * `app.html`, — вважається.
+ *
+ * Зворотний експеримент (§ 1.1) — прогнано: дописати
+ * `<meta name="robots" content="noindex" />` у `<svelte:head>` сторінки
+ * чеклиста → перевірка червоніє з назвою файлу й тега.
+ */
+describe('у кожного мета-тега один власник (SEO-HEAD-SINGLE-OWNER)', () => {
+	/** `name`/`property` кожного `<meta>` з оболонки застосунку. */
+	function shellMeta(): Set<string> {
+		const html = readFileSync(APP_HTML, 'utf8');
+		return new Set(
+			[...html.matchAll(/<meta[^>]+(?:name|property)="([^"]+)"/g)].map((match) => match[1])
+		);
+	}
+
+	/**
+	 * Коментарі відрізаються ПЕРЕД пошуком — і це знайшла сама перевірка.
+	 *
+	 * Перший прогін оголосив порушником саме той файл, який робить усе
+	 * правильно: докблок `beta-test-checklists/+page.svelte` пояснює, чому тег
+	 * там ПРАВИТЬСЯ, а не додається, і цитує при цьому і `<svelte:head>`, і
+	 * `<meta name="robots" …>`. Ліниве `[\s\S]*?` зачепилося за згадку в
+	 * коментарі на 21-му рядку й дотягнулося до справжнього `</svelte:head>` на
+	 * 117-му — тобто проглинуло весь файл.
+	 *
+	 * Це вже третій випадок того самого класу в цьому репозиторії
+	 * (`test-runners.test.ts`, `ci.test.ts`, тепер тут), і висновок той самий:
+	 * перевірка, яка червоніє без порушення, недовго лишається ввімкненою
+	 * (CODE-QUALITY § 6.4.1).
+	 */
+	function withoutHtmlComments(source: string): string {
+		return source
+			.replace(/<!--[\s\S]*?-->/g, '')
+			.replace(/\/\*[\s\S]*?\*\//g, '')
+			.replace(/^\s*\/\/.*$/gm, '');
+	}
+
+	/** Вміст усіх `<svelte:head>` проєкту, за файлами. */
+	function heads(): { file: string; body: string }[] {
+		return walk(ROOT)
+			.filter((file) => file.endsWith('.svelte'))
+			.flatMap((file) =>
+				[
+					...withoutHtmlComments(readFileSync(file, 'utf8')).matchAll(
+						/<svelte:head>([\s\S]*?)<\/svelte:head>/g
+					)
+				].map((match) => ({ file, body: match[1] }))
+			);
+	}
+
+	it('перевірка жива: коментарі відрізані, і саме той файл більше не порушник', () => {
+		// Канарка на фільтр. Без неї «нуль знахідок» означав би або чистий
+		// проєкт, або з'їдений вхід — і відрізнити було б неможливо.
+		const suspect = heads().filter((entry) =>
+			entry.file.endsWith('beta-test-checklists/+page.svelte')
+		);
+		expect(
+			suspect.length,
+			'у сторінки чеклиста мусить бути рівно один <svelte:head>; ' +
+				'більше означає, що фільтр коментарів перестав працювати'
+		).toBe(1);
+		// Ознака захвату — послідовність `*/`, тобто кінець докблоку: у
+		// справжньому `<svelte:head>` її не буває, а будь-яке над-захоплення
+		// коментаря її принесе. Шукати `<meta>` тут було б неправильно: канарка
+		// червоніла б разом зі справжнім порушенням і казала б про нього неправду.
+		expect(
+			suspect[0].body,
+			'у цей <svelte:head> потрапив кінець докблоку — ліниве [\\s\\S]*? знову зачепилося за коментар'
+		).not.toContain('*/');
+	});
+
+	it('перевірка жива: оболонка несе мета-теги, а `<svelte:head>` у проєкті є', () => {
+		expect(shellMeta().size, `в ${APP_HTML} не знайдено жодного <meta> — розбір застарів`).toBeGreaterThan(
+			5
+		);
+		expect(
+			heads().length,
+			'жодного <svelte:head> — перевірка нижче була б порожньою, і про це треба знати'
+		).toBeGreaterThan(0);
+	});
+
+	it('`<svelte:head>` не додає мета-тег, який уже є в оболонці', () => {
+		const owned = shellMeta();
+		const conflicts: string[] = [];
+		for (const { file, body } of heads()) {
+			for (const match of body.matchAll(/<meta[^>]+(?:name|property)="([^"]+)"/g)) {
+				if (owned.has(match[1])) conflicts.push(`${file}: <meta … "${match[1]}">`);
+			}
+		}
+		expect(
+			conflicts,
+			'`<svelte:head>` дописує, а не заміщує: у документі опиниться ДВА теги з тим самим ' +
+				`іменем, і який візьме краулер — не вирішує ніхто. Правити наявний в app.html:\n${conflicts.join('\n')}`
+		).toEqual([]);
+	});
+
+	it('в оболонці немає двох тегів з тим самим іменем', () => {
+		const html = readFileSync(APP_HTML, 'utf8');
+		const seen = new Map<string, number>();
+		for (const match of html.matchAll(/<meta[^>]+(?:name|property)="([^"]+)"/g)) {
+			seen.set(match[1], (seen.get(match[1]) ?? 0) + 1);
+		}
+		const duplicates = [...seen].filter(([, count]) => count > 1).map(([name]) => name);
+		expect(duplicates, `дубль у самому app.html:\n${duplicates.join('\n')}`).toEqual([]);
+	});
+});

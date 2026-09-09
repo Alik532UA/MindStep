@@ -113,6 +113,46 @@ for (const file of pages) {
     fail(name, "title відсутній або надто короткий");
 
   /*
+   * SEO-v9 § 4.4 (`SEO-HEAD-SINGLE-OWNER`, HIGH) — у кожного мета-тега один
+   * власник.
+   *
+   * `<svelte:head>` ДОПИСУЄ до `<head>`, а не заміщує в ньому. В
+   * `adoptananimal` це коштувало двохсот сторінок із логотипом замість
+   * фотографії: макет ставив `og:image`, сторінка ставила свій, у документі
+   * опинялися два теги — і який візьме краулер, не вирішує ніхто.
+   *
+   * Перевіряються всі теги, які мусять бути одинарними, а не лише `canonical`
+   * вище. Другий шар — над джерелами (`src/ui-conventions.spec.ts`): SSR тут
+   * вимкнений, тож у `build/` немає нічого зі `<svelte:head>`, і дубль,
+   * зроблений сторінкою поверх `app.html`, видно ЛИШЕ там.
+   *
+   * Зворотний експеримент: подвоїти `<meta name="robots">` у копії `build/` —
+   * падає саме цей рядок із назвою тега й кількістю.
+   */
+  const SINGLE_OWNER = [
+    "robots",
+    "description",
+    "og:title",
+    "og:description",
+    "og:image",
+    "og:url",
+    "twitter:card",
+    "twitter:title",
+    "twitter:description",
+    "twitter:image",
+  ];
+  for (const tag of SINGLE_OWNER) {
+    const count = (
+      html.match(
+        new RegExp(`<meta[^>]+(?:name|property)="${tag.replace(":", "\\:")}"`, "g"),
+      ) ?? []
+    ).length;
+    if (count > 1) {
+      fail(name, `<meta … "${tag}"> знайдено ${count} разів — два власники одного тега`);
+    }
+  }
+
+  /*
    * SECURITY-v8 § 6.1, § 6.3, § 16.
    *
    * Політика в static-профілі приходить тегом `<meta>`, і перевіряти її
