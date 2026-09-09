@@ -1,173 +1,80 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { checkTestDiscovery } from '../scripts/check-test-discovery.mjs';
 
 /**
  * Кожен файл перевірки належить раннеру, який у проєкті справді є
- * (AI-AGENT-PITFALLS-v8 § 1.3).
+ * (AI-AGENT-PITFALLS-v9 § 1.3, `GATE-TEST-RUNNERS`).
  *
- * Приводом став `tests/tests-examples/demo-todo-app.spec.ts` — демо-файл, який
- * лишає `npm init playwright`. Playwright у проєкті є й налаштований, але
- * `testDir` дорівнює `./tests/e2e`, а файл лежить поруч із цим каталогом, не
- * всередині. Тобто його не запускає ніхто, і при цьому він рахується як тест у
- * будь-якому переліку «що в нас перевіряється» — а перевіряє він чужий
- * todo-застосунок на playwright.dev.
+ * ## Чому тут лише виклик, а логіка — у `scripts/check-test-discovery.mjs`
  *
- * Другий, важчий випадок цього ж класу знайшовся в DigitalWorkshop:
- * `tests/core.spec.ts` імпортував раннер, якого немає в залежностях узагалі.
- * Звідти й перенесена ця перевірка.
+ * Уся логіка жила тут, і це був той рідкісний випадок, коли перевірка не могла
+ * впасти на власному дефекті. Вона стежить за маскою `test.include` у
+ * `vite.config.ts` — а звуження маски до `src/**\/*.spec.ts` викинуло б із
+ * прогону всі `.test.ts`, тобто разом із нею самою. Підсумковий рядок vitest
+ * звітував би успіх по тому, що лишилося, і читався б як «усе перевірено».
  *
- * Зворотний експеримент (§ 1.1): тимчасово прибрати `vitest` із
- * `devDependencies` — перевірка має перелічити всі файли перевірок проєкту.
+ * v9 називає цей клас окремо (§ 1.3.1, `PIT-TEST-DISCOVERY-PROCESS`) і вимагає
+ * ОКРЕМОГО ПРОЦЕСУ. Він є: `npm run check:tests`, крок у трьох workflow. Цей
+ * файл лишається другим прогоном тієї самої реалізації — дешевим і зручним
+ * локально; той, що виживає при зіпсованій масці, — не він.
+ *
+ * ## Що лишилося саме тут
+ *
+ * Дві речі, яких скрипт про себе сказати не може: що він існує і що його
+ * справді хтось кличе. Скрипт, який ніхто не запускає, — це рівно той самий
+ * дефект, тільки на поверх вище (§ 1.4).
  */
 
 const ROOT = resolve(__dirname, '..');
+const SCRIPT = 'scripts/check-test-discovery.mjs';
+const NPM_SCRIPT = 'check:tests';
 
-/** Каталоги, у яких взагалі можуть лежати файли перевірок. */
-const SEARCH_DIRS = ['src', 'tests', 'e2e'];
-
-const RUNNERS = [
-	{ imports: '@playwright/test', dep: '@playwright/test', config: /^playwright\.config\./ },
-	{ imports: 'vitest', dep: 'vitest', config: /^vitest\.config\.|^vite\.config\./ }
-];
-
-/**
- * `testDir` із конфігу Playwright. Файл під Playwright поза цим каталогом не
- * запуститься навіть за наявного раннера — і жодного слова про це не буде.
- */
-function playwrightTestDir(): string | null {
-	const config = readdirSync(ROOT).find((f) => /^playwright\.config\./.test(f));
-	if (!config) return null;
-	const source = readFileSync(join(ROOT, config), 'utf8');
-	const match = source.match(/testDir\s*:\s*['"`]\.?\/?([^'"`]+)['"`]/);
-	return match ? match[1].replace(/\/$/, '') : null;
-}
-
-/**
- * Коментарі відрізаються перед пошуком імпорту.
- *
- * Перший варіант цієї перевірки шукав назву раннера підрядком і оголосив
- * сиротою сам себе: у докблоці вище процитовано рядок
- * `import … from '@playwright/test'` із мертвого файлу, заради якого все й
- * писалося. Рівно та сама помилка, що й у § 1.1 канону — перевірка дивилася
- * поруч із тим, що мала перевіряти.
- */
-function withoutComments(source: string): string {
-	return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-}
-
-function walk(dir: string, out: string[] = []): string[] {
-	if (!existsSync(dir)) return out;
-	for (const entry of readdirSync(dir)) {
-		const full = join(dir, entry);
-		if (statSync(full).isDirectory()) walk(full, out);
-		else if (/\.(spec|test)\.(ts|js)$/.test(entry)) out.push(full.replace(/\\/g, '/'));
-	}
-	return out;
-}
-
-const specFiles = SEARCH_DIRS.flatMap((dir) => walk(join(ROOT, dir))).map((f) =>
-	f.slice(ROOT.replace(/\\/g, '/').length + 1)
-);
-
-describe('файли перевірок', () => {
-	it('перевірка жива: файли перевірок узагалі знайдено', () => {
-		expect(specFiles.length, 'жодного файлу перевірки — сканер шукає не там').toBeGreaterThan(2);
-	});
-
-	it('кожен файл перевірки належить раннеру, який у проєкті є', () => {
-		const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-		const deps: Record<string, string> = { ...pkg.dependencies, ...pkg.devDependencies };
-		const rootEntries = readdirSync(ROOT);
-
-		const orphans: string[] = [];
-		for (const file of specFiles) {
-			const source = withoutComments(readFileSync(join(ROOT, file), 'utf8'));
-			const runner = RUNNERS.find((r) =>
-				new RegExp(`from\\s*['"]${r.imports.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&')}['"]`).test(source)
-			);
-
-			if (!runner) {
-				orphans.push(`${file}: не імпортує жодного відомого раннера`);
-				continue;
-			}
-			if (!deps[runner.dep]) {
-				orphans.push(`${file}: імпортує ${runner.dep}, якого немає в package.json`);
-				continue;
-			}
-			if (!rootEntries.some((entry) => runner.config.test(entry))) {
-				orphans.push(`${file}: імпортує ${runner.dep}, але конфігу для нього в корені немає`);
-				continue;
-			}
-			if (runner.dep === '@playwright/test') {
-				const dir = playwrightTestDir();
-				if (dir && !file.startsWith(`${dir}/`)) {
-					orphans.push(`${file}: під Playwright, але поза testDir «${dir}» — раннер його не бачить`);
-				}
-			}
-		}
-
-		expect(orphans, `перевірки, яких не запускає ніхто:\n${orphans.join('\n')}`).toEqual([]);
-	});
-
-	it('жоден файл перевірки не вимикає типи через @ts-nocheck', () => {
-		const silenced = specFiles.filter((file) =>
-			/^\s*\/\/\s*@ts-nocheck/m.test(readFileSync(join(ROOT, file), 'utf8'))
+describe('файли перевірок належать раннерам (GATE-TEST-RUNNERS)', () => {
+	it('перевірка жива: спільна реалізація імпортується й щось повертає', () => {
+		expect(typeof checkTestDiscovery, `${SCRIPT} не експортує checkTestDiscovery`).toBe(
+			'function'
 		);
 		expect(
-			silenced,
-			`@ts-nocheck вимикає останній гейт, який міг би помітити мертвий імпорт:\n${silenced.join('\n')}`
-		).toEqual([]);
+			Array.isArray(checkTestDiscovery(ROOT)),
+			'перевірка мусить віддавати перелік проблем, хай і порожній'
+		).toBe(true);
+	});
+
+	it('жодного файлу перевірки, якого не запускає ніхто', () => {
+		const problems: string[] = checkTestDiscovery(ROOT);
+		expect(problems, `перевірки, яких не запускає ніхто:\n${problems.join('\n')}`).toEqual([]);
 	});
 });
 
-/**
- * Маска `include` раннера не викидає жодного файлу перевірки
- * (AI-AGENT-PITFALLS-v8 § 1.2).
- *
- * Це третій випадок того самого класу, і найгірший: файл написаний
- * правильно, ловить свою помилку — і не входить у прогін. Тоді його не
- * видно ніде. У виводі немає ні падіння, ні згадки; підсумковий рядок
- * звітує успіх по тому, що лишилося, і читається як «все перевірено».
- *
- * У цьому проєкті так уже було: маска стояла `src/**\/*.spec.ts`, конвенція
- * — `.spec.ts`, і доданий `storage.test.ts` не запускався ЗОВСІМ. Зараз
- * маска покриває обидва суфікси; перевірка тримає це.
- *
- * Читається саме конфіг, а не список файлів у пам'яті раннера: сюди можна
- * потрапити лише через `vite.config.ts`, і саме його правлять.
- *
- * Зворотний експеримент (§ 1.1): звузити маску до `*.spec.ts` — перевірка
- * перелічує всі чотири `.test.ts` (`ci`, `eslint-baseline`, `test-runners`
- * і будь-який новий).
- */
-describe('маска раннера (AI-AGENT-PITFALLS-v8 § 1.2)', () => {
-	const CONFIG = 'vite.config.ts';
-
-	/** Суфікси з `include: ['src/**\/*.{spec,test}.ts']` → ['spec', 'test']. */
-	function includedSuffixes(): string[] {
-		const source = readFileSync(join(ROOT, CONFIG), 'utf8');
-		return [...source.matchAll(/\*\.\{?([a-z,]*(?:spec|test)[a-z,]*)\}?\./g)].flatMap((m) =>
-			m[1].split(',')
-		);
-	}
-
-	it('перевірка жива: маску в конфігу знайдено', () => {
+describe('окремий процес існує й викликається (PIT-TEST-DISCOVERY-PROCESS)', () => {
+	it('скрипт лежить на диску', () => {
 		expect(
-			includedSuffixes().length,
-			`у ${CONFIG} не знайдено маски include — порівнювати нема з чим`
-		).toBeGreaterThan(0);
+			existsSync(resolve(ROOT, SCRIPT)),
+			`${SCRIPT} зник — при зіпсованій масці include перевірку не виконає ніхто`
+		).toBe(true);
 	});
 
-	it('кожен файл перевірки в src/ потрапляє в маску', () => {
-		const suffixes = includedSuffixes();
-		const missed = specFiles
-			.filter((file) => file.startsWith('src/'))
-			.filter((file) => !suffixes.some((suffix) => file.endsWith(`.${suffix}.ts`)));
+	it('npm-скрипт кличе саме його', () => {
+		const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
 		expect(
-			missed,
-			`ці файли не запускаються ніде, а підсумок прогону виглядає зеленим:\n${missed.join('\n')}`
-		).toEqual([]);
+			pkg.scripts?.[NPM_SCRIPT],
+			`у package.json немає скрипта «${NPM_SCRIPT}»`
+		).toContain('check-test-discovery.mjs');
+	});
+
+	it('хоч один workflow виконує цей крок', () => {
+		const dir = resolve(ROOT, '.github/workflows');
+		const workflows = readdirSync(dir).filter((name) => /\.ya?ml$/.test(name));
+		const naming = workflows.filter((name) =>
+			new RegExp(`npm run ${NPM_SCRIPT}\\b`).test(readFileSync(resolve(dir, name), 'utf8'))
+		);
+		expect(
+			naming.length,
+			`скрипт існує й у CI не викликається — це той самий дефект на поверх вище; ` +
+				`перевірено ${workflows.length} workflow`
+		).toBeGreaterThan(0);
 	});
 });
