@@ -134,7 +134,7 @@ jobs:
       # голосу через `each_key_duplicate`). Список підставляється, тож перевірка
       # не залежить від голосів, встановлених на раннері.
       - name: Runtime invariants (unique data-testid, html lang, axe, voice tab)
-        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts
 
       - name: Upload Playwright report
         if: failure()

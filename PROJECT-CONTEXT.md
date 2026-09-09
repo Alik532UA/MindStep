@@ -99,8 +99,8 @@ AI-агент читає його **перед** застосуванням па
 | `ts-files`           | 365   | модулів TypeScript: `find src -name '*.ts' \| wc -l`                            |
 | `routes`             | 21    | маршрутів: `find src/routes -name '+page.svelte' \| wc -l`                      |
 | `unit-spec-files`    | 51    | файлів юніт-перевірок — маска `test.include` у `vite.config.ts`                 |
-| `e2e-spec-files`     | 16    | файлів e2e: `find tests/e2e -name '*.spec.ts' \| wc -l`                         |
-| `e2e-in-ci`          | 4     | з них названі кроком `npx playwright test` у `.github/workflows/`               |
+| `e2e-spec-files`     | 17    | файлів e2e: `find tests/e2e -name '*.spec.ts' \| wc -l`                         |
+| `e2e-in-ci`          | 5     | з них названі кроком `npx playwright test` у `.github/workflows/`               |
 | `rules-cases`        | 89    | випадків у гейті правил бази — масив `CASES` у `scripts/check-rules.mjs`        |
 | `rules-cases-denied` | 59    | з них негативних (`allowed: false`) — «сторонній не мусить цього могти»         |
 | `contrast-debt`      | 33    | пар палітри нижче порогу контрасту — `KNOWN_CONTRAST_DEBT`                      |
