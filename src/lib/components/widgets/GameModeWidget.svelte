@@ -109,9 +109,9 @@
   <h3 class="widget-title">{$t("gameModes.title")}</h3>
 
   {#if activeMode === "local"}
-    <ButtonGroup options={localOptions} />
+    <ButtonGroup options={localOptions} dataTestId="game-mode-local-group" />
   {:else}
-    <ButtonGroup options={virtualPlayerOptions} />
+    <ButtonGroup options={virtualPlayerOptions} dataTestId="game-mode-virtual-group" />
   {/if}
   <div
     class="description"

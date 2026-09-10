@@ -4,12 +4,12 @@
 
     interface Props {
         value: string | number;
-        dataTestId?: string;
+        dataTestId: string;
         disabled?: boolean;
         scrubConfig?: { min: number; max: number; step?: number } | null;
-        decreaseTestId?: string;
-        increaseTestId?: string;
-        valueTestId?: string;
+        decreaseTestId: string;
+        increaseTestId: string;
+        valueTestId: string;
         ondecrement?: () => void;
         onincrement?: () => void;
         onchange?: (val: number) => void;
@@ -17,12 +17,12 @@
 
     let {
         value,
-        dataTestId = "",
+        dataTestId,
         disabled = false,
         scrubConfig = null,
-        decreaseTestId = "",
-        increaseTestId = "",
-        valueTestId = "",
+        decreaseTestId,
+        increaseTestId,
+        valueTestId,
         ondecrement,
         onincrement,
         onchange

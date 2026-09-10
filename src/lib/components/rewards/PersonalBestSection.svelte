@@ -29,6 +29,7 @@
                     onRandom={() =>
                         `Player ${Math.floor(Math.random() * 1000)}`}
                     onchange={handleNameChange}
+                    dataTestId="rewards-leaderboard-name"
                 />
             </div>
         </div>

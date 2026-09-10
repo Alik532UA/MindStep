@@ -7,13 +7,13 @@
   import hotkeyService from "$lib/services/hotkeyService";
 
   interface Props {
-    tid?: string;
+    tid: string;
     modalType?: "gameMode" | "expertMode";
     scope: string;
   }
 
   let { 
-    tid = "", 
+    tid, 
     modalType = "gameMode", 
     scope 
   }: Props = $props();

@@ -10,7 +10,7 @@
     interface Props extends HTMLButtonAttributes {
         text?: string;
         icon?: string;
-        dataTestId?: string;
+        dataTestId: string;
         children?: Snippet;
         iconSnippet?: Snippet;
     }
@@ -18,7 +18,7 @@
     let { 
         text = "", 
         icon = "", 
-        dataTestId = "", 
+        dataTestId, 
         children, 
         iconSnippet,
         ...restProps 

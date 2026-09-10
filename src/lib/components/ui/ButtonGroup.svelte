@@ -10,13 +10,20 @@
     interface Props {
         options?: ButtonOption[];
         className?: string;
-        dataTestId?: string;
+        /*
+         * Обовʼязковий і БЕЗ типового значення: цей проп цілком стає
+         * локатором. Типовий `""` давав у DOM `data-testid=""` — назву,
+         * що не називає нічого й однакова для кожного місця, де проп
+         * забули. Без типового значення забути його не можна:
+         * `svelte-check` червоніє на місці виклику.
+         */
+        dataTestId: string;
     }
 
     let {
         options = [],
         className = "",
-        dataTestId = ""
+        dataTestId
     }: Props = $props();
 </script>
 

@@ -107,12 +107,22 @@ function svelteFiles(dir: string, out: string[] = []): string[] {
 
 /**
  * Прибирає те, що не є розміткою: `<style>` (там testid трапляється в
- * селекторах `:global([data-testid="…"])`) і HTML-коментарі (там лишаються
- * старі назви та пояснення). Без цього перевірка рахує їх за окремі елементи
- * і повідомляє про дублікати, яких у DOM немає.
+ * селекторах `:global([data-testid="…"])`), HTML-коментарі та блокові
+ * коментарі скрипта (там лишаються старі назви та пояснення). Без цього
+ * перевірка рахує їх за окремі елементи і повідомляє про дублікати, яких у DOM
+ * немає.
+ *
+ * Докблоки додалися 2026-09-11, і привід типовий для цього класу перевірок:
+ * коментар у `ButtonGroup.svelte`, який ПОЯСНЮЄ, чому порожній локатор — це
+ * погано, сам містив приклад порожнього локатора, і перевірка оголосила
+ * порушником саме той файл, який щойно полагодили. Той самий клас уже ловився
+ * в `test-runners.test.ts` і `ci.test.ts`.
  */
 const markupOnly = (text: string) =>
-	text.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<!--[\s\S]*?-->/g, "");
+	text
+		.replace(/<style[\s\S]*?<\/style>/g, "")
+		.replace(/<!--[\s\S]*?-->/g, "")
+		.replace(/\/\*[\s\S]*?\*\//g, "");
 
 function collect(): { id: string; file: string }[] {
 	const found: { id: string; file: string }[] = [];
@@ -235,5 +245,132 @@ describe("data-testid conventions (v8)", () => {
 			}
 		}
 		expect(dupes, `Дублікати в одному файлі:\n${dupes.join("\n")}`).toEqual([]);
+	});
+});
+
+/**
+ * ЛОКАТОР, ЩО ПРИХОДИТЬ ПРОПОМ, МОЖЕ ВИЙТИ БЕЗІМЕННИМ
+ * (TESTID-AND-NAMING-v9 § 1.2; BETA-CHECKLIST-v9 `BETA-TESTID-REQUIRED`).
+ *
+ * ## Що ламалося
+ *
+ * `EditableText.svelte` складає локатори нащадків із пропа:
+ * `data-testid="{dataTestId}-edit-btn"`. Проп мав типове значення `""`, і на
+ * `/rewards` його ніхто не передавав — тобто в DOM жили `-edit-btn` і
+ * `-random-btn`: назви, що починаються з дефіса й ОДНАКОВІ для кожного місця,
+ * де проп забули. Знайдено 2026-09-11 гейтом сенсорних цілей, який просто
+ * назвав ці два локатори в повідомленні про перекриття.
+ *
+ * Другий бік того самого — проп, який стає локатором ЦІЛКОМ
+ * (`data-testid={dataTestId}`). Порожній типовий дає `data-testid=""`: назва,
+ * яка не називає нічого, і однакова скрізь, де проп забули. Перевірка знайшла
+ * такий випадок у `GameModeWidget.svelte` — дві групи кнопок без жодного
+ * локатора на контейнері.
+ *
+ * Перевірки вище цього не бачать за побудовою: вони читають рядок із джерела,
+ * тобто `{dataTestId}-edit-btn`, і підставляють замість `{…}` літеру. Значення
+ * пропа лежить в ІНШОМУ файлі, а типове — у цьому ж, але нижче.
+ *
+ * ## Чому саме типове значення, а не перебір місць виклику
+ *
+ * Прибрати типове значення означає зробити проп обовʼязковим, і далі місця
+ * виклику стереже `svelte-check`: пропущений проп — помилка типів, а не тихий
+ * порожній рядок. Тобто перевірка тут тримає ПРИЧИНУ, а повнотою займається
+ * компілятор — і робить це на КОЖНОМУ місці виклику, а не на восьми сторінках,
+ * куди дійшов e2e.
+ *
+ * ## Зворотний експеримент (AI-AGENT-PITFALLS-v9 § 1.1) — прогнано
+ *
+ * Повернути `dataTestId = ""` у `EditableText.svelte` — перевірка червоніє,
+ * називає файл, проп і приклад локатора, який із нього вийде. Те саме для
+ * `ButtonGroup.svelte` — випадок «проп стає локатором цілком».
+ */
+describe("локатор, що приходить пропом (TESTID-AND-NAMING-v9 § 1.2)", () => {
+	/** Значення атрибута як воно записане: у лапках або голим `{…}`. */
+	const ATTR = /data-testid=(?:"([^"]*)"|'([^']*)'|\{([^}]*)\})/g;
+	/** `ident = ""` або `ident = ''` усередині розбору `$props()`. */
+	const emptyDefault = (source: string, prop: string) =>
+		new RegExp(String.raw`\b${prop}\s*=\s*(""|'')\s*[,}]`).test(source);
+
+	/**
+	 * Голі імена пропів, з яких складається локатор. `option.dataTestId` та інші
+	 * звернення до полів пропускаємо: типове значення там лежить у типі поля, а
+	 * не в розборі `$props()`, і шукати його цією ж регуляркою не можна.
+	 */
+	function propsInTestIds(markup: string): string[] {
+		const out = new Set<string>();
+		for (const m of markup.matchAll(ATTR)) {
+			const quoted = m[1] ?? m[2];
+			// Значення в лапках: беремо кожну інтерполяцію голого імені.
+			if (quoted !== undefined) {
+				for (const i of quoted.matchAll(/\{(\w+)\}/g)) out.add(i[1]);
+				continue;
+			}
+			// `data-testid={ident}` — проп стає локатором цілком.
+			const bare = (m[3] ?? "").trim();
+			if (/^\w+$/.test(bare)) out.add(bare);
+		}
+		return [...out];
+	}
+
+	const withProps = svelteFiles("src")
+		.map((file) => ({ file: file.split("\\").join("/"), text: readFileSync(file, "utf8") }))
+		.map(({ file, text }) => ({ file, text, props: propsInTestIds(markupOnly(text)) }))
+		.filter(({ props }) => props.length > 0);
+
+	it("коментар, що ЗГАДУЄ локатор, не рахується за локатор", () => {
+		// Канарка на markupOnly: без неї докблок нижче в ButtonGroup.svelte
+		// оголошував би порушником саме той файл, який щойно полагодили.
+		expect(markupOnly('/* приклад: data-testid="" */<b data-testid="real-btn"></b>')).toBe(
+			'<b data-testid="real-btn"></b>'
+		);
+	});
+
+	it("перевірка жива: локатори з пропів у проєкті знайдено", () => {
+		expect(
+			withProps.length,
+			"жодного `data-testid` із пропа — перевірка нижче нічого не стереже"
+		).toBeGreaterThan(0);
+	});
+
+	it("розбір атрибута справді відрізняє три форми запису", () => {
+		expect(propsInTestIds('data-testid="{dataTestId}-edit-btn"')).toEqual(["dataTestId"]);
+		expect(propsInTestIds("data-testid={tid}")).toEqual(["tid"]);
+		expect(
+			propsInTestIds("data-testid={option.dataTestId}"),
+			"звернення до поля прийнято за проп"
+		).toEqual([]);
+		expect(
+			propsInTestIds('data-testid="game-mode-description-text"'),
+			"сталий рядок прийнято за проп"
+		).toEqual([]);
+	});
+
+	it("регулярка справді відрізняє порожнє типове значення", () => {
+		expect(emptyDefault('let { dataTestId = "", onchange }: Props = $props();', "dataTestId")).toBe(
+			true
+		);
+		expect(emptyDefault("let { dataTestId, onchange }: Props = $props();", "dataTestId")).toBe(
+			false
+		);
+		expect(
+			emptyDefault('let { dataTestId = "card", onchange }: Props = $props();', "dataTestId"),
+			"непорожнє типове значення прийнято за порожнє"
+		).toBe(false);
+	});
+
+	it("проп, з якого виходить локатор, не має порожнього типового значення", () => {
+		const bad: string[] = [];
+		for (const { file, text, props } of withProps) {
+			for (const prop of props) {
+				if (emptyDefault(text, prop)) {
+					bad.push(
+						`${file}: проп «${prop}» типово порожній — місце виклику, яке його не ` +
+							'передало, дає локатор виду «-edit-btn» або порожній data-testid=""'
+					);
+				}
+			}
+		}
+		expect(bad, `Локатори, що можуть вийти безіменними:\n${bad.join("\n")}`).toEqual([]);
 	});
 });

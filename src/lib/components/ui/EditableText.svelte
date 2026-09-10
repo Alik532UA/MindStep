@@ -12,7 +12,14 @@
         onRandom?: () => string; 
         minLength?: number;
         maxLength?: number;
-        dataTestId?: string;
+        /**
+         * Обовʼязковий, і саме без типового значення: з нього складаються
+         * локатори нащадків (`{dataTestId}-edit-btn`). Типовий `""` давав
+         * `-edit-btn` — назву, що починається з дефіса, однакову для КОЖНОГО
+         * місця, де проп забули передати. Без типового значення забути його
+         * не можна: `svelte-check` червоніє на місці виклику.
+         */
+        dataTestId: string;
         onchange?: (value: string) => void;
     }
 
@@ -23,7 +30,7 @@
         onRandom,
         minLength = 1,
         maxLength = 20,
-        dataTestId = "",
+        dataTestId,
         onchange
     }: Props = $props();
 

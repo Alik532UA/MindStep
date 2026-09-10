@@ -7,10 +7,10 @@
 
     interface Props {
         item: IMenuItem;
-        dataTestId?: string;
+        dataTestId: string;
     }
 
-    let { item, dataTestId = "" }: Props = $props();
+    let { item, dataTestId }: Props = $props();
 
     /**
      * Доступна назва кнопки — `label`, а якщо його немає, то `tooltip`; `id`
