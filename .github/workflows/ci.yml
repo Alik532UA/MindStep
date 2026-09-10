@@ -81,8 +81,10 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
-      # Ті самі чотири файли, що і в `deploy.yml`: решта `tests/e2e/` або важка
-      # (`virtual/`), або потребує емулятора Firebase (`online/`).
+      # Той самий перелік, що і в `deploy.yml`: решта `tests/e2e/` або важка
+      # (`virtual/`), або потребує емулятора Firebase (`online/`). Що перелік
+      # повний — тримає інваріант у `src/ci.test.ts`, а не рахунок у цьому
+      # коментарі.
       #
       # `a11y.spec.ts` — гейт axe (ACCESSIBILITY-v8 § 10, `GATE-A11Y-AXE`).
       # Поріг у ньому — база, що лише спадає, а не літеральний нуль: axe-core
@@ -92,8 +94,11 @@ jobs:
       # пристроях Apple: `getVoices()` віддавав той самий `voiceURI` кілька
       # разів, і keyed `{#each}` валив вкладку голосу цілком. Перевірка
       # підставляє саме цю форму списку, тож не залежить від голосів раннера.
+      # `touch-targets.spec.ts` — сенсорні цілі парами (ACCESSIBILITY-v9
+      # § 10.3.1, `A11Y-TOUCH-OVERLAP`). axe міряє кожну ціль окремо й
+      # зелений навіть тоді, коли дві з них лежать одна на одній.
       - name: Runtime invariants (unique data-testid, html lang, focus, axe, voice tab)
-        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts tests/e2e/touch-targets.spec.ts
 
       - name: Upload Playwright report
         if: failure()

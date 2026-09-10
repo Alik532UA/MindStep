@@ -617,3 +617,71 @@ describe('на хостинг їде перевірена збірка (§ 1.10)
 		).toEqual([]);
 	});
 });
+
+/**
+ * КОЖЕН E2E-ФАЙЛ ВЕРХНЬОГО РІВНЯ НАЗВАНИЙ У КОМАНДІ CI
+ * (AI-AGENT-PITFALLS-v9 § 1.3, той самий клас, що `PIT-TEST-DISCOVERY-PROCESS`).
+ *
+ * ## Що ламається без цього
+ *
+ * Кроки e2e в `ci.yml` і `deploy.yml` перелічують файли ПОІМЕННО, і це свідоме
+ * рішення: `tests/e2e/virtual/` — десять важких наборів, `tests/e2e/online/`
+ * потребує емулятора Firebase, тож каталогом цілком їх запускати не можна.
+ * Ціна рішення в тому, що доданий e2e-файл треба ще й вписати в два workflow —
+ * а забути це нічого не коштує: прогін зелений, файл просто не виконується.
+ *
+ * Ловиться саме верхній рівень `tests/e2e/`: підкаталоги — це і є той виняток,
+ * заради якого перелік явний. Тобто новий файл поруч із наявними мусить або
+ * потрапити в команду, або переїхати в підкаталог — і те, і те видно в diff.
+ *
+ * Приводом став `touch-targets.spec.ts`, доданий 2026-09-11: без цієї перевірки
+ * він проходив би лише локально.
+ *
+ * ## Зворотний експеримент (§ 1.1) — прогнано
+ *
+ * Прибрати `tests/e2e/reflow.spec.ts` з команди в `ci.yml` — перевірка називає
+ * файл і workflow.
+ */
+describe('перелік e2e у CI повний (AI-AGENT-PITFALLS-v9 § 1.3)', () => {
+	const E2E_DIR = 'tests/e2e';
+	const topLevel = existsSync(E2E_DIR)
+		? readdirSync(E2E_DIR, { withFileTypes: true })
+				.filter((entry) => entry.isFile() && /\.spec\.ts$/.test(entry.name))
+				.map((entry) => `${E2E_DIR}/${entry.name}`)
+		: [];
+
+	/**
+	 * Файли, які запускає не крок e2e, а окрема команда, — і причина в
+	 * `PROJECT-CONTEXT.md`. Перелік лише скорочується.
+	 */
+	const RUN_ELSEWHERE = new Set<string>([]);
+
+	/** Workflow, у яких крок e2e взагалі є: `deploy-dev.yml` його не має навмисно. */
+	const withE2E = files.filter((file) => /playwright test /.test(readWorkflow(file)));
+
+	it('перевірка жива: e2e-файли й команди знайдено', () => {
+		expect(topLevel.length, `у ${E2E_DIR} немає жодного .spec.ts верхнього рівня`).toBeGreaterThan(
+			3
+		);
+		expect(
+			withE2E.length,
+			'жоден workflow не запускає playwright — перевірка нижче нічого не стереже'
+		).toBeGreaterThan(0);
+	});
+
+	it('жоден e2e-файл верхнього рівня не лишився поза командою', () => {
+		const missing: string[] = [];
+		for (const file of withE2E) {
+			const body = readWorkflow(file);
+			for (const spec of topLevel) {
+				if (RUN_ELSEWHERE.has(spec)) continue;
+				if (!body.includes(spec)) missing.push(`${file}: не запускає ${spec}`);
+			}
+		}
+		expect(
+			missing,
+			'e2e-файл, якого немає в команді, не виконується ніде, а прогін зелений:\n' +
+				missing.join('\n')
+		).toEqual([]);
+	});
+});
