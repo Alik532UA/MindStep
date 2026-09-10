@@ -61,8 +61,26 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    /*
+     * Перший крок будь-якого прогону: доводимо, що на порті саме цей проєкт і
+     * саме це робоче дерево (CI-CD-AND-TOOLS-v9 § 1.11, `CI-E2E-TARGET-IDENTITY`).
+     *
+     * `--strictPort` і `reuseExistingServer: false` вище дивляться на порт ДО
+     * запуску команди. Доки dev-сервер компілює модулі, вікно відкрите: сусід
+     * із цієї ж машини встигає зайняти порт, і весь прогін іде по чужому
+     * сайту, звітуючи «element(s) not found» замість «це не наш застосунок».
+     *
+     * Саме проєкт-залежність, а не звичайний тест: інакше червонів би один
+     * файл, а решта однаково перевіряла б чужий сайт.
+     */
+    {
+      name: 'identity',
+      testMatch: /identity\.setup\.ts$/,
+    },
     {
       name: 'chromium',
+      dependencies: ['identity'],
+      testIgnore: /identity\.setup\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1900, height: 940 },

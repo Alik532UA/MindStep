@@ -24,6 +24,7 @@ AI-агент читає його **перед** застосуванням па
 | Префікс dev-середовища                 | не застосовується — dev-прев'ю ділить префікс із продакшном                                                                                  |
 | Бекенд                                 | Firebase: Firestore + Realtime Database (`database.rules.json`, `firestore.rules`)                                                           |
 | Порти емулятора                        | firestore **8080**, database **9000**, auth **9099** — сусідній `VetCrewGames` навмисно взяв інші (9010/9109), `Slovko` теж (8082/9002/9098) |
+| Порти dev-сервера                      | **5399** для агента (`.claude/launch.json`), **5373** для e2e (`playwright.config.ts`), обидва зі `--strictPort`; типовий Vite **5173** не використовується в тестах ніде (`CI-E2E-TARGET-IDENTITY`) |
 | Гілки                                  | `main` — продакшн, `dev` — прев'ю (`deploy-dev.yml`)                                                                                         |
 
 ## Хмарна база: стан правил доступу

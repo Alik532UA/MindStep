@@ -32,11 +32,24 @@
  *    не запускався ЗОВСІМ.
  * 3. **`@ts-nocheck` у файлі перевірки** — вимикає останній гейт, який міг би
  *    помітити мертвий імпорт.
+ * 4. **Файл поза типовою маскою Playwright.** Раннер типово бачить лише
+ *    `*.spec.ts` і `*.test.ts`; `*.setup.ts` він запускає тільки тоді, коли
+ *    якийсь проєкт назвав його у `testMatch`. Файл, який цього не отримав,
+ *    лежить у `testDir`, читається як перевірка й не виконується ніде.
+ *    Приводом став `tests/e2e/identity.setup.ts`, доданий 2026-09-10: перша
+ *    версія цього сканера його не бачила ЗОВСІМ — він шукав рівно два суфікси.
+ * 5. **Setup-проєкт, від якого ніхто не залежить.** Сенс такого проєкту — не
+ *    «теж запуститися», а ЗУПИНИТИ решту прогону. Без згадки в
+ *    `dependencies` іншого проєкту він виконується сам по собі, червоніє сам
+ *    по собі, і решта тестів однаково йде далі — тобто гарантії, заради якої
+ *    його писали, немає.
  *
  * ## Зворотний експеримент (§ 1.1) — прогнано
  *
  * Звузити маску до `*.spec.ts` → перелічуються всі `.test.ts`. Прибрати
  * `vitest` із `devDependencies` → перелічуються всі файли перевірок `src/`.
+ * Прибрати `testMatch` у проєкта `identity` → названий сам файл; прибрати
+ * `dependencies: ['identity']` у `chromium` → названий проєкт.
  *
  * Запуск: `npm run check:tests` (або `node scripts/check-test-discovery.mjs`).
  */
@@ -75,9 +88,63 @@ function walk(/** @type {string} */ dir, /** @type {string[]} */ out = []) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) walk(full, out);
-    else if (/\.(spec|test)\.(ts|js)$/.test(entry)) out.push(norm(full));
+    else if (/\.(spec|test|setup)\.(ts|js)$/.test(entry)) out.push(norm(full));
   }
   return out;
+}
+
+/** Що Playwright підхоплює без жодного `testMatch` у конфігу. */
+const PLAYWRIGHT_DEFAULT_MATCH = /\.(spec|test)\.(ts|js)$/;
+
+/**
+ * Проєкти з `playwright.config.*`: імʼя, власний `testMatch`, залежності.
+ *
+ * Розбір саме структурний, по фігурних дужках усередині `projects: [ … ]`, а не
+ * трьома незалежними грепами: греп зіставив би `testMatch` одного проєкта з
+ * `name` іншого, і перевірка звітувала б про покриття, якого немає.
+ */
+function playwrightProjects(/** @type {string} */ root) {
+  const config = readdirSync(root).find((f) => /^playwright\.config\./.test(f));
+  if (!config) return [];
+  const source = withoutComments(readFileSync(join(root, config), "utf8"));
+  const start = source.indexOf("projects:");
+  if (start === -1) return [];
+
+  /** @type {{name: string, testMatch: string|null, dependencies: string[]}[]} */
+  const projects = [];
+  let depth = 0;
+  let from = -1;
+  for (let i = source.indexOf("[", start); i < source.length; i++) {
+    const ch = source[i];
+    if (ch === "{") {
+      if (depth === 0) from = i;
+      depth++;
+    } else if (ch === "}") {
+      depth--;
+      if (depth === 0 && from !== -1) {
+        const block = source.slice(from, i + 1);
+        const name = block.match(/name\s*:\s*['"`]([^'"`]+)['"`]/);
+        if (name) {
+          const testMatch = block.match(/testMatch\s*:\s*(\/[^/]+\/[a-z]*|['"`][^'"`]+['"`])/);
+          const deps = block.match(/dependencies\s*:\s*\[([^\]]*)\]/);
+          projects.push({
+            name: name[1],
+            testMatch: testMatch ? testMatch[1] : null,
+            dependencies: [...(deps?.[1] ?? "").matchAll(/['"`]([^'"`]+)['"`]/g)].map((m) => m[1]),
+          });
+        }
+        from = -1;
+      }
+    } else if (ch === "]" && depth === 0) break;
+  }
+  return projects;
+}
+
+/** `testMatch` із конфігу — регулярка або рядок-підрядок — проти шляху файлу. */
+function matches(/** @type {string} */ testMatch, /** @type {string} */ file) {
+  const asRegExp = testMatch.match(/^\/(.+)\/([a-z]*)$/);
+  if (asRegExp) return new RegExp(asRegExp[1], asRegExp[2]).test(file);
+  return file.includes(testMatch.slice(1, -1));
 }
 
 /**
@@ -165,6 +232,42 @@ export function checkTestDiscovery(rootDir) {
       problems.push(
         `${file}: під Playwright, але поза testDir «${playwrightDir}» — раннер його не бачить`,
       );
+    }
+  }
+
+  // --- Клас 4 і 5: Playwright бачить файл, і setup справді зупиняє прогін ----
+  const projects = playwrightProjects(root);
+  const playwrightFiles = specFiles.filter(
+    (file) => playwrightDir && file.startsWith(`${playwrightDir}/`),
+  );
+
+  if (playwrightDir && projects.length === 0) {
+    problems.push(
+      "у playwright.config не розібрано жодного проєкту — перевірка масок нижче нічого не вартує",
+    );
+  }
+
+  for (const file of playwrightFiles) {
+    if (PLAYWRIGHT_DEFAULT_MATCH.test(file)) continue;
+
+    const owners = projects.filter((p) => p.testMatch && matches(p.testMatch, file));
+    if (owners.length === 0) {
+      problems.push(
+        `${file}: поза типовою маскою Playwright (*.spec, *.test) і жоден проєкт ` +
+          "не назвав його в testMatch — файл лежить у testDir і не запускається ніде",
+      );
+      continue;
+    }
+
+    for (const owner of owners) {
+      const dependents = projects.filter((p) => p.dependencies.includes(owner.name));
+      if (dependents.length === 0) {
+        problems.push(
+          `${file}: проєкт «${owner.name}» його запускає, але від нього не залежить ` +
+            "жоден інший — червоний setup не зупинить решту прогону, а саме заради " +
+            "цього такий проєкт і існує",
+        );
+      }
     }
   }
 
