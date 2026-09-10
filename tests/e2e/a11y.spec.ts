@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { A11Y_BASELINE, A11Y_KNOWN } from '../a11y-baseline';
+import { waitForMeasurablePage } from '../wait-for-ui';
 
 /**
  * Машинний аудит доступності (ACCESSIBILITY-v8 § 10, `GATE-A11Y-AXE`).
@@ -117,7 +118,7 @@ function assertWithinBaseline(
 for (const { key, path } of PAGES) {
 	test(`axe: ${path}`, async ({ page }) => {
 		await page.goto(path);
-		await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
+		await waitForMeasurablePage(page);
 
 		const results = await new AxeBuilder({ page })
 			.withTags(TAGS)
@@ -146,7 +147,7 @@ for (const { key, path } of PAGES) {
  */
 test('axe: відкрита модалка', async ({ page }) => {
 	await page.goto('/');
-	await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
+	await waitForMeasurablePage(page);
 
 	await page.getByTestId('center-play-btn').click();
 	await expect(page.getByRole('dialog')).toBeVisible();

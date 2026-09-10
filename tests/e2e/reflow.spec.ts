@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForMeasurablePage } from '../wait-for-ui';
 
 /**
  * WCAG 1.4.10 REFLOW: НА 320 CSS PX НЕМАЄ ГОРИЗОНТАЛЬНОЇ ПРОКРУТКИ
@@ -64,43 +65,13 @@ const PAGES = [
 /** Скільки пікселів вважати шумом округлення субпіксельних розмірів. */
 const TOLERANCE = 1;
 
-/**
- * ЧЕКАТИ НЕ РОЗМІТКИ, А ПЕРЕКЛАДУ — інакше міряється не та сторінка.
- *
- * Решта e2e чекає `[data-testid]` більше пʼяти, і для їхніх тверджень цього
- * досить. Тут ні: до того, як `svelte-i18n` віддасть локаль, `$t` малює САМ
- * КЛЮЧ — `mainMenu.clearCacheModal.keepAppearance`. Це довгий рядок без
- * пробілів, тобто нерозривний, і він розсуває розкладку сильніше за будь-який
- * справжній текст.
- *
- * Перший прогін цієї перевірки саме на цьому й спіймався: `/settings` показував
- * вузол 378 px шириною з текстом-ключем, тобто дефект був у перевірці, а не на
- * сторінці (AI-AGENT-PITFALLS § 1 — «перевірено не те»).
- *
- * Ознака ключа: суцільний ASCII-токен із точкою всередині й без пробілів.
- * Очікування не «поспати», а саме на зникнення таких токенів — тоді сторінка,
- * яка ніколи не перекладеться, валить ЦЕЙ рядок із зрозумілою причиною, а не
- * дає тихо неправильний вимір.
- */
-async function waitForTranslations(page: import('@playwright/test').Page): Promise<void> {
-	await page.waitForFunction(() => document.querySelectorAll('[data-testid]').length > 5);
-	await page.waitForFunction(
-		() =>
-			![...document.body.querySelectorAll('*')]
-				.filter((element) => element.children.length === 0)
-				.some((element) => /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test((element.textContent ?? '').trim())),
-		null,
-		{ timeout: 10000 }
-	);
-}
-
 test.describe('WCAG 1.4.10 Reflow', () => {
 	test.use({ viewport: { width: REFLOW_WIDTH, height: REFLOW_HEIGHT } });
 
 	for (const path of PAGES) {
 		test(`немає горизонтальної прокрутки на ${REFLOW_WIDTH} px: ${path}`, async ({ page }) => {
 			await page.goto(path);
-			await waitForTranslations(page);
+			await waitForMeasurablePage(page);
 
 			const measured = await page.evaluate((tolerance) => {
 				const doc = document.documentElement;
