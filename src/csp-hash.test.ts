@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import config from '../svelte.config.js';
 
@@ -86,6 +86,155 @@ describe('CSP: хеш інлайн-скрипта збігається з тим
 		expect(
 			crlf,
 			`у script-src лежить хеш над CRLF (${crlf.join(', ')}) — браузер його не приймає`
+		).toEqual([]);
+	});
+});
+
+
+/** Джерела `.svelte` без коментарів: докблок, що цитує порушення, — не порушення. */
+function svelteSources(): { file: string; text: string }[] {
+	const out: { file: string; text: string }[] = [];
+	const walk = (dir: string): void => {
+		for (const name of readdirSync(dir)) {
+			const full = `${dir}/${name}`;
+			if (statSync(full).isDirectory()) walk(full);
+			else if (full.endsWith('.svelte')) {
+				out.push({ file: full, text: stripComments(readFileSync(full, 'utf8')) });
+			}
+		}
+	};
+	walk('src');
+	return out;
+}
+
+/** `+page.ts` / `+layout.ts` — саме там оголошують `ssr` і `prerender`. */
+function routeModules(): string[] {
+	const out: string[] = [];
+	const walk = (dir: string): void => {
+		for (const name of readdirSync(dir)) {
+			const full = `${dir}/${name}`;
+			if (statSync(full).isDirectory()) walk(full);
+			else if (/[/\\]\+(page|layout)(\.server)?\.ts$/.test(full)) out.push(full);
+		}
+	};
+	walk('src/routes');
+	return out;
+}
+
+const stripComments = (source: string): string =>
+	source.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+
+/**
+ * РОЗГОРТАННЯ АТРИБУТІВ НА МЕДІА-ЕЛЕМЕНТІ — І ТРИГЕР, ЩО ЗНІМАЄ ВІДХИЛЕННЯ
+ * (SECURITY-v9 § 6.3.2, `SEC-CSP-SPREAD-HANDLER`, HIGH, `GATE-INLINE-HANDLERS`).
+ *
+ * ## Що це за клас
+ *
+ * Політика без `'unsafe-inline'` і без `'unsafe-hashes'` відмовляється виконати
+ * будь-який атрибут-обробник у розмітці, і хеші на обробники подій не
+ * поширюються в принципі («hashes do not apply to event handlers»). Таких
+ * атрибутів ніхто не пише — їх додає компілятор Svelte під час SSR: механізм
+ * відтворення подій `onload="this.__e=event"` вставляється в елемент, чиї
+ * атрибути задані РОЗГОРТАННЯМ `{...obj}`, бо що всередині обʼєкта, компілятор
+ * не знає. Заміряно каноном на восьмому проєкті: тринадцять `<img>` дали
+ * пʼятнадцять порушень CSP на головній сторінці при чистому `svelte-check` і
+ * зелених юніт-перевірках.
+ *
+ * ## Чому тут перевірка по джерелах, а не над `build/`
+ *
+ * Канон каже прямо: перевірка над `build/`, і лише там, бо в `src/` цих
+ * атрибутів немає за визначенням. У цьому проєкті так не вийде — і це записане
+ * відхилення в `PROJECT-CONTEXT.md`: `+layout.ts` вимикає SSR цілком, тож у
+ * `build/` лежать оболонка SPA і `404.html`, у яких розмітки компонентів немає
+ * зовсім. Перевірка над цими двома файлами була б рівно порожньою, а канон сам
+ * застерігає: нуль знайдених місць означає «дивимося не туди».
+ *
+ * Тому перевіряється не НАСЛІДОК (атрибут у зібраному HTML), а ПРИЧИНА
+ * (розгортання на елементі, який може отримати `onload`/`onerror`) — вона
+ * видима в джерелах і від профілю не залежить.
+ *
+ * ## І окремо — тригер, який досі жив у прозі
+ *
+ * Відхилення трималося на одному факті: SSR вимкнений. Факт записано словами, і
+ * речення «тригер перегляду: увімкнення SSR або prerender хоча б одного
+ * маршруту» ніхто не виконає — його просто не буде видно в той момент, коли SSR
+ * увімкнуть. Тепер тригер — червоний тест із інструкцією, а не абзац.
+ *
+ * ## Зворотний експеримент (AI-AGENT-PITFALLS-v9 § 1.1) — прогнано
+ *
+ * `<img src={s} {...size} />` у будь-якому компоненті — перевірка називає файл і
+ * елемент. `export const ssr = true` у `+layout.ts` — червоніє тригер із
+ * інструкцією добудувати шар над `build/`.
+ */
+describe('SEC-CSP-SPREAD-HANDLER: розгортання на медіа-елементі (SECURITY-v9 § 6.3.2)', () => {
+	/** Елементи, у які компілятор додає гачки відтворення подій. */
+	const RISKY = 'img|iframe|video|audio|source|embed|object';
+	const OPEN_TAG = new RegExp(`<(${RISKY})\\b[^>]*>`, 'gs');
+
+	const svelte = svelteSources();
+
+	it('перевірка жива: медіа-елементи в джерелах є, і регулярка бачить розгортання', () => {
+		const total = svelte.reduce(
+			(sum, { text }) => sum + [...text.matchAll(OPEN_TAG)].length,
+			0
+		);
+		expect(total, 'жодного медіа-елемента в джерелах — перевірка нижче порожня').toBeGreaterThan(
+			0
+		);
+		expect([...'<img src={s} {...size} />'.matchAll(OPEN_TAG)][0]?.[0]).toContain('{...');
+		expect([...'<img src={s} width={w} />'.matchAll(OPEN_TAG)][0]?.[0]).not.toContain('{...');
+	});
+
+	it('атрибути медіа-елемента не задаються розгортанням', () => {
+		const offenders: string[] = [];
+		for (const { file, text } of svelte) {
+			for (const match of text.matchAll(OPEN_TAG)) {
+				if (match[0].includes('{...')) {
+					offenders.push(`${file}: <${match[1]}> із розгортанням атрибутів`);
+				}
+			}
+		}
+		expect(
+			offenders,
+			'компілятор допише сюди onload/onerror, і CSP заблокує їх без жодного сліду в ' +
+				'розмітці — назвіть атрибути явно:\n' + offenders.join('\n')
+		).toEqual([]);
+	});
+
+	it('тригер відхилення: SSR і prerender лишаються вимкненими', () => {
+		const layout = readFileSync('src/routes/+layout.ts', 'utf8');
+		expect(
+			/export\s+const\s+ssr\s*=\s*false/.test(layout),
+			'SSR увімкнено — відхилення в PROJECT-CONTEXT.md («гейта над build/ немає, ' +
+				'бо розмітки компонентів там немає») втратило підставу. Тепер потрібен ДРУГИЙ ' +
+				'шар: перевірка на onload=/onerror= у build/**/*.html'
+		).toBe(true);
+
+		/*
+		 * Тригер — саме `ssr`, а НЕ `prerender`, і різниця тут не формальна.
+		 * `src/routes/+page.ts` уже має `prerender = true` і мав його весь час:
+		 * із вимкненим SSR це дає той самий порожній каркас SPA, бо серверного
+		 * рендеру не відбувається взагалі («Overwriting build/index.html with
+		 * fallback page» у виводі adapter-static). Розмітка компонентів
+		 * зʼявиться в `build/` лише тоді, коли якийсь маршрут поверне `ssr`.
+		 *
+		 * Формулювання «увімкнення SSR або prerender» у PROJECT-CONTEXT.md було
+		 * саме тому неточним: половина умови вже виконана.
+		 */
+		const enabled: string[] = [];
+		for (const { file, text } of svelte) {
+			if (/export\s+const\s+ssr\s*=\s*true/.test(text)) enabled.push(file);
+		}
+		for (const file of routeModules()) {
+			const text = readFileSync(file, 'utf8');
+			if (/export\s+const\s+ssr\s*=\s*true/.test(text)) enabled.push(file);
+		}
+		expect(
+			enabled,
+			'маршрут увімкнув SSR — у build/ зʼявиться розмітка компонентів, і разом із нею ' +
+				'клас § 6.3.2, якого перевірка по джерелах не покриває цілком:\n' +
+				enabled.join('\n')
 		).toEqual([]);
 	});
 });
