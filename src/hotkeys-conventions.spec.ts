@@ -197,3 +197,121 @@ describe('призначення записані як KeyboardEvent.code (HK-EV
 		).toEqual([]);
 	});
 });
+
+
+/**
+ * ГЛОБАЛЬНА ОДИНОЧНА ЛІТЕРА НАЗВАНА В ЗАПИСІ ПРО WCAG SC 2.1.4
+ * (HOTKEYS-v9 `HK-WCAG-CHARACTER-KEY` CRITICAL, `HK-CANONICAL-MAP`,
+ * `HK-LANGUAGE-KEY`, `HK-HANDLER-GUARDS`, `HK-DISCOVERABILITY`).
+ *
+ * ## Чому це окрема перевірка
+ *
+ * Пʼять правил `HK-*` мають у полі `checkedBy` не лише гейт, а й «запис у
+ * PROJECT-CONTEXT.md для SC 2.1.4». Запису не було зовсім: обраний шлях жив
+ * коментарями у двох файлах, і ці коментарі казали «шлях 2 — перепризначення»
+ * про РІЗНІ набори клавіш. Для ігрових це правда (`/controls` дає змінити
+ * будь-яку), для глобальних `T` і `L` — ні: вони зашиті в `+layout.svelte`, і
+ * їх не можна ні вимкнути, ні перепризначити.
+ *
+ * Тобто документ стверджував відповідність критерію рівня A, якої частково
+ * немає, — і жодна перевірка цього не бачила. Рівно клас `PIT-DOC-FACTS`.
+ *
+ * ## Що саме тут звіряється
+ *
+ * Не «критерій виконано» — цього статично не довести. Звіряється ПЕРЕЛІК:
+ * кожна одиночна літера, зареєстрована в контексті `global` (тобто активна на
+ * кожному екрані), названа в записі. Нова глобальна літера без рядка валить
+ * прогін; рядок про літеру, якої в коді вже немає, валить його з другого боку.
+ *
+ * Саме `global`: у контексті `game` клавіші приходять із реєстру `keybindings`,
+ * тобто перепризначаються за побудовою, і перелічувати їх тут означало б
+ * дублювати `gameSettingsDefaults.ts`.
+ *
+ * ## Зворотний експеримент (AI-AGENT-PITFALLS-v9 § 1.1) — прогнано
+ *
+ * Додати `hotkeyService.register("global", "KeyG", …)` у `+layout.svelte` —
+ * перевірка червоніє й називає літеру. Прибрати `KeyL` із таблиці в
+ * `PROJECT-CONTEXT.md` — червоніє з другого боку.
+ */
+describe('WCAG SC 2.1.4: глобальні літери названі в записі (HK-WCAG-CHARACTER-KEY)', () => {
+	const RECORD = 'PROJECT-CONTEXT.md';
+	const SECTION = 'WCAG SC 2.1.4';
+
+	/** `hotkeyService.register("global", "KeyT", …)` — саме глобальний контекст. */
+	const GLOBAL_REGISTER = /hotkeyService\.register\(\s*["'`]global["'`]\s*,\s*["'`](Key[A-Z])["'`]/g;
+
+	/**
+	 * Коментарі відрізаються перед пошуком — інакше перевірка рахує ЗГАДКУ про
+	 * реєстрацію за реєстрацію. Спіймано першим же прогоном: у
+	 * `TopRowWidget.svelte` лежить закоментований
+	 * `// hotkeyService.register("global", "KeyI", …)`, і `KeyI` виявився
+	 * «глобальною літерою», якої в застосунку немає. Той самий клас, що вже
+	 * ловився в `test-runners.test.ts`, `ci.test.ts` і `testid-conventions.spec.ts`.
+	 */
+	const withoutComments = (source: string) =>
+		source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+	function registeredGlobalLetters(): string[] {
+		const found = new Set<string>();
+		for (const file of files) {
+			for (const match of withoutComments(readFileSync(file, 'utf8')).matchAll(GLOBAL_REGISTER)) {
+				found.add(match[1]);
+			}
+		}
+		return [...found].sort();
+	}
+
+	const record = readFileSync(RECORD, 'utf8');
+	const section = record.slice(record.indexOf(SECTION));
+	/*
+	 * Перелік читається з ОДНОГО місця, а не з усього розділу: у таблиці поруч
+	 * названі й ігрові клавіші (`KeyM`, `KeyI`), і без цієї межі перевірка
+	 * оголосила б їх глобальними, яких у контексті `global` немає.
+	 */
+	const MARKER = '**Глобальні одиночні літери';
+	const listLine = section.includes(MARKER)
+		? section.slice(section.indexOf(MARKER)).split('\n').slice(0, 2).join(' ')
+		: '';
+
+	it('закоментована реєстрація не рахується за реєстрацію', () => {
+		const commented = '// hotkeyService.register("global", "KeyI", show);';
+		expect([...withoutComments(commented).matchAll(GLOBAL_REGISTER)]).toEqual([]);
+		const live = 'hotkeyService.register("global", "KeyI", show);';
+		expect([...withoutComments(live).matchAll(GLOBAL_REGISTER)].map((m) => m[1])).toEqual([
+			'KeyI'
+		]);
+	});
+
+	it('перевірка жива: запис існує, і глобальні літери в коді знайдено', () => {
+		expect(
+			record.includes(SECTION),
+			`у ${RECORD} немає розділу «${SECTION}» — пʼять правил HK-* вимагають саме його`
+		).toBe(true);
+		expect(
+			registeredGlobalLetters().length,
+			'жодної глобальної літери в коді — перевірка нижче нічого не стереже'
+		).toBeGreaterThan(0);
+	});
+
+	it('кожна глобальна літера названа в записі', () => {
+		const missing = registeredGlobalLetters().filter((key) => !listLine.includes(key));
+		expect(
+			missing,
+			`нова глобальна літера без рядка в «${SECTION}»: критерій рівня A вимагає ` +
+				'назвати обраний шлях (вимкнути / перепризначити / лише у фокусі)\n' +
+				missing.join('\n')
+		).toEqual([]);
+	});
+
+	it('запис не застарів: кожна названа літера ще реєструється', () => {
+		const registered = new Set(registeredGlobalLetters());
+		const named = [...new Set([...listLine.matchAll(/`(Key[A-Z])`/g)].map((m) => m[1]))];
+		const stale = named.filter((key) => !registered.has(key));
+		expect(
+			stale,
+			`у «${SECTION}» названа літера, якої в коді вже немає — запис про борг, ` +
+				'якого немає, читається як наявний:\n' +
+				stale.join('\n')
+		).toEqual([]);
+	});
+});
