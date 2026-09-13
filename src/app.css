@@ -13,6 +13,46 @@
 /* ВИДАЛЕНО: @import url('./lib/css/layouts/main-menu.css'); - Старе меню видалено */
 @import url('./lib/css/components/settings-expander.css');
 
+/*
+ * ПЛАВНА ЗМІНА ТЕМИ — і під курсором, і по-справжньому (THEME-SWITCHER § 5).
+ *
+ * Клас вішає контролер (`stores/appSettingsState.svelte.ts`):
+ * `previewThemePair` — поки курсор на кнопці пікера, `updateSettings` — на час
+ * самої зміни. Без нього вісімнадцять комбінацій стилю й світлості
+ * перемикалися стрибком, і на прев'ю це видно найгірше: курсор веде по сітці, а
+ * застосунок клацає кольорами.
+ *
+ * ## Чому `*`, а не перелік поверхонь
+ *
+ * Стиль і тему тримають ТОКЕНИ (`css/themes/*.css`), і їх читають сотні правил
+ * у десятках компонентів. Перелічити «головні поверхні» означало б плавно
+ * міняти тло й стрибком — усе, що на ньому лежить.
+ *
+ * Ціна обмежена свідомо: правило живе лише поки курсор на кнопці пікера або
+ * доки триває зміна (контролер знімає клас таймером), і виключає `canvas` —
+ * його малює скрипт, і CSS-перехід там нічого не дає.
+ */
+html.theme-shifting,
+html.theme-shifting body,
+html.theme-shifting *:not(canvas) {
+    transition:
+        background-color 0.56s ease,
+        color 0.56s ease,
+        border-color 0.56s ease,
+        fill 0.56s ease,
+        stroke 0.56s ease;
+}
+
+/* Вимикає перехід, але НЕ саму зміну теми: побачити тему — це інформація, а не
+   рух (ACCESSIBILITY-v9 § 7). */
+@media (prefers-reduced-motion: reduce) {
+    html.theme-shifting,
+    html.theme-shifting body,
+    html.theme-shifting *:not(canvas) {
+        transition: none;
+    }
+}
+
 /* === FIX: Глобальне скидання box-sizing === */
 *,
 *::before,

@@ -2,6 +2,7 @@
     import { t } from "$lib/i18n/typedI18n";
     import type { TranslationKey } from "$lib/types/i18n";
     import NotoEmoji from "$lib/components/NotoEmoji.svelte";
+    import { appSettingsState } from "$lib/stores/appSettingsState.svelte";
 
     /**
      * Вибір стилю й теми — ОДИН компонент на обидва місця.
@@ -66,6 +67,31 @@
     const styles: readonly Style[] = ["purple", "green", "blue", "gray", "orange", "wood"];
 
     const nameOf = (style: Style) => $t(`mainMenu.themeName.${style}` as TranslationKey);
+
+    /**
+     * Наведення на будь-яку з трьох кнопок рядка ПОКАЗУЄ цю пару на всьому
+     * застосунку, поки курсор там (THEME-SWITCHER § 3).
+     *
+     * Пара, а не сам стиль: клік по сонцю в рядку purple дає `purple + light`,
+     * і прев'ю, що міняло б лише стиль, показувало б не те, що станеться (§ 7).
+     *
+     * ТІЛЬКИ МИША. `pointerenter` приходить і від тапу, а `pointerleave` на
+     * дотику — ні: пара застрягла б показаною, доки людина не торкнеться чогось
+     * іншого. А пікер живе в модалці, тобто на телефоні це головний шлях сюди.
+     */
+    function previewOn(style: Style, theme: Theme, e: PointerEvent) {
+        if (e.pointerType === "mouse") appSettingsState.previewThemePair({ style, theme });
+    }
+
+    function previewOff(e: PointerEvent) {
+        if (e.pointerType === "mouse") appSettingsState.previewThemePair(null);
+    }
+
+    /*
+     * Модалку закривають клавішею, кліком по тлу й самим вибором — `pointerleave`
+     * тоді не приходить, і застосунок лишився б у показаній парі назавжди.
+     */
+    $effect(() => () => appSettingsState.previewThemePair(null));
 </script>
 
 <div class="theme-picker" data-testid="{testIdPrefix}-picker-list">
@@ -75,6 +101,8 @@
                 class="theme-btn"
                 data-theme="light"
                 onclick={() => onSelect(style, "light")}
+                onpointerenter={(e) => previewOn(style, "light", e)}
+                onpointerleave={previewOff}
                 aria-label={`${$t("settings.themeLight")} — ${nameOf(style)}`}
                 data-testid="{testIdPrefix}-{style}-light-btn"
             >
@@ -99,6 +127,8 @@
             <button
                 class="theme-name"
                 onclick={() => onSelect(style, "normal")}
+                onpointerenter={(e) => previewOn(style, "normal", e)}
+                onpointerleave={previewOff}
                 aria-label={`${$t("settings.themeNormal")} — ${nameOf(style)}`}
                 data-testid="{testIdPrefix}-{style}-normal-btn"
             >
@@ -108,6 +138,8 @@
                 class="theme-btn"
                 data-theme="dark"
                 onclick={() => onSelect(style, "dark")}
+                onpointerenter={(e) => previewOn(style, "dark", e)}
+                onpointerleave={previewOff}
                 aria-label={`${$t("settings.themeDark")} — ${nameOf(style)}`}
                 data-testid="{testIdPrefix}-{style}-dark-btn"
             >
