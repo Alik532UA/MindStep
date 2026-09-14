@@ -93,8 +93,13 @@ export default defineConfig(({ mode }) => {
 					globPatterns: isDev
 						? [] 
 						: ['**/*.{js,css,html,ico,png,svg,webp,woff2,json}'],
-					// navigateFallback має бути відносним до base або повним шляхом
-					navigateFallback: isDev ? null : `${base}/index.html`.replace(/\/+/g, '/'),
+					// navigateFallback має бути відносним до base або повним шляхом.
+					//
+					// Файл — ТОЙ САМИЙ, що й `fallback` у `svelte.config.js`: офлайн
+					// воркер мусить віддавати рівно ту оболонку, яку віддав би сервер.
+					// Доки тут стояв `index.html`, це збігалося випадково — бо той же
+					// `index.html` був і фолбеком адаптера.
+					navigateFallback: isDev ? null : `${base}/404.html`.replace(/\/+/g, '/'),
 					navigateFallbackDenylist: [/^\/version\.json$/],
 					dontCacheBustURLsMatching: /-[a-f0-9]{8}\./,
 				},
