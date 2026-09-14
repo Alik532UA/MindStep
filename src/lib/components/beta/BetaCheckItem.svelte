@@ -6,9 +6,16 @@
     interface Props {
         check: BetaCheck;
         lang: 'uk' | 'en';
+        /**
+         * Номер у списку — наскрізний по ВКЛАДЦІ, не по рівню (§ 2.2), і
+         * малюється з ПОЗИЦІЇ, а не з `id`. Доти номерів не було взагалі:
+         * сказати «зламалося на третьому» було ніяк, і людина вимушено
+         * цитувала текст пункта цілком.
+         */
+        number: number;
     }
 
-    let { check, lang }: Props = $props();
+    let { check, lang, number }: Props = $props();
 
     const VOTES: readonly { vote: BetaVote; labelKey: keyof typeof BETA_UI }[] = [
         { vote: 'fail', labelKey: 'voteFail' },
@@ -27,6 +34,7 @@
     data-testid="beta-check-{check.id}-item"
 >
     <div class="head">
+        <span class="number">{number}</span>
         <span class="category" data-testid="beta-check-{check.id}-category-text">
             {check.category[lang]}
         </span>
@@ -61,6 +69,17 @@
 </li>
 
 <style>
+    .number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        border: 1px solid var(--border-color, rgba(128, 128, 128, 0.35));
+        font-variant-numeric: tabular-nums;
+    }
+
     .beta-item {
         display: flex;
         flex-direction: column;

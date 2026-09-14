@@ -318,6 +318,27 @@ describe('BETA-CHECKLIST-v8 § 5.4 — форма пункта', () => {
 		expect(barren, 'вкладка без жодного пункта для людини').toEqual([]);
 	});
 
+	/**
+	 * § 3.4 `BETA-LEVEL-BALANCE` — сильніша умова, ніж «хоч один manual».
+	 *
+	 * Контрольна група корисна доти, доки лишається групою, а не списком: кожен
+	 * `covered` витрачає час живої людини там, де автотест уже дивиться. У
+	 * сусідньому проєкті набору перекіс дійшов до 26 `covered` проти 15 `manual`,
+	 * тобто половина чеклиста була контрольною групою.
+	 */
+	it('у вкладці covered не переважає manual (§ 3.4)', () => {
+		const skewed = BETA_TABS.map((tab) => {
+			const own = checks.filter((c) => c.id.startsWith(`${tab.id}_`));
+			const n = (level: string) => own.filter((c) => c.coverage === level).length;
+			return { id: tab.id, manual: n('manual'), covered: n('covered') };
+		}).filter((row) => row.covered > row.manual);
+
+		expect(
+			skewed.map((r) => `${r.id}: covered ${r.covered} > manual ${r.manual}`),
+			'контрольна група більша за роботу — час людини йде туди, де тест уже дивиться'
+		).toEqual([]);
+	});
+
 	it('у кожної вкладки є пункт-межа', () => {
 		const barren = BETA_TABS.filter(
 			(tab) => !checks.some((c) => c.id.startsWith(`${tab.id}_`) && c.negative)

@@ -104,9 +104,16 @@
         }
     }
 
+    /**
+     * Стирання у ДВА кроки (§ 6.3), а не `confirm()`.
+     *
+     * Нативний діалог блокує потік, виглядає чужим у будь-якій темі, не
+     * перекладається разом зі сторінкою, і в headless його доводиться
+     * перехоплювати окремим обробником — тобто e2e § 5.7 дорожчає на рівному
+     * місці. Кнопка, яка сама стає підтвердженням, робить те саме дешевше.
+     */
     function clearMarks() {
-        if (!confirm(BETA_UI.clearConfirm[lang])) return;
-        betaProgress.clear();
+        if (!betaProgress.requestClear()) return;
         reportText = '';
         reportHint = '';
     }
@@ -139,7 +146,12 @@
     </header>
 
     <nav class="tabs" aria-label={BETA_UI.pageTitle[lang]}>
+        <!--
+            Лічильник на КОЖНІЙ вкладці (§ 8.1). Вкладок вісім, у найбільшій —
+            сімнадцять пунктів, а загальне «17 / 62» не каже, чи закінчена ця.
+        -->
         {#each BETA_TABS as tab (tab.id)}
+            {@const tabDone = betaProgress.progressOf(checksOfTab(tab.id))}
             <button
                 type="button"
                 class="tab"
@@ -149,19 +161,32 @@
                 data-testid="beta-tab-{tab.id}-btn"
             >
                 {tab.title[lang]}
+                <span
+                    class="tab-count"
+                    aria-label={BETA_UI.tabProgress[lang]}
+                    data-testid="beta-tab-{tab.id}-progress-text"
+                >
+                    {tabDone.done}/{tabDone.total}
+                </span>
             </button>
         {/each}
     </nav>
 
     {#each COVERAGE_ORDER as level (level)}
         {@const items = checksOfLevel(activeTab, level)}
+        <!--
+            Номер, який бачить людина, — наскрізний по ВКЛАДЦІ (§ 2.2). Доти
+            номерів не було взагалі: сказати «зламалося на третьому» було ніяк,
+            і людина вимушено цитувала текст пункта цілком.
+        -->
+        {@const offset = tabChecks.findIndex((c) => c.coverage === level)}
         {#if items.length > 0}
             <section class="level" data-testid="beta-level-{level}-section">
                 <h2>{BETA_UI[LEVEL_TITLE[level]][lang]}</h2>
                 <p class="level-hint">{BETA_UI[LEVEL_HINT[level]][lang]}</p>
                 <ul class="items">
-                    {#each items as check (check.id)}
-                        <BetaCheckItem {check} {lang} />
+                    {#each items as check, position (check.id)}
+                        <BetaCheckItem {check} {lang} number={offset + position + 1} />
                     {/each}
                 </ul>
             </section>
@@ -178,8 +203,13 @@
             >
                 {BETA_UI.copyReport[lang]}
             </button>
-            <button type="button" onclick={clearMarks} data-testid="beta-clear-btn">
-                {BETA_UI.clear[lang]}
+            <button
+                type="button"
+                class:armed={betaProgress.clearArmed}
+                onclick={clearMarks}
+                data-testid="beta-clear-btn"
+            >
+                {betaProgress.clearArmed ? BETA_UI.clearConfirm[lang] : BETA_UI.clear[lang]}
             </button>
         </div>
 
@@ -285,6 +315,24 @@
         font-size: 0.875rem;
         cursor: pointer;
     }
+    /* Рівна ширина цифр: лічильники в ряду вкладок не мусять стрибати. */
+    .tab-count {
+        margin-inline-start: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 400;
+        opacity: 0.8;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /*
+     * Зведена кнопка стирання (§ 6.3). Стан НЕ лише кольором: рамка товща,
+     * напис напівжирний, і сам текст кнопки міняється на питання.
+     */
+    .actions button.armed {
+        border-width: 2px;
+        font-weight: 700;
+    }
+
     .tab.active {
         font-weight: 700;
         border-width: 2px;

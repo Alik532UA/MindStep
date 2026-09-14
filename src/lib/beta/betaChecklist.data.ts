@@ -147,9 +147,15 @@ export const BETA_UI = {
 		en: 'The clipboard is unavailable. The report is below — select it and copy by hand.'
 	},
 	clear: { uk: 'Стерти всі позначки', en: 'Erase every mark' },
+	/**
+	 * Другий крок стирання (§ 6.3). Напис каже, що станеться при НАСТУПНОМУ
+	 * натисканні: доти цей рядок ішов у `confirm()`, тобто був питанням у чужому
+	 * діалозі, а тепер він — сама кнопка.
+	 */
 	clearConfirm: {
-		uk: 'Стерти всі позначки? Скасувати це не вийде.',
-		en: 'Erase every mark? This cannot be undone.'
+		uk: 'Точно стерти? Натисніть ще раз',
+		en: 'Really erase? Press again'
 	},
+	tabProgress: { uk: 'позначено у вкладці', en: 'marked on this tab' },
 	nothingMarked: { uk: 'Жодного пункта ще не позначено.', en: 'Nothing marked yet.' }
 } as const satisfies Record<string, Localized>;
