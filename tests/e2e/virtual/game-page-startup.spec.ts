@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 
 test('Game page loads and renders correctly on direct navigation', { tag: ['@done', '@GPS-1'] }, async ({ page }) => {
   await test.step('Перехід на сторінку гри та перевірка статусу', async () => {

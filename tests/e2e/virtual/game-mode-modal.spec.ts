@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Модальне вікно вибору режиму гри', { tag: '@GMM' }, () => {
   test.beforeEach(async ({ page }) => {

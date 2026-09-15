@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { TOUCH_OVERLAP_BASELINE, type TouchPageKey } from '../touch-targets-baseline';
 import { waitForMeasurablePage } from '../wait-for-ui';
 

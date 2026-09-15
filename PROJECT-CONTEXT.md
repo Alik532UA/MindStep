@@ -97,9 +97,9 @@ AI-агент читає його **перед** застосуванням па
 | Ключ                 | Число | Що це і чим міряється                                                          |
 | -------------------- | ----- | ------------------------------------------------------------------------------ |
 | `svelte-files`       | 183   | компонентів і сторінок: `find src -name '*.svelte' \| wc -l`                    |
-| `ts-files`           | 373   | модулів TypeScript: `find src -name '*.ts' \| wc -l`                            |
+| `ts-files`           | 375   | модулів TypeScript: `find src -name '*.ts' \| wc -l`                            |
 | `routes`             | 21    | маршрутів: `find src/routes -name '+page.svelte' \| wc -l`                      |
-| `unit-spec-files`    | 51    | файлів юніт-перевірок — маска `test.include` у `vite.config.ts`                 |
+| `unit-spec-files`    | 53    | файлів юніт-перевірок — маска `test.include` у `vite.config.ts`                 |
 | `e2e-spec-files`     | 19    | файлів e2e: `find tests/e2e -name '*.spec.ts' \| wc -l`                         |
 | `e2e-in-ci`          | 7     | з них названі кроком `npx playwright test` у `.github/workflows/`               |
 | `rules-cases`        | 89    | випадків у гейті правил бази — масив `CASES` у `scripts/check-rules.mjs`        |

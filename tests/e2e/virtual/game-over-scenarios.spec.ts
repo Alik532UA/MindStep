@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { startNewGame, setBoardSize, makeMove, expectScoreToBeZeroOrNegative, setBlockMode, BlockModeState } from '../../utils';
 
 test.describe('Сценарії завершення гри', { tag: '@GOS' }, () => {

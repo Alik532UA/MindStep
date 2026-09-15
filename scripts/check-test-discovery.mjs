@@ -54,7 +54,7 @@
  * Запуск: `npm run check:tests` (або `node scripts/check-test-discovery.mjs`).
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 /** Каталоги, у яких взагалі можуть лежати файли перевірок. */
 const SEARCH_DIRS = ["src", "tests", "e2e"];
@@ -91,6 +91,56 @@ function walk(/** @type {string} */ dir, /** @type {string[]} */ out = []) {
     else if (/\.(spec|test|setup)\.(ts|js)$/.test(entry)) out.push(norm(full));
   }
   return out;
+}
+
+const importsRunner = (/** @type {string} */ source, /** @type {{imports: string}} */ runner) =>
+  new RegExp(
+    `from\\s*['"]${runner.imports.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&")}['"]`,
+  ).test(source);
+
+/**
+ * Раннер файлу — за його імпортами, ЗА ПОСИЛАННЯМИ на локальні модулі.
+ *
+ * Пряме порівняння рядка тут більше не годиться, і це не послаблення, а
+ * виправлення. Специфікації Playwright беруть `test` не з `@playwright/test`,
+ * а з власного модуля фікстур (`tests/e2e/fixtures.ts`, ANALYTICS-v9 § 5.2,
+ * `AN-E2E-BLOCK`): глушилка аналітики мусить діяти на КОЖНУ сторінку, а не
+ * лише там, де її згадали. Після того переходу пряме порівняння оголосило
+ * сиротами всі 20 специфікацій одразу — тобто перевірка червоніла б на
+ * цілком правильному коді, а справжню сироту в тій купі вже ніхто б не
+ * побачив.
+ *
+ * Гарантія лишається та сама: файл мусить ДОСЯГАТИ раннера. Обхід іде лише
+ * по відносних шляхах (`./`, `../`) і пам'ятає відвідане, тож цикл імпортів
+ * його не зациклює.
+ *
+ * Тип повернення записаний явно: функція рекурсивна, і без анотації
+ * `svelte-check` справедливо каже «implicitly has return type any».
+ *
+ * @param {string} root
+ * @param {string} file
+ * @param {Set<string>} [seen]
+ * @returns {{ imports: string; dep: string; config: RegExp } | undefined}
+ */
+function runnerOf(root, file, seen = new Set()) {
+  const abs = join(root, file);
+  if (seen.has(abs) || !existsSync(abs) || statSync(abs).isDirectory()) return undefined;
+  seen.add(abs);
+
+  const source = withoutComments(readFileSync(abs, "utf8"));
+  const direct = RUNNERS.find((r) => importsRunner(source, r));
+  if (direct) return direct;
+
+  for (const [, spec] of source.matchAll(/from\s*['"](\.[^'"]*)['"]/g)) {
+    const base = norm(join(dirname(file), spec));
+    // `./fixtures`, `./fixtures.ts` і `../ready.js` (TS-імпорт із розширенням JS).
+    const candidates = [base, `${base}.ts`, `${base}.js`, base.replace(/\.js$/, ".ts")];
+    for (const candidate of candidates) {
+      const found = runnerOf(root, candidate, seen);
+      if (found) return found;
+    }
+  }
+  return undefined;
 }
 
 /** Що Playwright підхоплює без жодного `testMatch` у конфігу. */
@@ -209,15 +259,10 @@ export function checkTestDiscovery(rootDir) {
   const playwrightDir = playwrightTestDir(root);
 
   for (const file of specFiles) {
-    const source = withoutComments(readFileSync(join(root, file), "utf8"));
-    const runner = RUNNERS.find((r) =>
-      new RegExp(`from\\s*['"]${r.imports.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&")}['"]`).test(
-        source,
-      ),
-    );
+    const runner = runnerOf(root, file);
 
     if (!runner) {
-      problems.push(`${file}: не імпортує жодного відомого раннера`);
+      problems.push(`${file}: не досягає жодного відомого раннера — ні прямо, ні через локальні імпорти`);
       continue;
     }
     if (!deps[runner.dep]) {

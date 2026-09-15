@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 /**
  * `<html lang>` іде за вибраною мовою (I18N-v8 § 5.2, § 7.2; ACCESSIBILITY-v8,

@@ -19,13 +19,25 @@ const isConfigured = GA_ID !== PLACEHOLDER && /^G-[A-Z0-9]{6,}$/.test(GA_ID);
 
 const isBrowser = typeof window !== "undefined";
 
-// `dev` keeps local work from landing in the same property as real traffic.
-const enabled = () => isBrowser && !dev && isConfigured;
+/**
+ * Локальне середовище або автоматизований тест (Playwright, Puppeteer тощо).
+ * Запобігає засміченню аналітики під час розробки, локального прев'ю та E2E-тестів.
+ */
+const isTestOrLocal = () => {
+	if (!isBrowser || typeof window === 'undefined') return false;
+	const hostname = window.location?.hostname ?? '';
+	const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+	const isWebDriver = typeof navigator !== 'undefined' && Boolean(navigator.webdriver);
+	return isLocal || isWebDriver;
+};
+
+// `dev`, `localhost` та автотести відключають аналітику, щоб тестовий трафік не потрапляв у продакшн.
+const enabled = () => isBrowser && !dev && !isTestOrLocal() && isConfigured;
 
 type EventParams = Record<string, string | number | boolean>;
 
 /**
- * Реєстр подій (ANALYTICS-v8 § 3.1).
+ * Реєстр подій (ANALYTICS-v9 § 3.1).
  *
  * Назви подій були рядковими літералами в місцях виклику. GA4 приймає будь-який
  * рядок: `game_end`, `game-end` і `gameEnd` стають ТРЬОМА різними подіями, і

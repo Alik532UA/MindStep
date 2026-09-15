@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, blockAnalytics } from '../fixtures';
 import { clearFirestore, createOnlineRoom, joinOnlineRoom } from '../../utils';
 
 /**
@@ -33,7 +33,9 @@ test.describe('Онлайн мультиплеєр', { tag: '@OM' }, () => {
 
   test('Створення кімнати та приєднання другого гравця', { tag: ['@done', '@OM-1'] }, async ({ browser }, testInfo) => {
     const context1 = await browser.newContext();
+    await blockAnalytics(context1);
     const context2 = await browser.newContext();
+    await blockAnalytics(context2);
 
     const p1 = await context1.newPage();
     const p2 = await context2.newPage();

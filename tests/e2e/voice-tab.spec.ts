@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * Вкладка голосу виживає на переліку голосів, який віддає Apple.

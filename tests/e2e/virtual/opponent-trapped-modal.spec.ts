@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { setBoardSize, startNewGame, setBlockMode, BlockModeState, makeMove } from '../../utils';
 
 test.describe('Модальне вікно "Суперник у пастці"', { tag: '@OTM' }, () => {
