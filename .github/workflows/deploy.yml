@@ -138,7 +138,7 @@ jobs:
       # § 10.3.1, `A11Y-TOUCH-OVERLAP`). axe міряє кожну ціль окремо й
       # зелений навіть тоді, коли дві з них лежать одна на одній.
       - name: Runtime invariants (unique data-testid, html lang, axe, voice tab)
-        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts tests/e2e/touch-targets.spec.ts
+        run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/beta-checklist.spec.ts
 
       - name: Upload Playwright report
         if: failure()
