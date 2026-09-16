@@ -93,6 +93,7 @@ jobs:
           key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright chromium
+        if: ${{ !cancelled() }}
         run: npx playwright install --with-deps chromium
 
       # Той самий перелік, що і в `deploy.yml`: решта `tests/e2e/` або важка

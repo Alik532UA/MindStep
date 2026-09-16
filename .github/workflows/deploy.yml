@@ -133,6 +133,7 @@ jobs:
           key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright chromium
+        if: ${{ !cancelled() }}
         run: npx playwright install --with-deps chromium
 
       # Перелік файлів, а не каталог: `tests/e2e/virtual/` — це десять важких
