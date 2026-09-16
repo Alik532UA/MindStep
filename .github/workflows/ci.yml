@@ -30,15 +30,20 @@
 name: CI
 
 on:
+  # Гілка розробки — `dev`, і прямий пуш у неї теж мусить проходити гейти
+  # (CI-CD-AND-TOOLS-v9 § 1.12).
+  push:
+    branches: [dev]
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
 
 jobs:
   gates:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -78,6 +83,15 @@ jobs:
           path: test-reports/
           retention-days: 7
 
+      # Браузери не приходять із npm ci. Кешуються між запусками
+      # (CI-CD-AND-TOOLS-v9 § 1.3).
+      - name: Cache Playwright browsers
+        if: ${{ !cancelled() }}
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
@@ -98,19 +112,21 @@ jobs:
       # § 10.3.1, `A11Y-TOUCH-OVERLAP`). axe міряє кожну ціль окремо й
       # зелений навіть тоді, коли дві з них лежать одна на одній.
       - name: Runtime invariants (unique data-testid, html lang, focus, axe, voice tab)
+        if: ${{ !cancelled() }}
         run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/beta-checklist.spec.ts
 
       - name: Upload Playwright report
-        if: failure()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-pr
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Audit dependencies
-        if: ${{ !cancelled() }}
-        run: npm audit --audit-level=high
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: npm run audit:ci
 
       # Секрети сюди НЕ передаються навмисно: у PR із форку й у PR від
       # Dependabot вони недоступні за побудовою, тож крок, який на них
@@ -119,12 +135,15 @@ jobs:
       # виконується й до конфігу Firebase не звертається. Перевірено локально:
       # збірка без `.env` проходить, `check:build` теж.
       - name: Build
+        id: build
         run: npm run build
         env:
           BASE_PATH: "/MindStep"
 
       - name: Check built output
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run check:build
 
       - name: Збірка не змінює відстежувані файли
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: git diff --exit-code

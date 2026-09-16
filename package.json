@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.986",
+  "version": "0.5.987",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -27,6 +27,7 @@
     "lint:fix": "eslint . --fix",
     "lint:knip": "knip",
     "lint:all": "npm run lint && npm run lint:knip",
+    "audit:ci": "node scripts/check-audit.mjs",
     "diagnose": "node scripts/diagnose.js"
   },
   "devDependencies": {

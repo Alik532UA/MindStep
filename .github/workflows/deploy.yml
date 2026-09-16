@@ -8,8 +8,6 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
 
 # `cancel-in-progress: false` — вимога CI-CD-AND-TOOLS-v8 § 1.3 для
 # деплой-пайплайна, і не з міркувань акуратності. Пуш пачкою комітів разом із
@@ -36,6 +34,9 @@ jobs:
   # перевіряються», і наступний аудит читає це як факт.
   rules:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -65,6 +66,9 @@ jobs:
 
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -119,6 +123,15 @@ jobs:
       #
       # Вісім сторінок; `/online` і `/game/*` не входять — вони потребують
       # кімнати й емулятора Firebase, це окремий джоб.
+      # Браузери не приходять із npm ci. Кешуються між запусками
+      # (CI-CD-AND-TOOLS-v9 § 1.3).
+      - name: Cache Playwright browsers
+        if: ${{ !cancelled() }}
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
@@ -138,14 +151,16 @@ jobs:
       # § 10.3.1, `A11Y-TOUCH-OVERLAP`). axe міряє кожну ціль окремо й
       # зелений навіть тоді, коли дві з них лежать одна на одній.
       - name: Runtime invariants (unique data-testid, html lang, axe, voice tab)
+        if: ${{ !cancelled() }}
         run: npx playwright test tests/e2e/invariants.spec.ts tests/e2e/html-lang.spec.ts tests/e2e/a11y.spec.ts tests/e2e/voice-tab.spec.ts tests/e2e/reflow.spec.ts tests/e2e/touch-targets.spec.ts tests/e2e/beta-checklist.spec.ts
 
       - name: Upload Playwright report
-        if: failure()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
 
       # Поріг high, а не moderate: лишилися 7 moderate у транзитивних
@@ -154,7 +169,7 @@ jobs:
       # вимкнути, а вимкнений гейт гірший за відсутній.
       - name: Audit dependencies
         if: ${{ !cancelled() }}
-        run: npm audit --audit-level=high
+        run: npm run audit:ci
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -180,6 +195,7 @@ jobs:
       # (SEO-v8 § 6.1, SECURITY-v8 § 16). Саме він знайшов `/about`, який
       # у продакшн-збірці віддавав порожній документ.
       - name: Build
+        id: build
         run: npm run build
         env:
           BASE_PATH: "/MindStep"
@@ -202,6 +218,7 @@ jobs:
           VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}
 
       - name: Check built output
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run check:build
 
       # CI-CD-AND-TOOLS-v8 § 1.5 — єдина машинна перевірка правила «артефакт
@@ -215,9 +232,11 @@ jobs:
       # Інваріант `src/ci.test.ts` тепер тримає пару «є `npm run build` — є цей
       # крок», щоб він не зник удруге.
       - name: Збірка не змінює відстежувані файли
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: git diff --exit-code
 
       - name: Lighthouse Audit
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npx @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
 
       # Preserve dev/ from current gh-pages

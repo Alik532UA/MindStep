@@ -5,8 +5,6 @@ name: Deploy Dev to GitHub Pages
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
 
 # Те саме правило, що й у deploy.yml: скасований прогін ховає гейт, який
 # жодного разу не виконувався (CI-CD-AND-TOOLS-v8 § 1.3).
@@ -17,6 +15,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -67,6 +68,7 @@ jobs:
           retention-days: 7
 
       - name: Build
+        id: build
         run: npm run build
         env:
           BASE_PATH: "/MindStep/dev"
@@ -79,9 +81,11 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
       - name: Check built output
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run check:build
 
       - name: Збірка не змінює відстежувані файли
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: git diff --exit-code
 
       - name: Deploy to GitHub Pages (dev subfolder)
