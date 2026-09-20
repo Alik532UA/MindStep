@@ -35,6 +35,9 @@ const firestoreRules = readFileSync('firestore.rules', 'utf8');
 const rulesCode = firestoreRules.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 const databaseRules = readFileSync('database.rules.json', 'utf8').replace(/^\s*\/\/.*$/gm, '');
 
+/** Єдине джерело конфігу Firebase — той самий файл, який читає застосунок. */
+const firebaseConfigSource = readFileSync('src/lib/services/firebaseService.ts', 'utf8');
+
 describe('хмарна база', () => {
 	it('знаходить джерела — перевірка жива', () => {
 		expect(sources.length).toBeGreaterThan(0);
@@ -48,6 +51,50 @@ describe('хмарна база', () => {
 			expect(path, `firebase.json не вказує правила для ${key}`).toBeTruthy();
 			expect(existsSync(path), `${path} немає`).toBe(true);
 		}
+	});
+
+	/*
+	 * Конфіг лежить у джерелі, а не у змінних CI (SECURITY-v9 § 4.2.1,
+	 * `SEC-CONFIG-IN-SOURCE`). `.firebaserc` існує окремо, бо його читає
+	 * `firebase-tools`, а той не вміє в TypeScript — тож не «одне джерело», а
+	 * «два, звірені гейтом». Різні значення означали б, що правила їдуть не в
+	 * ту базу, у яку пише застосунок, і обидва кроки будуть зелені.
+	 */
+	it('ідентифікатор проєкту всюди один (§ 4.2.1)', () => {
+		const inSource = /projectId:\s*'([^']+)'/.exec(firebaseConfigSource)?.[1];
+		expect(inSource, 'у firebaseService.ts немає літерала projectId').toBeTruthy();
+
+		const rc = JSON.parse(readFileSync('.firebaserc', 'utf8'));
+		expect(rc.projects?.default, '`.firebaserc` називає інший проєкт').toBe(inSource);
+	});
+
+	/*
+	 * АДРЕСА RTDB — НЕ ДРІБНИЦЯ, І ЦЕ ВИМІРЯНО В ПРОДАКШНІ.
+	 *
+	 * `VITE_FIREBASE_DATABASE_URL` не потрапила у збірку CI, SDK вивів адресу з
+	 * `projectId` і пішов на `firebaseio.com` замість `europe-west1` — а CSP
+	 * дозволяє лише `*.firebasedatabase.app`. Присутність і перепідключення не
+	 * працювали ЖОДНОГО разу, мовчки: SDK не скаржиться на «не ту» адресу.
+	 *
+	 * Доти на це стояла перевірка В РАНТАЙМІ, тобто помилку було видно в
+	 * журналі браузера відвідувача. Тепер вона тут.
+	 */
+	it('адреса RTDB європейська й вписана в джерело (§ 4.2.1)', () => {
+		const url = /databaseURL:\s*'([^']+)'/.exec(firebaseConfigSource)?.[1];
+		expect(url, 'у firebaseService.ts немає літерала databaseURL').toBeTruthy();
+		expect(
+			url,
+			'адреса не з `firebasedatabase.app`: CSP дозволяє лише цей домен, ' +
+				'тож онлайн мовчки не працюватиме',
+		).toMatch(/\.europe-west1\.firebasedatabase\.app$/);
+	});
+
+	it('конфіг не читається зі змінних оточення (§ 4.2.1)', () => {
+		expect(
+			firebaseConfigSource,
+			'значення повернулися в `import.meta.env` — тоді воно знову живе у двох місцях, ' +
+				'а `git clone && npm run dev` знову не працює',
+		).not.toMatch(/import\.meta\.env\.VITE_FIREBASE/);
 	});
 
 	it('гейт правил існує, кличе емулятор і закріплює проєкт (§ 3)', () => {

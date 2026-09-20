@@ -33,8 +33,12 @@
  * ## Запуск
  *
  *   GOOGLE_APPLICATION_CREDENTIALS=/шлях/до/ключа.json \
- *   FIREBASE_PROJECT=stay-on-the-board \
  *   node scripts/firestore-ttl.mjs [--apply]
+ *
+ * Ідентифікатор проєкту не передається: він береться з `firebaseService.ts` —
+ * того самого файлу, який читає застосунок. Окреме джерело для одного факту
+ * означало б, що політику можна ввімкнути не в тій базі, у яку пише код, і
+ * обидві дії будуть «успішні» (SECURITY-v9 § 4.2.1, `SEC-CONFIG-IN-SOURCE`).
  *
  * Без `--apply` він лише ПОКАЗУЄ поточний стан і нічого не міняє. Умикання
  * TTL означає, що база почне видаляти документи, — таке не робиться як побічний
@@ -64,16 +68,18 @@ const POLICIES = [
 	}
 ];
 
+const CONFIG_SOURCE = 'src/lib/services/firebaseService.ts';
 const KEY_FILE = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-const PROJECT = process.env.FIREBASE_PROJECT;
 const APPLY = process.argv.includes('--apply');
 
 if (!KEY_FILE) {
 	console.error('Немає GOOGLE_APPLICATION_CREDENTIALS — шляху до ключа сервісного акаунта.');
 	process.exit(2);
 }
+
+const PROJECT = /projectId:\s*["']([^"']+)["']/.exec(readFileSync(CONFIG_SOURCE, 'utf8'))?.[1];
 if (!PROJECT) {
-	console.error('Немає FIREBASE_PROJECT — ідентифікатора проєкту.');
+	console.error(`У ${CONFIG_SOURCE} немає projectId — невідомо, у якій базі вмикати політики.`);
 	process.exit(2);
 }
 

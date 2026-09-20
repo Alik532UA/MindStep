@@ -28,16 +28,37 @@ import { logService } from "./logService.svelte";
 
 const isBrowser = typeof window !== 'undefined';
 
+/*
+ * КОНФІГ СТОЇТЬ ТУТ, А НЕ ПРИЇЖДЖАЄ ЗІ ЗМІННИХ CI.
+ *
+ * Значення публічні за побудовою: вони в бандлі, який качає кожен відвідувач,
+ * і сховати їх неможливо. Межу безпеки тримають `firestore.rules`,
+ * `database.rules.json` і перелік дозволених доменів
+ * (SECURITY-v9 § 4.1, § 4.2.1 `SEC-CONFIG-IN-SOURCE`).
+ *
+ * Змінні дають рівно одне: зібрати той самий код під іншу базу. Такого
+ * сценарію тут немає — проєкт Firebase один, `deploy-dev.yml` збирає під нього
+ * ж, а емулятор чіпляється за адресою (`127.0.0.1`), а не іншим `projectId`.
+ *
+ * Натомість вони вже коштували ПРАЦЮЮЧОГО ОНЛАЙНУ: `VITE_FIREBASE_DATABASE_URL`
+ * не потрапила в збірку CI, SDK вивів адресу з `projectId`, пішов у
+ * `firebaseio.com` замість `europe-west1` — і присутність із перепідключенням
+ * не працювали ЖОДНОГО разу, мовчки. Подробиці — у `getRealtimeDb()` нижче.
+ * Рядок, якого бракувало, тепер не може не потрапити в збірку: він ось тут.
+ *
+ * Межа: щойно з'явиться ДРУГА база (тестова, демо, окремий стенд) — значення
+ * повертаються у змінні, бо вшите в бандл перецілити неможливо.
+ */
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
-};
+    apiKey: 'AIzaSyAbHjX0oyy9aCU8WDn9x3i-_T7hRMCSfRA',
+    authDomain: 'stay-on-the-board.firebaseapp.com',
+    projectId: 'stay-on-the-board',
+    storageBucket: 'stay-on-the-board.firebasestorage.app',
+    messagingSenderId: '939636937442',
+    appId: '1:939636937442:web:714e1a4566703fed8604bb',
+    measurementId: 'G-CPGNM62XZW',
+    databaseURL: 'https://stay-on-the-board-default-rtdb.europe-west1.firebasedatabase.app'
+} as const;
 
 // Примусово вмикаємо емулятор у тестах
 const USE_EMULATOR = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' || (isBrowser && (window as any).__playwright_test__);
@@ -47,10 +68,6 @@ let db: Firestore | null = null;
 let rtdb: Database | null = null;
 let auth: Auth | null = null;
 let analytics: Analytics | null = null;
-
-export function isFirebaseConfigured(): boolean {
-    return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
-}
 
 function initializeFirebase(): FirebaseApp {
     if (app) return app;
@@ -98,13 +115,14 @@ export function getRealtimeDb(): Database {
      * Заміряно в продакшні: змінної не було в збірці CI, і присутність із
      * перепідключенням не працювали ЖОДНОГО разу — мовчки, бо SDK не скаржиться
      * на «не ту» адресу, він просто йде за нею.
+     *
+     * ПЕРЕВІРКА ЗВІДСИ ПЕРЕЇХАЛА В ГЕЙТ. Доти тут стояв `logService.error`, і
+     * це була відповідь на питання «що робити, коли адреси немає» — тобто на
+     * питання, яке не мало б виникати. Тепер адреса лежить у `firebaseConfig`
+     * вище, у git, а `cloud-database.spec.ts` звіряє, що вона є і що вона
+     * європейська. Помилка, яку видно на збірці, коштує дешевше за помилку,
+     * яку видно в журналі браузера відвідувача.
      */
-    if (!firebaseConfig.databaseURL) {
-        logService.error(
-            '[FirebaseService] Немає VITE_FIREBASE_DATABASE_URL — SDK піде на типову адресу ' +
-                'firebaseio.com замість europe-west1, і CSP її заблокує. Онлайн не працюватиме.'
-        );
-    }
 
     /*
      * ЛИШЕ ВЕБСОКЕТ — інакше RTDB не з'єднується під нашою політикою безпеки.

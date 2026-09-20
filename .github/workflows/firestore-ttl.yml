@@ -25,7 +25,6 @@ jobs:
     timeout-minutes: 10
     env:
       SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      FIREBASE_PROJECT: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v7
 
@@ -38,14 +37,13 @@ jobs:
       # Тут це доречно, на відміну від викладення правил: цей воркфлоу
       # запускають руками й задля однієї дії, тож «пропущено з попередженням»
       # виглядало б як «спрацювало».
-      - name: Ключ і проєкт на місці
+      #
+      # Про проєкт тут не питаємо: він лежить у `firebaseService.ts`, тобто в
+      # git, і скрипт бере його звідти (SECURITY-v9 § 4.2.1).
+      - name: Ключ на місці
         run: |
           if [ -z "$SERVICE_ACCOUNT" ]; then
             echo "::error title=Немає ключа::Секрет FIREBASE_SERVICE_ACCOUNT не заданий."
-            exit 1
-          fi
-          if [ -z "$FIREBASE_PROJECT" ]; then
-            echo "::error title=Немає проєкту::Секрет VITE_FIREBASE_PROJECT_ID не заданий."
             exit 1
           fi
 
