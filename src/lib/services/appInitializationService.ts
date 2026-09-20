@@ -13,7 +13,7 @@ import { base } from "$app/paths";
 import { animationService } from "$lib/services/animationService";
 import { uiState } from "$lib/stores/uiState.svelte";
 import { storageService } from "$lib/services/storage";
-import { ownCacheNames, ownRegistrations } from "$lib/services/ownScope";
+import { ownCacheNames, unregisterOwnServiceWorkers } from "$lib/services/ownScope";
 
 import { urlSyncService } from "$lib/services/urlSyncService";
 import { authService } from "$lib/services/authService";
@@ -215,12 +215,7 @@ class AppInitializationService {
 
         try {
             // 1. Unregister own service workers
-            if ("serviceWorker" in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                for (const registration of ownRegistrations(registrations)) {
-                    await registration.unregister();
-                }
-            }
+            await unregisterOwnServiceWorkers();
 
             // 2. Clear own caches
             if ("caches" in window) {

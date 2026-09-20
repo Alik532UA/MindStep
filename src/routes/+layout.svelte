@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "../app.css";
 	import { appInitializationService } from "$lib/services/appInitializationService";
-	import { ownRegistrations } from "$lib/services/ownScope";
+	import { ownServiceWorkerRegistrations } from "$lib/services/ownScope";
 	import { initAnalytics, trackPageView } from "$lib/services/analyticsService";
 	import { webVitals } from "$lib/controllers/webVitals.svelte";
 	import { versionState } from "$lib/stores/versionState.svelte";
@@ -142,29 +142,32 @@
 		/*
 		 * Прибирання старого `sw.js` після переїзду на `service-worker.js`.
 		 *
-		 * Фільтр за `scope` (`ownRegistrations`) обов'язковий: сусідні проєкти
-		 * на `alik532ua.github.io` теж мають `sw.js`, і без фільтра ця гілка
+		 * Перелік приходить УЖЕ відфільтрованим за `scope`
+		 * (`ownServiceWorkerRegistrations`), і це обов'язково: сусідні проєкти
+		 * на `alik532ua.github.io` теж мають `sw.js`, тож без фільтра ця гілка
 		 * знімала ЧУЖУ реєстрацію, а потім перезавантажувала свою сторінку —
 		 * тобто ламала сусіда й нічого не лікувала в себе
 		 * (STORAGE-NAMESPACE § 1, `ownScope.ts`).
+		 *
+		 * Фільтрувати тут на місці більше не можна навмисно: `getRegistrations()`
+		 * поза модулем межі заборонений цілком, бо дозвіл «можна, якщо поруч є
+		 * фільтр» пропускає файл, у якому викликів два, а фільтр в одного.
 		 */
-		if ("serviceWorker" in navigator) {
-			navigator.serviceWorker.getRegistrations().then((registrations) => {
-				for (const registration of ownRegistrations(registrations)) {
-					if (
-						registration.active &&
-						registration.active.scriptURL.endsWith("/sw.js")
-					) {
-						logService.init(
-							"[Layout] Unregistering old sw.js service worker",
-						);
-						registration.unregister().then(() => {
-							window.location.reload();
-						});
-					}
+		ownServiceWorkerRegistrations().then((registrations) => {
+			for (const registration of registrations) {
+				if (
+					registration.active &&
+					registration.active.scriptURL.endsWith("/sw.js")
+				) {
+					logService.init(
+						"[Layout] Unregistering old sw.js service worker",
+					);
+					registration.unregister().then(() => {
+						window.location.reload();
+					});
 				}
-			});
-		}
+			}
+		});
 
 		return () => {
 			appInitializationService.cleanup();

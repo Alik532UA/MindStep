@@ -1,7 +1,7 @@
 import { logService } from "./logService.svelte";
 import { storageService } from "./storage";
 import { base } from "$app/paths";
-import { ownCacheNames, ownRegistrations } from "./ownScope";
+import { ownCacheNames, unregisterOwnServiceWorkers } from "./ownScope";
 
 /**
  * Текст підтвердження свідомо НЕ через i18n.
@@ -80,16 +80,11 @@ export const maintenanceService = {
              * `ownScope.ts`: доти він був копією тут, а другий виклик
              * `getRegistrations()` (критичне оновлення) фільтра не мав зовсім.
              */
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(
-                        ownRegistrations(registrations).map((registration) => registration.unregister())
-                    );
-                    logService.info('[Maintenance] Own service worker registrations removed.');
-                } catch (e) {
-                    logService.error('[Maintenance] Failed to unregister service worker', e);
-                }
+            try {
+                const removed = await unregisterOwnServiceWorkers();
+                logService.info(`[Maintenance] Own service worker registrations removed: ${removed}.`);
+            } catch (e) {
+                logService.error('[Maintenance] Failed to unregister service worker', e);
             }
 
             // 5. Перезавантаження
