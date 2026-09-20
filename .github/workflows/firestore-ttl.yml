@@ -1,0 +1,62 @@
+name: Firestore TTL
+
+# ЗАПУСК ЛИШЕ РУКАМИ, і це навмисно.
+#
+# Увімкнена TTL-політика означає, що база ПОЧНЕ ВИДАЛЯТИ документи. Таке не
+# робиться як побічний ефект пуша: рішення ухвалює людина, а прогін лише
+# виконує його й лишає слід у журналі Actions.
+#
+# Як запустити: вкладка Actions → «Firestore TTL» → Run workflow.
+# Типово він лише ПОКАЗУЄ стан політик; щоб увімкнути — перемкнути `apply` на
+# `true` у тому самому вікні.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Увімкнути політики (false — лише показати стан)'
+        type: boolean
+        default: false
+
+jobs:
+  ttl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    env:
+      SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      FIREBASE_PROJECT: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Умова перевіряється ПЕРШИМ кроком і валить прогін, а не пропускає його.
+      #
+      # Тут це доречно, на відміну від викладення правил: цей воркфлоу
+      # запускають руками й задля однієї дії, тож «пропущено з попередженням»
+      # виглядало б як «спрацювало».
+      - name: Ключ і проєкт на місці
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error title=Немає ключа::Секрет FIREBASE_SERVICE_ACCOUNT не заданий."
+            exit 1
+          fi
+          if [ -z "$FIREBASE_PROJECT" ]; then
+            echo "::error title=Немає проєкту::Секрет VITE_FIREBASE_PROJECT_ID не заданий."
+            exit 1
+          fi
+
+      # Ключ живе рівно один крок; прибирає його `trap … EXIT`, а не `rm`
+      # наприкінці: скрипт нижче може впасти, і тоді рядок із `rm` не
+      # виконається взагалі (CI-CD-AND-TOOLS-v9 § 2, `CI-SECRET-EPHEMERAL`).
+      #
+      # `umask 077`: типові права на файл у раннері дають читання всім.
+      - name: TTL-політики
+        run: |
+          trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
+          (umask 077; printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json")
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" \
+            node scripts/firestore-ttl.mjs ${{ inputs.apply && '--apply' || '' }}
