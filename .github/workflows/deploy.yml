@@ -101,13 +101,24 @@ jobs:
     # форку, де секрету немає зовсім.
     env:
       SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      FIREBASE_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
+      # Ідентифікатор проєкту береться з ТОГО САМОГО секрету, який уже читає
+      # збірка, а не з нового. Окремий вимагав би заводити друге джерело для
+      # одного факту — і саме так тут ледь не з'явився деплой правил у проєкт
+      # «mindstep», якого не існує: справжній називається `stay-on-the-board`.
+      FIREBASE_PROJECT: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+
+      # Дві умови окремо: бракувати може або ключа, або ідентифікатора проєкту,
+      # і повідомлення мусить називати саме те, чого бракує.
+      - name: Ідентифікатора проєкту немає
+        if: ${{ env.FIREBASE_PROJECT == '' }}
+        run: |
+          echo "::warning title=Правила не викладені::Немає секрету VITE_FIREBASE_PROJECT_ID. Без нього невідомо, у який проєкт викладати."
 
       - name: Секрета немає — правила лишаються як є
         if: ${{ env.SERVICE_ACCOUNT == '' }}
@@ -125,13 +136,13 @@ jobs:
       # `umask 077` перед записом: типові права на файл у раннері дають читання
       # всім, а в кроках нижче може виконуватися будь-що.
       - name: Викласти правила й індекси
-        if: ${{ env.SERVICE_ACCOUNT != '' }}
+        if: ${{ env.SERVICE_ACCOUNT != '' && env.FIREBASE_PROJECT != '' }}
         run: |
           trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
           (umask 077; printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json")
           GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx --yes firebase-tools@15 deploy \
             --only firestore:rules,firestore:indexes,database \
-            --project "${FIREBASE_PROJECT:-mindstep}" --non-interactive
+            --project "$FIREBASE_PROJECT" --non-interactive
 
   build-and-deploy:
     # Правила йдуть ПЕРШИМИ: нові сумісні зі старим кодом, старі з новим — ні.
