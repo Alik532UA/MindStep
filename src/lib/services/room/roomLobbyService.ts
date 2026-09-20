@@ -2,6 +2,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { getFirestoreDb } from '../firebaseService';
 import { COLLECTIONS } from '$lib/types/firebaseSchema';
 import type { OnlinePlayer } from '$lib/schemas/onlineSchema';
+import { activityStamp } from './roomLifetime';
 
 /**
  * Операції лобі над документом кімнати.
@@ -37,7 +38,7 @@ class RoomLobbyService {
 
 	/** Почати партію. Дозволено господареві. */
 	async setStatus(roomId: string, status: 'waiting' | 'playing' | 'finished'): Promise<void> {
-		await updateDoc(this.roomRef(roomId), { status, lastActivity: Date.now() });
+		await updateDoc(this.roomRef(roomId), { status, ...activityStamp() });
 	}
 
 	/** Змінити налаштування партії. Дозволено господареві. */

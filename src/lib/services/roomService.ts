@@ -14,6 +14,8 @@ import type { Unsubscribe } from 'firebase/firestore';
 import { errorHandlerService } from './errorHandlerService';
 import { RoomError, AuthError } from '$lib/models/errors';
 import { ensureNumber } from '$lib/utils/timeUtils';
+import { activityStamp, sweepOwnExpiredRooms } from '$lib/services/room/roomLifetime';
+import { generateRoomId } from '$lib/utils/roomId';
 
 const ROOM_TIMEOUT_MS = 600000;
 const MAX_PLAYERS = 8;
@@ -65,7 +67,7 @@ class RoomService {
             hostId: hostId,
             status: 'waiting',
             createdAt: Date.now(),
-            lastActivity: Date.now(),
+            ...activityStamp(),
             isPrivate: isPrivate,
             settingsLocked: false,
             allowGuestSettings: true,
@@ -75,7 +77,7 @@ class RoomService {
         };
 
         try {
-            const roomId = this.generateTimestampId();
+            const roomId = generateRoomId();
 
             await roomFirestoreService.createRoomDoc(roomId, roomData);
 
@@ -97,67 +99,39 @@ class RoomService {
         }
     }
 
-    /**
-     * Ідентифікатор кімнати: ВИПАДКОВИЙ префікс, а потім позначка часу.
-     *
-     * Доти він починався з дати (`2026-08-18_12-30-01_123_456`) — тобто був
-     * монотонним у часі, і це документована гаряча ділянка записів Firestore.
-     * База розкладає документи по діапазонах ключів і масштабується, РОЗДІЛЯЮЧИ
-     * ці діапазони; ключ, монотонний у часі, зводить усі записи в один діапазон —
-     * той, що на кінці, — і розділити його неможливо, бо наступний запис однаково
-     * піде в останній. Межа — близько 500 записів за секунду, і виглядає її
-     * досягнення як затримки й відмови під навантаженням, а не як помилка в коді
-     * (CLOUD-DATABASE-v8 § 6.5).
-     *
-     * Читабельність лишається: дата в ідентифікаторі стоїть, просто не першою.
-     * Сортувати за нею все одно нікому не треба — лобі сортує за полем
-     * `lastActivity`, для якого є індекс.
-     */
-    private generateTimestampId(): string {
-        const now = new Date();
-        const pad = (num: number) => num.toString().padStart(2, '0');
-        const padMs = (num: number) => num.toString().padStart(3, '0');
-
-        const year = now.getFullYear();
-        const month = pad(now.getMonth() + 1);
-        const day = pad(now.getDate());
-        const hours = pad(now.getHours());
-        const minutes = pad(now.getMinutes());
-        const seconds = pad(now.getSeconds());
-        const ms = padMs(now.getMilliseconds());
-
-        // Чотири символи з 36 — понад мільйон початків діапазону, тож послідовні
-        // кімнати розходяться по різних ділянках.
-        const prefix = Math.random().toString(36).slice(2, 6).padEnd(4, '0');
-
-        return `${prefix}_${year}-${month}-${day}_${hours}-${minutes}-${seconds}_${ms}`;
-    }
 
     /**
      * Перетворити знімок кімнат на список для лобі.
      *
-     * **Прострочені кімнати тут більше НЕ ВИДАЛЯЮТЬСЯ, і це принципово.**
+     * **Прострочені видаляються тут знову — але ЛИШЕ СВОЇ.**
      *
-     * Доти цей метод видаляв чужі кімнати з клієнта, який просто відкрив лобі:
+     * Доти цей метод видаляв ЧУЖІ кімнати з клієнта, який просто відкрив лобі:
      * `Promise.allSettled(...).catch()`, тобто ще й без сліду про невдачу.
-     * Наслідків три, і третій найдорожчий:
+     * Найдорожчим наслідком було третє: щоб прибирати чуже, потрібне право
+     * видаляти чуже — тобто дірка в правилах, яка заразом є готовим примітивом
+     * «видалити всі кімнати» одним циклом. Саме ця вимога й тримала `rooms`
+     * відкритими на запис.
      *
-     *  1. прибирання залежало від того, чи хтось зайшов у лобі;
-     *  2. помилка видалення нікуди не потрапляла;
-     *  3. **щоб прибирати чуже, потрібне право видаляти чуже** — тобто дірка в
-     *     правилах, яка заразом є готовим примітивом «видалити всі кімнати»
-     *     одним циклом. Саме ця вимога й тримала `rooms` відкритими на запис.
+     * Тому прибирання прибрали цілком, а борг записали: покинуті кімнати не
+     * стирав ніхто. `leaveRoom` видаляє кімнату, коли виходить останній, але
+     * це працює лише тоді, коли людина СПРАВДІ натиснула «вийти»: закрита
+     * вкладка чи обірваний зв'язок лишали документ назавжди.
      *
-     * Тепер правило дозволяє знести кімнату лише її господареві, а прострочені
-     * просто НЕ ПОКАЗУЮТЬСЯ. Вони важать кілобайт і нікому не заважають; те, що
-     * їх ніхто не стирає, записано боргом у PROJECT-CONTEXT.md разом із
-     * розв'язком — заплановане завдання на боці провайдера
-     * (CLOUD-DATABASE-v8 § 9.3).
+     * Тепер прибирає господар — свою власну кімнату, за правилом
+     * `allow delete: if hostOf(resource)`, яке існувало від початку. Нових
+     * прав це не потребує, тож повернення старої дірки тут немає: чужу кімнату
+     * той самий код спробувати не може, бо фільтр стоїть на `hostId`.
+     *
+     * Це покриває найчастіший випадок — людина створила кімнату, закрила
+     * вкладку, повернулася завтра. Тих, хто не повернеться НІКОЛИ, прибирає
+     * TTL-політика Firestore за полем `expiresAt` (див. `roomLifetime.ts`).
+     * Два шляхи, бо жоден поодинці не покриває обох випадків.
      */
     private processRoomsSnapshot(querySnapshot: any): { rooms: RoomSummary[], latestCreatedAt?: number } {
         const rooms: RoomSummary[] = [];
         const now = Date.now();
         let activeRoomsLatestCreated = 0;
+        sweepOwnExpiredRooms(querySnapshot);
 
         querySnapshot.forEach((doc: any) => {
             const data = doc.data() as Room;
@@ -168,8 +142,8 @@ class RoomService {
                 activeRoomsLatestCreated = createdAtNum;
             }
 
-            // Прострочену кімнату просто не показуємо. Видаляти чуже клієнт не
-            // має права — і саме тому більше не намагається.
+            // Межа показу (10 хв) і межа видалення (доба) — РІЗНІ; чому саме
+            // так, написано в `roomLifetime.ts`.
             if (now - lastActivityNum > ROOM_TIMEOUT_MS) return;
             
             const allPlayers = Object.values(data.players || {});
@@ -201,6 +175,7 @@ class RoomService {
             latestCreatedAt: activeRoomsLatestCreated > 0 ? activeRoomsLatestCreated : undefined
         };
     }
+
 
     /**
      * Перелік публічних кімнат.
@@ -323,7 +298,7 @@ class RoomService {
                 if (roomData.players[existingSession.playerId].name !== playerName) {
                     await roomFirestoreService.updateRoomDoc(roomId, {
                         [`players.${existingSession.playerId}.name`]: playerName,
-                        lastActivity: Date.now()
+                        ...activityStamp()
                     });
                 }
                 return existingSession.playerId;
@@ -347,7 +322,7 @@ class RoomService {
 
             await roomFirestoreService.updateRoomDoc(roomId, {
                 [`players.${playerId}`]: newPlayer,
-                lastActivity: Date.now()
+                ...activityStamp()
             }, true);
 
             roomSessionService.saveSession(roomId, playerId);
@@ -409,7 +384,7 @@ class RoomService {
         await roomFirestoreService.updateRoomDoc(roomId, {
             status: 'playing',
             players: players,
-            lastActivity: Date.now()
+            ...activityStamp()
         });
     }
 
@@ -420,7 +395,7 @@ class RoomService {
         const updates: Record<string, any> = {
             [`players.${playerId}.isReady`]: true,
             [`players.${playerId}.isWatchingReplay`]: false,
-            lastActivity: Date.now()
+            ...activityStamp()
         };
 
         const updatedPlayers = { ...roomData.players };
@@ -439,7 +414,7 @@ class RoomService {
     }
 
     async updateRoomSettings(roomId: string, settings: Partial<GameSettingsState> & { allowGuestSettings?: boolean }): Promise<void> {
-        const updates: Record<string, any> = { lastActivity: Date.now() };
+        const updates: Record<string, any> = { ...activityStamp() };
 
         for (const [key, value] of Object.entries(settings)) {
             if (key === 'allowGuestSettings') {
@@ -459,7 +434,7 @@ class RoomService {
     async renameRoom(roomId: string, newName: string): Promise<void> {
         await roomFirestoreService.updateRoomDoc(roomId, {
             name: newName,
-            lastActivity: Date.now()
+            ...activityStamp()
         });
     }
 

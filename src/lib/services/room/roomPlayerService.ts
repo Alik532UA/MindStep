@@ -6,6 +6,7 @@ import { roomSessionService } from './roomSessionService';
 import { networkStatsState } from '$lib/stores/networkStatsState.svelte';
 import { roomFirestoreService } from './roomFirestoreService';
 import { presenceService } from '$lib/services/presenceService';
+import { activityStamp } from './roomLifetime';
 
 export class RoomPlayerService {
     private get db() {
@@ -28,7 +29,7 @@ export class RoomPlayerService {
         const roomRef = doc(this.db, 'rooms', roomId);
         const updates = {
             [`players.${playerId}.isReady`]: isReady,
-            lastActivity: Date.now()
+            ...activityStamp()
         };
         await updateDoc(roomRef, updates);
         networkStatsState.recordWrite('RoomPlayer:toggleReady', updates);
@@ -38,7 +39,7 @@ export class RoomPlayerService {
         const roomRef = doc(this.db, 'rooms', roomId);
         const updates = {
             [`players.${playerId}.isWatchingReplay`]: isWatching,
-            lastActivity: Date.now()
+            ...activityStamp()
         };
         await updateDoc(roomRef, updates);
         networkStatsState.recordWrite('RoomPlayer:setWatchingReplay', updates);
@@ -103,7 +104,7 @@ export class RoomPlayerService {
                 } else {
                     const updates: Record<string, any> = {
                         [`players.${playerId}`]: deleteField(),
-                        lastActivity: Date.now()
+                        ...activityStamp()
                     };
 
                     if (roomData.hostId === playerId) {

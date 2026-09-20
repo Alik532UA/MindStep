@@ -353,10 +353,13 @@ describe('хмарна база', () => {
 		// Монотонний ключ зводить усі записи в ОДИН діапазон — той, що на кінці, —
 		// і розділити його неможливо: наступний запис однаково піде в останній.
 		// Межа близько 500 записів/с, і виглядає це як затримки, а не як помилка.
-		const body = readFileSync('src/lib/services/roomService.ts', 'utf8').match(
-			/private generateTimestampId\(\)[\s\S]*?\n {4}\}/
+		// Генератор переїхав із `roomService` у власний модуль: до роботи
+		// сервісу він не має стосунку, а `roomService` стоїть під ратчетом
+		// розміру — тож кожен доданий туди рядок коштує вилучення іншого.
+		const body = readFileSync('src/lib/utils/roomId.ts', 'utf8').match(
+			/export function generateRoomId\(\)[\s\S]*?\n\}/
 		);
-		expect(body, 'generateTimestampId не знайдено').not.toBeNull();
+		expect(body, 'generateRoomId не знайдено').not.toBeNull();
 		expect(body?.[0], 'ключ мусить починатися з випадкового префікса').toMatch(/Math\.random/);
 		expect(body?.[0], 'рік не має стояти першим у ключі').toMatch(/\$\{prefix\}/);
 	});

@@ -48,6 +48,9 @@ const value = (raw) => {
 	if (typeof raw === 'string') return { stringValue: raw };
 	if (typeof raw === 'number') return Number.isInteger(raw) ? { integerValue: String(raw) } : { doubleValue: raw };
 	if (typeof raw === 'boolean') return { booleanValue: raw };
+	// Позначка часу, а не число: TTL-політика Firestore видаляє документи саме
+	// за таким полем, і `integerValue` вона не бачить узагалі.
+	if (raw instanceof Date) return { timestampValue: raw.toISOString() };
 	if (raw && typeof raw === 'object') {
 		return { mapValue: { fields: Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, value(v)])) } };
 	}
@@ -451,6 +454,30 @@ const CASES = [
 		name: 'господар створює кімнату з обома учасниками (для випадків нижче)',
 		allowed: true,
 		run: () => fsCreate('rooms', ROOM_FIELDS, room({ players: bothPlayers }), host.token)
+	},
+	{
+		/*
+		 * ПОЗНАЧКА ЖИТТЯ КІМНАТИ — два поля, і обидва мусять пройти.
+		 *
+		 * `expiresAt` додався заради TTL-політики Firestore: вона видаляє
+		 * документи САМЕ за полем-позначкою часу й числового `lastActivity` не
+		 * бачить. Але перелік полів в `update` звужений, а `changedOnly`
+		 * відкидає запис ЦІЛКОМ через одне незнане поле — тобто без цього
+		 * випадку помилка виглядала б не як «TTL не працює», а як «кімната
+		 * перестала оновлюватися» на кожному натисканні «готовий».
+		 */
+		name: 'господар подовжує життя кімнати (lastActivity + expiresAt)',
+		allowed: true,
+		run: () =>
+			fsUpdate(
+				`rooms/${ROOM_FIELDS}`,
+				room({
+					players: bothPlayers,
+					lastActivity: 2,
+					expiresAt: new Date(Date.now() + 86400000)
+				}),
+				host.token
+			)
 	},
 	{
 		/*

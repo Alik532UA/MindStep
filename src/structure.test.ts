@@ -273,7 +273,7 @@ describe('розмір файлів — ратчет, а не число в пр
 		'src/lib/config/countries.generated.ts': 264,
 		// Справжній борг: онлайн-режим і кімнати — найбільші за відповідальністю.
 		'src/lib/game-modes/OnlineGameMode.ts': 450,
-		'src/lib/services/roomService.ts': 336,
+		'src/lib/services/roomService.ts': 325,
 		'src/lib/game-modes/BaseGameMode.ts': 298,
 		'src/lib/sync/MatchLogGameStateSync.ts': 293,
 		'src/lib/stores/gameSettingsPresets.ts': 273,

@@ -132,7 +132,7 @@ service cloud.firestore {
              && !(request.auth.uid in resource.data.players)
              && request.auth.uid in request.resource.data.players
              && onlyMyPlayerRow()
-             && changedOnly(['players', 'lastActivity'])
+             && changedOnly(['players', 'lastActivity', 'expiresAt'])
              && hostKept()
              && resource.data.status == 'waiting'
              && (!('maxPlayers' in resource.data)
@@ -318,12 +318,12 @@ service cloud.firestore {
        */
       allow update: if signedIn() && statusValid() && (hostKept() || hostHandover()) && (
         (hostOf(resource)
-           && changedOnly(['players', 'lastActivity', 'status', 'settings', 'settingsLocked',
-                           'allowGuestSettings', 'name', 'match', 'hostId']))
+           && changedOnly(['players', 'lastActivity', 'expiresAt', 'status', 'settings',
+                           'settingsLocked', 'allowGuestSettings', 'name', 'match', 'hostId']))
         || (memberOf(resource)
            && onlyMyPlayerRow()
            && guestSettingsAllowed()
-           && changedOnly(['players', 'lastActivity', 'status', 'settings', 'hostId']))
+           && changedOnly(['players', 'lastActivity', 'expiresAt', 'status', 'settings', 'hostId']))
         || joining()
       );
 
