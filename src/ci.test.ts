@@ -69,6 +69,73 @@ describe('перевірка жива', () => {
 	});
 });
 
+/**
+ * БЛОК БЕЗ ЖОДНОГО КЛЮЧА — валідний YAML і НЕВАЛІДНИЙ workflow.
+ *
+ * `env:`, під яким лишилися самі коментарі, YAML читає як `null` і не
+ * скаржиться. Валідатор GitHub Actions скаржиться: «Unexpected value ''» — і
+ * робить це в найгірший спосіб. Прогін створюється НА БУДЬ-ЯКІЙ гілці,
+ * ігноруючи `on:`, бо `on:` він прочитати не встиг; у прогоні НУЛЬ джобів, а
+ * в переліку він виглядає як звичайне падіння деплою.
+ *
+ * Заміряно 2026-09-21: прогін 35566515977, гілка `dev`, хоча `deploy.yml`
+ * тригериться лише на `main`. Причина — прибрали останню змінну з `env:`, а
+ * докблок над нею лишили. Ні `js-yaml`, ні `svelte-check`, ні решта гейтів
+ * цього не бачать: файл синтаксично правильний.
+ */
+describe('workflow проходить валідацію GitHub, а не лише YAML', () => {
+	const BLOCK_KEYS = ['env', 'with', 'outputs', 'inputs', 'permissions', 'defaults'];
+
+	/** Порожні блоки у файлі: рядки виду `env:` без жодного ключа під ними. */
+	function emptyBlocks(file: string): string[] {
+		const lines = readWorkflow(file).split('\n');
+		const bad: string[] = [];
+		lines.forEach((line, i) => {
+			const m = /^(\s*)([A-Za-z_-]+):\s*$/.exec(line);
+			if (!m || !BLOCK_KEYS.includes(m[2])) return;
+			let j = i + 1;
+			while (j < lines.length && (lines[j].trim() === '' || /^\s*#/.test(lines[j]))) {
+				if (lines[j].trim() === '') break;
+				j++;
+			}
+			const next = /^(\s*)\S/.exec(lines[j] ?? '');
+			if (!next || next[1].length <= m[1].length) bad.push(`${file}:${i + 1} — «${m[2]}»`);
+		});
+		return bad;
+	}
+
+	it('жоден блок не лишився без ключів', () => {
+		const bad = files.flatMap(emptyBlocks);
+		expect(
+			bad,
+			'блок без ключів робить файл невалідним для Actions, і прогін тоді ' +
+				'запускається на ЧУЖИХ гілках із нулем джобів:\n' + bad.join('\n')
+		).toEqual([]);
+	});
+
+	/*
+	 * Зворотний експеримент (AI-AGENT-PITFALLS-v9 § 1.1): на зразку з порожнім
+	 * `env:` перевірка мусить знаходити рівно одне, а на заповненому — нічого.
+	 * Без цього вона зеленіла б і тоді, коли розбір перестав збігатися взагалі.
+	 */
+	it('перевірка жива: ловить зразок і не чіпає правильний', () => {
+		const lines = (s: string) => s.split('\n');
+		const scan = (text: string) => {
+			const ls = lines(text);
+			return ls.filter((line, i) => {
+				const m = /^(\s*)([A-Za-z_-]+):\s*$/.exec(line);
+				if (!m || !BLOCK_KEYS.includes(m[2])) return false;
+				let j = i + 1;
+				while (j < ls.length && /^\s*#/.test(ls[j])) j++;
+				const next = /^(\s*)\S/.exec(ls[j] ?? '');
+				return !next || next[1].length <= m[1].length;
+			}).length;
+		};
+		expect(scan('        env:\n          # самий коментар\n\n      - name: далі')).toBe(1);
+		expect(scan('        env:\n          KEY: value\n')).toBe(0);
+	});
+});
+
 describe('CI', () => {
 	it('тести запускаються в CI (§ 1.6)', () => {
 		expect(/run:\s*npm (test|run test)/.test(all), 'у workflow немає кроку з тестами').toBe(true);

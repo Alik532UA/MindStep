@@ -266,16 +266,6 @@ jobs:
       - name: Audit dependencies
         if: ${{ !cancelled() }}
         run: npm run audit:ci
-        env:
-          # АДРЕСА RTDB — і без неї онлайн ЛАМАЄТЬСЯ МОВЧКИ.
-          #
-          # SDK, не отримавши `databaseURL`, виводить її з `projectId` і йде на
-          # типовий `https://<projectId>-default-rtdb.firebaseio.com` — тобто в
-          # американську базу, якої в цього проєкту немає (справжня в
-          # `europe-west1.firebasedatabase.app`). Політика безпеки при цьому
-          # дозволяє `wss://*.firebasedatabase.app`, але не `*.firebaseio.com`,
-          # тож у продакшні присутність і перепідключення просто не працювали, а
-          # в консолі лежало «violates the following Content Security Policy».
 
       # Єдиний гейт, який бачить дефекти, невидимі в `src/`: порожнє тіло
       # сторінки, canonical, `sveltekit-prerender` в адресах і те, що CSP у
