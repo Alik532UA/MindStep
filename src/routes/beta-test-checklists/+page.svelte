@@ -1,6 +1,7 @@
 <script lang="ts">
     import { locale } from 'svelte-i18n';
     import { resolve } from '$app/paths';
+    import type { Pathname } from '$app/types';
     import { BETA_CHECKS, BETA_TABS, BETA_UI } from '$lib/beta/betaChecklist.data';
     import { checksOfLevel, checksOfTab, progressOf } from '$lib/beta/betaChecklist';
     import { COVERAGE_ORDER, type Coverage } from '$lib/beta/betaChecklist.types';
@@ -49,12 +50,25 @@
     });
 
     /**
-     * Сторінка чеклиста бета-тестування (BETA-CHECKLIST-v8).
+     * Сторінка чеклиста бета-тестування (BETA-CHECKLIST § 8.3).
      *
      * Дві мови, не чотири, і це рішення § 2.4: пункти живуть у власних даних, а
      * не в словнику інтерфейсу. Решта мов показує англійський.
+     *
+     * МОВА ЧЕКЛИСТА ПЕРЕМИКАЄТЬСЯ ТУТ (§ 8.3, `BETA-OWN-LANG-BTN`).
+     *
+     * Пункти живуть двома мовами (§ 2.4), а інтерфейс застосунку має чотири
+     * (`uk`, `en`, `crh`, `nl`). Доти чеклист просто йшов за локаллю сторінки, і
+     * з цього виходив тупик, якого не видно з даних: людина, чий застосунок
+     * відкрився нідерландською, бачила чеклист англійською й НЕ МАЛА ЧИМ
+     * перемкнути його на українську — мовний перемикач застосунку дає їй чотири
+     * мови інтерфейсу, а чеклист розуміє дві.
+     *
+     * `null` означає «як у застосунку»: доки кнопку не натиснули, поведінка та
+     * сама, що була.
      */
-    const lang = $derived($locale?.startsWith('uk') ? 'uk' : 'en');
+    let chosenLang = $state<'uk' | 'en' | null>(null);
+    const lang = $derived(chosenLang ?? ($locale?.startsWith('uk') ? 'uk' : 'en'));
 
     let activeTab = $state(BETA_TABS[0].id);
 
@@ -70,6 +84,28 @@
     };
 
     const tabChecks = $derived(checksOfTab(activeTab));
+
+    /**
+     * Маршрути вкладки, які МОЖНА відкрити посиланням (§ 8.4).
+     *
+     * Перелік лежав у даних невикористаним: його читав лише інваріант § 5.1.
+     * Динамічні сегменти (`/online/lobby/[roomId]`) відкинуто — конкретної
+     * кімнати тут нема з чого взяти, а посилання в 404 гірше за його
+     * відсутність.
+     */
+    const screens = $derived(
+        (BETA_TABS.find((tab) => tab.id === activeTab)?.routes ?? []).filter(
+            (route) => !route.includes('[')
+        )
+    );
+
+    /**
+     * Адреса → дискримінатор локатора: `/game/local` → `game-local`, корінь →
+     * `root`. Косих рисок у локаторах немає (TESTID-AND-NAMING § 1.2).
+     */
+    const screenTid = (route: string) =>
+        route.replace(/^\/|\/$/g, '').replace(/\//g, '-') || 'root';
+
     const overall = $derived(progressOf(BETA_CHECKS, betaProgress.marks, betaProgress.version));
 
     let reportText = $state('');
@@ -130,13 +166,36 @@
           маршрутів, тож помилка в адресі стає помилкою компіляції, а не
           мовчазним 404 у збірці з іншим base (SEO-v8 § 1.5).
         -->
-        <a class="back" href={resolve('/')}>← {lang === 'uk' ? 'На головну' : 'Home'}</a>
+        <!--
+            ВИХІД ЗІ СТОРІНКИ ПІД ІМЕНЕМ (§ 8.4). Посилання було й доти — без
+            локатора, тобто перевірити, що зі службової сторінки є куди піти,
+            було нічим. Тестувальник приходить сюди за ПРЯМИМ посиланням: ні
+            історії вкладки, ні пункта меню (сторінка навмисно поза меню, § 4).
+        -->
+        <a class="back" href={resolve('/')} data-testid="beta-home-link">
+            ← {BETA_UI.home[lang]}
+        </a>
         <h1>{BETA_UI.pageTitle[lang]}</h1>
         <p class="intro">{BETA_UI.intro[lang]}</p>
         <p class="progress">
             {BETA_UI.progress[lang]}:
             <b data-testid="beta-progress-value">{overall.current} / {overall.total}</b>
-            <span class="version">{betaProgress.version}</span>
+            <!--
+                Версія була видима й доти — не було ЛОКАТОРА (§ 8.5.1,
+                `BETA-VERSION-VISIBLE`). Підказка «позначено на іншій версії» на
+                пункті має сенс лише поряд із числом поточної збірки, а довести,
+                що число нікуди не поділося, без імені неможливо.
+            -->
+            <span class="version" data-testid="beta-version-text">{betaProgress.version}</span>
+
+            <button
+                type="button"
+                class="lang"
+                onclick={() => (chosenLang = lang === 'uk' ? 'en' : 'uk')}
+                data-testid="beta-lang-btn"
+            >
+                {BETA_UI.langSwitch[lang]}
+            </button>
             {#if overall.stale > 0}
                 <span class="stale-total">
                     {BETA_UI.staleHint[lang]}: {overall.stale}
@@ -171,6 +230,42 @@
             </button>
         {/each}
     </nav>
+
+    <!--
+        КУДИ ЙТИ ПО ЦЮ ВКЛАДКУ (§ 8.4, `BETA-SCREEN-LINKS`).
+
+        Показаний той САМИЙ перелік, що читає інваріант § 5.1, тож розійтися з
+        дійсністю непоміченим він не може — на відміну від окремого списку
+        «корисних посилань», який поповнити забувають.
+    -->
+    {#if screens.length > 0}
+        <p class="screens">
+            <span>{BETA_UI.screens[lang]}</span>
+            <!--
+                `resolve(route as Pathname)` ПРЯМО в атрибуті, а не через
+                помічник, і причина не в стилі: правило
+                `svelte/no-navigation-without-resolve` дивиться на сам атрибут,
+                тож виклик, схований у функцію, для нього не існує. А це
+                правило тримається тут боргом, який може лише спадати — обхід
+                коштував би +1 до числа, яке домовлено зменшувати.
+
+                Приведення типу потрібне тому, що `tab.routes` оголошені як
+                `readonly string[]`: інакше вкладка не могла б назвати маршрут
+                із параметром (`/online/lobby/[roomId]`), який інваріант § 5.1
+                звіряє з деревом `src/routes`. Ці рядки перевіряє саме
+                інваріант, а не компілятор.
+            -->
+            {#each screens as route (route)}
+                <a
+                    class="screen"
+                    href={resolve(route as Pathname)}
+                    data-testid="beta-screen-{screenTid(route)}-link"
+                >
+                    {route}
+                </a>
+            {/each}
+        </p>
+    {/if}
 
     {#each COVERAGE_ORDER as level (level)}
         {@const items = checksOfLevel(activeTab, level)}
@@ -213,8 +308,19 @@
             </button>
         </div>
 
-        {#if reportHint}
+        <!--
+            ДВІ ПІДКАЗКИ, А НЕ ОДНА (§ 6.2.1, `BETA-REPORT-HINT-SPLIT`).
+
+            Доти `beta-report-hint` показував і «скопійовано», і «буфер
+            відмовив», тож сценарій «підказка видима» зеленів однаково в обох
+            випадках — тобто перевірка запасного шляху не перевіряла запасного
+            шляху. Тепер відмова має власну назву, і саме її дивиться e2e.
+        -->
+        {#if reportHint && !reportText}
             <p class="hint" role="status" data-testid="beta-report-hint">{reportHint}</p>
+        {/if}
+        {#if reportHint && reportText}
+            <p class="hint" role="status" data-testid="beta-report-failed-hint">{reportHint}</p>
         {/if}
         {#if reportText}
             <!-- Звіт текстом поруч, коли буфер відмовив: інакше робота зникає
@@ -296,6 +402,32 @@
         padding: 0.05rem 0.4rem;
         border: 1px solid currentColor;
         border-radius: 3px;
+    }
+
+    /*
+     * Кнопка мови чеклиста й посилання на екрани вкладки: 44 px на дотик
+     * (ACCESSIBILITY) дає саме `min-height` разом із `inline-flex`.
+     */
+    .lang,
+    .screen {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        border: 0;
+        padding: 0;
+        background: none;
+        font: inherit;
+        color: inherit;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .screens {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        opacity: 0.85;
     }
 
     .tabs {

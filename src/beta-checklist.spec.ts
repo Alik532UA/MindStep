@@ -6,6 +6,16 @@ import { join } from 'node:path';
 import { BETA_CHECKS, BETA_TABS, BETA_UNCOVERED_ROUTES } from '$lib/beta/betaChecklist.data';
 import { COVERAGE_ORDER, type BetaCheck } from '$lib/beta/betaChecklist.types';
 import { sortChecks } from '$lib/beta/betaChecklist';
+import { languages } from '$lib/config/constants';
+
+/**
+ * Джерела САМОЇ сторінки й рядка пункта — окремо від решти проєкту.
+ *
+ * Правила § 8 говорять про те, що є на ЦІЙ сторінці: `beta-lang-btn`,
+ * знайдений у чужому компоненті, нічого не довів би.
+ */
+const PAGE_SOURCE = readFileSync('src/routes/beta-test-checklists/+page.svelte', 'utf8');
+const ROW_SOURCE = readFileSync('src/lib/components/beta/BetaCheckItem.svelte', 'utf8');
 
 /**
  * Інваріанти чеклиста бета-тестування (BETA-CHECKLIST-v8 § 5).
@@ -408,5 +418,87 @@ describe('BETA-CHECKLIST-v8 § 3 — порядок показу', () => {
 
 	it('сортування не втрачає й не додає пунктів', () => {
 		expect(sortChecks(checks)).toHaveLength(checks.length);
+	});
+
+	/**
+	 * § 5.6 `BETA-LOCATOR-PER-CHECK` + TESTID-AND-NAMING § 1.2.
+	 *
+	 * Обидва правила стояли в каноні, і не падало жодне: за форму `id`
+	 * (`{вкладка}_{номер}`) і за форму локатора (без підкреслень) відповідали
+	 * різні перевірки, а місце, де одне переходить у друге, не дивився ніхто.
+	 */
+	it('локатор пункта виходить із id чистим, без підкреслень (§ 5.6)', () => {
+		const inRow = [...ROW_SOURCE.matchAll(/data-testid="(beta-[^"]*)"/g)].map((m) => m[1]);
+		expect(inRow.length, 'перевірка мертва: локаторів у рядку не знайдено').toBeGreaterThan(0);
+
+		expect(
+			inRow.filter((id) => /\{\s*check\.id\s*\}/.test(id)),
+			'локатор бере check.id без переведення в kebab-case'
+		).toEqual([]);
+		expect(
+			inRow.filter((id) => id.includes('_')),
+			'підкреслення в локаторі'
+		).toEqual([]);
+
+		// Порядок сегментів — канонічний: `beta-vote-{id}-{стан}-btn`. Доти стан
+		// стояв ПЕРЕД пунктом (`beta-vote-ok-menu_1-btn`), тобто той самий
+		// елемент звався інакше, ніж у решті дев'яти реалізацій.
+		expect(
+			inRow.filter((id) => id.startsWith('beta-vote-{tid}-')),
+			'стан відповіді названий не за каноном'
+		).toHaveLength(1);
+	});
+
+	/**
+	 * § 8.3 `BETA-OWN-LANG-BTN`.
+	 *
+	 * Правило стоїть у каноні з 9.0 і не виконувалося тут саме тому, що не мало
+	 * входу: пункти живуть двома мовами, інтерфейс застосунку має чотири, і
+	 * людина, чий застосунок відкрився нідерландською, бачила чеклист
+	 * англійською без жодного способу перемкнути його на українську.
+	 */
+	it('мов інтерфейсу більше двох — на сторінці є власна кнопка мови (§ 8.3)', () => {
+		if (languages.length <= 2) return;
+		expect(PAGE_SOURCE, 'чеклист знає дві мови, застосунок — чотири').toContain(
+			'data-testid="beta-lang-btn"'
+		);
+	});
+
+	/**
+	 * § 8.5.1 `BETA-VERSION-VISIBLE`, § 8.4 `BETA-SCREEN-LINKS`, § 6.2.1
+	 * `BETA-REPORT-HINT-SPLIT`.
+	 *
+	 * Версія й вихід на сторінці були — без локаторів, тобто довести, що вони
+	 * нікуди не поділися, було нічим. Перелік маршрутів вкладки лежав у даних
+	 * невикористаним. А спільна підказка робила сценарій «підказка видима»
+	 * зеленим саме тоді, коли копіювання НЕ спрацювало.
+	 */
+	it('на сторінці є версія, екрани, вихід і дві різні підказки звіту', () => {
+		expect(PAGE_SOURCE).toContain('data-testid="beta-version-text"');
+		expect(PAGE_SOURCE).toContain('data-testid="beta-home-link"');
+		expect(PAGE_SOURCE, 'перелік екранів лишився лише для перевірок').toContain(
+			'data-testid="beta-screen-'
+		);
+		expect(PAGE_SOURCE).toContain('data-testid="beta-report-hint"');
+		expect(PAGE_SOURCE).toContain('data-testid="beta-report-failed-hint"');
+	});
+
+	/**
+	 * § 4.0 `BETA-NOINDEX-OVER-DISALLOW` — перевірка ПРОТИЛЕЖНОГО.
+	 *
+	 * `Disallow` забороняє ЗАВАНТАЖЕННЯ, тож краулер не читає `noindex` ніколи,
+	 * і адреса, на яку хтось послався ззовні, лягає в індекс голим URL. У цьому
+	 * профілі це найгостріше: SSR немає, і `noindex` виставляє КЛІЄНТ після
+	 * гідрації — його бачить лише той краулер, який сторінку завантажив і
+	 * відмалював, а саме це `Disallow` у нього й відбирав.
+	 */
+	it('сторінка чеклиста НЕ закрита Disallow у robots.txt (§ 4.0)', () => {
+		const robots = readFileSync('static/robots.txt', 'utf8');
+		const disallowed = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]);
+
+		expect(
+			disallowed.filter((rule) => rule.includes('beta-test-checklists')),
+			'Disallow забирає в краулера саме той запит, у відповіді на який лежить noindex'
+		).toEqual([]);
 	});
 });

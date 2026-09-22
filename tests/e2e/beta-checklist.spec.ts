@@ -22,6 +22,15 @@ const PAGE = '/beta-test-checklists';
 /** Перший пункт вкладки `menu` — `id` стабільний назавжди (§ 2.2). */
 const CHECK = 'menu_1';
 
+/**
+ * Той самий пункт у ЛОКАТОРІ — kebab-case (§ 5.6, `BETA-LOCATOR-PER-CHECK`).
+ *
+ * У сховищі лежить `menu_1`, у розмітці — `menu-1`: підкреслень у локаторах
+ * немає (TESTID-AND-NAMING § 1.2). Порядок сегментів теж став канонічним:
+ * `beta-vote-{id}-{стан}-btn`, а не `beta-vote-{стан}-{id}-btn`.
+ */
+const TID = CHECK.replace(/_/g, '-');
+
 const progress = (page: import('@playwright/test').Page) =>
 	page.getByTestId('beta-progress-value').innerText();
 
@@ -31,21 +40,21 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('позначка переживає перезавантаження', async ({ page }) => {
-	const vote = page.getByTestId(`beta-vote-ok-${CHECK}-btn`);
+	const vote = page.getByTestId(`beta-vote-${TID}-ok-btn`);
 	await vote.click();
 	await expect(vote).toHaveAttribute('aria-pressed', 'true');
 
 	await page.reload();
 
 	await expect(
-		page.getByTestId(`beta-vote-ok-${CHECK}-btn`),
+		page.getByTestId(`beta-vote-${TID}-ok-btn`),
 		'позначка не пережила перезавантаження — сесія тестувальника зникає мовчки'
 	).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('поступ росте на один, а повторний клік його повертає', async ({ page }) => {
 	const before = await progress(page);
-	const vote = page.getByTestId(`beta-vote-ok-${CHECK}-btn`);
+	const vote = page.getByTestId(`beta-vote-${TID}-ok-btn`);
 
 	await vote.click();
 	await expect(page.getByTestId('beta-progress-value'), 'поступ не зрушив').not.toHaveText(before);
@@ -64,7 +73,7 @@ test('лічильник вкладки росте окремо від зага�
 	await expect(own).toBeVisible();
 	const before = await own.innerText();
 
-	await page.getByTestId(`beta-vote-ok-${CHECK}-btn`).click();
+	await page.getByTestId(`beta-vote-${TID}-ok-btn`).click();
 
 	await expect(own, 'лічильник вкладки не зрушив').not.toHaveText(before);
 	await expect(
@@ -74,7 +83,7 @@ test('лічильник вкладки росте окремо від зага�
 });
 
 test('перемикання вкладки міняє пункти й не губить позначене', async ({ page }) => {
-	await page.getByTestId(`beta-vote-ok-${CHECK}-btn`).click();
+	await page.getByTestId(`beta-vote-${TID}-ok-btn`).click();
 
 	await page.getByTestId('beta-tab-online-btn').click();
 	await expect(
@@ -84,7 +93,7 @@ test('перемикання вкладки міняє пункти й не гу
 
 	await page.getByTestId('beta-tab-menu-btn').click();
 	await expect(
-		page.getByTestId(`beta-vote-ok-${CHECK}-btn`),
+		page.getByTestId(`beta-vote-${TID}-ok-btn`),
 		'позначка загубилася при поверненні на вкладку'
 	).toHaveAttribute('aria-pressed', 'true');
 });
@@ -95,7 +104,7 @@ test('перемикання вкладки міняє пункти й не гу
  * `confirm()`, який у headless довелося б перехоплювати окремим обробником.
  */
 test('перше натискання «стерти» нічого не стирає', async ({ page }) => {
-	await page.getByTestId(`beta-vote-ok-${CHECK}-btn`).click();
+	await page.getByTestId(`beta-vote-${TID}-ok-btn`).click();
 	const marked = await progress(page);
 
 	await page.getByTestId('beta-clear-btn').click();
@@ -114,14 +123,68 @@ test('перше натискання «стерти» нічого не сти�
  * лише писала в лог — кнопка виглядала натиснутою, а звіту не було НІДЕ.
  */
 test('звіт доходить до людини навіть без буфера обміну', async ({ page, context }) => {
+	/*
+	 * БУФЕР ЛАМАЄТЬСЯ НАВМИСНО, а `clearPermissions()` для цього НЕ ДОСИТЬ.
+	 *
+	 * Заміряно: у headless Chromium `writeText` після відкликаного дозволу
+	 * однаково спрацьовує, тож сторінка йшла гілкою УСПІХУ — і сценарій
+	 * перевіряв не запасний шлях, а те, що кнопка є. Доти цього не було видно
+	 * лише тому, що підказка успіху й підказка відмови мали ОДИН локатор
+	 * (§ 6.2.1): «підказка видима» правдиве в обох випадках.
+	 */
 	await context.clearPermissions();
-	await page.getByTestId(`beta-vote-ok-${CHECK}-btn`).click();
+	await page.addInitScript(() => {
+		Object.defineProperty(navigator, 'clipboard', {
+			configurable: true,
+			value: { writeText: () => Promise.reject(new Error('clipboard blocked in test')) }
+		});
+	});
+	await page.reload();
+	await page.getByTestId(`beta-vote-${TID}-ok-btn`).click();
 	await page.getByTestId('beta-report-btn').click();
 
-	await expect(page.getByTestId('beta-report-hint')).toBeVisible();
+	// Саме локатор ВІДМОВИ (§ 6.2.1): спільний зеленів би й тоді, коли буфер
+	// спрацював, тобто запасний шлях лишався б неперевіреним.
+	await expect(page.getByTestId('beta-report-failed-hint')).toBeVisible();
 
 	const field = page.getByTestId('beta-report-input');
 	if (await field.isVisible()) {
 		await expect(field).toHaveValue(new RegExp(CHECK));
 	}
+});
+
+/**
+ * § 8.3 `BETA-OWN-LANG-BTN`: мов інтерфейсу чотири (`uk`, `en`, `crh`, `nl`),
+ * мов чеклиста дві. Кнопка перемикає РІВНО чеклист — адреса й мова застосунку
+ * лишаються як були, інакше вона дублювала б перемикач у налаштуваннях і
+ * нічого не вирішувала.
+ */
+test('кнопка мови перемикає чеклист, не чіпаючи адреси', async ({ page }) => {
+	const text = page.getByTestId(`beta-check-${TID}-text`);
+	const before = await text.innerText();
+	const url = page.url();
+
+	await page.getByTestId('beta-lang-btn').click();
+
+	await expect(text, 'текст пункта не змінився — кнопка нічого не перемкнула').not.toHaveText(
+		before
+	);
+	expect(page.url(), 'кнопка чеклиста змінила адресу сторінки').toBe(url);
+});
+
+/**
+ * § 8.5.1 `BETA-VERSION-VISIBLE` і § 8.4 `BETA-SCREEN-LINKS`: версія відповідає
+ * на «чи рахується моя позначка», перелік екранів знімає найдовший крок у
+ * роботі — прочитав пункт, шукає, де це в застосунку.
+ */
+test('на сторінці видно версію, екрани вкладки й вихід', async ({ page }) => {
+	await expect(page.getByTestId('beta-version-text')).toHaveText(/\d/);
+	await expect(
+		page.getByTestId('beta-home-link'),
+		'зі службової сторінки нема куди піти'
+	).toHaveAttribute('href', /.+/);
+
+	const links = page.locator('[data-testid^="beta-screen-"]');
+	expect(await links.count(), 'вкладка не показала жодного екрана').toBeGreaterThan(0);
+	await expect(links.first()).toHaveAttribute('href', /.+/);
 });

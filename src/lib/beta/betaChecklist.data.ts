@@ -157,5 +157,15 @@ export const BETA_UI = {
 		en: 'Really erase? Press again'
 	},
 	tabProgress: { uk: 'позначено у вкладці', en: 'marked on this tab' },
-	nothingMarked: { uk: 'Жодного пункта ще не позначено.', en: 'Nothing marked yet.' }
+	nothingMarked: { uk: 'Жодного пункта ще не позначено.', en: 'Nothing marked yet.' },
+	home: { uk: 'На головну', en: 'Home' },
+	screens: { uk: 'Де це дивитися:', en: 'Where to look:' },
+	/**
+	 * Підпис кнопки мови ЧЕКЛИСТА (§ 8.3, `BETA-OWN-LANG-BTN`).
+	 *
+	 * Він навмисно не переклад одного напису, а назви мов: кнопка називає ту
+	 * мову, НА ЯКУ перемикає, і людина, яка мови сторінки не розуміє, мусить
+	 * прочитати саме це слово.
+	 */
+	langSwitch: { uk: 'English', en: 'Українська' }
 } as const satisfies Record<string, Localized>;
