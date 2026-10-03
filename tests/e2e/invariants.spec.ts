@@ -143,15 +143,15 @@ test('чеклист малює вкладки, рівні та позначки
 	await expect(progress).toHaveText(/^0 \//);
 
 	// Позначка змінює поступ — тобто стан справді десь лежить, а не малюється.
-	await page.getByTestId('beta-vote-ok-menu_1-btn').click();
+	await page.getByTestId('beta-vote-menu-1-ok-btn').click();
 	await expect(progress).toHaveText(/^1 \//);
-	await expect(page.getByTestId('beta-vote-ok-menu_1-btn')).toHaveAttribute(
+	await expect(page.getByTestId('beta-vote-menu-1-ok-btn')).toHaveAttribute(
 		'aria-pressed',
 		'true'
 	);
 
 	// Той самий стан удруге знімає позначку: помилковий клік мусить бути зворотним.
-	await page.getByTestId('beta-vote-ok-menu_1-btn').click();
+	await page.getByTestId('beta-vote-menu-1-ok-btn').click();
 	await expect(progress).toHaveText(/^0 \//);
 });
 
