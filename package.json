@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.1003",
+  "version": "0.5.1004",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -43,7 +43,7 @@
     "firebase-tools": "^15.8.0",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
-    "knip": "^5.62.0",
+    "knip": "^6.39.0",
     "rollup-plugin-visualizer": "^6.0.3",
     "svelte": "^5.20.2",
     "svelte-check": "^4.3.1",
@@ -60,5 +60,12 @@
     "svelte-i18n": "^4.0.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.0",
+    "basic-ftp": "^6.2.1",
+    "chokidar": "^4.0.3",
+    "cookie": "^0.7.2",
+    "esbuild": "^0.25.0"
   }
 }
