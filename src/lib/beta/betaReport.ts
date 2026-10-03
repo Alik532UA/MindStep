@@ -24,12 +24,13 @@ export interface ReportContext {
 
 const VOTE_LABEL: Record<BetaVote, string> = {
 	fail: 'НЕ ПРАЦЮЄ',
-	weird: 'ПРАЦЮЄ, АЛЕ ДИВНО',
-	ok: 'ПРАЦЮЄ'
+	unclear: 'НЕ ЗРОЗУМІЛО',
+	ok: 'ПРАЦЮЄ',
+	skip: 'ПРОПУЩЕНО'
 };
 
 /** Поламане — вгорі: його читають першим, і воно найкоротше живе. */
-const VOTE_ORDER: readonly BetaVote[] = ['fail', 'weird', 'ok'];
+const VOTE_ORDER: readonly BetaVote[] = ['fail', 'unclear', 'ok', 'skip'];
 
 function tabTitleOf(check: BetaCheck, titles: Readonly<Record<string, string>>): string {
 	const tabId = check.id.split('_')[0];
@@ -66,7 +67,9 @@ export function buildReport(
 	}
 
 	for (const vote of VOTE_ORDER) {
-		const group = marked.filter((entry) => entry.mark.vote === vote);
+		const group = marked.filter(
+			(entry) => ((entry.mark.vote as string) === 'weird' ? 'unclear' : entry.mark.vote) === vote
+		);
 		if (group.length === 0) continue;
 
 		lines.push(`--- ${VOTE_LABEL[vote]} (${group.length}) ---`);

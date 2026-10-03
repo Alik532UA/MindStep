@@ -134,9 +134,11 @@ export const BETA_UI = {
 		uk: 'Контрольна група. Помилка тут — звіт про дефект ТЕСТА, а не гри, і у звіті вона позначається окремо.',
 		en: 'A control group. A failure here reports a defect in the TEST, not the game, and the report flags it separately.'
 	},
-	voteFail: { uk: 'Не працює', en: 'Broken' },
-	voteWeird: { uk: 'Працює, але дивно', en: 'Works, but oddly' },
 	voteOk: { uk: 'Працює', en: 'Works' },
+	voteFail: { uk: 'Не працює', en: 'Broken' },
+	voteUnclear: { uk: 'Не зрозуміло', en: 'Unclear' },
+	voteSkip: { uk: 'Пропустити', en: 'Skip' },
+	voteWeird: { uk: 'Не зрозуміло', en: 'Unclear' },
 	staleHint: { uk: 'позначено на іншій версії', en: 'marked on another build' },
 	boundary: { uk: 'межа', en: 'boundary' },
 	progress: { uk: 'Позначено на цій версії', en: 'Marked on this build' },

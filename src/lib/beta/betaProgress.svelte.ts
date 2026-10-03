@@ -16,24 +16,8 @@ const STORAGE_KEY = 'beta_marks';
 
 type MarkMap = Record<string, BetaMark>;
 
-const VOTES: readonly BetaVote[] = ['fail', 'weird', 'ok'];
+const VOTES: readonly BetaVote[] = ['ok', 'fail', 'unclear', 'skip'];
 
-function isMark(value: unknown): value is BetaMark {
-	if (typeof value !== 'object' || value === null) return false;
-	const m = value as Record<string, unknown>;
-	return VOTES.includes(m.vote as BetaVote) && typeof m.version === 'string';
-}
-
-/**
- * Прочитане зі сховища — НЕДОВІРЕНИЙ ВВІД (BETA-CHECKLIST-v9 § 8.6,
- * `BETA-MARKS-UNTRUSTED`).
- *
- * Ключ переживає і зміну чеклиста, і зміну формату позначки. Найчастіший
- * випадок безневинний і найгірший: пункт ПРИБРАЛИ зі списку, а позначка
- * лишилася. Форму вона має правильну, тож проходила — і рахувалася в поступі,
- * даючи «65 / 62», число, яке не означає нічого й не має де виправитися: у
- * списку такого пункта вже немає, отже й зняти позначку нема на чому.
- */
 function readMarks(): MarkMap {
 	const raw = storageService.getJSON<unknown>(STORAGE_KEY);
 	if (typeof raw !== 'object' || raw === null) return {};
@@ -41,7 +25,14 @@ function readMarks(): MarkMap {
 	const known = new Set(BETA_CHECKS.map((check) => check.id));
 	const out: MarkMap = {};
 	for (const [id, value] of Object.entries(raw as Record<string, unknown>)) {
-		if (known.has(id) && isMark(value)) out[id] = value;
+		if (!known.has(id)) continue;
+		if (typeof value === 'object' && value !== null) {
+			const m = value as Record<string, unknown>;
+			const vote = m.vote === 'weird' ? 'unclear' : m.vote;
+			if (VOTES.includes(vote as BetaVote) && typeof m.version === 'string') {
+				out[id] = { vote: vote as BetaVote, version: m.version };
+			}
+		}
 	}
 	return out;
 }

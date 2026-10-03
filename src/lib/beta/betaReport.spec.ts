@@ -94,7 +94,7 @@ describe('звіт', () => {
 	});
 
 	it('назва вкладки виводиться з id пункта', () => {
-		const marks: Record<string, BetaMark> = { online_1: { vote: 'weird', version: '1.2.3' } };
+		const marks: Record<string, BetaMark> = { online_1: { vote: 'unclear', version: '1.2.3' } };
 		expect(buildReport(CHECKS, marks, TITLES, CTX)).toContain('Гра в мережі');
 	});
 });

@@ -79,7 +79,7 @@ export interface BetaTab {
 }
 
 /** Чотири стани відповіді: відсутність позначки — і є «не перевірено». */
-export type BetaVote = 'fail' | 'weird' | 'ok';
+export type BetaVote = 'ok' | 'fail' | 'unclear' | 'skip';
 
 export interface BetaMark {
 	vote: BetaVote;

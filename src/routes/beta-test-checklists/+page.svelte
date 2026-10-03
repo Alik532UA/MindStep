@@ -72,6 +72,23 @@
 
     let activeTab = $state(BETA_TABS[0].id);
 
+    function selectTab(id: string) {
+        activeTab = id;
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', id);
+            window.history.replaceState(window.history.state, '', url.href);
+        }
+    }
+
+    $effect(() => {
+        if (typeof window === 'undefined') return;
+        const param = new URL(window.location.href).searchParams.get('tab');
+        if (param && BETA_TABS.some((t) => t.id === param)) {
+            activeTab = param;
+        }
+    });
+
     const LEVEL_TITLE: Record<Coverage, keyof typeof BETA_UI> = {
         manual: 'levelManual',
         testable: 'levelTestable',
@@ -216,7 +233,7 @@
                 class="tab"
                 class:active={activeTab === tab.id}
                 aria-pressed={activeTab === tab.id}
-                onclick={() => (activeTab = tab.id)}
+                onclick={() => selectTab(tab.id)}
                 data-testid="beta-tab-{tab.id}-btn"
             >
                 {tab.title[lang]}
@@ -239,7 +256,7 @@
         «корисних посилань», який поповнити забувають.
     -->
     {#if screens.length > 0}
-        <p class="screens">
+        <p class="screens" data-sveltekit-preload-data="off">
             <span>{BETA_UI.screens[lang]}</span>
             <!--
                 `resolve(route as Pathname)` ПРЯМО в атрибуті, а не через
@@ -408,8 +425,7 @@
      * Кнопка мови чеклиста й посилання на екрани вкладки: 44 px на дотик
      * (ACCESSIBILITY) дає саме `min-height` разом із `inline-flex`.
      */
-    .lang,
-    .screen {
+    .lang {
         display: inline-flex;
         align-items: center;
         min-height: 44px;
@@ -420,6 +436,28 @@
         color: inherit;
         text-decoration: underline;
         cursor: pointer;
+    }
+
+    .screen {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color, rgba(128, 128, 128, 0.4));
+        background: var(--bg-secondary, rgba(128, 128, 128, 0.08));
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .screen:hover {
+        background: var(--bg-secondary, rgba(128, 128, 128, 0.16));
+        border-color: currentColor;
     }
 
     .screens {

@@ -18,9 +18,10 @@
     let { check, lang, number }: Props = $props();
 
     const VOTES: readonly { vote: BetaVote; labelKey: keyof typeof BETA_UI }[] = [
+        { vote: 'ok', labelKey: 'voteOk' },
         { vote: 'fail', labelKey: 'voteFail' },
-        { vote: 'weird', labelKey: 'voteWeird' },
-        { vote: 'ok', labelKey: 'voteOk' }
+        { vote: 'unclear', labelKey: 'voteUnclear' },
+        { vote: 'skip', labelKey: 'voteSkip' }
     ];
 
     const mark = $derived(betaProgress.markOf(check.id));
@@ -109,15 +110,23 @@
      * не розрізняє (ACCESSIBILITY-v8, анти-патерни).
      */
     .beta-item[data-state='fail'] {
-        border-left-color: #c24a44;
+        border-color: #c24a44;
+        border-width: 2px;
         border-left-width: 6px;
     }
+    .beta-item[data-state='unclear'],
     .beta-item[data-state='weird'] {
-        border-left-color: #c9862f;
+        border-color: #c9862f;
+        border-width: 2px;
         border-left-width: 6px;
     }
     .beta-item[data-state='ok'] {
-        border-left-color: #2e9b85;
+        border-color: #2e9b85;
+        border-width: 2px;
+    }
+    .beta-item[data-state='skip'] {
+        border-color: #2563eb;
+        border-width: 2px;
     }
     .beta-item[data-state='ok'] .text {
         opacity: 0.62;
@@ -171,12 +180,15 @@
 
     /* 44px — мінімальна сенсорна зона (ACCESSIBILITY-v8, WCAG 2.5.8). */
     .vote {
+        --vote-ok: #2e9b85;
+        --vote-fail: #c24a44;
+        --vote-unclear: #c9862f;
+        --vote-skip: #2563eb;
         min-height: 44px;
         min-width: 44px;
         padding: 0.4rem 0.9rem;
         border: 1px solid var(--border-color, rgba(128, 128, 128, 0.4));
         border-radius: 6px;
-        background: transparent;
         color: inherit;
         font: inherit;
         font-size: 0.875rem;
@@ -188,22 +200,55 @@
         border-color: currentColor;
     }
 
-    .vote.chosen {
-        font-weight: 700;
-        border-width: 2px;
+    .vote-ok {
+        background: color-mix(in srgb, var(--vote-ok) 8%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-fail {
+        background: color-mix(in srgb, var(--vote-fail) 8%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-unclear,
+    .vote-weird {
+        background: color-mix(in srgb, var(--vote-unclear) 8%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-skip {
+        background: color-mix(in srgb, var(--vote-skip) 8%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
     }
 
-    .vote-fail.chosen {
-        border-color: #c24a44;
-        color: #c24a44;
+    .vote.chosen {
+        font-weight: 700;
+        border-width: 4px;
     }
-    .vote-weird.chosen {
-        border-color: #c9862f;
-        color: #c9862f;
-    }
+
     .vote-ok.chosen {
-        border-color: #2e9b85;
-        color: #2e9b85;
+        background: color-mix(in srgb, var(--vote-ok) 18%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-fail.chosen {
+        background: color-mix(in srgb, var(--vote-fail) 18%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-unclear.chosen,
+    .vote-weird.chosen {
+        background: color-mix(in srgb, var(--vote-unclear) 18%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+    .vote-skip.chosen {
+        background: color-mix(in srgb, var(--vote-skip) 18%, var(--bg-secondary, rgba(128, 128, 128, 0.06)));
+    }
+
+    .vote.chosen.vote-ok {
+        border-color: var(--vote-ok);
+        color: var(--vote-ok);
+    }
+    .vote.chosen.vote-fail {
+        border-color: var(--vote-fail);
+        color: var(--vote-fail);
+    }
+    .vote.chosen.vote-unclear,
+    .vote.chosen.vote-weird {
+        border-color: var(--vote-unclear);
+        color: var(--vote-unclear);
+    }
+    .vote.chosen.vote-skip {
+        border-color: var(--vote-skip);
+        color: var(--vote-skip);
     }
 
     @media (prefers-reduced-motion: reduce) {
