@@ -2,7 +2,7 @@
   "name": "mindstep",
   "description": "A multi-game platform with 'Survive', 'Arena', and 'Maze' modes.",
   "private": true,
-  "version": "0.5.1005",
+  "version": "0.5.1006",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -51,7 +51,7 @@
     "typescript-eslint": "^8.67.0",
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^1.0.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "firebase": "^12.6.0",
