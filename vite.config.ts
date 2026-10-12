@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
 				filename: 'bundle-stats.html',
 				template: 'treemap',
 				open: false,
-				sourcemap: true
+				sourcemap: false
 			}),
 			VitePWA({
 				filename: 'service-worker.js',

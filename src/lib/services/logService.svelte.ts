@@ -1,3 +1,13 @@
+export function scrubPII<T>(val: T): T {
+  if (!val || typeof val !== 'object') return val;
+  const copy: any = Array.isArray(val) ? [] : {};
+  for (const [k, v] of Object.entries(val)) {
+    if (/password|token|key|secret|email|phone/i.test(k)) copy[k] = '***';
+    else if (typeof v === 'object') copy[k] = scrubPII(v);
+    else copy[k] = v;
+  }
+  return copy as T;
+}
 // src/lib/services/logService.svelte.ts
 // Розумний сервіс для логування з динамічною обробкою груп через Proxy.
 // Svelte 5 Runes.
@@ -149,6 +159,8 @@ function safeStringify(args: any[]): string {
     }).join(' ');
 }
 
+// sessionStorage mirror (DEBUGGING-v10 § 1.5 & OBSERVABILITY-v10 § 1.1)
+// Direct reference for crash audit: window.sessionStorage
 const SESSION_LOGS_KEY = 'mindstep_logs_history';
 
 class LogState {
