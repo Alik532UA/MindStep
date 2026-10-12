@@ -51,6 +51,7 @@
   const isVisible = $derived(urlDebug || debugMode.enabled);
 
   let copied = $state(false);
+  let fallbackReport = $state<string | null>(null);
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
   onDestroy(() => {
@@ -58,9 +59,11 @@
   });
 
   async function copyReport() {
+    const report = logService.getLogReport();
     try {
       // Шапка (версія, адреса, пристрій, стан мережі) уже всередині звіту.
-      await navigator.clipboard.writeText(logService.getLogReport());
+      await navigator.clipboard.writeText(report);
+      fallbackReport = null;
       copied = true;
       copyTimer = setTimeout(() => {
         copied = false;
@@ -70,9 +73,20 @@
       // `warn`. І саме `logService`, а не `console`: тут `error` крутив би
       // лічильник, з якого живе сама ця кнопка (DEBUGGING-v8 § 1.3).
       logService.warn('[LogCopyButton] не вдалося скопіювати звіт', err);
+      fallbackReport = report;
     }
   }
 </script>
+
+{#if fallbackReport}
+  <textarea
+    class="log-fallback"
+    readonly
+    value={fallbackReport}
+    aria-label="Debug report fallback"
+    data-testid="debug-log-fallback-input"
+  ></textarea>
+{/if}
 
 {#if isVisible}
   <button
@@ -217,5 +231,22 @@
     .error-count {
       font-size: 1rem;
     }
+  }
+
+  .log-fallback {
+    position: fixed;
+    bottom: 76px;
+    left: 16px;
+    width: min(38rem, calc(100vw - 32px));
+    height: min(40dvh, 20rem);
+    z-index: 9999;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    background: #1e1e1e;
+    color: #ffffff;
+    border: 2px solid #ef4444;
+    border-radius: 8px;
+    resize: none;
   }
 </style>

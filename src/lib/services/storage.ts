@@ -122,3 +122,33 @@ export const storageService = {
 		return this.set(key, raw);
 	}
 };
+
+function ss(): Storage | null {
+	try {
+		return typeof sessionStorage !== 'undefined' ? sessionStorage : null;
+	} catch {
+		return null;
+	}
+}
+
+export const sessionService = {
+	get(key: string): string | null {
+		const store = ss();
+		if (!store) return null;
+		try {
+			return store.getItem(getStorageKey(key));
+		} catch {
+			return null;
+		}
+	},
+	set(key: string, value: string): boolean {
+		const store = ss();
+		if (!store) return false;
+		try {
+			store.setItem(getStorageKey(key), value);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+};

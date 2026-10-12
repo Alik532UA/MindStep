@@ -2,7 +2,7 @@
 // Розумний сервіс для логування з динамічною обробкою груп через Proxy.
 // Svelte 5 Runes.
 
-import { storageService } from './storage';
+import { storageService, sessionService } from './storage';
 import { untrack } from 'svelte';
 
 const isBrowser = typeof window !== 'undefined';
@@ -149,14 +149,27 @@ function safeStringify(args: any[]): string {
     }).join(' ');
 }
 
+const SESSION_LOGS_KEY = 'mindstep_logs_history';
+
 class LogState {
     config = $state<LogConfig>(loadConfig());
     logs = $state<string[]>([]);
     errorCount = $state(0);
     version = __APP_VERSION__;
+    private mirrorEnabled = true;
 
     constructor() {
         if (isBrowser) {
+            try {
+                const saved = sessionService.get(SESSION_LOGS_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) this.logs = parsed;
+                }
+            } catch {
+                // Ignore storage failure on init
+            }
+
             $effect.root(() => {
                 $effect(() => {
                     const currentConfig = this.config;
@@ -165,6 +178,17 @@ class LogState {
                     });
                 });
             });
+        }
+    }
+
+    private mirror() {
+        if (!isBrowser || !this.mirrorEnabled) return;
+        try {
+            if (!sessionService.set(SESSION_LOGS_KEY, JSON.stringify(this.logs))) {
+                this.mirrorEnabled = false;
+            }
+        } catch {
+            this.mirrorEnabled = false;
         }
     }
 
@@ -205,7 +229,8 @@ class LogState {
 
                 // Безпечно додаємо в масив логів для звіту
                 this.logs.push(logEntry + (args.length > 0 ? ' ' + safeStringify(args) : ''));
-                if (this.logs.length > 500) this.logs.shift();
+                if (this.logs.length > 1000) this.logs.shift();
+                this.mirror();
             }
         });
     }
