@@ -64,6 +64,13 @@
 	let unsubscribeTestMode: () => void;
 
 	onMount(() => {
+		const onRejection = (e: PromiseRejectionEvent) =>
+			logService.error(`[UnhandledRejection] ${String(e.reason)}`);
+		const onWindowError = (e: ErrorEvent) =>
+			logService.error(`[WindowError] ${e.message} at ${e.filename}:${e.lineno}`);
+		window.addEventListener("unhandledrejection", onRejection);
+		window.addEventListener("error", onWindowError);
+
 		// Міграція старого сховища до нової системи з префіксами
 		migrateStorage();
 
@@ -170,6 +177,8 @@
 		});
 
 		return () => {
+			window.removeEventListener("unhandledrejection", onRejection);
+			window.removeEventListener("error", onWindowError);
 			appInitializationService.cleanup();
 			unsubscribeVersion();
 		};
