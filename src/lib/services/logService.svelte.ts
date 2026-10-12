@@ -1,6 +1,6 @@
 export function scrubPII<T>(val: T): T {
   if (!val || typeof val !== 'object') return val;
-  const copy: any = Array.isArray(val) ? [] : {};
+  const copy: Record<string, unknown> = Array.isArray(val) ? ([] as unknown as Record<string, unknown>) : {};
   for (const [k, v] of Object.entries(val)) {
     if (/password|token|key|secret|email|phone/i.test(k)) copy[k] = '***';
     else if (typeof v === 'object') copy[k] = scrubPII(v);
