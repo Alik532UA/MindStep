@@ -1,2 +1,0 @@
-import{m as o}from"./DxKcFYvW.js";import"./D9SGhz6c.js";import"./lIID-R0y.js";import"./Bzak7iHL.js";import"./B15PH1SD.js";import"./DHrvIL-b.js";/* empty css        */import"./i07DmlQk.js";import{F as t}from"./CiQSkRtg.js";import"./D8Ct_Wr9.js";import"./D_T3uVlA.js";/* empty css        */function c(){o.showModal({dataTestId:"faq-modal",component:t,variant:"menu",buttons:[],closeOnOverlayClick:!0,props:{}})}export{c as s};
-//# sourceMappingURL=DCrnEHTe.js.map
