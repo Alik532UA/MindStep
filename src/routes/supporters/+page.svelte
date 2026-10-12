@@ -2,6 +2,7 @@
   import FloatingBackButton from "$lib/components/FloatingBackButton.svelte";
   import { t } from "$lib/i18n/typedI18n";
   import { base } from "$app/paths";
+  import { sanitizeHtml } from "$lib/security/sanitize";
 </script>
 
 <div class="supporters-container">
@@ -34,7 +35,7 @@
          від користувача чи з Firestore. Це єдине дозволене {@html} тут; решта
          — помилка збірки (eslint.config.js). -->
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    {@html $t("supportersPage.callToAction")}
+    {@html sanitizeHtml($t("supportersPage.callToAction"))}
   </p>
   <a
     href="https://send.monobank.ua/jar/8TPmFKQTCK"
