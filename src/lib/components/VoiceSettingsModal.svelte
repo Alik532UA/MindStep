@@ -36,7 +36,7 @@
     if (voiceListContainer) {
       setTimeout(updateFadeState, 0);
 
-      resizeObserver = new ResizeObserver(updateFadeState);
+      resizeObserver = new ResizeObserver(() => requestAnimationFrame(updateFadeState));
       resizeObserver.observe(voiceListContainer);
 
       mutationObserver = new MutationObserver(updateFadeState);

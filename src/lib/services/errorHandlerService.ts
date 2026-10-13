@@ -16,6 +16,7 @@ class ErrorHandlerService {
         const { context, showToast = true, userMessageKey = 'common.errorOccurred', userMessageRaw } = options;
 
         const message = error instanceof Error ? error.message : String(error);
+        if (message.includes('ResizeObserver loop')) return;
         const stack = error instanceof Error ? error.stack : undefined;
 
         // 1. Логування для розробника
@@ -44,6 +45,8 @@ class ErrorHandlerService {
         if (typeof window === 'undefined') return;
 
         window.onerror = (message, source, lineno, colno, error) => {
+            if (typeof message === 'string' && message.includes('ResizeObserver loop')) return;
+            if (error?.message && error.message.includes('ResizeObserver loop')) return;
             this.handle(error || message, { context: 'WindowOnError' });
         };
 

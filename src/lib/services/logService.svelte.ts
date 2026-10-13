@@ -205,6 +205,7 @@ class LogState {
     }
 
     add(type: string, message: string, ...args: unknown[]) {
+        if (typeof message === 'string' && message.includes('ResizeObserver loop')) return;
         const isDev = import.meta.env.DEV;
 
         // Лічильник рахує ВСІ помилки, а не лише ті, чия тема увімкнена:
