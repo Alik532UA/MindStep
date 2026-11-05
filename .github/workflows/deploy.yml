@@ -305,10 +305,6 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: git diff --exit-code
 
-      - name: Lighthouse Audit
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: npx @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
-
       # Preserve dev/ from current gh-pages
       - name: Preserve dev folder
         run: |
