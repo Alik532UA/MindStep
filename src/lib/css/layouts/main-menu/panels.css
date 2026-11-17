@@ -58,8 +58,8 @@
 /* Titles */
 .main-menu-title {
     text-align: center;
-    /* Адаптивний розмір: min 1.8em, бажаний 8% ширини екрану, max 2.8em */
-    font-size: clamp(0.1em, 8vw, 2.8em);
+    /* Адаптивний розмір: min 1.5rem, бажаний rem + vw, max 2.8rem (FLUID-SIZING-v10 § 2.1) */
+    font-size: clamp(1.5rem, 1.2rem + 2vw, 2.8rem);
     font-weight: 800;
     color: var(--text-accent);
     margin-bottom: 8px;
