@@ -160,7 +160,7 @@ jobs:
     # Заразом це робить гейт правил блокувальним — доти деплой не чекав на нього
     # зовсім, тобто збірка з невикладеними звуженнями публікувалася без перешкод.
     needs: publish-rules
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     timeout-minutes: 30
