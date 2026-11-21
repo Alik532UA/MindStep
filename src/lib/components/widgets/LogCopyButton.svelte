@@ -4,55 +4,20 @@
   import { onDestroy } from 'svelte';
   import { debugMode } from '$lib/services/debugMode.svelte';
   import { logService } from '$lib/services/logService.svelte';
-  import { Check, Copy } from 'lucide-svelte';
-
-  /**
-   * Службове табло: номер версії, лічильник помилок і збір звіту — ОДИН елемент.
-   *
-   * **Чому одне, а не двоє.** Доти номер версії тут не показувався взагалі, а
-   * кнопка звіту зʼявлялася лише за наявності помилок і лише в dev. Тобто
-   * найчастіше потрібна річ — «яка версія на екрані?» — не мала на екрані місця, а
-   * найпотрібніша в проді річ — звіт про збій — була в проді недосяжна.
-   *
-   * **Форма змінюється, місце — ні.** У спокої це капсула з номером версії; коли є
-   * помилки — червоний кружок із їхньою кількістю; після копіювання — галочка.
-   * Один елемент, один кут, один `data-testid`.
-   *
-   * **Видимість (DEBUGGING-v8 § 2.1, із відхиленням).** У dev табло видиме
-   * ЗАВЖДИ, а не лише за наявності помилок, як приписує канон: воно тепер несе
-   * номер версії, а його ховати нема сенсу — саме в dev він і потрібен. У проді
-   * табло приховане, доки не ввімкнено debug-режим.
-   *
-   * **Два входи, і вони навмисно різні за природою.** `?debug=1` в адресі працює
-   * на телефоні й пересилається посиланням; серія натискань `V` — для того, хто
-   * вже сидить за клавіатурою, і вона зберігається між сеансами. На дотику серія
-   * недосяжна, і саме тому адресний параметр лишається: інакше версію на телефоні
-   * не побачив би ніхто.
-   *
-   * **Сам жест `V` живе в `hotkeyService`, а не тут** — саме тому, що в проді цей
-   * компонент не відмальований, доки жест не спрацював. Слухач у компоненті, який
-   * жест же й показує, не міг би цього жесту дочекатися.
-   *
-   * **Пороги асиметричні** — 55 щоб показати в проді, 5 щоб сховати, 5/5 у dev.
-   * Чому саме так, розписано в `debugMode.svelte.ts`.
-   */
-
-  /*
-   * `browser &&` тут обовʼязковий: під час prerender звернення до
-   * `page.url.searchParams` кидає «Cannot access url.searchParams on a page with
-   * prerendering enabled» і валить збірку цілком.
-   */
-  const urlDebug = $derived(browser && page.url.searchParams.get('debug') === '1');
-  /*
-   * `?debug=1` діє ПОВЕРХ збереженого стану: посилання з ним мусить показати табло
-   * навіть тому, хто раніше сховав його серією натискань. Інакше найнадійніший
-   * шлях (єдиний досяжний на телефоні) можна було б заблокувати назавжди.
-   */
-  const isVisible = $derived(urlDebug || debugMode.enabled);
+  import { Check, Copy, Bug, Trash2, EyeOff } from 'lucide-svelte';
+  import { isPlainKey } from '$lib/services/keyboard';
+  import ErrorLogModal from './ErrorLogModal.svelte';
 
   let copied = $state(false);
   let fallbackReport = $state<string | null>(null);
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  let menuOpen = $state(false);
+  let modalOpen = $state(false);
+  let userDismissed = $state(false);
+
+  const urlDebug = $derived(browser && page.url.searchParams.get('debug') === '1');
+  const isVisible = $derived(!userDismissed && (urlDebug || debugMode.enabled));
 
   onDestroy(() => {
     if (copyTimer) clearTimeout(copyTimer);
@@ -61,7 +26,6 @@
   async function copyReport() {
     const report = logService.getLogReport();
     try {
-      // Шапка (версія, адреса, пристрій, стан мережі) уже всередині звіту.
       await navigator.clipboard.writeText(report);
       fallbackReport = null;
       copied = true;
@@ -69,14 +33,38 @@
         copied = false;
       }, 1500);
     } catch (err) {
-      // Відмова буфера обміну — буденна річ поза HTTPS і без дозволу, тож
-      // `warn`. І саме `logService`, а не `console`: тут `error` крутив би
-      // лічильник, з якого живе сама ця кнопка (DEBUGGING-v8 § 1.3).
-      logService.warn('[LogCopyButton] не вдалося скопіювати звіт', err);
+      logService.warn?.('[LogCopyButton] не вдалося скопіювати звіт', err);
       fallbackReport = report;
     }
   }
+
+  async function handleAction(action: 'copy' | 'modal' | 'clear' | 'hide') {
+    menuOpen = false;
+    if (action === 'copy') await copyReport();
+    else if (action === 'modal') modalOpen = true;
+    else if (action === 'clear') logService.clear();
+    else if (action === 'hide') {
+      userDismissed = true;
+      if (debugMode.enabled) debugMode.toggle();
+    }
+  }
+
+  function handleWindowClick(e: MouseEvent) {
+    if (!menuOpen) return;
+    const target = e.target as HTMLElement | null;
+    if (!target?.closest('.service-badge-wrapper')) {
+      menuOpen = false;
+    }
+  }
+
+  function handleWindowKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && isPlainKey(e) && menuOpen) {
+      menuOpen = false;
+    }
+  }
 </script>
+
+<svelte:window onclick={handleWindowClick} onkeydown={handleWindowKeydown} />
 
 {#if fallbackReport}
   <textarea
@@ -89,43 +77,136 @@
 {/if}
 
 {#if isVisible}
-  <button
-    type="button"
-    class="log-fab"
-    class:has-errors={logService.errorCount > 0}
-    class:copied
-    onclick={copyReport}
-    aria-label={`Копіювати звіт про роботу — ${logService.version}`}
-    data-testid="app-version-value"
-  >
-    <!-- Номер версії — поза гілками: лічильник ДОДАЄТЬСЯ до нього, а не заміняє
-         його. Інакше на dev, де помилка буває майже завжди, версії не видно. -->
-    {#if copied}
-      <Check class="badge-icon badge-icon--hint" />
-    {:else if logService.errorCount > 0}
-      <span class="error-count">{logService.errorCount > 99 ? '99+' : logService.errorCount}</span>
-    {:else}
-      <Copy class="badge-icon badge-icon--hint" />
+  <div class="service-badge-wrapper">
+    {#if menuOpen}
+      <div class="service-menu" role="menu" data-testid="service-badge-context-menu">
+        <button
+          type="button"
+          class="menu-item"
+          role="menuitem"
+          onclick={() => handleAction('copy')}
+          data-testid="service-badge-copy-report-btn"
+        >
+          <Copy size={13} />
+          <span>Скопіювати повний звіт</span>
+        </button>
+        <button
+          type="button"
+          class="menu-item"
+          role="menuitem"
+          onclick={() => handleAction('modal')}
+          data-testid="service-badge-view-errors-btn"
+        >
+          <Bug size={13} />
+          <span>Переглянути помилки ({logService.errorCount})</span>
+        </button>
+        <button
+          type="button"
+          class="menu-item"
+          role="menuitem"
+          onclick={() => handleAction('clear')}
+          data-testid="service-badge-clear-btn"
+        >
+          <Trash2 size={13} />
+          <span>Скинути лічильник</span>
+        </button>
+        <button
+          type="button"
+          class="menu-item"
+          role="menuitem"
+          onclick={() => handleAction('hide')}
+          data-testid="service-badge-hide-btn"
+        >
+          <EyeOff size={13} />
+          <span>Приховати табло</span>
+        </button>
+      </div>
     {/if}
-    <span class="version">{logService.version}</span>
-  </button>
+
+    <button
+      type="button"
+      class="log-fab"
+      class:has-errors={logService.errorCount > 0}
+      class:copied
+      onclick={() => (menuOpen = !menuOpen)}
+      oncontextmenu={(e) => {
+        e.preventDefault();
+        menuOpen = true;
+      }}
+      aria-label={`Меню діагностики — ${logService.version}`}
+      aria-haspopup="menu"
+      aria-expanded={menuOpen}
+      data-testid="app-version-value"
+    >
+      {#if copied}
+        <Check class="badge-icon badge-icon--hint" />
+      {:else if logService.errorCount > 0}
+        <span class="error-count">{logService.errorCount > 99 ? '99+' : logService.errorCount}</span>
+      {:else}
+        <Copy class="badge-icon badge-icon--hint" />
+      {/if}
+      <span class="version">{logService.version}</span>
+    </button>
+  </div>
 {/if}
 
+<ErrorLogModal isOpen={modalOpen} onclose={() => (modalOpen = false)} />
+
 <style>
-  .log-fab {
+  .service-badge-wrapper {
     position: fixed;
     bottom: 16px;
     left: 16px;
     z-index: 9999;
+  }
 
+  .service-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    min-width: 220px;
+    background: #1e1e1e;
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 10000;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .log-fab {
     display: flex;
     align-items: center;
     gap: 4px;
-    /* Капсула: номер версії в коло 32px не влазить. */
     min-height: 32px;
     padding: 0 8px;
     border-radius: 16px;
-
     background-color: var(--bg-secondary, #2a2a2a);
     color: var(--text-primary, #fff);
     border: 2px solid var(--border-color, #444);
@@ -146,14 +227,9 @@
     font-size: 10px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     line-height: 1;
-    /* Номер читає той, хто дивиться на скріншот, тож він не має «розсипатися». */
     white-space: nowrap;
   }
 
-  /*
-   * Іконка копіювання — підказка, що капсула клікабельна, а не окрема дія. Тому
-   * вона дрібніша за номер і тане: головне тут число версії.
-   */
   .log-fab :global(.badge-icon) {
     width: 16px;
     height: 16px;
@@ -166,36 +242,18 @@
     opacity: 0.6;
   }
 
-  /*
-   * Форма НЕ змінюється між станами: капсула лишається капсулою, бо номер версії
-   * лишається на місці. Доти помилки перетворювали табло на кружок 32px — зникала не
-   * лише версія, а й упізнаваність елемента.
-   */
-
-  /*
-   * Червоний темніший за #f44336 — за WCAG AA, не за смаком: білий текст на
-   * попередньому давав 3.7:1 при потрібних 4.5. Тепер 5.46:1. Лічильник помилок —
-   * це та плашка, яку читають саме тоді, коли щось пішло не так, тобто найгірший
-   * кандидат на «майже читно». Літерали, а не токени теми: сигнал «є помилки»
-   * мусить виглядати однаково в будь-якій темі.
-   */
   .log-fab.has-errors {
     background-color: #c92a2a;
     color: white;
     border-color: #7f1d1d;
   }
 
-  /* Зелений — за тим самим правилом: #2f9e44 давав під білим 3.45:1, #237a35 дає 5.38:1. */
   .log-fab.copied {
     background-color: #237a35;
     color: white;
     border-color: #1b5e20;
   }
 
-  /*
-   * Лічильник — плашка ПЕРЕД номером, а не текст замість нього. Темніший червоний за
-   * тло капсули (#7f1d1d на #c92a2a): білий текст дає на ньому 10:1.
-   */
   .error-count {
     font-weight: bold;
     font-size: 0.75rem;
@@ -206,13 +264,19 @@
     color: white;
   }
 
-  /*
-   * Розмір залежить від СПОСОБУ ВВЕДЕННЯ, а не від ширини вікна: на десктопі
-   * 900px кнопка лишалася б маленькою для миші, а на планшеті 1024px — маленькою
-   * для дотику (ACCESSIBILITY-v8 § 8, DEBUGGING-v8 § 2.2). Доти тут стояв
-   * `max-width: 768px`, який зменшував кнопку саме там, де потрібне 44px.
-   */
+  @media (prefers-reduced-motion: reduce) {
+    .menu-item,
+    .log-fab {
+      transition: none;
+    }
+  }
+
   @media (hover: none) {
+    .service-badge-wrapper {
+      bottom: 12px;
+      left: 12px;
+    }
+
     .log-fab {
       min-height: 44px;
       padding: 0 12px;

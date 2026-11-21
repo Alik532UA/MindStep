@@ -1,9 +1,11 @@
 export function scrubPII<T>(val: T): T {
-  if (!val || typeof val !== 'object') return val;
-  const copy: Record<string, unknown> = Array.isArray(val) ? ([] as unknown as Record<string, unknown>) : {};
+  if (!val || typeof val !== "object") return val;
+  const copy: Record<string, unknown> = Array.isArray(val)
+    ? ([] as unknown as Record<string, unknown>)
+    : {};
   for (const [k, v] of Object.entries(val)) {
-    if (/password|token|key|secret|email|phone/i.test(k)) copy[k] = '***';
-    else if (typeof v === 'object') copy[k] = scrubPII(v);
+    if (/password|token|key|secret|email|phone/i.test(k)) copy[k] = "***";
+    else if (typeof v === "object") copy[k] = scrubPII(v);
     else copy[k] = v;
   }
   return copy as T;
@@ -12,16 +14,16 @@ export function scrubPII<T>(val: T): T {
 // Розумний сервіс для логування з динамічною обробкою груп через Proxy.
 // Svelte 5 Runes.
 
-import { storageService, sessionService } from './storage';
-import { untrack } from 'svelte';
+import { storageService, sessionService } from "./storage";
+import { untrack } from "svelte";
 
-const isBrowser = typeof window !== 'undefined';
-const STORAGE_KEY = 'log_config';
+const isBrowser = typeof window !== "undefined";
+const STORAGE_KEY = "log_config";
 
 export interface LogConfig {
-    // Індексна підпис лишається навмисно: сюди приходить те, що ЛЕЖИТЬ У
-    // СХОВИЩІ, а там можуть бути теми зі старіших версій застосунку.
-    [key: string]: boolean;
+  // Індексна підпис лишається навмисно: сюди приходить те, що ЛЕЖИТЬ У
+  // СХОВИЩІ, а там можуть бути теми зі старіших версій застосунку.
+  [key: string]: boolean;
 }
 
 /**
@@ -37,29 +39,29 @@ export interface LogConfig {
  * дзеркалом присутності, впала б на файлі логера.
  */
 const initialConfig = {
-    init: true,
-    ui: true,
-    action: true,
-    score: true,
-    ai: true,
-    error: true,
-    warn: true,
-    info: true,
-    sync: true,
-    reward: true,
-    tooltip: false,
-    hotkey: false,
-    state: true,
-    animation: false,
-    logicMove: true,
-    logicVirtualPlayer: true,
-    logicAvailability: false,
-    testMode: true,
-    modal: true,
-    GAME_MODE: true,
-    speech: false,
-    voiceControl: true,
-    presence: true
+  init: true,
+  ui: true,
+  action: true,
+  score: true,
+  ai: true,
+  error: true,
+  warn: true,
+  info: true,
+  sync: true,
+  reward: true,
+  tooltip: false,
+  hotkey: false,
+  state: true,
+  animation: false,
+  logicMove: true,
+  logicVirtualPlayer: true,
+  logicAvailability: false,
+  testMode: true,
+  modal: true,
+  GAME_MODE: true,
+  speech: false,
+  voiceControl: true,
+  presence: true,
 } satisfies LogConfig;
 
 /**
@@ -85,32 +87,35 @@ const LOG_TOPICS = Object.keys(initialConfig) as readonly LogTopic[];
 type LogFn = (message: string, ...args: unknown[]) => void;
 
 export type LogService = Record<LogTopic, LogFn> & {
-    readonly config: LogConfig;
-    readonly version: string;
-    /** Скільки помилок сталося за сесію. Кнопка копіювання логів живе з цього. */
-    readonly errorCount: number;
-    getLogReport(): string;
-    /** Увімкнути всі теми до кінця сесії — прихований жест у панелі керування. */
-    forceEnableLogging(): void;
+  readonly config: LogConfig;
+  readonly version: string;
+  /** Скільки помилок сталося за сесію. Кнопка копіювання логів живе з цього. */
+  readonly errorCount: number;
+  readonly logs: string[];
+  getLogReport(): string;
+  getReport(): string;
+  clear(): void;
+  /** Увімкнути всі теми до кінця сесії — прихований жест у панелі керування. */
+  forceEnableLogging(): void;
 };
 
 let isForceEnabled = false;
 
-if (isBrowser && storageService.get('force-logging') === 'true') {
-    isForceEnabled = true;
+if (isBrowser && storageService.get("force-logging") === "true") {
+  isForceEnabled = true;
 }
 
 function loadConfig(): LogConfig {
-    if (!isBrowser) return { ...initialConfig };
-    try {
-        const savedConfig = storageService.getJSON<LogConfig>(STORAGE_KEY);
-        if (savedConfig) {
-            return { ...initialConfig, ...savedConfig };
-        }
-    } catch (e) {
-        console.error('Failed to load log config', e);
+  if (!isBrowser) return { ...initialConfig };
+  try {
+    const savedConfig = storageService.getJSON<LogConfig>(STORAGE_KEY);
+    if (savedConfig) {
+      return { ...initialConfig, ...savedConfig };
     }
-    return { ...initialConfig };
+  } catch (e) {
+    console.error("Failed to load log config", e);
+  }
+  return { ...initialConfig };
 }
 
 /**
@@ -125,8 +130,9 @@ function loadConfig(): LogConfig {
  * у чат, у листа, у скріншот. Усе, що пішло в лог із поля з такою назвою,
  * пішло б і туди.
  */
-const REDACT_KEY = /^(password|token|authorization|cookie|email|phone|secret|apikey|api_key)$/i;
-const REDACTED = '«приховано»';
+const REDACT_KEY =
+  /^(password|token|authorization|cookie|email|phone|secret|apikey|api_key)$/i;
+const REDACTED = "«приховано»";
 
 /**
  * Безпечне перетворення об'єктів у рядок для звіту (без циклічних посилань).
@@ -137,161 +143,182 @@ const REDACTED = '«приховано»';
  * розходився б із ним на краях — `Map`, `Date`, власний `toJSON`.
  */
 function safeStringify(args: any[]): string {
-    return args.map(arg => {
-        if (arg instanceof HTMLElement) return `<${arg.tagName.toLowerCase()} />`;
-        if (typeof arg === 'object' && arg !== null) {
-            try {
-                // Використовуємо JSON.stringify з реплейсером для захисту від циклів
-                const cache = new Set();
-                return JSON.stringify(arg, (key, value) => {
-                    if (REDACT_KEY.test(key)) return REDACTED;
-                    if (typeof value === 'object' && value !== null) {
-                        if (cache.has(value)) return '[Circular]';
-                        cache.add(value);
-                    }
-                    return value;
-                }, 2);
-            } catch (e) {
-                return '[Complex Object]';
-            }
+  return args
+    .map((arg) => {
+      if (arg instanceof HTMLElement) return `<${arg.tagName.toLowerCase()} />`;
+      if (typeof arg === "object" && arg !== null) {
+        try {
+          // Використовуємо JSON.stringify з реплейсером для захисту від циклів
+          const cache = new Set();
+          return JSON.stringify(
+            arg,
+            (key, value) => {
+              if (REDACT_KEY.test(key)) return REDACTED;
+              if (typeof value === "object" && value !== null) {
+                if (cache.has(value)) return "[Circular]";
+                cache.add(value);
+              }
+              return value;
+            },
+            2,
+          );
+        } catch (e) {
+          return "[Complex Object]";
         }
-        return String(arg);
-    }).join(' ');
+      }
+      return String(arg);
+    })
+    .join(" ");
 }
 
 // sessionStorage mirror (DEBUGGING-v10 § 1.5 & OBSERVABILITY-v10 § 1.1)
 // Direct reference for crash audit: window.sessionStorage
-const SESSION_LOGS_KEY = 'mindstep_logs_history';
+const SESSION_LOGS_KEY = "mindstep_logs_history";
 
 class LogState {
-    config = $state<LogConfig>(loadConfig());
-    logs = $state<string[]>([]);
-    errorCount = $state(0);
-    version = __APP_VERSION__;
-    private mirrorEnabled = true;
+  config = $state<LogConfig>(loadConfig());
+  logs = $state<string[]>([]);
+  errorCount = $state(0);
+  version = __APP_VERSION__;
+  private mirrorEnabled = true;
 
-    constructor() {
-        if (isBrowser) {
-            try {
-                const saved = sessionService.get(SESSION_LOGS_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed)) this.logs = parsed;
-                }
-            } catch {
-                // Ignore storage failure on init
-            }
-
-            $effect.root(() => {
-                $effect(() => {
-                    const currentConfig = this.config;
-                    untrack(() => {
-                        storageService.setJSON(STORAGE_KEY, currentConfig);
-                    });
-                });
-            });
+  constructor() {
+    if (isBrowser) {
+      try {
+        const saved = sessionService.get(SESSION_LOGS_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) this.logs = parsed;
         }
-    }
+      } catch {
+        // Ignore storage failure on init
+      }
 
-    private mirror() {
-        if (!isBrowser || !this.mirrorEnabled) return;
-        try {
-            if (!sessionService.set(SESSION_LOGS_KEY, JSON.stringify(this.logs))) {
-                this.mirrorEnabled = false;
-            }
-        } catch {
-            this.mirrorEnabled = false;
-        }
-    }
-
-    add(type: string, message: string, ...args: unknown[]) {
-        if (typeof message === 'string' && message.includes('ResizeObserver loop')) return;
-        const isDev = import.meta.env.DEV;
-
-        // Лічильник рахує ВСІ помилки, а не лише ті, чия тема увімкнена:
-        // вимкнена тема — це про шум у консолі, а не про «помилки не було».
-        if (type.toLowerCase() === 'error') this.errorCount += 1;
-
-        untrack(() => {
-            if (this.config[type] === undefined) {
-                this.config[type] = true;
-            }
-
-            if (this.config[type] || isForceEnabled || isDev) {
-                // Час у форматі UTC hh:mm:ss.mmm, а не toLocaleTimeString().
-                //
-                // Цей рядок іде не лише в консоль розробника: нижче він
-                // потрапляє в `this.logs`, тобто в КОЖЕН рядок звіту, який
-                // гравець копіює кнопкою. toLocaleTimeString() рендериться в
-                // локалі СИСТЕМИ гравця: `3:05:12 PM` в одній, `15:05:12` в
-                // іншій, а подекуди й іншими цифрами. Звіт читає той, хто
-                // розбирає збій, і зіставляти події за таким часом ніяк
-                // (I18N-v8 § 4.3).
-                const timestamp = new Date().toISOString().slice(11, 23);
-                const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
-                
-                if (type.toLowerCase() === 'error') {
-                    console.error(logEntry, ...args);
-                } else if (isDev || isForceEnabled) {
-                    // `warn` окремим каналом: DevTools дає йому власний фільтр
-                    // і стек, а очікуваних збоїв (офлайн, відмова сховища) тут
-                    // рівно цей рівень (DEBUGGING-v8 § 1.3).
-                    if (type.toLowerCase() === 'warn') console.warn(logEntry, ...args);
-                    else console.log(logEntry, ...args);
-                }
-
-                // Безпечно додаємо в масив логів для звіту
-                this.logs.push(logEntry + (args.length > 0 ? ' ' + safeStringify(args) : ''));
-                if (this.logs.length > 1000) this.logs.shift();
-                this.mirror();
-            }
+      $effect.root(() => {
+        $effect(() => {
+          const currentConfig = this.config;
+          untrack(() => {
+            storageService.setJSON(STORAGE_KEY, currentConfig);
+          });
         });
+      });
     }
+  }
 
-    /**
-     * Звіт = шапка + рядки логу.
-     *
-     * **Шапка тут, а не в тому, хто копіює.** Доти її будували два різні місця —
-     * кнопка в dev-меню й службове табло, — і збігалися вони лише в номері версії:
-     * у табла шапки не було взагалі, тож звіт із проду приходив без адреси,
-     * пристрою й стану мережі. Тепер джерело одне, і кожен, хто копіює звіт,
-     * отримує ту саму шапку.
-     *
-     * `ONLINE` — не прикраса: половина звітів «нічого не працює» пояснюється саме
-     * цим рядком (DEBUGGING-v8 § 2.3). `DEVICE` відповідає на друге за частотою
-     * питання — «а на чому?».
-     *
-     * Час в ISO, а не `toLocaleString()`: звіт читає той, хто розбирає збій, а не
-     * гравець, який його скопіював. `toLocaleString()` рендериться в локалі
-     * СИСТЕМИ гравця — 03.08 чи 08.03 залежно від того, де він живе, і розрізнити
-     * їх у звіті нема по чому (I18N-v8 § 4.3).
-     */
-    getReport(): string {
-        const header = [
-            '--- MindStep DEBUG LOG ---',
-            `DATE: ${new Date().toISOString()}`,
-            `VERSION: ${this.version}`,
-            // Поза браузером (prerender, вузол тесту) цих джерел немає, а звіт має
-            // лишитися звітом, а не винятком: логер не має права нічого кидати.
-            `URL: ${isBrowser ? window.location.href : 'n/a'}`,
-            `DEVICE: ${isBrowser ? navigator.userAgent : 'n/a'}`,
-            `ONLINE: ${isBrowser ? navigator.onLine : 'n/a'}`,
-            '--------------------------',
-            ''
-        ].join('\n');
-        return untrack(() => header + this.logs.join('\n'));
+  private mirror() {
+    if (!isBrowser || !this.mirrorEnabled) return;
+    try {
+      if (!sessionService.set(SESSION_LOGS_KEY, JSON.stringify(this.logs))) {
+        this.mirrorEnabled = false;
+      }
+    } catch {
+      this.mirrorEnabled = false;
     }
+  }
 
-    /**
-     * Вмикає всі теми й запам'ятовує це у сховищі. Викликається прихованим
-     * жестом (три кліки по підпису панелі керування) — щоб зібрати звіт із
-     * пристрою гравця, до якого немає доступу.
-     */
-    forceEnableLogging(): void {
-        isForceEnabled = true;
-        storageService.set('force-logging', 'true');
-        this.add('init', '[logService] логування увімкнено вручну на цю сесію');
+  add(type: string, message: string, ...args: unknown[]) {
+    if (typeof message === "string" && message.includes("ResizeObserver loop"))
+      return;
+    const isDev = import.meta.env.DEV;
+
+    // Лічильник рахує ВСІ помилки, а не лише ті, чия тема увімкнена:
+    // вимкнена тема — це про шум у консолі, а не про «помилки не було».
+    if (type.toLowerCase() === "error") this.errorCount += 1;
+
+    untrack(() => {
+      if (this.config[type] === undefined) {
+        this.config[type] = true;
+      }
+
+      if (this.config[type] || isForceEnabled || isDev) {
+        // Час у форматі UTC hh:mm:ss.mmm, а не toLocaleTimeString().
+        //
+        // Цей рядок іде не лише в консоль розробника: нижче він
+        // потрапляє в `this.logs`, тобто в КОЖЕН рядок звіту, який
+        // гравець копіює кнопкою. toLocaleTimeString() рендериться в
+        // локалі СИСТЕМИ гравця: `3:05:12 PM` в одній, `15:05:12` в
+        // іншій, а подекуди й іншими цифрами. Звіт читає той, хто
+        // розбирає збій, і зіставляти події за таким часом ніяк
+        // (I18N-v8 § 4.3).
+        const timestamp = new Date().toISOString().slice(11, 23);
+        const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+
+        if (type.toLowerCase() === "error") {
+          console.error(logEntry, ...args);
+        } else if (isDev || isForceEnabled) {
+          // `warn` окремим каналом: DevTools дає йому власний фільтр
+          // і стек, а очікуваних збоїв (офлайн, відмова сховища) тут
+          // рівно цей рівень (DEBUGGING-v8 § 1.3).
+          if (type.toLowerCase() === "warn") console.warn(logEntry, ...args);
+          else console.log(logEntry, ...args);
+        }
+
+        // Безпечно додаємо в масив логів для звіту
+        this.logs.push(
+          logEntry + (args.length > 0 ? " " + safeStringify(args) : ""),
+        );
+        if (this.logs.length > 1000) this.logs.shift();
+        this.mirror();
+      }
+    });
+  }
+
+  /**
+   * Звіт = шапка + рядки логу.
+   *
+   * **Шапка тут, а не в тому, хто копіює.** Доти її будували два різні місця —
+   * кнопка в dev-меню й службове табло, — і збігалися вони лише в номері версії:
+   * у табла шапки не було взагалі, тож звіт із проду приходив без адреси,
+   * пристрою й стану мережі. Тепер джерело одне, і кожен, хто копіює звіт,
+   * отримує ту саму шапку.
+   *
+   * `ONLINE` — не прикраса: половина звітів «нічого не працює» пояснюється саме
+   * цим рядком (DEBUGGING-v8 § 2.3). `DEVICE` відповідає на друге за частотою
+   * питання — «а на чому?».
+   *
+   * Час в ISO, а не `toLocaleString()`: звіт читає той, хто розбирає збій, а не
+   * гравець, який його скопіював. `toLocaleString()` рендериться в локалі
+   * СИСТЕМИ гравця — 03.08 чи 08.03 залежно від того, де він живе, і розрізнити
+   * їх у звіті нема по чому (I18N-v8 § 4.3).
+   */
+  getReport(): string {
+    const header = [
+      "--- MindStep DEBUG LOG ---",
+      `DATE: ${new Date().toISOString()}`,
+      `VERSION: ${this.version}`,
+      // Поза браузером (prerender, вузол тесту) цих джерел немає, а звіт має
+      // лишитися звітом, а не винятком: логер не має права нічого кидати.
+      `URL: ${isBrowser ? window.location.href : "n/a"}`,
+      `DEVICE: ${isBrowser ? navigator.userAgent : "n/a"}`,
+      `ONLINE: ${isBrowser ? navigator.onLine : "n/a"}`,
+      "--------------------------",
+      "",
+    ].join("\n");
+    return untrack(() => header + this.logs.join("\n"));
+  }
+
+  /**
+   * Вмикає всі теми й запам'ятовує це у сховищі. Викликається прихованим
+   * жестом (три кліки по підпису панелі керування) — щоб зібрати звіт із
+   * пристрою гравця, до якого немає доступу.
+   */
+  forceEnableLogging(): void {
+    isForceEnabled = true;
+    storageService.set("force-logging", "true");
+    this.add("init", "[logService] логування увімкнено вручну на цю сесію");
+  }
+
+  clear(): void {
+    this.logs = [];
+    this.errorCount = 0;
+    if (isBrowser) {
+      try {
+        sessionService.remove(SESSION_LOGS_KEY);
+      } catch {
+        // Ignore storage failure
+      }
     }
+  }
 }
 
 const logState = new LogState();
@@ -301,20 +328,32 @@ const logState = new LogState();
  * і тепер це видно компілятору.
  */
 const facade = {
-    get config() { return logState.config; },
-    get version() { return logState.version; },
-    get errorCount() { return logState.errorCount; },
-    getLogReport: () => logState.getReport(),
-    forceEnableLogging: () => logState.forceEnableLogging()
+  get config() {
+    return logState.config;
+  },
+  get version() {
+    return logState.version;
+  },
+  get errorCount() {
+    return logState.errorCount;
+  },
+  get logs() {
+    return logState.logs;
+  },
+  getLogReport: () => logState.getReport(),
+  getReport: () => logState.getReport(),
+  clear: () => logState.clear(),
+  forceEnableLogging: () => logState.forceEnableLogging(),
 };
 
 const loggerProxy = new Proxy(facade, {
-    get(target, prop) {
-        if (prop in target) return target[prop as keyof typeof target];
-        // Невідома тема все ще стає рядком у звіті, а не винятком: логер не має
-        // права нічого кидати (DEBUGGING-v8 § 1.5), а межу тепер тримає тип.
-        return (msg: string, ...args: unknown[]) => logState.add(String(prop), msg, ...args);
-    }
+  get(target, prop) {
+    if (prop in target) return target[prop as keyof typeof target];
+    // Невідома тема все ще стає рядком у звіті, а не винятком: логер не має
+    // права нічого кидати (DEBUGGING-v8 § 1.5), а межу тепер тримає тип.
+    return (msg: string, ...args: unknown[]) =>
+      logState.add(String(prop), msg, ...args);
+  },
 }) as unknown as LogService;
 
 export const logService = loggerProxy;
