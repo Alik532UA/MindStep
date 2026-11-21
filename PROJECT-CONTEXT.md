@@ -96,8 +96,8 @@ AI-агент читає його **перед** застосуванням па
 
 | Ключ                 | Число  | Що це і чим міряється                                                    |
 | -------------------- | ------ | ------------------------------------------------------------------------ |
-| `svelte-files`       | 183    | компонентів і сторінок: `find src -name '*.svelte' \| wc -l`             |
-| `ts-files`           | 384    | модулів TypeScript: `find src -name '*.ts' \| wc -l`                     |
+| `svelte-files`       | 185    | компонентів і сторінок: `find src -name '*.svelte' \| wc -l`             |
+| `ts-files`           | 385    | модулів TypeScript: `find src -name '*.ts' \| wc -l`                     |
 | `routes`             | 21     | маршрутів: `find src/routes -name '+page.svelte' \| wc -l`               |
 | `unit-spec-files`    | 56     | файлів юніт-перевірок — маска `test.include` у `vite.config.ts`          |
 | `e2e-spec-files`     | 19     | файлів e2e: `find tests/e2e -name '*.spec.ts' \| wc -l`                  |
