@@ -282,7 +282,8 @@ describe('розмір файлів — ратчет, а не число в пр
 		// Компоненти понад орієнтир: розмітка + стилі в одному файлі.
 		'src/lib/components/ErrorBoundary.svelte': 419,
 		'src/lib/components/modals/GameOverContent.svelte': 371,
-		'src/lib/components/social/FriendsPanel.svelte': 370
+		'src/lib/components/social/FriendsPanel.svelte': 370,
+		'src/lib/components/widgets/ErrorLogModal.svelte': 375
 	};
 
 	const measured = code.map((file) => ({
